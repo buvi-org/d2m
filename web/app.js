@@ -32,6 +32,8 @@ const state = {
   toolType: 'ball_endmill',
   toolDiameter: 6.0,
   resolution: 1.0,
+  toolpathPoints: [],  // [[x,y,z], ...] for toolpath line
+  opDetails: [],       // Per-operation stats for operation list
 };
 
 // ---------------------------------------------------------------------------
@@ -66,7 +68,8 @@ const els = {
   toolDiameterInput: document.getElementById('tool-diameter'),
   resolutionInput: document.getElementById('resolution'),
   opList: document.getElementById('op-list'),
-  downloadBtn: document.getElementById('download-btn'),
+  downloadBtnStl: document.getElementById('download-btn-stl'),
+  downloadBtnGlb: document.getElementById('download-btn-glb'),
   toast: document.getElementById('toast'),
   toastMsg: document.getElementById('toast-msg'),
 };
@@ -85,7 +88,7 @@ const wsClient = new SimulationWSClient({
 
   onProgress: (data) => {
     if (data.meshBuffer) {
-      state.meshes[data.opIndex + 1] = data.meshBuffer; // +1 because opIndex -1 initial is also sent
+      state.meshes[data.opIndex + 1] = data.meshBuffer;
       state.currentOpIndex = data.opIndex;
       state.totalOps = data.totalOps;
       state.operationCount = data.opIndex + 1;
@@ -93,7 +96,31 @@ const wsClient = new SimulationWSClient({
       // Update viewer with new mesh
       viewer.updateStockMesh(data.meshBuffer);
 
-      // Update progress
+      // Collect toolpath point
+      if (data.endPosition) {
+        state.toolpathPoints[data.opIndex] = data.endPosition;
+        viewer.setToolpath(state.toolpathPoints.filter(p => p !== undefined && p !== null));
+      }
+
+      // Update tool position
+      if (data.endPosition) {
+        viewer.updateTool(
+          data.endPosition,
+          null,
+          state.toolType,
+          state.toolDiameter,
+          30
+        );
+      }
+
+      // Store operation detail
+      state.opDetails[data.opIndex] = {
+        volume: data.volumeThisMove || 0,
+        cumulativeVolume: data.volumeRemoved,
+        gouges: data.gougesFound,
+      };
+
+      // Update UI
       updateProgress(data.opIndex, data.totalOps);
       updateStats(data.volumeRemoved, data.gougesFound, state.operationCount);
       updateOpList(data.opIndex, data.totalOps);
@@ -106,7 +133,16 @@ const wsClient = new SimulationWSClient({
     state.completed = true;
     state.isSimulating = false;
     state.simResult = data;
+
+    // Set the complete toolpath
+    if (data.toolpathPositions && data.toolpathPositions.length > 0) {
+      state.toolpathPoints = data.toolpathPositions;
+      viewer.setToolpath(data.toolpathPositions);
+    }
+
+    // Show gouge markers
     viewer.addGougeMarkers(data.gouges || []);
+
     updateUIState();
     updateStats(data.totalVolumeRemoved, data.gougeCount, data.totalOps, data.totalTimeMs);
     updateOpListComplete(data.totalOps);
@@ -135,6 +171,9 @@ const wsClient = new SimulationWSClient({
 function init() {
   viewer.init(document.getElementById('viewport'));
 
+  // Sync initial G-code from textarea
+  state.gcodeText = els.gcodeTextarea.value.trim();
+
   // Load initial empty state
   setupEventListeners();
   updateUIState();
@@ -162,6 +201,12 @@ function setupEventListeners() {
   });
   els.targetInput.addEventListener('change', () => {
     handleFileSelect(els.targetInput.files, 'target');
+  });
+
+  // G-code textarea sync
+  els.gcodeTextarea.addEventListener('input', () => {
+    state.gcodeText = els.gcodeTextarea.value;
+    updateUIState();
   });
 
   // Simulate button
@@ -199,8 +244,9 @@ function setupEventListeners() {
     viewer.setHeatmapMode(els.heatmapToggle.checked);
   });
 
-  // Download button
-  els.downloadBtn.addEventListener('click', downloadResult);
+  // Download buttons
+  els.downloadBtnStl.addEventListener('click', () => downloadResult('stl'));
+  els.downloadBtnGlb.addEventListener('click', () => downloadResult('glb'));
 }
 
 // ---------------------------------------------------------------------------
@@ -277,7 +323,10 @@ async function startSimulation() {
   state.totalOps = 0;
   state.completed = false;
   state.simResult = null;
+  state.toolpathPoints = [];
+  state.opDetails = [];
   viewer.clearScene();
+  els.opList.innerHTML = '';
 
   try {
     // Upload meshes
@@ -371,21 +420,43 @@ function updateStats(volumeRemoved, gougesFound, opsCount, totalTimeMs) {
 
 function updateOpList(currentOp, totalOps) {
   const container = els.opList;
+
+  // Remove initial placeholder
+  if (container.children.length === 1 &&
+      container.children[0].textContent.includes('Waiting')) {
+    container.innerHTML = '';
+  }
+
   // Extend list if needed
   while (container.children.length <= currentOp) {
+    const idx = container.children.length;
     const item = document.createElement('div');
     item.className = 'op-item pending';
-    item.textContent = `Op ${container.children.length + 1}`;
+    item.title = `Operation ${idx + 1}`;
+    item.textContent = `Op ${idx + 1}`;
     container.appendChild(item);
   }
 
-  // Mark current + previous as done
+  // Mark status and add volume detail
   for (let i = 0; i < container.children.length; i++) {
+    const detail = state.opDetails[i];
+    let cls = 'op-item pending';
+    let text = `Op ${i + 1}`;
+
     if (i <= currentOp) {
-      container.children[i].className = 'op-item done';
+      cls = 'op-item done';
+      if (detail) {
+        text = `Op ${i + 1}  Δ${detail.volume.toFixed(1)}mm³`;
+      }
     } else if (i === currentOp + 1 && i < totalOps) {
-      container.children[i].className = 'op-item in-progress';
+      cls = 'op-item in-progress';
     }
+
+    container.children[i].className = cls;
+    container.children[i].textContent = text;
+    container.children[i].title = detail
+      ? `Vol: ${detail.cumulativeVolume.toFixed(1)} mm³ | Gouges: ${detail.gouges}`
+      : text;
   }
 
   // Scroll to current
@@ -398,7 +469,11 @@ function updateOpListComplete(totalOps) {
   const container = els.opList;
   for (let i = 0; i < container.children.length; i++) {
     if (i < totalOps) {
+      const detail = state.opDetails[i];
       container.children[i].className = 'op-item done';
+      if (detail) {
+        container.children[i].textContent = `Op ${i + 1}  Δ${detail.volume.toFixed(1)}mm³`;
+      }
     }
   }
 }
@@ -453,24 +528,27 @@ async function showOperation(opIndex) {
 // Download
 // ---------------------------------------------------------------------------
 
-async function downloadResult() {
+async function downloadResult(format) {
   if (!state.partId || !state.completed) {
     showToast('Simulation must complete before downloading', true);
     return;
   }
 
+  const ext = format === 'stl' ? 'stl' : 'glb';
   try {
-    const resp = await fetch(`${API_BASE}/api/mesh/${state.partId}/final`);
-    if (!resp.ok) throw new Error('Download failed');
+    const resp = await fetch(`${API_BASE}/api/download/${state.partId}/${ext}`);
+    if (!resp.ok) throw new Error(`Download failed: ${resp.status}`);
 
     const blob = await resp.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${state.partId}_final.glb`;
+    a.download = `${state.partId}_result.${ext}`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('Download started');
+    showToast(`${ext.toUpperCase()} download started`);
   } catch (e) {
     showToast(`Download error: ${e.message}`, true);
   }
@@ -493,12 +571,8 @@ function updateUIState() {
   els.stepFwdBtn.disabled = state.isSimulating || !state.completed;
   els.stepBackBtn.disabled = state.isSimulating || !state.completed;
   els.opSlider.disabled = state.isSimulating || !state.completed;
-  els.downloadBtn.disabled = !state.completed;
-
-  // Reflect gcode in textarea if not already there
-  if (!els.gcodeTextarea.value && state.gcodeText) {
-    els.gcodeTextarea.value = state.gcodeText;
-  }
+  els.downloadBtnStl.disabled = !state.completed;
+  els.downloadBtnGlb.disabled = !state.completed;
 }
 
 // ---------------------------------------------------------------------------

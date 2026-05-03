@@ -296,6 +296,56 @@ async def get_gouges(part_id: str):
     }
 
 
+@app.get("/api/download/{part_id}/stl")
+async def download_stl(part_id: str):
+    """Download the final stock mesh as STL binary."""
+    mesh = None
+
+    # Try to get latest simulated mesh
+    if part_id in _snapshots and _snapshots[part_id]:
+        glb_bytes = _snapshots[part_id][-1].get("glb_bytes")
+        if glb_bytes:
+            try:
+                mesh = trimesh.load(io.BytesIO(glb_bytes), file_type="glb")
+            except Exception:
+                pass
+
+    # Fallback: use the simulator's current mesh
+    if mesh is None and part_id in _simulators:
+        mesh = _simulators[part_id].current_stock_mesh
+
+    # Fallback: use the original stock
+    if mesh is None and part_id in _parts:
+        mesh = _parts[part_id]["stock_mesh"]
+
+    if mesh is None:
+        return Response(status_code=404, content="No mesh data available")
+
+    stl_bytes = mesh.export(file_type="stl")
+    return Response(
+        content=stl_bytes,
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f"attachment; filename={part_id}_result.stl"},
+    )
+
+
+@app.get("/api/download/{part_id}/glb")
+async def download_glb(part_id: str):
+    """Download the final stock mesh as GLB binary (convenience alias for /final)."""
+    if part_id not in _snapshots or not _snapshots[part_id]:
+        return Response(status_code=404, content="No simulation data")
+
+    glb_bytes = _snapshots[part_id][-1].get("glb_bytes")
+    if glb_bytes is None:
+        return Response(status_code=500, content="Mesh data missing")
+
+    return Response(
+        content=glb_bytes,
+        media_type="model/gltf-binary",
+        headers={"Content-Disposition": f"attachment; filename={part_id}_result.glb"},
+    )
+
+
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "parts_loaded": len(_parts)}
@@ -423,6 +473,7 @@ async def ws_simulate(websocket: WebSocket, part_id: str):
         # Execute moves one at a time, snapshotting after each
         move_results = []
         total_vol = 0.0
+        toolpath_positions = []  # Collect end positions for toolpath viz
         _snapshots[part_id] = []
 
         for op_idx, (start_joints, end_joints, line_no) in enumerate(raw_moves):
@@ -434,6 +485,10 @@ async def ws_simulate(websocket: WebSocket, part_id: str):
 
             if result.success:
                 total_vol += result.removal.volume_removed
+
+            # Collect toolpath
+            ep = end_pose.position.tolist()
+            toolpath_positions.append(ep)
 
             # Extract mesh and serialize
             mesh = sim.current_stock_mesh
@@ -447,6 +502,7 @@ async def ws_simulate(websocket: WebSocket, part_id: str):
                 "volume_this_move": result.removal.volume_removed,
                 "glb_bytes": glb_bytes,
                 "success": result.success,
+                "end_position": ep,
             }
             _snapshots[part_id].append(snap)
 
@@ -464,6 +520,7 @@ async def ws_simulate(websocket: WebSocket, part_id: str):
                 "volume_this_move": result.removal.volume_removed,
                 "gouges_found": len(sim.gouges),
                 "columns_modified": result.removal.columns_modified,
+                "end_position": ep,
             })
 
         # Final deviation check
@@ -484,6 +541,7 @@ async def ws_simulate(websocket: WebSocket, part_id: str):
             ],
             "gouge_count": len(gouges),
             "stock_volume_mm3": float(sim.stock_volume),
+            "toolpath_positions": toolpath_positions,
         })
 
     except WebSocketDisconnect:

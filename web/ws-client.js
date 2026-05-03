@@ -144,6 +144,7 @@ export class SimulationWSClient {
             volumeThisMove: msg.volume_this_move,
             gougesFound: msg.gouges_found,
             columnsModified: msg.columns_modified,
+            endPosition: msg.end_position || null,
           });
         }
         break;
@@ -157,6 +158,7 @@ export class SimulationWSClient {
             gouges: msg.gouges || [],
             gougeCount: msg.gouge_count || 0,
             stockVolumeMm3: msg.stock_volume_mm3,
+            toolpathPositions: msg.toolpath_positions || [],
           });
         }
         break;
