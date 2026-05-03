@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>d2m — 5-Axis CNC Simulator</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Three.js import map -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ================================================================ -->
+  <!-- Sidebar                                                           -->
+  <!-- ================================================================ -->
+
+  <aside class="sidebar">
+
+    <div class="sidebar-header">
+      <h1>d2m</h1>
+      <div class="subtitle">5-Axis CNC Simulator</div>
+    </div>
+
+    <div class="sidebar-content">
+
+      <!-- Upload section -->
+      <div class="section">
+        <div class="section-header">Upload Files</div>
+        <div class="section-body">
+          <div class="drop-zone" id="drop-zone">
+            <p>Drop STL/STEP + G-code files here</p>
+            <div class="file-inputs">
+              <div class="file-input-wrapper">
+                <input type="file" id="stock-input" accept=".stl,.step,.stp,.obj,.ply">
+                <span class="file-btn">Stock</span>
+              </div>
+              <div class="file-input-wrapper">
+                <input type="file" id="target-input" accept=".stl,.step,.stp,.obj,.ply">
+                <span class="file-btn">Target</span>
+              </div>
+            </div>
+            <div class="file-label" id="stock-label">No stock file</div>
+            <div class="file-label" id="target-label">No target file</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- G-code section -->
+      <div class="section">
+        <div class="section-header">G-Code Program</div>
+        <div class="section-body">
+          <textarea class="gcode-textarea" id="gcode-textarea"
+            placeholder="Enter G-code or drop a .nc file...">G00 X0 Y0 Z5
+G01 Z-2 F500
+G01 X10 F1000
+G01 Y10
+G01 X0
+G01 Y0
+G00 Z5</textarea>
+        </div>
+      </div>
+
+      <!-- Tool settings -->
+      <div class="section">
+        <div class="section-header">Tool Settings</div>
+        <div class="section-body">
+          <div class="setting-row">
+            <label>Tool</label>
+            <select id="tool-type">
+              <option value="ball_endmill" selected>Ball Endmill</option>
+              <option value="flat_endmill">Flat Endmill</option>
+              <option value="drill">Drill</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <label>Diameter</label>
+            <input type="number" id="tool-diameter" value="6.0" min="0.5" max="50" step="0.1">
+            <span style="font-size:11px;color:var(--text-muted)">mm</span>
+          </div>
+          <div class="setting-row">
+            <label>Resolution</label>
+            <input type="number" id="resolution" value="1.0" min="0.2" max="5.0" step="0.1">
+            <span style="font-size:11px;color:var(--text-muted)">mm</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Simulate -->
+      <div class="section">
+        <div class="section-header">Control</div>
+        <div class="section-body">
+          <button class="btn btn-primary full-width" id="simulate-btn" disabled>
+            Simulate
+          </button>
+
+          <div class="progress-container">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="progress-bar"></div>
+            </div>
+            <div class="progress-text" id="progress-text">Ready</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playback controls -->
+      <div class="section">
+        <div class="section-header">Playback</div>
+        <div class="section-body">
+          <div class="playback-controls">
+            <button class="btn btn-sm" id="step-back-btn" disabled title="Step back">&lt;&lt;</button>
+            <button class="btn btn-sm" id="play-btn" disabled title="Play">&#9654;</button>
+            <button class="btn btn-sm" id="pause-btn" disabled title="Pause">&#9646;&#9646;</button>
+            <button class="btn btn-sm" id="step-fwd-btn" disabled title="Step forward">&gt;&gt;</button>
+          </div>
+          <div class="slider-row">
+            <input type="range" id="op-slider" min="0" max="0" value="0" disabled>
+            <span class="op-label" id="op-label">Op 0/0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="section">
+        <div class="section-header">Statistics</div>
+        <div class="section-body">
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="stat-volume">0</div>
+              <div class="stat-label">Vol Removed (mm&sup3;)</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="stat-time">0s</div>
+              <div class="stat-label">Sim Time</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="stat-gouges">0</div>
+              <div class="stat-label">Gouges</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="stat-ops">0</div>
+              <div class="stat-label">Operations</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Operation list -->
+      <div class="section">
+        <div class="section-header">Operations</div>
+        <div class="section-body">
+          <div class="op-list" id="op-list">
+            <div class="op-item pending">Waiting for simulation...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View options -->
+      <div class="section">
+        <div class="section-header">View Options</div>
+        <div class="section-body">
+          <div class="toggle-row">
+            <label>Show Tool</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="tool-toggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <label>Show Target</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="target-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <label>Wireframe</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="wireframe-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <label>Heatmap</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="heatmap-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download -->
+      <div class="section">
+        <div class="section-body">
+          <button class="btn btn-success full-width" id="download-btn" disabled>
+            Download Result (GLB)
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ================================================================ -->
+  <!-- 3D Viewport                                                       -->
+  <!-- ================================================================ -->
+
+  <main class="viewport" id="viewport"></main>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toast-msg"></span>
+</div>
+
+</body>
+</html>
