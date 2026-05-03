@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>d2m — WebGPU Tri-Dexel Simulation Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    overflow: hidden;
+  }
+  #canvas-container {
+    position: absolute; inset: 0;
+  }
+  canvas { display: block; }
+
+  #hud {
+    position: absolute; top: 16px; left: 16px;
+    background: rgba(13, 17, 23, 0.92);
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 16px 20px;
+    min-width: 320px;
+    backdrop-filter: blur(12px);
+  }
+  #hud h1 {
+    font-size: 18px; font-weight: 600;
+    color: #58a6ff; margin: 0 0 4px 0;
+  }
+  #hud .subtitle {
+    font-size: 12px; color: #8b949e; margin-bottom: 12px;
+  }
+  #hud .stat-row {
+    display: flex; justify-content: space-between;
+    font-size: 13px; line-height: 1.8;
+  }
+  #hud .stat-label { color: #8b949e; }
+  #hud .stat-value { color: #e6edf3; font-variant-numeric: tabular-nums; }
+  #hud .stat-value.good { color: #3fb950; }
+  #hud .stat-value.warn { color: #d29922; }
+
+  #controls {
+    position: absolute; bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 12px;
+  }
+  #controls button {
+    padding: 10px 24px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    background: rgba(22, 27, 34, 0.92);
+    color: #c9d1d9;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    transition: all 0.15s;
+  }
+  #controls button:hover {
+    background: #1f6feb;
+    border-color: #1f6feb;
+    color: #fff;
+  }
+  #controls button:active { transform: scale(0.97); }
+  #controls button:disabled {
+    opacity: 0.4; cursor: not-allowed;
+    background: rgba(22, 27, 34, 0.5);
+  }
+  #controls button.primary {
+    background: #238636;
+    border-color: #238636;
+  }
+  #controls button.primary:hover {
+    background: #2ea043;
+  }
+
+  #log {
+    position: absolute; top: 16px; right: 16px;
+    width: 300px; max-height: 320px;
+    background: rgba(13, 17, 23, 0.92);
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px 16px;
+    overflow-y: auto;
+    backdrop-filter: blur(12px);
+    font-size: 12px; line-height: 1.6;
+  }
+  #log .entry { padding: 2px 0; border-bottom: 1px solid #21262d; }
+  #log .entry:last-child { border-bottom: none; }
+  #log .entry.error { color: #f85149; }
+  #log .entry.warn { color: #d29922; }
+  #log .entry.info { color: #58a6ff; }
+  #log .entry.success { color: #3fb950; }
+
+  #loading {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(13, 17, 23, 0.96);
+    z-index: 100;
+  }
+  #loading.hidden { display: none; }
+  #loading .spinner {
+    width: 48px; height: 48px;
+    border: 3px solid #30363d;
+    border-top-color: #58a6ff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading .msg { font-size: 14px; color: #8b949e; }
+
+  .status-badge {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .status-badge.ok { background: #3fb950; }
+  .status-badge.warn { background: #d29922; }
+  .status-badge.err { background: #f85149; }
+</style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<div id="hud">
+  <h1>d2m Tri-Dexel Demo</h1>
+  <div class="subtitle">Architecture C: WebGPU Compute + WebGL Render</div>
+  <div class="stat-row"><span class="stat-label">Status</span><span class="stat-value" id="stat-status"><span class="status-badge ok"></span>Ready</span></div>
+  <div class="stat-row"><span class="stat-label">Grid Resolution</span><span class="stat-value" id="stat-grid">—</span></div>
+  <div class="stat-row"><span class="stat-label">Moves Executed</span><span class="stat-value" id="stat-moves">0</span></div>
+  <div class="stat-row"><span class="stat-label">GPU Time</span><span class="stat-value" id="stat-gputime">0.0 ms</span></div>
+  <div class="stat-row"><span class="stat-label">GPU Memory</span><span class="stat-value" id="stat-memory">—</span></div>
+  <div class="stat-row"><span class="stat-label">WebGPU</span><span class="stat-value good" id="stat-webgpu">—</span></div>
+</div>
+
+<div id="log">
+  <div class="entry info">[init] Checking WebGPU support...</div>
+</div>
+
+<div id="controls">
+  <button class="primary" id="btn-run" disabled>Run Simulation</button>
+  <button id="btn-reset" disabled>Reset Stock</button>
+  <button id="btn-toggle" disabled>Toggle Wireframe</button>
+</div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="msg">Initializing WebGPU...</div>
+</div>
+
+<!-- Three.js from CDN -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { WebGPUSimulator, initWebGPU } from './sim/engine.js';
+import { BallEndmill, FlatEndmill, createTool } from './sim/tools.js';
+import { GCodeParser } from './sim/gcode.js';
+
+// ---------------------------------------------------------------------------
+//  UI Helpers
+// ---------------------------------------------------------------------------
+
+const logEl = document.getElementById('log');
+function log(msg, cls = 'info') {
+  const div = document.createElement('div');
+  div.className = `entry ${cls}`;
+  div.textContent = msg;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function setStat(id, value) {
+  document.getElementById(id).textContent = value;
+}
+
+function setLoading(msg) {
+  document.querySelector('#loading .msg').textContent = msg;
+}
+
+function hideLoading() {
+  document.getElementById('loading').classList.add('hidden');
+}
+
+function setStatus(text, badgeCls = 'ok') {
+  setStat('stat-status', text);
+  const badge = document.querySelector('#stat-status .status-badge');
+  if (badge) {
+    badge.className = 'status-badge ' + badgeCls;
+  }
+}
+
+// ---------------------------------------------------------------------------
+//  Three.js Scene Setup
+// ---------------------------------------------------------------------------
+
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d1117);
+scene.fog = new THREE.Fog(0x0d1117, 200, 600);
+
+const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.5, 1000);
+camera.position.set(40, 30, 50);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0x404060, 2.5);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 4);
+dirLight.position.set(50, 80, 60);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+dirLight.shadow.camera.near = 0.5;
+dirLight.shadow.camera.far = 500;
+dirLight.shadow.camera.left = -100;
+dirLight.shadow.camera.right = 100;
+dirLight.shadow.camera.top = 100;
+dirLight.shadow.camera.bottom = -100;
+scene.add(dirLight);
+
+const fillLight = new THREE.DirectionalLight(0x8090b0, 1.5);
+fillLight.position.set(-20, 20, -10);
+scene.add(fillLight);
+
+// Grid and axes
+const gridHelper = new THREE.GridHelper(60, 20, 0x30363d, 0x21262d);
+scene.add(gridHelper);
+
+const axesHelper = new THREE.AxesHelper(30);
+scene.add(axesHelper);
+
+// Orbit controls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 0, 0);
+controls.update();
+
+// Mesh objects
+let stockMeshObj = null;
+let resultMeshObj = null;
+let wireframeMode = false;
+
+// ---------------------------------------------------------------------------
+//  Stock Box Mesh Generation (simulated 20x20x20mm box centered at origin)
+// ---------------------------------------------------------------------------
+
+function createBoxMesh(size = 20) {
+  const half = size / 2;
+  // Vertices: 8 corners of a box
+  const s = half;
+  const vertices = new Float32Array([
+    -s, -s, -s,   s, -s, -s,   s,  s, -s,   -s,  s, -s,  // back face
+    -s, -s,  s,   s, -s,  s,   s,  s,  s,   -s,  s,  s,  // front face
+  ]);
+  // Indices: 12 triangles (6 faces)
+  const indices = new Uint32Array([
+    0, 1, 2,  0, 2, 3,  // back
+    4, 6, 5,  4, 7, 6,  // front
+    0, 4, 5,  0, 5, 1,  // bottom
+    2, 6, 7,  2, 7, 3,  // top
+    0, 3, 7,  0, 7, 4,  // left
+    1, 5, 6,  1, 6, 2,  // right
+  ]);
+  return { vertices, indices };
+}
+
+// ---------------------------------------------------------------------------
+//  Mesh Update (Three.js rendering)
+// ---------------------------------------------------------------------------
+
+function updateMeshVisual(vertices, indices) {
+  // Remove old mesh
+  if (stockMeshObj) {
+    scene.remove(stockMeshObj);
+    if (stockMeshObj.geometry) stockMeshObj.geometry.dispose();
+    if (stockMeshObj.material) stockMeshObj.material.dispose();
+    stockMeshObj = null;
+  }
+
+  if (vertices.length === 0) return;
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  if (indices.length > 0) {
+    geo.setIndex(new THREE.BufferAttribute(indices, 1));
+  }
+  geo.computeVertexNormals();
+
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x4499cc,
+    roughness: 0.35,
+    metalness: 0.15,
+    side: THREE.DoubleSide,
+    wireframe: wireframeMode,
+  });
+
+  stockMeshObj = new THREE.Mesh(geo, mat);
+  stockMeshObj.castShadow = true;
+  stockMeshObj.receiveShadow = true;
+  scene.add(stockMeshObj);
+}
+
+function toggleWireframe() {
+  wireframeMode = !wireframeMode;
+  if (stockMeshObj && stockMeshObj.material) {
+    stockMeshObj.material.wireframe = wireframeMode;
+  }
+  document.getElementById('btn-toggle').textContent =
+    wireframeMode ? 'Toggle Solid' : 'Toggle Wireframe';
+}
+
+// ---------------------------------------------------------------------------
+//  Demo G-Code Program (5 moves: face, pocket, profile, drill, chamfer)
+// ---------------------------------------------------------------------------
+
+const DEMO_GCODE = `
+G21 G90 G94
+G00 X0 Y0 Z5
+; Move 1: Face mill top surface (flat endmill, 10mm DOC)
+; Tool: FlatEndmill D=16mm
+M06 T1
+S2000 M03
+G00 X-12 Y-12 Z2
+G01 Z-2 F500
+G01 X12 Y-12 F800
+G01 X12 Y12
+G01 X-12 Y12
+G01 X-12 Y-12
+G00 Z5
+; Move 2: Pocket center (ball endmill, 5mm deep)
+; Tool: BallEndmill D=6mm
+M06 T2
+S5000 M03
+G00 X0 Y0 Z2
+G01 Z-5 F300
+G01 X5 Y0 F600
+G01 X5 Y5
+G01 X-5 Y5
+G01 X-5 Y-5
+G01 X5 Y-5
+G01 X0 Y0
+G00 Z5
+; Move 3: Profile slot along X axis
+G00 X-8 Y-8 Z2
+G01 Z-3 F300
+G01 X8 Y-8 F600
+G00 Z5
+; Move 4: Drill hole at (4, 4)
+; Tool: Drill D=4mm
+M06 T3
+S3000 M03
+G00 X4 Y4 Z2
+G01 Z-15 F200
+G00 Z5
+; Move 5: Second hole at (-4, -4)
+G00 X-4 Y-4 Z2
+G01 Z-10 F200
+G00 Z5
+M05
+M30
+`;
+
+// ---------------------------------------------------------------------------
+//  MAIN SIMULATION
+// ---------------------------------------------------------------------------
+
+let simulator = null;
+
+async function runSimulation() {
+  const btnRun = document.getElementById('btn-run');
+  const btnReset = document.getElementById('btn-reset');
+  btnRun.disabled = true;
+  btnReset.disabled = true;
+
+  try {
+    setStatus('Running...', 'warn');
+    log('[sim] Starting material removal simulation...', 'info');
+
+    const boxMesh = createBoxMesh(20);
+
+    // Create tool definitions
+    const flatTool = createTool('flat_endmill', { diameter: 16, fluteLength: 30 });
+    const ballTool = createTool('ball_endmill', { diameter: 6, fluteLength: 25 });
+    const drillTool = createTool('drill', { diameter: 4, tipAngle: 118, fluteLength: 30 });
+
+    // Tool table
+    const toolTable = {
+      T1: flatTool,
+      T2: ballTool,
+      T3: drillTool,
+    };
+
+    // G-code parser
+    const parser = new GCodeParser();
+    const commands = parser.parse(DEMO_GCODE);
+    log(`[gcode] Parsed ${commands.length} motion commands`, 'info');
+    setStat('stat-moves', commands.length);
+
+    // Execute moves sequentially
+    let currentTool = ballTool; // default
+    let lastPose = { position: [0, 0, 5], axis: [0, 0, 1] };
+    let moveIdx = 0;
+
+    for (const cmd of commands) {
+      moveIdx++;
+
+      // Check for tool change (embedded in comments — simplified)
+      const commentText = DEMO_GCODE; // not in cmd directly, simplified
+
+      // Get coords (default to current position when not specified)
+      const targetPos = [
+        cmd.coords.X !== undefined ? cmd.coords.X : lastPose.position[0],
+        cmd.coords.Y !== undefined ? cmd.coords.Y : lastPose.position[1],
+        cmd.coords.Z !== undefined ? cmd.coords.Z : lastPose.position[2],
+      ];
+      const targetPose = {
+        position: targetPos,
+        axis: [0, 0, 1], // 3-axis: tool always vertical
+      };
+
+      // Select tool based on move number
+      if (moveIdx <= 5) {
+        currentTool = flatTool;  // face mill
+      } else if (moveIdx <= 10) {
+        currentTool = ballTool;  // pocket
+      } else if (moveIdx <= 12) {
+        currentTool = ballTool;  // profile
+      } else {
+        currentTool = drillTool; // drill
+      }
+
+      const result = await simulator.executeMove(currentTool, lastPose, targetPose, {
+        linearRes: 1.0,
+      });
+
+      log(`[move ${moveIdx}] ${cmd.motion} ` +
+        `to (${targetPos[0].toFixed(1)}, ${targetPos[1].toFixed(1)}, ${targetPos[2].toFixed(1)}) ` +
+        `— ${result.timeMs.toFixed(1)}ms`, 'success');
+
+      lastPose = targetPose;
+
+      // Update stats
+      setStat('stat-gputime', `${simulator.stats.totalGPUtimeMs.toFixed(1)} ms`);
+    }
+
+    // Extract final mesh
+    setStatus('Extracting mesh...', 'warn');
+    setLoading('Running marching cubes...');
+    log('[marching] Extracting surface mesh from tri-dexel...', 'info');
+
+    const meshResult = await simulator.getStockMesh();
+    log(`[marching] Extracted ${meshResult.vertices.length / 3} vertices, ${meshResult.indices.length / 3} triangles`, 'success');
+
+    // Update Three.js mesh
+    updateMeshVisual(meshResult.vertices, meshResult.indices);
+
+    // Show stats
+    const stats = simulator.getStats();
+    const mem = simulator.getMemoryUsage();
+    setStat('stat-grid', `${stats.gridRes[0]}x${stats.gridRes[1]}x${stats.gridRes[2]}`);
+    setStat('stat-moves', moveIdx);
+    setStat('stat-gputime', `${stats.totalGPUtimeMs.toFixed(1)} ms`);
+    setStat('stat-memory', `${mem.totalMB.toFixed(0)} MB`);
+    setStatus('Complete', 'ok');
+    setLoading('');
+    hideLoading();
+    log('[done] Simulation complete!', 'success');
+
+  } catch (err) {
+    log(`[error] ${err.message}`, 'error');
+    console.error(err);
+    setStatus(`Error: ${err.message}`, 'err');
+  } finally {
+    btnRun.disabled = false;
+    btnReset.disabled = false;
+  }
+}
+
+async function resetSimulation() {
+  if (!simulator) return;
+  setStatus('Resetting...', 'warn');
+  setLoading('Re-initializing stock...');
+  await simulator.reset();
+  log('[reset] Stock re-initialized from original mesh', 'info');
+  setStat('stat-moves', '0');
+  setStat('stat-gputime', '0.0 ms');
+  setStatus('Ready', 'ok');
+  setLoading('');
+  hideLoading();
+}
+
+// ---------------------------------------------------------------------------
+//  INITIALIZATION
+// ---------------------------------------------------------------------------
+
+async function init() {
+  try {
+    log('[init] Checking WebGPU support...', 'info');
+
+    // Verify WebGPU
+    if (!navigator.gpu) {
+      throw new Error('WebGPU not supported. Use Chrome 113+ or Edge 113+.');
+    }
+    log('[init] WebGPU available!', 'success');
+    setStat('stat-webgpu', 'Supported');
+
+    setLoading('Requesting WebGPU adapter...');
+    const { device, adapter } = await initWebGPU();
+    log(`[init] GPU: ${adapter.info.device || 'Unknown'} (${adapter.info.architecture || 'Unknown'})`, 'success');
+
+    // Create box mesh for stock
+    setLoading('Creating stock geometry...');
+    const boxMesh = createBoxMesh(20);
+    log('[init] Stock: 20x20x20mm box, 8 vertices, 12 triangles', 'info');
+
+    // Load WGSL shader source
+    setLoading('Compiling WGSL shaders...');
+
+    const subtractSrc = await fetch('./shaders/dexel_subtract.wgsl').then(r => r.text());
+    const marchingSrc = await fetch('./shaders/marching_cubes.wgsl').then(r => r.text());
+    log('[init] Shader source loaded (subtract + marching cubes)', 'success');
+
+    // Create simulator
+    setLoading('Initializing dexel grids...');
+    simulator = new WebGPUSimulator(device, boxMesh, {
+      resolution: 0.5,  // 0.5mm grid spacing
+    });
+
+    await simulator.initialize(subtractSrc, marchingSrc);
+    log('[init] Dexel grids initialized from stock mesh', 'success');
+
+    // Show grid info
+    const stats = simulator.getStats();
+    const mem = simulator.getMemoryUsage();
+    setStat('stat-grid', `${stats.gridRes[0]}x${stats.gridRes[1]}x${stats.gridRes[2]}`);
+    setStat('stat-memory', `${mem.totalMB.toFixed(0)} MB`);
+    setStatus('Ready', 'ok');
+
+    // Enable buttons
+    document.getElementById('btn-run').disabled = false;
+    document.getElementById('btn-reset').disabled = false;
+    document.getElementById('btn-toggle').disabled = false;
+
+    // Setup button handlers
+    document.getElementById('btn-run').addEventListener('click', runSimulation);
+    document.getElementById('btn-reset').addEventListener('click', resetSimulation);
+    document.getElementById('btn-toggle').addEventListener('click', toggleWireframe);
+
+    // Render initial empty scene
+    hideLoading();
+    log('[init] Ready. Click "Run Simulation" to start.', 'success');
+
+  } catch (err) {
+    log(`[fatal] ${err.message}`, 'error');
+    console.error(err);
+    setStatus(`Init failed: ${err.message}`, 'err');
+    document.querySelector('#loading .msg').textContent = `Error: ${err.message}`;
+  }
+}
+
+// ---------------------------------------------------------------------------
+//  Render Loop
+// ---------------------------------------------------------------------------
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// ---------------------------------------------------------------------------
+//  Resize Handler
+// ---------------------------------------------------------------------------
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+// ---------------------------------------------------------------------------
+//  Start
+// ---------------------------------------------------------------------------
+
+animate();
+init();
+</script>
+</body>
+</html>
