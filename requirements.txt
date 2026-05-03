@@ -29,6 +29,11 @@ uvicorn>=0.30.0
 matplotlib>=3.9.0
 plotly>=5.23.0
 
+# Simulation (Tri-Dexel CNC)
+trimesh>=4.4.0
+scipy>=1.13.0
+rtree>=1.2.0
+
 # Utilities
 pydantic>=2.9.0
 pyyaml>=6.0.0
