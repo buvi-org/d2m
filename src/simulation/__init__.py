@@ -21,3 +21,9 @@ from .tri_dexel import DexelInterval, DexelColumn, DexelGrid, TriDexelModel
 from .tools import Tool, FlatEndmill, BallEndmill, BullNoseEndmill, Drill, ChamferTool
 from .kinematics import FiveAxisKinematics, MachineConfig, ToolPose
 from .simulator import FiveAxisSimulator, SimulationResult, MoveResult
+from .machine import (
+    MachineModel, MachineComponent, ComponentType,
+    ToolAssembly, ToolComponent, CollisionPair, Collision, CheckType,
+    generate_default_table_table, generate_default_head_head,
+    generate_default_head_table, generate_from_config,
+)
