@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Data & Models (large files)
+data/
+models/
+*.step
+*.stp
+*.iges
+*.igs
+*.sldprt
+*.f3d
+
+# Renders temp
+temp/
+*.png
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ML
+wandb/
+mlruns/
+lightning_logs/
+
+# Logs
+*.log

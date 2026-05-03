@@ -1,0 +1,36 @@
+# CAD Parsing
+cadquery>=2.4.0
+pythonocc-core>=7.8.0
+numpy>=1.26.0
+
+# ML / GNN
+torch>=2.4.0
+torch-geometric>=2.6.0
+transformers>=4.45.0
+datasets>=2.20.0
+unsloth>=2024.12.0
+trl>=0.10.0
+peft>=0.13.0
+bitsandbytes>=0.44.0
+accelerate>=0.34.0
+
+# Knowledge Graph
+neo4j>=5.20.0
+py2neo>=2021.2.0
+networkx>=3.3.0
+
+# UI
+streamlit>=1.39.0
+gradio>=4.40.0
+fastapi>=0.115.0
+uvicorn>=0.30.0
+
+# Visualization
+matplotlib>=3.9.0
+plotly>=5.23.0
+
+# Utilities
+pydantic>=2.9.0
+pyyaml>=6.0.0
+rich>=13.8.0
+tqdm>=4.66.0
