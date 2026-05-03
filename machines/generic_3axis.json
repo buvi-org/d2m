@@ -1,0 +1,149 @@
+{
+  "name": "Generic 3-Axis Vertical Mill",
+  "version": "1.0",
+  "description": "Generic 3-axis vertical milling machine. Suitable for testing and as a template for creating custom 3-axis machine definitions. X=600, Y=400, Z=350 mm travels. Spindle: BT40, 8,000 RPM, 11 kW.",
+  "manufacturer": "Generic",
+  "model": "3-Axis VMC",
+
+  "components": [
+    {
+      "id": "bed",
+      "type": "static",
+      "parent": null,
+      "label": "Machine Bed / Base Casting",
+      "mesh": "generic_3axis/bed.stl",
+      "transform": [0, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "column",
+      "type": "static",
+      "parent": "bed",
+      "label": "Vertical Column",
+      "mesh": "generic_3axis/column.stl",
+      "transform": [0, -300, 0, 0, 0, 0]
+    },
+    {
+      "id": "z_axis",
+      "type": "linear_axis",
+      "parent": "column",
+      "label": "Z-Axis Head Slide",
+      "mesh": "generic_3axis/z_saddle.stl",
+      "transform": [0, 0, 500, 0, 0, 0],
+      "axis": "Z",
+      "limits": [-350, 0],
+      "max_feed": 20000,
+      "rapid_feed": 30000
+    },
+    {
+      "id": "spindle",
+      "type": "spindle",
+      "parent": "z_axis",
+      "label": "Spindle Cartridge (BT40)",
+      "mesh": "generic_3axis/spindle_head.stl",
+      "transform": [0, 0, -100, 0, 0, 0],
+      "max_rpm": 8000,
+      "max_power_kw": 11,
+      "max_torque_nm": 70,
+      "spindle_nose_to_gauge_mm": 50
+    },
+    {
+      "id": "tool_mount",
+      "type": "tool_mount",
+      "parent": "spindle",
+      "label": "BT40 Tool Interface",
+      "mesh": null,
+      "transform": [0, 0, -50, 0, 0, 0]
+    },
+    {
+      "id": "y_axis",
+      "type": "linear_axis",
+      "parent": "bed",
+      "label": "Y-Axis Saddle",
+      "mesh": "generic_3axis/y_saddle.stl",
+      "transform": [0, -200, 0, 0, 0, 0],
+      "axis": "Y",
+      "limits": [-200, 200],
+      "max_feed": 20000,
+      "rapid_feed": 30000
+    },
+    {
+      "id": "x_axis",
+      "type": "linear_axis",
+      "parent": "y_axis",
+      "label": "X-Axis Table",
+      "mesh": "generic_3axis/x_table.stl",
+      "transform": [-300, 0, 0, 0, 0, 0],
+      "axis": "X",
+      "limits": [-300, 300],
+      "max_feed": 20000,
+      "rapid_feed": 30000
+    },
+    {
+      "id": "table",
+      "type": "static",
+      "parent": "x_axis",
+      "label": "Work Table Surface",
+      "mesh": "generic_3axis/table.stl",
+      "transform": [0, 0, -150, 0, 0, 0]
+    },
+    {
+      "id": "fixture_mount",
+      "type": "fixture_mount",
+      "parent": "table",
+      "label": "Fixture Mounting Surface (T-slots)",
+      "mesh": null,
+      "transform": [0, 0, -50, 0, 0, 0]
+    }
+  ],
+
+  "collision_groups": {
+    "tool_group": ["tool_mount"],
+    "spindle_group": ["spindle", "z_axis", "column"],
+    "head_group": ["spindle", "z_axis", "tool_mount"],
+    "table_group": ["table", "x_axis", "y_axis"],
+    "fixture_group": ["fixture_mount"]
+  },
+
+  "collision_pairs": [
+    {
+      "group_a": "tool_group",
+      "group_b": "fixture_group",
+      "clearance_mm": 2.0,
+      "check_type": "near_miss",
+      "warn_clearance_mm": 5.0
+    },
+    {
+      "group_a": "spindle_group",
+      "group_b": "table_group",
+      "clearance_mm": 5.0,
+      "check_type": "static"
+    },
+    {
+      "group_a": "tool_group",
+      "group_b": "stock",
+      "clearance_mm": 0.0,
+      "check_type": "during_cut"
+    },
+    {
+      "group_a": "spindle_group",
+      "group_b": "stock",
+      "clearance_mm": 5.0,
+      "check_type": "static"
+    }
+  ],
+
+  "home_position": [300, 200, 0, 0, 0, 0],
+  "tool_change_position": [300, 200, -350, 0, 0, 0],
+
+  "axis_priority": ["Z"],
+  "retract_axis": "Z",
+
+  "work_offset_defaults": {
+    "G54": [300, 200, 50, 0, 0, 0]
+  },
+
+  "kinematic_chain": {
+    "tool_chain": ["tool_mount", "spindle", "z_axis", "column", "bed"],
+    "workpiece_chain": ["fixture_mount", "table", "x_axis", "y_axis", "bed"]
+  }
+}

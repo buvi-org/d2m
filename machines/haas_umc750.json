@@ -1,0 +1,175 @@
+{
+  "name": "Haas UMC-750",
+  "version": "1.0",
+  "description": "Haas UMC-750 Universal Machining Center - 5-axis vertical machining center with BC trunnion table configuration. X=762, Y=508, Z=508 mm travels. Table diameter 500 mm. Spindle: BT40, 8,100 RPM (standard), 22.4 kW (30 hp). 40+1 tool changer.",
+  "manufacturer": "Haas Automation",
+  "model": "UMC-750",
+
+  "components": [
+    {
+      "id": "bed",
+      "type": "static",
+      "parent": null,
+      "label": "Machine Bed / Base Casting",
+      "mesh": "haas_umc750/bed.stl",
+      "transform": [0, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "column",
+      "type": "static",
+      "parent": "bed",
+      "label": "Vertical Column",
+      "mesh": "haas_umc750/column.stl",
+      "transform": [0, -400, 0, 0, 0, 0]
+    },
+    {
+      "id": "z_axis",
+      "type": "linear_axis",
+      "parent": "column",
+      "label": "Z-Axis Head Slide",
+      "mesh": "haas_umc750/z_saddle.stl",
+      "transform": [0, 0, 650, 0, 0, 0],
+      "axis": "Z",
+      "limits": [-508, 0],
+      "max_feed": 20300,
+      "rapid_feed": 20300
+    },
+    {
+      "id": "spindle",
+      "type": "spindle",
+      "parent": "z_axis",
+      "label": "Spindle Cartridge (BT40)",
+      "mesh": "haas_umc750/spindle_head.stl",
+      "transform": [0, 0, -130, 0, 0, 0],
+      "max_rpm": 8100,
+      "max_power_kw": 22.4,
+      "max_torque_nm": 122,
+      "spindle_nose_to_gauge_mm": 50
+    },
+    {
+      "id": "tool_mount",
+      "type": "tool_mount",
+      "parent": "spindle",
+      "label": "BT40 Tool Interface",
+      "mesh": null,
+      "transform": [0, 0, -50, 0, 0, 0]
+    },
+    {
+      "id": "y_axis",
+      "type": "linear_axis",
+      "parent": "bed",
+      "label": "Y-Axis Saddle",
+      "mesh": "haas_umc750/y_saddle.stl",
+      "transform": [0, -254, 0, 0, 0, 0],
+      "axis": "Y",
+      "limits": [-254, 254],
+      "max_feed": 22900,
+      "rapid_feed": 22900
+    },
+    {
+      "id": "x_axis",
+      "type": "linear_axis",
+      "parent": "y_axis",
+      "label": "X-Axis Table Slide",
+      "mesh": "haas_umc750/x_table.stl",
+      "transform": [-381, 0, 0, 0, 0, 0],
+      "axis": "X",
+      "limits": [-381, 381],
+      "max_feed": 22900,
+      "rapid_feed": 22900
+    },
+    {
+      "id": "b_axis",
+      "type": "rotary_axis",
+      "parent": "x_axis",
+      "label": "B-Axis Trunnion (Tilting Table)",
+      "mesh": "haas_umc750/b_trunnion.stl",
+      "transform": [0, 0, -300, 0, 0, 0],
+      "axis": "B",
+      "limits": [-35, 120],
+      "max_feed": 15000,
+      "max_rpm": 50,
+      "pivot_offset": [0, 0, 0]
+    },
+    {
+      "id": "c_axis",
+      "type": "rotary_axis",
+      "parent": "b_axis",
+      "label": "C-Axis Rotary Table (500mm dia)",
+      "mesh": "haas_umc750/c_table.stl",
+      "transform": [0, 0, -200, 0, 0, 0],
+      "axis": "C",
+      "limits": [0, 360],
+      "max_feed": 36000,
+      "max_rpm": 100,
+      "continuous": true,
+      "pivot_offset": [0, 0, -200]
+    },
+    {
+      "id": "fixture_mount",
+      "type": "fixture_mount",
+      "parent": "c_axis",
+      "label": "Fixture Mounting Surface (T-slots)",
+      "mesh": null,
+      "transform": [0, 0, -60, 0, 0, 0]
+    }
+  ],
+
+  "collision_groups": {
+    "tool_group": ["tool_mount"],
+    "spindle_group": ["spindle", "z_axis", "column"],
+    "head_group": ["spindle", "z_axis", "tool_mount"],
+    "table_group": ["c_axis", "b_axis", "x_axis", "y_axis"],
+    "trunnion_group": ["b_axis", "c_axis"],
+    "fixture_group": ["fixture_mount"]
+  },
+
+  "collision_pairs": [
+    {
+      "group_a": "tool_group",
+      "group_b": "fixture_group",
+      "clearance_mm": 2.0,
+      "check_type": "near_miss",
+      "warn_clearance_mm": 5.0
+    },
+    {
+      "group_a": "spindle_group",
+      "group_b": "table_group",
+      "clearance_mm": 5.0,
+      "check_type": "static"
+    },
+    {
+      "group_a": "head_group",
+      "group_b": "trunnion_group",
+      "clearance_mm": 10.0,
+      "check_type": "static"
+    },
+    {
+      "group_a": "tool_group",
+      "group_b": "stock",
+      "clearance_mm": 0.0,
+      "check_type": "during_cut"
+    },
+    {
+      "group_a": "spindle_group",
+      "group_b": "stock",
+      "clearance_mm": 8.0,
+      "check_type": "static"
+    }
+  ],
+
+  "home_position": [381, 254, 0, 0, 0, 0],
+  "tool_change_position": [381, 254, -508, 0, 0, 0],
+
+  "axis_priority": ["Z"],
+  "retract_axis": "Z",
+
+  "work_offset_defaults": {
+    "G54": [381, 254, 60, 0, 0, 0]
+  },
+
+  "kinematic_chain": {
+    "tool_chain": ["tool_mount", "spindle", "z_axis", "column", "bed"],
+    "workpiece_chain": ["fixture_mount", "c_axis", "b_axis", "x_axis", "y_axis", "bed"]
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "name": "DMG DMU 50",
+  "version": "1.0",
+  "description": "DMG MORI DMU 50 3rd Generation - 5-axis vertical machining center with BC trunnion table configuration. X=500, Y=450, Z=400 mm travels. Table diameter 630 mm. Spindle: HSK-A63, 18,000 RPM, 25 kW, 130 Nm.",
+  "manufacturer": "DMG MORI",
+  "model": "DMU 50",
+
+  "components": [
+    {
+      "id": "bed",
+      "type": "static",
+      "parent": null,
+      "label": "Machine Bed / Base Casting",
+      "mesh": "dmg_dmu50/bed.stl",
+      "transform": [0, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "column",
+      "type": "static",
+      "parent": "bed",
+      "label": "Vertical Column",
+      "mesh": "dmg_dmu50/column.stl",
+      "transform": [0, -400, 0, 0, 0, 0]
+    },
+    {
+      "id": "z_axis",
+      "type": "linear_axis",
+      "parent": "column",
+      "label": "Z-Axis Head Slide",
+      "mesh": "dmg_dmu50/z_saddle.stl",
+      "transform": [0, 0, 600, 0, 0, 0],
+      "axis": "Z",
+      "limits": [-400, 0],
+      "max_feed": 24000,
+      "rapid_feed": 24000
+    },
+    {
+      "id": "spindle",
+      "type": "spindle",
+      "parent": "z_axis",
+      "label": "Spindle Cartridge (HSK-A63)",
+      "mesh": "dmg_dmu50/spindle_head.stl",
+      "transform": [0, 0, -120, 0, 0, 0],
+      "max_rpm": 18000,
+      "max_power_kw": 25,
+      "max_torque_nm": 130,
+      "spindle_nose_to_gauge_mm": 50
+    },
+    {
+      "id": "tool_mount",
+      "type": "tool_mount",
+      "parent": "spindle",
+      "label": "HSK-A63 Tool Interface",
+      "mesh": null,
+      "transform": [0, 0, -50, 0, 0, 0]
+    },
+    {
+      "id": "y_axis",
+      "type": "linear_axis",
+      "parent": "bed",
+      "label": "Y-Axis Saddle",
+      "mesh": "dmg_dmu50/y_saddle.stl",
+      "transform": [0, -225, 0, 0, 0, 0],
+      "axis": "Y",
+      "limits": [-225, 225],
+      "max_feed": 30000,
+      "rapid_feed": 30000
+    },
+    {
+      "id": "x_axis",
+      "type": "linear_axis",
+      "parent": "y_axis",
+      "label": "X-Axis Table Slide",
+      "mesh": "dmg_dmu50/x_table.stl",
+      "transform": [-250, 0, 0, 0, 0, 0],
+      "axis": "X",
+      "limits": [-250, 250],
+      "max_feed": 30000,
+      "rapid_feed": 30000
+    },
+    {
+      "id": "b_axis",
+      "type": "rotary_axis",
+      "parent": "x_axis",
+      "label": "B-Axis Trunnion (Tilting Table)",
+      "mesh": "dmg_dmu50/b_trunnion.stl",
+      "transform": [0, 0, -280, 0, 0, 0],
+      "axis": "B",
+      "limits": [-35, 110],
+      "max_feed": 18000,
+      "max_rpm": 50,
+      "pivot_offset": [0, 0, 0]
+    },
+    {
+      "id": "c_axis",
+      "type": "rotary_axis",
+      "parent": "b_axis",
+      "label": "C-Axis Rotary Table (630mm dia)",
+      "mesh": "dmg_dmu50/c_table.stl",
+      "transform": [0, 0, -220, 0, 0, 0],
+      "axis": "C",
+      "limits": [0, 360],
+      "max_feed": 36000,
+      "max_rpm": 100,
+      "continuous": true,
+      "pivot_offset": [0, 0, -220]
+    },
+    {
+      "id": "fixture_mount",
+      "type": "fixture_mount",
+      "parent": "c_axis",
+      "label": "Fixture Mounting Surface (T-slots)",
+      "mesh": null,
+      "transform": [0, 0, -75, 0, 0, 0]
+    }
+  ],
+
+  "collision_groups": {
+    "tool_group": ["tool_mount"],
+    "spindle_group": ["spindle", "z_axis", "column"],
+    "head_group": ["spindle", "z_axis", "tool_mount"],
+    "table_group": ["c_axis", "b_axis", "x_axis", "y_axis"],
+    "trunnion_group": ["b_axis", "c_axis"],
+    "fixture_group": ["fixture_mount"]
+  },
+
+  "collision_pairs": [
+    {
+      "group_a": "tool_group",
+      "group_b": "fixture_group",
+      "clearance_mm": 2.0,
+      "check_type": "near_miss",
+      "warn_clearance_mm": 5.0
+    },
+    {
+      "group_a": "spindle_group",
+      "group_b": "table_group",
+      "clearance_mm": 5.0,
+      "check_type": "static"
+    },
+    {
+      "group_a": "head_group",
+      "group_b": "trunnion_group",
+      "clearance_mm": 10.0,
+      "check_type": "static"
+    },
+    {
+      "group_a": "tool_group",
+      "group_b": "stock",
+      "clearance_mm": 0.0,
+      "check_type": "during_cut"
+    },
+    {
+      "group_a": "spindle_group",
+      "group_b": "stock",
+      "clearance_mm": 8.0,
+      "check_type": "static"
+    }
+  ],
+
+  "home_position": [0, 225, 0, 0, 0, 0],
+  "tool_change_position": [0, 225, -400, 0, 0, 0],
+  "axis_priority": ["Z"],
+  "retract_axis": "Z",
+
+  "work_offset_defaults": {
+    "G54": [250, 225, 75, 0, 0, 0]
+  },
+
+  "kinematic_chain": {
+    "tool_chain": ["tool_mount", "spindle", "z_axis", "column", "bed"],
+    "workpiece_chain": ["fixture_mount", "c_axis", "b_axis", "x_axis", "y_axis", "bed"]
+  }
+}
