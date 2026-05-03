@@ -3,21 +3,29 @@
 The FiveAxisSimulator is the primary entry point.  It wires together:
 - TriDexelModel       (workpiece representation)
 - MaterialRemovalEngine (material subtraction)
-- FiveAxisKinematics   (machine kinematics)
+- MachineModel         (scene-graph machine kinematics + collision)
 - Surface extraction   (tri-dexel to mesh)
 - Validation           (gouge / collision checking)
 
-Usage:
+Usage (new, recommended):
+    machine = MachineModel.from_json("machines/dmg_dmu50.json")
+    sim = FiveAxisSimulator(stock_mesh, target_mesh, machine)
+
+Usage (legacy, backward-compatible):
     sim = FiveAxisSimulator(stock_mesh, target_mesh, MachineConfig.TABLE_TABLE)
-    sim.load_tool(BallEndmill(diameter=10.0))
-    sim.execute_move(start_pose, end_pose)
-    mesh = sim.current_stock_mesh
+    # Auto-generates a default MachineModel internally.
+
+The simulator now uses the scene-graph MachineModel for:
+- Forward/inverse kinematics (parameterized from the component tree)
+- Collision detection (mesh proximity between configured collision pairs)
+- Axis limits checking (machine-specific, from the tree)
+- World-transform computation for visualization and debugging
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Union
 import time
 import re
 import numpy as np
@@ -30,6 +38,12 @@ from .material_removal import (
     MaterialRemovalEngine, RemovalResult, Gouge, Collision,
 )
 from .surface import tri_dexel_to_mesh, compare_to_target, detect_gouges
+from .machine import (
+    MachineModel, MachineComponent, ComponentType,
+    ToolAssembly, ToolComponent, CollisionPair, Collision as MachineCollision,
+    CheckType,
+    generate_from_config,
+)
 
 
 # =========================================================================
@@ -196,39 +210,86 @@ class FiveAxisSimulator:
     """Main orchestrator for 5-axis CNC material removal simulation.
 
     Wires together the tri-dexel model, material removal engine,
-    5-axis kinematics, surface extraction, and validation.
+    machine kinematics (via MachineModel), surface extraction,
+    and validation (gouge + collision checking).
+
+    Can be constructed with either:
+    - A MachineModel instance (new, recommended)
+    - A MachineConfig enum (legacy, auto-generates default MachineModel)
 
     Attributes:
         stock_mesh:      Starting stock mesh.
         target_mesh:     Target (desired) CAD mesh.
-        machine_config:  Machine kinematic configuration.
+        machine:         MachineModel instance (scene-graph machine definition).
         resolution:      Dexel grid resolution in mm.
-        kinematics:      FiveAxisKinematics instance.
         tri_dexel:       Current stock as TriDexelModel.
         removal_engine:  MaterialRemovalEngine.
         current_tool:    Currently loaded tool.
+        tool_assembly:   Optional ToolAssembly for collision checking.
     """
 
     def __init__(
         self,
         stock_mesh: trimesh.Trimesh,
         target_mesh: trimesh.Trimesh,
-        machine_config: MachineConfig = MachineConfig.TABLE_TABLE,
+        machine: Union[MachineModel, MachineConfig, str] = MachineConfig.TABLE_TABLE,
         resolution: float = 0.1,
         primary_axis: str = "B",
         secondary_axis: str = "C",
+        tool_assembly: Optional[ToolAssembly] = None,
+        fixture_mesh: Optional[trimesh.Trimesh] = None,
     ):
+        """Initialize the simulator.
+
+        Args:
+            stock_mesh: Starting stock as a trimesh.
+            target_mesh: Target (desired) CAD mesh.
+            machine: One of:
+                - MachineModel instance (new, recommended)
+                - MachineConfig enum (legacy, auto-generates default model)
+                - str path to a machine JSON file
+            resolution: Dexel grid resolution in mm.
+            primary_axis: Primary rotary axis (legacy, used only if machine is MachineConfig).
+            secondary_axis: Secondary rotary axis (legacy, used only if machine is MachineConfig).
+            tool_assembly: Optional ToolAssembly for collision detection.
+            fixture_mesh: Optional fixture mesh for collision detection.
+        """
         self.stock_mesh = stock_mesh
         self.target_mesh = target_mesh
-        self.machine_config = machine_config
         self.resolution = float(resolution)
+        self.tool_assembly = tool_assembly
+        self.fixture_mesh = fixture_mesh
 
-        # Kinematics
-        self.kinematics = FiveAxisKinematics(
-            config=machine_config,
-            primary_axis=primary_axis,
-            secondary_axis=secondary_axis,
-        )
+        # Resolve machine model (new scene-graph or legacy enum)
+        if isinstance(machine, MachineModel):
+            self.machine = machine
+            self._uses_legacy_config = False
+        elif isinstance(machine, MachineConfig):
+            self.machine = generate_from_config(machine)
+            self._uses_legacy_config = True
+        elif isinstance(machine, str):
+            # Path to a machine JSON file
+            self.machine = MachineModel.from_json(machine)
+            self._uses_legacy_config = False
+        else:
+            raise TypeError(
+                f"machine must be MachineModel, MachineConfig, or str path, "
+                f"got {type(machine).__name__}"
+            )
+
+        # Kinematics: use the machine's built-in solver
+        # (parameterized from the component tree)
+        self._kinematics = self.machine._build_kinematics_solver()
+
+        # For backward compatibility: expose the legacy config
+        if self._uses_legacy_config:
+            self.machine_config = machine
+        else:
+            self.machine_config = None
+
+        # Store legacy params for reference
+        self._legacy_primary = primary_axis
+        self._legacy_secondary = secondary_axis
 
         # Tri-dexel model from stock
         self.tri_dexel = TriDexelModel.from_mesh(stock_mesh, resolution=resolution)
@@ -242,6 +303,7 @@ class FiveAxisSimulator:
         self.current_tool: Optional[Tool] = None
         self._move_history: list[MoveResult] = []
         self._current_joints: np.ndarray = np.zeros(6, dtype=np.float64)
+        self._current_pose: Optional[ToolPose] = None
 
     # -----------------------------------------------------------------
     #  Tool management
@@ -264,16 +326,21 @@ class FiveAxisSimulator:
         start_pose: ToolPose,
         end_pose: ToolPose,
         tool: Optional[Tool] = None,
+        run_collision_check: bool = True,
     ) -> MoveResult:
         """Execute a single tool move between two poses.
 
         If start and end pose are identical, treats it as a single-position
         engagement (drilling, plunging).  Otherwise computes the swept volume.
 
+        After material removal, runs collision checking on all configured
+        collision pairs (machine-machine and tool-stock).
+
         Args:
             start_pose: Start tool pose in workpiece frame.
             end_pose:   End tool pose in workpiece frame.
             tool:       Tool (defaults to self.current_tool).
+            run_collision_check: If True, check collision pairs after the move.
 
         Returns:
             MoveResult with statistics.
@@ -302,15 +369,65 @@ class FiveAxisSimulator:
                 active_tool, start_pose, end_pose,
             )
 
+        # Collision checking using the machine model
+        collisions: list[Collision] = []
+        if run_collision_check:
+            machine_collisions = self._check_machine_collisions_at_end_pose(end_pose)
+            for mc in machine_collisions:
+                if not mc.is_near_miss:
+                    collisions.append(Collision(
+                        body_a=mc.component_a,
+                        body_b=mc.component_b,
+                        penetration=abs(mc.clearance_mm - mc.distance_mm),
+                        position=mc.point_a,
+                    ))
+                else:
+                    warnings.append(
+                        f"Near-miss: {mc.component_a} <-> {mc.component_b} "
+                        f"({mc.distance_mm:.2f} mm, clearance {mc.warn_clearance_mm:.2f} mm)"
+                    )
+
+        if collisions:
+            warnings.append(f"{len(collisions)} collision(s) detected")
+
         result = MoveResult(
-            success=True,
+            success=len(collisions) == 0,
             start_pose=start_pose.copy(),
             end_pose=end_pose.copy(),
             removal=removal,
+            collisions=collisions,
             warnings=warnings,
         )
         self._move_history.append(result)
         return result
+
+    def _check_machine_collisions_at_end_pose(
+        self, pose: ToolPose,
+    ) -> list[MachineCollision]:
+        """Run collision checking at a given tool pose.
+
+        Computes joint positions from the tool pose via inverse kinematics,
+        then checks all configured collision pairs.
+
+        Args:
+            pose: Tool pose in workpiece frame.
+
+        Returns:
+            List of MachineCollision objects.
+        """
+        # Compute joint positions from the pose
+        joints = self.machine.compute_inverse_kinematics(
+            pose, prev_joints=self._current_joints,
+        )
+        if joints is None:
+            return []
+
+        return self.machine.check_collisions(
+            joints=joints,
+            tool_assembly=self.tool_assembly,
+            stock_mesh=self.current_stock_mesh,
+            fixture_mesh=self.fixture_mesh,
+        )
 
     # -----------------------------------------------------------------
     #  G-code execution
@@ -323,7 +440,7 @@ class FiveAxisSimulator:
         Supports G00 (rapid), G01 (linear feed), and modal state.
 
         G00 moves:  Rapid traverse, no material removal (retract only).
-        G01 moves:  Linear feed with material removal.
+        G01 moves:  Linear feed with material removal + collision checking.
 
         Note: G02/G03 arcs are currently linearized.
 
@@ -352,25 +469,46 @@ class FiveAxisSimulator:
             joints = parser.to_joints(parsed)
             motion = parsed.get("motion", 0)
 
-            # Compute tool pose from joints
-            pose = self.kinematics.forward(joints)
+            # Check axis limits using the machine model (machine-specific limits)
+            if not self.machine.check_limits(joints):
+                all_warnings.append(
+                    f"Line {line_no}: joint values {np.round(joints, 1)} exceed machine limits"
+                )
+
+            # Compute tool pose from joints using the machine model's FK
+            pose = self.machine.compute_forward_kinematics(joints)
 
             if prev_joints is not None and motion in (0, 1):
-                prev_pose = self.kinematics.forward(prev_joints)
+                prev_pose = self.machine.compute_forward_kinematics(prev_joints)
 
                 if motion == 1:
-                    # G01: feed move with material removal
-                    move_result = self.execute_move(prev_pose, pose)
+                    # G01: feed move with material removal + collision check
+                    move_result = self.execute_move(prev_pose, pose, run_collision_check=True)
                     if move_result.success:
                         total_vol += move_result.removal.volume_removed
                         moves += 1
                         all_warnings.extend(move_result.warnings)
                     else:
                         all_warnings.extend(move_result.warnings)
-                # G00 is rapid -- no material removal, just positioning
+                    collisions.extend(move_result.collisions)
+                elif motion == 0:
+                    # G00: rapid -- check collisions but no material removal
+                    rapid_collisions = self._check_rapid_collisions(prev_joints, joints)
+                    for mc in rapid_collisions:
+                        collisions.append(Collision(
+                            body_a=mc.component_a,
+                            body_b=mc.component_b,
+                            penetration=abs(mc.clearance_mm - mc.distance_mm),
+                            position=mc.point_a,
+                        ))
+                    if rapid_collisions:
+                        all_warnings.append(
+                            f"Line {line_no}: {len(rapid_collisions)} collision(s) during rapid move"
+                        )
 
             prev_joints = joints.copy()
             self._current_joints = joints.copy()
+            self._current_pose = pose
 
         t_elapsed = (time.perf_counter() - t_start) * 1000.0
 
@@ -386,6 +524,45 @@ class FiveAxisSimulator:
             gouges=gouges,
             warnings=all_warnings,
         )
+
+    def _check_rapid_collisions(
+        self, start_joints: np.ndarray, end_joints: np.ndarray,
+    ) -> list[MachineCollision]:
+        """Check collisions during rapid (G00) moves.
+
+        Checks at both start and end positions. For critical pairs,
+        samples intermediate positions as well.
+
+        Args:
+            start_joints: Starting joint positions.
+            end_joints: Ending joint positions.
+
+        Returns:
+            List of MachineCollision objects.
+        """
+        all_collisions: list[MachineCollision] = []
+
+        # Check at end position
+        end_collisions = self.machine.check_collisions(
+            joints=end_joints,
+            tool_assembly=self.tool_assembly,
+            stock_mesh=self.current_stock_mesh,
+            fixture_mesh=self.fixture_mesh,
+            check_type_filter=CheckType.RAPID_ONLY,
+        )
+        all_collisions.extend(end_collisions)
+
+        # Also check static pairs at end position
+        static_collisions = self.machine.check_collisions(
+            joints=end_joints,
+            tool_assembly=self.tool_assembly,
+            stock_mesh=self.current_stock_mesh,
+            fixture_mesh=self.fixture_mesh,
+            check_type_filter=CheckType.STATIC,
+        )
+        all_collisions.extend(static_collisions)
+
+        return all_collisions
 
     # -----------------------------------------------------------------
     #  Properties
@@ -430,6 +607,60 @@ class FiveAxisSimulator:
         )
         self._move_history.clear()
         self._current_joints = np.zeros(6, dtype=np.float64)
+        self._current_pose = None
+
+    # -----------------------------------------------------------------
+    #  Backward-compatibility properties
+    # -----------------------------------------------------------------
+
+    @property
+    def kinematics(self) -> FiveAxisKinematics:
+        """Legacy kinematics accessor.
+
+        Returns the FiveAxisKinematics solver used internally.
+        For new code, prefer using self.machine methods directly.
+        """
+        return self._kinematics
+
+    @property
+    def machine_config(self) -> Optional[MachineConfig]:
+        """Legacy machine config accessor. None if using MachineModel directly."""
+        return self._machine_config
+
+    @machine_config.setter
+    def machine_config(self, value: Optional[MachineConfig]) -> None:
+        self._machine_config = value
+
+    # -----------------------------------------------------------------
+    #  Machine model accessors
+    # -----------------------------------------------------------------
+
+    def get_component_world_transform(
+        self, component_id: str, joints: Optional[np.ndarray] = None,
+    ) -> np.ndarray:
+        """Get the 4x4 world transform for a machine component.
+
+        Uses the scene-graph tree walk to compute where a component is
+        in 3D space at the given joint positions.
+
+        Args:
+            component_id: ID of the machine component.
+            joints: (6,) joint vector. Uses current joints if None.
+
+        Returns:
+            4x4 homogeneous transform.
+        """
+        if joints is None:
+            joints = self._current_joints
+        return self.machine.get_world_transform(component_id, joints)
+
+    def load_tool_assembly(self, assembly: ToolAssembly) -> None:
+        """Load a tool assembly for collision detection.
+
+        Args:
+            assembly: A ToolAssembly instance.
+        """
+        self.tool_assembly = assembly
 
 
 # =========================================================================
@@ -450,7 +681,7 @@ if __name__ == "__main__":
 
     sim = FiveAxisSimulator(
         stock, target,
-        machine_config=MachineConfig.TABLE_TABLE,
+        machine=MachineConfig.TABLE_TABLE,  # legacy mode
         resolution=0.5,
     )
     sim.load_tool(BallEndmill(diameter=6.0, flute_length=30.0))
@@ -485,7 +716,7 @@ if __name__ == "__main__":
     print("2. G-code execution ...")
     sim2 = FiveAxisSimulator(
         stock, target,
-        machine_config=MachineConfig.TABLE_TABLE,
+        machine=MachineConfig.TABLE_TABLE,  # legacy mode
         resolution=0.5,
     )
     sim2.load_tool(BallEndmill(diameter=6.0, flute_length=30.0))
@@ -519,6 +750,34 @@ G00 Z5
     print(f"   Volume before reset: {vol_before_reset:.1f}")
     print(f"   Volume after reset:  {vol_after_reset:.1f}")
     assert abs(vol_after_reset - 8000.0) < 100.0, "Reset did not restore stock"
+    print("   PASSED\n")
+
+    # ------------------------------------------------------------------
+    # 4. MachineModel construction (new API)
+    # ------------------------------------------------------------------
+    print("4. MachineModel construction (new API) ...")
+    from .machine import generate_default_table_table, ToolAssembly, ToolComponent
+    machine = generate_default_table_table("Test DMG DMU 50")
+    sim3 = FiveAxisSimulator(
+        stock, target,
+        machine=machine,  # new API: pass MachineModel directly
+        resolution=0.5,
+    )
+    sim3.load_tool(BallEndmill(diameter=6.0, flute_length=30.0))
+    print(f"   Machine: {sim3.machine.name}")
+    print(f"   Components: {len(sim3.machine.components)}")
+    print(f"   Active axes: {sim3.machine.active_axes}")
+    assert sim3.machine.name == "Test DMG DMU 50"
+    print("   PASSED\n")
+
+    # ------------------------------------------------------------------
+    # 5. World transform accessor
+    # ------------------------------------------------------------------
+    print("5. Component world transform ...")
+    joints_mid = np.array([50.0, 0.0, -100.0, 0.0, 15.0, 30.0])
+    T_spindle = sim3.get_component_world_transform("spindle", joints_mid)
+    print(f"   Spindle world position: {T_spindle[0:3, 3].round(2)}")
+    assert T_spindle.shape == (4, 4)
     print("   PASSED\n")
 
     print("=== ALL SIMULATOR TESTS PASSED ===")

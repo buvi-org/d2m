@@ -8,6 +8,24 @@ Supports three machine configurations:
 All kinematics use closed-form analytic solutions derived from the
 transformation chain model.
 
+.. deprecated::
+    This module represents the original hardcoded kinematics approach.
+    For new code, prefer `MachineModel` from `src.simulation.machine`,
+    which supports arbitrary machine topologies via a scene-graph
+    component tree with explicit collision pairs, component STL meshes,
+    and machine-specific axis limits.
+
+    The MachineConfig enum and hardcoded FK/IK are retained for backward
+    compatibility only.  The FiveAxisKinematics solver is still used
+    internally by MachineModel as the core FK/IK engine, parameterized
+    from the component tree.
+
+    Migration path:
+        Old: kin = FiveAxisKinematics(config=MachineConfig.TABLE_TABLE)
+        New: machine = MachineModel.from_json("machines/dmg_dmu50.json")
+             pose = machine.compute_forward_kinematics(joints)
+             joints = machine.compute_inverse_kinematics(pose)
+
 Reference:
   "Kinematic Modeling of 5-Axis Machine Tools",
   "Inverse Kinematics of Five-Axis Machines" (standard textbook derivations)
