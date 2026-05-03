@@ -40,7 +40,7 @@ See [docs/architecture.md](docs/architecture.md) for full technical architecture
 | Feature Recognition | PyTorch Geometric (GNN / GAT) |
 | Knowledge Graph | Neo4j + custom Python rule engine |
 | LLM Planning | Llama 4 Scout (17B MoE) or Qwen3-VL-32B, fine-tuned via QLoRA (Unsloth) |
-| Simulation | FreeCAD CAM / CadQuery collision checks |
+| Simulation | Multi-fidelity: trimesh voxel + manifold3d + PyBullet (see [docs/simulation.md](docs/simulation.md)) |
 | UI | Streamlit / Gradio (Phase 1), React (later) |
 | Deployment | Cloud GPU (Vast.ai / RunPod for training), Render / Hugging Face Spaces for hosting |
 
