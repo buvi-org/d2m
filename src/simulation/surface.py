@@ -339,8 +339,8 @@ def tri_dexel_to_mesh(tri_dexel: TriDexelModel) -> trimesh.Trimesh:
     if len(fused_verts) < 4:
         return trimesh.Trimesh()
 
-    # 3. Build SDF
-    sdf_resolution = tri_dexel.resolution / 2.0
+    # 3. Build SDF (match dexel resolution to avoid excessive mesh density)
+    sdf_resolution = tri_dexel.resolution
     sdf = _point_cloud_to_sdf(
         fused_verts, fused_norms,
         bounds=tri_dexel.bounds,

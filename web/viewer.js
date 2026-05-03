@@ -13,7 +13,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const GRID_SIZE = 100;
 const GRID_DIVISIONS = 20;
-const DEFAULT_CAMERA_POS = [80, 50, 80];
+const DEFAULT_CAMERA_POS = [30, 20, 30];
 const TOOL_CYLINDER_COLOR = 0xffaa00;
 const TOOL_SPHERE_COLOR = 0xff8800;
 const GOUGE_SPHERE_COLOR = 0xff2222;
@@ -147,7 +147,7 @@ export class Viewer {
 
   _setupGrid() {
     const grid = new THREE.GridHelper(GRID_SIZE, GRID_DIVISIONS, 0x444466, 0x222244);
-    grid.position.y = -GRID_SIZE / 2;
+    grid.position.y = -15; // just below default stock box (20mm cube centered at origin)
     this.scene.add(grid);
   }
 
@@ -176,9 +176,8 @@ export class Viewer {
   /**
    * Load a GLB ArrayBuffer into the scene as the stock mesh.
    */
-  loadStockMesh(arrayBuffer) {
-    // Parse GLB
-    const gltf = this._parseGLB(arrayBuffer);
+  async loadStockMesh(arrayBuffer) {
+    const gltf = await this._parseGLB(arrayBuffer);
     if (!gltf) return;
 
     // Dispose old mesh
@@ -206,8 +205,8 @@ export class Viewer {
   /**
    * Load the target CAD mesh for reference.
    */
-  loadTargetMesh(arrayBuffer) {
-    const gltf = this._parseGLB(arrayBuffer);
+  async loadTargetMesh(arrayBuffer) {
+    const gltf = await this._parseGLB(arrayBuffer);
     if (!gltf) return;
 
     this._disposeTargetMesh();
@@ -232,22 +231,19 @@ export class Viewer {
   /**
    * Replace the stock mesh with updated geometry (after an operation).
    */
-  updateStockMesh(arrayBuffer) {
-    this.loadStockMesh(arrayBuffer);
+  async updateStockMesh(arrayBuffer) {
+    await this.loadStockMesh(arrayBuffer);
   }
 
   _parseGLB(arrayBuffer) {
     try {
-      // Use GLTFLoader's parse method
-      const bytes = new Uint8Array(arrayBuffer);
-      let gltf = null;
-      this._gltfLoader.parse(bytes, '', (result) => { gltf = result; }, (e) => {
-        console.error('GLB parse error:', e);
+      // GLTFLoader.parse() needs raw ArrayBuffer, not Uint8Array (Three.js 0.160 quirk)
+      return new Promise((resolve, reject) => {
+        this._gltfLoader.parse(arrayBuffer, '', resolve, reject);
       });
-      return gltf;
     } catch (e) {
       console.error('Failed to parse GLB:', e);
-      return null;
+      return Promise.resolve(null);
     }
   }
 
@@ -528,6 +524,25 @@ export class Viewer {
   }
 
   // -----------------------------------------------------------------------
+  // Default cube (shown before simulation)
+  // -----------------------------------------------------------------------
+
+  loadDefaultCube() {
+    const geom = new THREE.BoxGeometry(20, 20, 20);
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x8899aa,
+      metalness: 0.7,
+      roughness: 0.35,
+    });
+    this.stockMesh = new THREE.Mesh(geom, mat);
+    this.stockMesh.castShadow = true;
+    this.stockMesh.receiveShadow = true;
+    this._originalStockMaterial = mat;
+    this.scene.add(this.stockMesh);
+    this._fitCameraToMesh(this.stockMesh);
+  }
+
+  // -----------------------------------------------------------------------
   // Camera
   // -----------------------------------------------------------------------
 
@@ -561,6 +576,20 @@ export class Viewer {
       this.controls.target.set(0, 0, 0);
       this.controls.update();
     }
+  }
+
+  zoomIn(factor = 0.7) {
+    const dir = new THREE.Vector3().subVectors(this.camera.position, this.controls.target);
+    dir.multiplyScalar(factor);
+    this.camera.position.copy(this.controls.target.clone().add(dir));
+  }
+
+  zoomOut(factor = 1.4) {
+    this.zoomIn(factor);
+  }
+
+  fitView() {
+    this.resetCamera();
   }
 
   // -----------------------------------------------------------------------

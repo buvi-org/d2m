@@ -86,47 +86,62 @@ const wsClient = new SimulationWSClient({
     updateUIState();
   },
 
-  onProgress: (data) => {
+  onProgress: async (data) => {
+    if (data.opIndex < 0) {
+      // Initial state message (opIndex -1) — skip, we already loaded via REST
+      return;
+    }
+
+    state.currentOpIndex = data.opIndex;
+    state.totalOps = data.totalOps;
+    state.operationCount = data.opIndex + 1;
+
+    // Update viewer with new mesh (via WebSocket base64 or REST fallback)
     if (data.meshBuffer) {
       state.meshes[data.opIndex + 1] = data.meshBuffer;
-      state.currentOpIndex = data.opIndex;
-      state.totalOps = data.totalOps;
-      state.operationCount = data.opIndex + 1;
-
-      // Update viewer with new mesh
-      viewer.updateStockMesh(data.meshBuffer);
-
-      // Collect toolpath point
-      if (data.endPosition) {
-        state.toolpathPoints[data.opIndex] = data.endPosition;
-        viewer.setToolpath(state.toolpathPoints.filter(p => p !== undefined && p !== null));
+      viewer.updateStockMesh(data.meshBuffer).catch(e => console.error('Mesh update error:', e));
+    } else if (data.meshTooLarge && state.partId) {
+      // Fallback: fetch mesh via REST API
+      try {
+        const resp = await fetch(`${API_BASE}/api/mesh/${state.partId}/${data.opIndex}`);
+        if (resp.ok) {
+          const buf = await resp.arrayBuffer();
+          state.meshes[data.opIndex + 1] = buf;
+          await viewer.updateStockMesh(buf);
+        }
+      } catch (e) {
+        console.error('REST mesh fallback error:', e);
       }
-
-      // Update tool position
-      if (data.endPosition) {
-        viewer.updateTool(
-          data.endPosition,
-          null,
-          state.toolType,
-          state.toolDiameter,
-          30
-        );
-      }
-
-      // Store operation detail
-      state.opDetails[data.opIndex] = {
-        volume: data.volumeThisMove || 0,
-        cumulativeVolume: data.volumeRemoved,
-        gouges: data.gougesFound,
-      };
-
-      // Update UI
-      updateProgress(data.opIndex, data.totalOps);
-      updateStats(data.volumeRemoved, data.gougesFound, state.operationCount);
-      updateOpList(data.opIndex, data.totalOps);
-    } else if (data.meshTooLarge) {
-      showToast('Warning: Mesh too large for streaming, use REST endpoint');
     }
+
+    // Collect toolpath point
+    if (data.endPosition) {
+      state.toolpathPoints[data.opIndex] = data.endPosition;
+      viewer.setToolpath(state.toolpathPoints.filter(p => p !== undefined && p !== null));
+    }
+
+    // Update tool position
+    if (data.endPosition) {
+      viewer.updateTool(
+        data.endPosition,
+        null,
+        state.toolType,
+        state.toolDiameter,
+        30
+      );
+    }
+
+    // Store operation detail
+    state.opDetails[data.opIndex] = {
+      volume: data.volumeThisMove || 0,
+      cumulativeVolume: data.volumeRemoved,
+      gouges: data.gougesFound,
+    };
+
+    // Update UI
+    updateProgress(data.opIndex, data.totalOps);
+    updateStats(data.volumeRemoved, data.gougesFound, state.operationCount);
+    updateOpList(data.opIndex, data.totalOps);
   },
 
   onComplete: (data) => {
@@ -171,13 +186,71 @@ const wsClient = new SimulationWSClient({
 function init() {
   viewer.init(document.getElementById('viewport'));
 
+  // Show a default 20mm cube immediately so the viewport is not empty
+  viewer.loadDefaultCube();
+
   // Sync initial G-code from textarea
   state.gcodeText = els.gcodeTextarea.value.trim();
 
+  // Generate default stock/target STL files so simulate is ready immediately
+  if (!state.stockFile) {
+    state.stockFile = makeBoxSTLFile('default_stock.stl', 20, 20, 20);
+    els.stockLabel.textContent = 'default_stock.stl (20mm cube)';
+  }
+  if (!state.targetFile) {
+    state.targetFile = makeBoxSTLFile('default_target.stl', 20, 20, 16);
+    els.targetLabel.textContent = 'default_target.stl (20x20x16mm)';
+  }
+
   // Load initial empty state
   setupEventListeners();
+  setupCameraControls();
   updateUIState();
-  showToast('Upload stock + target meshes and G-code to begin');
+  showToast('Ready — sample G-code and default box meshes loaded');
+}
+
+// ---------------------------------------------------------------------------
+// Generate a default ASCII STL box mesh as a File object
+// ---------------------------------------------------------------------------
+
+function makeBoxSTLFile(filename, sx, sy, sz) {
+  const hx = sx / 2, hy = sy / 2, hz = sz / 2;
+
+  // 6 faces, each 2 triangles = 12 triangles
+  const faces = [
+    // +Z face
+    { n: [0,0,1], v: [[-hx,-hy,hz],[ hx,-hy,hz],[-hx, hy,hz]] },
+    { n: [0,0,1], v: [[ hx,-hy,hz],[ hx, hy,hz],[-hx, hy,hz]] },
+    // -Z face
+    { n: [0,0,-1], v: [[-hx,-hy,-hz],[-hx, hy,-hz],[ hx,-hy,-hz]] },
+    { n: [0,0,-1], v: [[ hx,-hy,-hz],[-hx, hy,-hz],[ hx, hy,-hz]] },
+    // +Y face
+    { n: [0,1,0], v: [[-hx, hy,-hz],[-hx, hy, hz],[ hx, hy,-hz]] },
+    { n: [0,1,0], v: [[ hx, hy,-hz],[-hx, hy, hz],[ hx, hy, hz]] },
+    // -Y face
+    { n: [0,-1,0], v: [[-hx,-hy,-hz],[ hx,-hy,-hz],[-hx,-hy, hz]] },
+    { n: [0,-1,0], v: [[ hx,-hy,-hz],[ hx,-hy, hz],[-hx,-hy, hz]] },
+    // +X face
+    { n: [1,0,0], v: [[ hx,-hy,-hz],[ hx, hy,-hz],[ hx,-hy, hz]] },
+    { n: [1,0,0], v: [[ hx,-hy, hz],[ hx, hy,-hz],[ hx, hy, hz]] },
+    // -X face
+    { n: [-1,0,0], v: [[-hx,-hy,-hz],[-hx,-hy, hz],[-hx, hy,-hz]] },
+    { n: [-1,0,0], v: [[-hx,-hy, hz],[-hx, hy, hz],[-hx, hy,-hz]] },
+  ];
+
+  let stl = 'solid ' + filename.replace(/\.stl$/i, '') + '\n';
+  for (const f of faces) {
+    stl += `  facet normal ${f.n[0]} ${f.n[1]} ${f.n[2]}\n`;
+    stl += '    outer loop\n';
+    for (const v of f.v) {
+      stl += `      vertex ${v[0]} ${v[1]} ${v[2]}\n`;
+    }
+    stl += '    endloop\n';
+    stl += '  endfacet\n';
+  }
+  stl += 'endsolid\n';
+
+  return new File([stl], filename, { type: 'application/sla' });
 }
 
 // ---------------------------------------------------------------------------
@@ -250,6 +323,17 @@ function setupEventListeners() {
 }
 
 // ---------------------------------------------------------------------------
+// Camera controls (overlay buttons on viewport)
+// ---------------------------------------------------------------------------
+
+function setupCameraControls() {
+  document.getElementById('cam-zoom-in').addEventListener('click', () => viewer.zoomIn());
+  document.getElementById('cam-zoom-out').addEventListener('click', () => viewer.zoomOut());
+  document.getElementById('cam-fit').addEventListener('click', () => viewer.fitView());
+  document.getElementById('cam-reset').addEventListener('click', () => viewer.resetCamera());
+}
+
+// ---------------------------------------------------------------------------
 // File handling
 // ---------------------------------------------------------------------------
 
@@ -316,7 +400,7 @@ async function startSimulation() {
   state.toolDiameter = parseFloat(els.toolDiameterInput.value) || 6.0;
   state.resolution = parseFloat(els.resolutionInput.value) || 1.0;
 
-  // Reset state
+  // Reset state (keep current mesh until new one loads)
   state.meshes = [];
   state.currentOpIndex = -1;
   state.operationCount = 0;
@@ -325,7 +409,8 @@ async function startSimulation() {
   state.simResult = null;
   state.toolpathPoints = [];
   state.opDetails = [];
-  viewer.clearScene();
+  viewer.setToolpath(null);
+  viewer.clearGougeMarkers();
   els.opList.innerHTML = '';
 
   try {
@@ -380,14 +465,14 @@ async function loadInitialMeshes(partId) {
     const stockResp = await fetch(`${API_BASE}/api/mesh/${partId}/initial`);
     if (stockResp.ok) {
       const buf = await stockResp.arrayBuffer();
-      viewer.loadStockMesh(buf);
+      await viewer.loadStockMesh(buf);
     }
 
     // Load target mesh
     const targetResp = await fetch(`${API_BASE}/api/mesh/${partId}/target`);
     if (targetResp.ok) {
       const buf = await targetResp.arrayBuffer();
-      viewer.loadTargetMesh(buf);
+      await viewer.loadTargetMesh(buf);
       viewer.setTargetVisible(els.targetToggle.checked);
     }
   } catch (err) {
@@ -504,7 +589,7 @@ async function showOperation(opIndex) {
       const resp = await fetch(`${API_BASE}/api/mesh/${state.partId}/initial`);
       if (resp.ok) {
         const buf = await resp.arrayBuffer();
-        viewer.updateStockMesh(buf);
+        await viewer.updateStockMesh(buf);
       }
     } catch (e) { /* ignore */ }
   } else {
@@ -512,7 +597,7 @@ async function showOperation(opIndex) {
       const resp = await fetch(`${API_BASE}/api/mesh/${state.partId}/${opIndex - 1}`);
       if (resp.ok) {
         const buf = await resp.arrayBuffer();
-        viewer.updateStockMesh(buf);
+        await viewer.updateStockMesh(buf);
       }
     } catch (e) {
       showToast(`Failed to load mesh for operation ${opIndex}`, true);

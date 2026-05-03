@@ -133,7 +133,7 @@ def _make_simulator(stock: trimesh.Trimesh, target: trimesh.Trimesh,
     return FiveAxisSimulator(
         stock_mesh=stock,
         target_mesh=target,
-        machine_config=MachineConfig.TABLE_TABLE,
+        machine=MachineConfig.TABLE_TABLE,
         resolution=resolution,
         primary_axis="B",
         secondary_axis="C",
@@ -506,9 +506,9 @@ async def ws_simulate(websocket: WebSocket, part_id: str):
             }
             _snapshots[part_id].append(snap)
 
-            # Check GLB size — if too large, skip mesh in message
+            # Check GLB size — if too large, skip mesh in message and use REST fallback
             glb_b64 = base64.b64encode(glb_bytes).decode("ascii")
-            mesh_included = len(glb_bytes) < 900_000  # keep under ~1MB after b64
+            mesh_included = len(glb_bytes) < 2_000_000  # up to ~2MB GLB (~2.6MB b64)
 
             await websocket.send_json({
                 "type": "progress",

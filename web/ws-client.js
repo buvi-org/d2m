@@ -24,6 +24,7 @@ export class SimulationWSClient {
     this._maxReconnectAttempts = 3;
     this._reconnectDelay = 2000;
     this._intentionalClose = false;
+    this._pendingMessages = [];
   }
 
   // -----------------------------------------------------------------------
@@ -92,6 +93,10 @@ export class SimulationWSClient {
 
     ws.onopen = () => {
       this._reconnectAttempts = 0;
+      // Flush any queued messages
+      while (this._pendingMessages.length > 0) {
+        ws.send(this._pendingMessages.shift());
+      }
       if (this._callbacks.onConnected) {
         this._callbacks.onConnected();
       }
@@ -178,8 +183,12 @@ export class SimulationWSClient {
   _send(data) {
     if (this._ws && this._ws.readyState === WebSocket.OPEN) {
       this._ws.send(JSON.stringify(data));
+    } else if (this._ws && this._ws.readyState === WebSocket.CONNECTING) {
+      // Queue the message — it will be sent when onopen fires
+      this._pendingMessages.push(JSON.stringify(data));
     } else {
-      console.error('WebSocket not connected');
+      console.error('WebSocket not connected (state: '
+        + (this._ws ? this._ws.readyState : 'null') + ')');
       if (this._callbacks.onError) {
         this._callbacks.onError('WebSocket not connected');
       }
@@ -190,11 +199,10 @@ export class SimulationWSClient {
    * Decode a base64 string to an ArrayBuffer.
    */
   _base64ToArrayBuffer(base64) {
+    // Use the data URI approach — avoids atob Unicode issues
+    const dataUrl = 'data:application/octet-stream;base64,' + base64;
     const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0) & 0xFF);
     return bytes.buffer;
   }
 }
