@@ -953,13 +953,19 @@ export async function initWebGPU() {
     throw new Error('No WebGPU adapter found.');
   }
 
+  // Cap requested limits at what the adapter actually supports
+  const supported = adapter.limits;
   const device = await adapter.requestDevice({
     requiredFeatures: [],
     requiredLimits: {
-      maxStorageBufferBindingSize: 512 * 1024 * 1024, // 512 MB
-      maxComputeWorkgroupStorageSize: 65536,
-      maxComputeInvocationsPerWorkgroup: 256,
-      maxComputeWorkgroupSizeX: 256,
+      maxStorageBufferBindingSize: Math.min(512 * 1024 * 1024,
+        supported.maxStorageBufferBindingSize),
+      maxComputeWorkgroupStorageSize: Math.min(32768,
+        supported.maxComputeWorkgroupStorageSize),
+      maxComputeInvocationsPerWorkgroup: Math.min(256,
+        supported.maxComputeInvocationsPerWorkgroup),
+      maxComputeWorkgroupSizeX: Math.min(256,
+        supported.maxComputeWorkgroupSizeX),
     },
   });
 
