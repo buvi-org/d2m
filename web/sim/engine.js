@@ -774,12 +774,18 @@ export class WebGPUSimulator {
       return { vertices: new Float32Array(0), indices: new Uint32Array(0) };
     }
 
-    // Read back vertices (6 floats per vertex)
+    // Read back vertices (6 floats per vertex: position xyz + normal xyz)
     await this.stagingVertexBuffer.mapAsync(GPUMapMode.READ);
     const vertexData = new Float32Array(
       this.stagingVertexBuffer.getMappedRange(0, vertexCount * 6 * 4)
     );
-    const vertices = new Float32Array(vertexData.slice(0, vertexCount * 3)); // extract just positions
+    // Extract position-only from interleaved [pos, normal, pos, normal, ...] buffer
+    const vertices = new Float32Array(vertexCount * 3);
+    for (let i = 0; i < vertexCount; i++) {
+      vertices[i * 3]     = vertexData[i * 6];
+      vertices[i * 3 + 1] = vertexData[i * 6 + 1];
+      vertices[i * 3 + 2] = vertexData[i * 6 + 2];
+    }
     this.stagingVertexBuffer.unmap();
 
     // Read back indices

@@ -235,6 +235,37 @@ export class Viewer {
     await this.loadStockMesh(arrayBuffer);
   }
 
+  /**
+   * Load/update the stock mesh directly from raw vertex and index arrays.
+   * Used by the browser-side WebGPU simulation path, bypassing GLB parsing.
+   *
+   * @param {Float32Array} vertices - Interleaved xyz positions (length = N*3)
+   * @param {Uint32Array} indices - Triangle indices (length = M*3)
+   */
+  loadMeshFromArrays(vertices, indices) {
+    this._disposeStockMesh();
+
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    if (indices && indices.length > 0) {
+      geom.setIndex(new THREE.BufferAttribute(indices, 1));
+    }
+    geom.computeVertexNormals();
+
+    this._originalStockMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8899aa,
+      metalness: 0.7,
+      roughness: 0.35,
+    });
+
+    this.stockMesh = new THREE.Mesh(geom, this._originalStockMaterial);
+    this.stockMesh.castShadow = true;
+    this.stockMesh.receiveShadow = true;
+    this.scene.add(this.stockMesh);
+    this._fitCameraToMesh(this.stockMesh);
+    this._updateWireframe();
+  }
+
   _parseGLB(arrayBuffer) {
     try {
       // GLTFLoader.parse() needs raw ArrayBuffer, not Uint8Array (Three.js 0.160 quirk)

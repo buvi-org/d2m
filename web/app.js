@@ -5,6 +5,7 @@
 
 import { Viewer } from './viewer.js';
 import { SimulationWSClient } from './ws-client.js';
+import { startBrowserSimulation } from './sim-integration.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -22,7 +23,7 @@ const state = {
   currentOpIndex: -1,
   isSimulating: false,
   isPaused: false,
-  meshes: [],          // ArrayBuffer for each operation mesh
+  meshes: [],          // ArrayBuffer for each operation mesh (server path)
   totalOps: 0,
   completed: false,
   simResult: null,     // Result from complete message
@@ -34,6 +35,9 @@ const state = {
   resolution: 1.0,
   toolpathPoints: [],  // [[x,y,z], ...] for toolpath line
   opDetails: [],       // Per-operation stats for operation list
+  isBrowserSim: false, // true when using WebGPU browser simulation
+  browserMeshes: [],   // [{vertices, indices}, ...] for browser sim playback
+  browserInitialMesh: null, // initial stock mesh for browser sim
 };
 
 // ---------------------------------------------------------------------------
@@ -383,6 +387,157 @@ function handleFileSelect(fileList, type) {
 // Simulation control
 // ---------------------------------------------------------------------------
 
+function _resetSimulationState() {
+  state.meshes = [];
+  state.browserMeshes = [];
+  state.browserInitialMesh = null;
+  state.currentOpIndex = -1;
+  state.operationCount = 0;
+  state.totalOps = 0;
+  state.completed = false;
+  state.isSimulating = false;
+  state.simResult = null;
+  state.toolpathPoints = [];
+  state.opDetails = [];
+  state.isBrowserSim = false;
+  viewer.setToolpath(null);
+  viewer.clearGougeMarkers();
+  els.opList.innerHTML = '';
+}
+
+async function _runBrowserSimulation() {
+  state.isBrowserSim = true;
+  state.isSimulating = true;
+  els.simulateBtn.disabled = true;
+  els.simulateBtn.textContent = 'Simulating on GPU...';
+  updateUIState();
+
+  const gpuSimStart = performance.now();
+
+  try {
+    await startBrowserSimulation(
+      {
+        stockFile: state.stockFile,
+        targetFile: state.targetFile,
+        gcodeText: state.gcodeText,
+        toolType: state.toolType,
+        toolDiameter: state.toolDiameter,
+        resolution: state.resolution,
+      },
+      {
+        onProgress: (data) => {
+          if (data.opIndex < 0) {
+            // Stage message (parsing, init, etc.) — skip
+            return;
+          }
+
+          state.currentOpIndex = data.opIndex;
+          state.totalOps = data.totalOps;
+          state.operationCount = data.opIndex + 1;
+
+          // Update viewer with raw arrays from GPU
+          if (data.vertices && data.indices) {
+            viewer.loadMeshFromArrays(data.vertices, data.indices);
+            // Store for playback
+            state.browserMeshes[data.opIndex + 1] = {
+              vertices: data.vertices,
+              indices: data.indices,
+            };
+          }
+
+          // Collect toolpath point
+          if (data.endPosition) {
+            const ep = data.endPosition;
+            state.toolpathPoints[data.opIndex] = [ep[0], ep[1], ep[2]];
+            viewer.setToolpath(
+              state.toolpathPoints.filter(p => p !== undefined && p !== null)
+            );
+          }
+
+          // Update tool position visualization
+          if (data.endPosition) {
+            viewer.updateTool(
+              data.endPosition,
+              null,
+              state.toolType,
+              state.toolDiameter,
+              30
+            );
+          }
+
+          // Store operation detail
+          state.opDetails[data.opIndex] = {
+            volume: data.timeMs || 0,
+            cumulativeVolume: data.volumeRemoved || 0,
+            gouges: 0,
+          };
+
+          // Update UI
+          updateProgress(data.opIndex, data.totalOps);
+          updateStats(
+            data.volumeRemoved || 0,
+            0,
+            state.operationCount
+          );
+          updateOpList(data.opIndex, data.totalOps);
+        },
+
+        onComplete: (data) => {
+          const totalTimeMs = performance.now() - gpuSimStart;
+          state.completed = true;
+          state.isSimulating = false;
+          state.simResult = data;
+
+          // Store initial mesh for playback
+          if (data.initialMesh) {
+            state.browserInitialMesh = data.initialMesh;
+          }
+
+          // Final toolpath
+          if (state.toolpathPoints.length > 0) {
+            viewer.setToolpath(
+              state.toolpathPoints.filter(p => p !== undefined && p !== null)
+            );
+          }
+
+          updateUIState();
+          updateStats(
+            data.totalVolumeRemoved || 0,
+            0,
+            data.totalOps,
+            totalTimeMs
+          );
+          updateOpListComplete(data.totalOps);
+
+          const volText = (data.totalVolumeRemoved || 0).toFixed(1);
+          showToast(
+            `GPU Simulation complete: ${data.totalOps} ops in ${(totalTimeMs / 1000).toFixed(1)}s`
+          );
+
+          els.simulateBtn.disabled = false;
+          els.simulateBtn.textContent = 'Simulate';
+        },
+
+        onError: (message) => {
+          state.isSimulating = false;
+          state.isBrowserSim = false;
+          updateUIState();
+          showToast(`Browser sim error: ${message}`, true);
+          els.simulateBtn.disabled = false;
+          els.simulateBtn.textContent = 'Simulate';
+        },
+      }
+    );
+  } catch (err) {
+    state.isSimulating = false;
+    state.isBrowserSim = false;
+    updateUIState();
+    showToast(`GPU Simulation error: ${err.message}`, true);
+    els.simulateBtn.disabled = false;
+    els.simulateBtn.textContent = 'Simulate';
+  }
+}
+
 async function startSimulation() {
   // Read G-code from textarea
   state.gcodeText = els.gcodeTextarea.value.trim();
@@ -400,18 +555,18 @@ async function startSimulation() {
   state.toolDiameter = parseFloat(els.toolDiameterInput.value) || 6.0;
   state.resolution = parseFloat(els.resolutionInput.value) || 1.0;
 
-  // Reset state (keep current mesh until new one loads)
-  state.meshes = [];
-  state.currentOpIndex = -1;
-  state.operationCount = 0;
-  state.totalOps = 0;
-  state.completed = false;
-  state.simResult = null;
-  state.toolpathPoints = [];
-  state.opDetails = [];
-  viewer.setToolpath(null);
-  viewer.clearGougeMarkers();
-  els.opList.innerHTML = '';
+  // Reset state
+  _resetSimulationState();
+
+  // --- Browser WebGPU path ---
+  if (navigator.gpu) {
+    showToast('Running simulation on GPU (WebGPU)...');
+    await _runBrowserSimulation();
+    return;
+  }
+
+  // --- Server WebSocket path (fallback) ---
+  state.isSimulating = true;
 
   try {
     // Upload meshes
@@ -456,6 +611,7 @@ async function startSimulation() {
     showToast(`Error: ${err.message}`, true);
     els.simulateBtn.disabled = false;
     els.simulateBtn.textContent = 'Simulate';
+    state.isSimulating = false;
   }
 }
 
@@ -581,7 +737,40 @@ function stepBackward() {
 }
 
 async function showOperation(opIndex) {
-  if (!state.partId || opIndex < 0 || opIndex > state.totalOps) return;
+  if (opIndex < 0 || opIndex > state.totalOps) return;
+
+  // --- Browser simulation playback ---
+  if (state.isBrowserSim) {
+    if (opIndex === 0) {
+      // Show initial mesh
+      if (state.browserInitialMesh && state.browserInitialMesh.vertices.length > 0) {
+        viewer.loadMeshFromArrays(
+          state.browserInitialMesh.vertices,
+          state.browserInitialMesh.indices
+        );
+      } else {
+        // Fallback: reload default cube
+        viewer.loadDefaultCube();
+      }
+    } else {
+      const mesh = state.browserMeshes[opIndex];
+      if (mesh && mesh.vertices.length > 0) {
+        viewer.loadMeshFromArrays(mesh.vertices, mesh.indices);
+      } else if (state.browserMeshes[opIndex - 1]) {
+        // Fallback to previous mesh if current is missing
+        const prev = state.browserMeshes[opIndex - 1];
+        viewer.loadMeshFromArrays(prev.vertices, prev.indices);
+      }
+    }
+
+    state.currentOpIndex = opIndex;
+    els.opSlider.value = opIndex;
+    els.opLabel.textContent = `Op ${opIndex}/${state.totalOps}`;
+    return;
+  }
+
+  // --- Server simulation playback ---
+  if (!state.partId) return;
 
   if (opIndex === 0) {
     // Show initial mesh
