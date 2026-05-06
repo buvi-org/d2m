@@ -34,6 +34,9 @@ trimesh>=4.4.0
 scipy>=1.13.0
 rtree>=1.2.0
 
+# AI / LLM
+openai>=1.55.0
+
 # Utilities
 pydantic>=2.9.0
 pyyaml>=6.0.0

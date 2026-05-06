@@ -43,8 +43,8 @@ d2m is a **hybrid AI system** combining neural networks, symbolic reasoning, and
 │                     REASONING & PLANNING ENGINE                        │
 │                                                                       │
 │  ┌─────────────────┐    ┌─────────────────────┐                      │
-│  │  Knowledge Graph │    │  Multimodal LLM      │                      │
-│  │  (Neo4j)         │◄──►│  (Llama 4 / Qwen3)   │                      │
+│  │  Knowledge Graph │    │  Text LLM             │                      │
+│  │  (Neo4j)         │◄──►│  (DeepSeek V4 Pro)    │                      │
 │  │                  │    │                      │                      │
 │  │  • Materials     │    │  • Process selection  │                      │
 │  │  • Tools/Machines│    │  • Sequencing         │                      │
@@ -142,12 +142,13 @@ d2m is a **hybrid AI system** combining neural networks, symbolic reasoning, and
 
 **Engine**: Python rule engine (custom, declarative) with graph queries for relationship checking.
 
-### 5. Multimodal LLM Planner (Neural Layer)
+### 5. LLM Planner (Neural Layer)
 
 **Responsibility**: High-level reasoning — process selection, sequencing, explanation generation.
 
-- **Base Model**: Llama 4 Scout (17B MoE, natively multimodal) or Qwen3-VL-32B
-- **Input**: Text prompt (features JSON + material + constraints) + 4 rendered views
+- **Base Model**: DeepSeek V4 Pro — state-of-the-art reasoning, extremely cost-efficient
+- **Input**: Text prompt (features JSON + material + constraints + structured geometry description)
+- **4-view renders**: Generated for human review in the UI, but not required for LLM input
 - **Output**: Full JSON process plan with:
   - Operation sequence with dependencies
   - Tool selection per operation
@@ -155,13 +156,19 @@ d2m is a **hybrid AI system** combining neural networks, symbolic reasoning, and
   - Estimated cycle time & cost
   - DFM notes and warnings
   - Natural-language rationale for each decision
-- **Fine-tuning**: QLoRA (r=16, alpha=16) on synthetic data
+- **Fine-tuning**: DeepSeek managed fine-tuning API
   - 5,000-20,000 instruction-response pairs
-  - 1-2 hours on single RTX 4090
-  - Cost: ₹5,000-12,000 per run
-- **Inference**: Merged LoRA weights, served via vLLM or llama.cpp
+  - No GPU provisioning needed
+  - Cost: ₹3,000-8,000 per run
+- **Inference**: DeepSeek API with fine-tuned model ID
 
 **Why LLM**: Captures the "engineering judgment" that pure rule-based systems miss — trade-offs, edge cases, explanations in natural language.
+
+**Why text-only**: DeepSeek V4 Pro is a text model. This is sufficient because:
+- Manufacturing features are discrete and nameable (holes, pockets, slots, bosses)
+- Dimensions, tolerances, and adjacency relationships are numeric — text is the natural representation
+- 4-view renders are still generated for human review in the UI
+- If visual reasoning proves necessary, renders can be added via a separate vision model or base64-encoded images if DeepSeek adds vision support
 
 ### 6. Optimization Layer
 
@@ -572,8 +579,8 @@ The LLM provides engineering judgment; the symbolic layer ensures physical and s
             │                  └─────────┬─────────┘
             │                            │
             │                  ┌─────────▼─────────┐
-            │                  │  QLoRA Fine-Tuning │
-            │                  │  (Llama 4/Qwen3)   │
+            │                  │  Fine-Tuning      │
+            │                  │  (DeepSeek V4 Pro)   │
             │                  └─────────┬─────────┘
             │                            │
             │                  ┌─────────▼─────────┐
@@ -591,8 +598,8 @@ The LLM provides engineering judgment; the symbolic layer ensures physical and s
 |----------|--------|-----|
 | GNN over 3D CNN for features | Graph Attention Network | CAD topology (face adjacency) is naturally a graph; GNNs capture structural dependencies that CNNs miss |
 | Hybrid symbolic + neural | Neo4j + LLM | Hard manufacturing rules (physics, material science) must never be violated; symbolic layer guarantees constraint enforcement |
-| Multimodal over text-only | Llama 4 Scout / Qwen3-VL | Visual inspection catches surface finish, thin-wall, and assembly issues invisible to text |
-| QLoRA over full fine-tune | Unsloth QLoRA | 10-100x cheaper, fits on single consumer GPU, negligible accuracy loss for this task |
+| Multimodal over text-only | DeepSeek V4 Pro (text) | Manufacturing features are discrete and numeric — text is the natural representation. 4 renders still generated for human review. |
+| QLoRA over full fine-tune | DeepSeek managed fine-tuning API | No GPU provisioning needed, cost-efficient, simple API |
 | RL over pure SFT | GRPO | Simulation feedback fixes infeasible plans the model would otherwise hallucinate |
 | Synthetic over real data | CadQuery scripts | Real CAD→plan datasets are proprietary and rare; synthetic data with engineered labels is near-free and covers more edge cases |
 

@@ -18,7 +18,7 @@ Build a working pipeline that uses off-the-shelf LLM APIs + hardcoded rules befo
 **Deliverables**:
 - [ ] STEP file parser (pythonOCC/CadQuery) extracting basic geometry
 - [ ] Simple rule engine (material → process mapping + basic DFM checks)
-- [ ] Claude API integration for process plan generation from text features
+- [ ] DeepSeek V4 Pro API integration for process plan generation from text features
 - [ ] Streamlit UI: upload CAD → view plan
 - [ ] Test on 10-20 real CAD parts
 
@@ -73,27 +73,28 @@ Train a Graph Neural Network to automatically identify machinable features from 
 
 ---
 
-### Phase 3: LLM Fine-Tuning (Multimodal Planner)
-**Week 5-7 | Cost: ₹5,000-12,000**
+### Phase 3: LLM Fine-Tuning (Text + Feature-Based Planner)
+**Week 5-7 | Cost: ₹3,000-8,000**
 
-Fine-tune a multimodal LLM (Llama 4 Scout or Qwen3-VL-32B) for manufacturing process planning.
+Fine-tune DeepSeek V4 Pro for manufacturing process planning using text-based feature descriptions and structured geometry data.
 
 **Deliverables**:
-- [ ] Dataset formatting: synthetic JSON → Alpaca-style multimodal prompts
+- [ ] Dataset formatting: synthetic JSON → Alpaca-style text prompts
   - Instruction: "Design a manufacturing process. Material: X. Features: [...]. Tolerances: ±Y."
-  - Images: 4-view PNG renders
+  - Geometry described via structured text (feature types, dimensions, positions, adjacency)
   - Response: Full JSON process plan
-- [ ] QLoRA fine-tuning script (Unsloth) with multimodal support
-  - r=16, alpha=16, 1-3 epochs, batch size 4-8
-  - Single RTX 4090 / A100, 1-2 hours
+- [ ] Fine-tuning via DeepSeek API fine-tuning endpoint
+  - 5,000-20,000 instruction-response pairs
+  - Managed fine-tuning — no GPU provisioning needed
 - [ ] Evaluation: Compare LLM plans against ground-truth rules; >90% rule compliance
-- [ ] LoRA adapter saved + merge option
+- [ ] Fine-tuned model ID saved for inference
 
-**Milestone**: LLM generates rule-compliant, professional process plans from features + images.
+**Milestone**: LLM generates rule-compliant, professional process plans from feature descriptions.
 
 **Model choice**:
-- **Primary**: Llama 4 Scout (17B MoE) — natively multimodal, strong reasoning, open-weight
-- **Alternative**: Qwen3-VL-32B — excellent for technical diagrams, efficient fine-tuning
+- **DeepSeek V4 Pro** — state-of-the-art reasoning, extremely cost-efficient inference, managed fine-tuning API
+- Geometry conveyed through structured text (feature types, dimensions, tolerances, adjacency relationships) rather than images
+- 4-view renders generated for optional human review in the UI, but not required for LLM input
 
 **Key risk**: LLM hallucinates infeasible sequences. Mitigation: Knowledge graph post-validation catches violations before output.
 
@@ -159,14 +160,14 @@ Add digital simulation for plan validation and reinforcement learning for contin
 | 0: Prototype | 0 | 0 |
 | 1: Synthetic Data | 2,000 – 8,000 | 24 – 96 |
 | 2: GNN Feature Extraction | 8,000 – 15,000 | 96 – 180 |
-| 3: LLM Fine-Tuning | 5,000 – 12,000 | 60 – 144 |
+| 3: DeepSeek Fine-Tuning | 3,000 – 8,000 | 36 – 96 |
 | 4: Integration + UI | 5,000 – 10,000 | 60 – 120 |
 | 5: Simulation + RL | 15,000 – 40,000 | 180 – 480 |
-| **Total** | **35,000 – 85,000** | **$420 – $1,020** |
+| **Total** | **33,000 – 79,000** | **$396 – $948** |
 
 **Ongoing monthly costs** (post-launch): ₹5,000-15,000 ($60-180) for inference hosting + occasional retraining.
 
-**AI tool subscriptions**: ~₹5,000-8,000/month ($60-95) for Claude Pro + Cursor Pro + Grok Premium.
+**AI tool subscriptions**: ~₹3,000-5,000/month ($36-60) for DeepSeek API + Cursor Pro.
 
 ## Development Methodology
 

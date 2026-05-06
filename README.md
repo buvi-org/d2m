@@ -21,7 +21,7 @@ CAD File (STEP) + Specs
     ├─→ 4-View Renderer ────────→ PNG Images (front, top, side, iso)
     │
     ▼
-Multimodal LLM (Llama 4 / Qwen3-VL) + Knowledge Graph (Neo4j)
+LLM (DeepSeek V4 Pro) + Knowledge Graph (Neo4j)
     │
     ▼
 Process Plan JSON + DFM Notes + Explanations
@@ -39,7 +39,7 @@ See [docs/architecture.md](docs/architecture.md) for full technical architecture
 | CAD Parsing | pythonOCC / CadQuery |
 | Feature Recognition | PyTorch Geometric (GNN / GAT) |
 | Knowledge Graph | Neo4j + custom Python rule engine |
-| LLM Planning | Llama 4 Scout (17B MoE) or Qwen3-VL-32B, fine-tuned via QLoRA (Unsloth) |
+| LLM Planning | DeepSeek V4 Pro, fine-tuned via managed fine-tuning API |
 | Simulation | Multi-fidelity: trimesh voxel + manifold3d + PyBullet (see [docs/simulation.md](docs/simulation.md)) |
 | UI | Streamlit / Gradio (Phase 1), React (later) |
 | Deployment | Cloud GPU (Vast.ai / RunPod for training), Render / Hugging Face Spaces for hosting |
@@ -48,14 +48,14 @@ See [docs/architecture.md](docs/architecture.md) for full technical architecture
 
 ## Project Plan
 
-Phased solo build using AI-assisted development (Claude Code, Cursor, Grok):
+Phased solo build using AI-assisted development (Claude Code, Cursor):
 
 | Phase | Timeline | Scope | Cost (₹) |
 |-------|----------|-------|----------|
 | **0**: Prototype | Week 1-2 | STEP parsing → LLM API → basic plan output. Zero training. | 0 |
 | **1**: Synthetic Data | Week 2-3 | CadQuery script generating 10k+ labeled parts with STEP + JSON + renders | 2,000-8,000 |
 | **2**: Feature Recognition | Week 3-5 | Train GNN on synthetic MFCAD++ data for feature extraction | 8,000-15,000 |
-| **3**: LLM Fine-Tuning | Week 5-7 | Multimodal QLoRA fine-tune Llama 4 / Qwen3-VL on planning task | 5,000-12,000 |
+| **3**: LLM Fine-Tuning | Week 5-7 | Fine-tune DeepSeek V4 Pro on planning task via managed API | 3,000-8,000 |
 | **4**: Integration + UI | Week 7-9 | Full pipeline + Streamlit UI + rule engine | 5,000-10,000 |
 | **5**: Simulation + RL | Week 9-12 | Digital validation, RL fine-tuning loop | 15,000-40,000 |
 
