@@ -53,7 +53,7 @@ Phased solo build using AI-assisted development (Claude Code, Cursor):
 | Phase | Timeline | Scope | Cost (₹) |
 |-------|----------|-------|----------|
 | **0**: Prototype | Week 1-2 | STEP parsing → LLM API → basic plan output. Zero training. | 0 |
-| **1**: Synthetic Data | Week 2-3 | CadQuery script generating 10k+ labeled parts with STEP + JSON + renders | 2,000-8,000 |
+| **1**: Synthetic Data | Week 2-3 | ✅ Complete — 9,994 labeled parts with STEP + JSON. CadQuery CSG engine + rule-based labeling. | 2,000-8,000 |
 | **2**: Feature Recognition | Week 3-5 | Train GNN on synthetic MFCAD++ data for feature extraction | 8,000-15,000 |
 | **3**: LLM Fine-Tuning | Week 5-7 | Fine-tune DeepSeek V4 Pro on planning task via managed API | 3,000-8,000 |
 | **4**: Integration + UI | Week 7-9 | Full pipeline + Streamlit UI + rule engine | 5,000-10,000 |
@@ -66,29 +66,52 @@ See [docs/plan.md](docs/plan.md) for detailed phased roadmap with milestones and
 ## Quick Start
 
 ```bash
-# Clone
+# Clone with LFS
 git clone https://github.com/buvi-org/d2m.git
 cd d2m
+git lfs pull
 
 # Install
 pip install -r requirements.txt
 
-# Generate synthetic training data
-python scripts/generate_synthetic_data.py --num_parts 5000
+# Extract the 10K synthetic dataset (67 MB archive, ~1.1 GB extracted)
+7z x synthetic_10k_samples.7z -odata/synthetic_10k
+```
 
-# Train feature extractor
-python scripts/train_gnn_features.py
+### Generate your own synthetic data
 
-# Fine-tune LLM planner
-python scripts/train_llm_planner.py
+```bash
+# Full 10K batch (multi-process, no renders for speed)
+python generate_synthetic_data.py --count 10000 --output-dir ./data/synthetic --workers 8 --no-render
 
-# Run the app
-streamlit run app/main.py
+# With 4-view PNG renders (slower)
+python generate_synthetic_data.py --count 100 --output-dir ./data/synthetic --workers 4
+
+# Resume interrupted batch
+python generate_synthetic_data.py --count 10000 --output-dir ./data/synthetic --resume
+
+# Convert generated parts to JSONL training format
+python convert_dataset.py --input-dir data/synthetic --output data/train.jsonl --val-split 0.1
+```
+
+### Phase 2: GNN training (requires RTX 4090 or similar)
+
+```bash
+# Extract dataset first
+7z x synthetic_10k_samples.7z -odata/synthetic_10k
+
+# Convert to JSONL for LLM fine-tuning
+python convert_dataset.py --input-dir data/synthetic_10k --output data/train_10k.jsonl --val-split 0.1
+
+# Train GNN feature extractor (coming in Phase 2)
+# python scripts/train_gnn_features.py
 ```
 
 ## Status
 
-**Pre-MVP / Planning** — Building synthetic data pipeline and Phase 0 prototype.
+**Phase 0 complete** — Rule engine + LLM planner working via DeepSeek API.
+
+**Phase 1 complete** — 9,994 labeled synthetic CAD parts generated (STEP + JSON + renders). Dataset available as `synthetic_10k_samples.7z` (67 MB via git-lfs).
 
 ## License
 
