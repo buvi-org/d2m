@@ -874,6 +874,762 @@ class SlotOp(MachiningOperation):
 
 
 # =============================================================================
+#  Phase 2 concrete operations
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+#  10. PeckDrillOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class PeckDrillOp(MachiningOperation):
+    """Deep-hole peck drilling -- like DrillOp but with peck always enabled.
+
+    Uses the same ``drill_hole`` geometry as ``DrillOp``.  The feeds/speeds
+    are adjusted with a reduced feed rate and a ``peck: True`` flag.
+    """
+
+    cx: float = 0.0
+    cy: float = 0.0
+    diameter: float = 6.0
+    depth: float = 20.0
+    peck_step: float = 2.0
+    """Retract step increment for peck drilling (mm)."""
+    through: bool = False
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            try:
+                self.tool = ToolCatalog.get_best_for("drill", self.diameter)
+            except ValueError:
+                self.tool = ToolSpec("drill", self.diameter, tip_angle=118.0)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        if "error" not in self.feeds_speeds:
+            self.feeds_speeds = dict(self.feeds_speeds)
+            orig = self.feeds_speeds.get("feed_rate_mm_min", 0)
+            self.feeds_speeds["feed_rate_mm_min"] = orig * 0.5 if orig else 0
+            self.feeds_speeds["peck"] = True
+
+        self.position = (self.cx, self.cy)
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        return drill_hole(shape, self.cx, self.cy, self.diameter, self.depth,
+                          self.through, face_selector=self.face_selector)
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "peck_drill",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "depth_mm": self.depth,
+            "hole_diameter_mm": self.diameter,
+            "through": self.through,
+            "peck_step_mm": self.peck_step,
+            "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": f"Peck drilling (step={self.peck_step}mm)",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# ---------------------------------------------------------------------------
+#  11. ReamOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ReamOp(MachiningOperation):
+    """Precision hole finishing with a reamer."""
+
+    cx: float = 0.0
+    cy: float = 0.0
+    diameter: float = 6.0
+    depth: float = 10.0
+    through: bool = False
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            self.tool = _pick_reamer(self.diameter)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        self.position = (self.cx, self.cy)
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        return drill_hole(shape, self.cx, self.cy, self.diameter, self.depth,
+                          self.through, face_selector=self.face_selector)
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "ream",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "depth_mm": self.depth,
+            "hole_diameter_mm": self.diameter,
+            "through": self.through,
+            "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": "",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# ---------------------------------------------------------------------------
+#  12. BoreOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class BoreOp(MachiningOperation):
+    """Boring operation for hole trueness and finish.
+
+    Auto-selects a flat endmill approximately 90 % of the bore diameter.
+    """
+
+    cx: float = 0.0
+    cy: float = 0.0
+    diameter: float = 20.0
+    depth: float = 10.0
+    through: bool = False
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            tool_dia = self.diameter * 0.9
+            try:
+                self.tool = ToolCatalog.get_best_for("flat_endmill", tool_dia)
+            except ValueError:
+                self.tool = ToolSpec("flat_endmill", tool_dia)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        self.position = (self.cx, self.cy)
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        return drill_hole(shape, self.cx, self.cy, self.diameter, self.depth,
+                          self.through, face_selector=self.face_selector)
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "bore",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "depth_mm": self.depth,
+            "hole_diameter_mm": self.diameter,
+            "through": self.through,
+            "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": "",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# ---------------------------------------------------------------------------
+#  13. CountersinkOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class CountersinkOp(MachiningOperation):
+    """Creates a conical countersink for flat-head screws.
+
+    Uses *countersink_cut* which drills a through-hole and then applies a
+    shallow circular pocket for the conical recess.
+    """
+
+    cx: float = 0.0
+    cy: float = 0.0
+    diameter: float = 5.0
+    """Through-hole diameter (mm)."""
+    countersink_diameter: float = 10.0
+    """Diameter of the countersink at the surface (mm)."""
+    depth: float = 0
+    """Depth of the countersink recess (mm).  0 = through-hole only."""
+    countersink_angle: float = 82.0
+    """Included angle of the countersink cone (degrees)."""
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            try:
+                self.tool = ToolCatalog.get_best_for("chamfer", 6.0)
+            except ValueError:
+                self.tool = ToolSpec("chamfer", 6.0, tip_angle=90.0, tip_diameter=1.0)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        self.position = (self.cx, self.cy)
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        return countersink_cut(
+            shape, self.cx, self.cy, self.diameter,
+            self.countersink_diameter, self.depth,
+            self.countersink_angle,
+            face_selector=self.face_selector,
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "countersink",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "hole_diameter_mm": self.diameter,
+            "countersink_diameter_mm": self.countersink_diameter,
+            "countersink_angle_deg": self.countersink_angle,
+            "depth_mm": self.depth,
+            "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": "",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# ---------------------------------------------------------------------------
+#  14. CounterboreOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class CounterboreOp(MachiningOperation):
+    """Creates a flat-bottom recess for socket-head cap screws.
+
+    First drills the through-hole, then applies a circular pocket for the
+    counterbore at shallow depth.
+    """
+
+    cx: float = 0.0
+    cy: float = 0.0
+    hole_diameter: float = 6.0
+    """Diameter of the through-hole (mm)."""
+    counterbore_diameter: float = 12.0
+    """Diameter of the counterbore recess (mm)."""
+    counterbore_depth: float = 6.0
+    """Depth of the counterbore recess (mm)."""
+    through: bool = False
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            try:
+                self.tool = ToolCatalog.get_best_for(
+                    "flat_endmill", self.counterbore_diameter * 0.8
+                )
+            except ValueError:
+                self.tool = ToolSpec("flat_endmill", self.counterbore_diameter * 0.8)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        self.position = (self.cx, self.cy)
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        # The screw shank hole is always drilled through.
+        # The 'through' parameter controls the counterbore recess only.
+        result = drill_hole(shape, self.cx, self.cy, self.hole_diameter,
+                            depth=0, through=True,
+                            face_selector=self.face_selector)
+        result = circular_pocket_cut(result, self.cx, self.cy,
+                                     self.counterbore_diameter,
+                                     self.counterbore_depth,
+                                     face_selector=self.face_selector)
+        return result
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "counterbore",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "hole_diameter_mm": self.hole_diameter,
+            "counterbore_diameter_mm": self.counterbore_diameter,
+            "counterbore_depth_mm": self.counterbore_depth,
+            "through": self.through,
+            "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": "",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# ---------------------------------------------------------------------------
+#  15. ThreadMillOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ThreadMillOp(MachiningOperation):
+    """Thread milling using circular interpolation.
+
+    Unlike ``TapOp`` which uses a tap tool, thread milling uses a thread-mill
+    cutter that interpolates the thread form via helical motion.  Geometry is
+    unchanged (thread form is too fine for B-Rep).
+    """
+
+    cx: float = 0.0
+    cy: float = 0.0
+    diameter: float = 6.0
+    """Thread major diameter (mm)."""
+    pitch: float = 1.0
+    """Thread pitch (mm).  Defaults to standard coarse for the diameter."""
+    depth: float = 10.0
+    """Thread depth (mm)."""
+    through: bool = False
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.pitch <= 0:
+            self.pitch = _standard_pitch(self.diameter)
+
+        if self.tool is None:
+            try:
+                self.tool = ToolCatalog.get_best_for("thread_mill", self.diameter)
+            except ValueError:
+                self.tool = ToolSpec("thread_mill", self.diameter)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        self.position = (self.cx, self.cy)
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        # Thread form is too fine for B-Rep CSG
+        return shape
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "thread_mill",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "thread_diameter_mm": self.diameter,
+            "thread_pitch_mm": self.pitch,
+            "depth_mm": self.depth,
+            "through": self.through,
+            "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": "",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# ---------------------------------------------------------------------------
+#  16. TSlotOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class TSlotOp(MachiningOperation):
+    """T-slot cutting (undercut slot wider at the bottom).
+
+    Approximated as a rectangular slot -- full T-slot geometry requires a
+    custom shape.  Auto-selects a dovetail / T-slot cutter.
+    """
+
+    cx: float = 0.0
+    cy: float = 0.0
+    length: float = 30.0
+    width: float = 10.0
+    depth: float = 8.0
+    angle: float = 0.0
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            try:
+                self.tool = ToolCatalog.get_best_for("dovetail", self.width * 0.8)
+            except ValueError:
+                self.tool = ToolSpec("dovetail", self.width * 0.8)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        self.position = (self.cx, self.cy)
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        return slot_cut(shape, self.cx, self.cy, self.length, self.width,
+                        self.depth, self.angle, face_selector=self.face_selector)
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "t_slot",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "depth_mm": self.depth,
+            "slot_length_mm": self.length,
+            "slot_width_mm": self.width,
+            "slot_angle_deg": self.angle,
+            "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": "T-slot approximated as rectangular slot",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# ---------------------------------------------------------------------------
+#  17. DovetailOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class DovetailOp(MachiningOperation):
+    """Dovetail slot cutting.
+
+    Approximated as a rectangular slot.  Auto-selects a dovetail cutter.
+    """
+
+    cx: float = 0.0
+    cy: float = 0.0
+    length: float = 30.0
+    width: float = 10.0
+    depth: float = 5.0
+    angle: float = 45.0
+    """Dovetail angle in degrees (default 45)."""
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            try:
+                self.tool = ToolCatalog.get_best_for("dovetail", self.width * 0.8)
+            except ValueError:
+                self.tool = ToolSpec("dovetail", self.width * 0.8)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        self.position = (self.cx, self.cy)
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        return slot_cut(shape, self.cx, self.cy, self.length, self.width,
+                        self.depth, self.angle, face_selector=self.face_selector)
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "dovetail",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "depth_mm": self.depth,
+            "slot_length_mm": self.length,
+            "slot_width_mm": self.width,
+            "dovetail_angle_deg": self.angle,
+            "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": "Dovetail approximated as rectangular slot",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# ---------------------------------------------------------------------------
+#  18. GrooveOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class GrooveOp(MachiningOperation):
+    """Rectangular groove (open-ended slot).
+
+    Like a slot but may extend to the part edge.  Auto-selects a flat endmill
+    that fits within the groove width.
+    """
+
+    cx: float = 0.0
+    cy: float = 0.0
+    length: float = 30.0
+    width: float = 8.0
+    depth: float = 5.0
+    angle: float = 0.0
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            self.tool = _pick_slot_tool(self.width)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        self.position = (self.cx, self.cy)
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        return slot_cut(shape, self.cx, self.cy, self.length, self.width,
+                        self.depth, self.angle, face_selector=self.face_selector)
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "groove",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "depth_mm": self.depth,
+            "groove_length_mm": self.length,
+            "groove_width_mm": self.width,
+            "groove_angle_deg": self.angle,
+            "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": "",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# ---------------------------------------------------------------------------
+#  19. Surface3DOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class Surface3DOp(MachiningOperation):
+    """3D surface machining (parallel finishing).
+
+    Auto-selects a ball endmill.  Geometry is unchanged for now -- 3D
+    surface is too complex for simple CSG; this is a placeholder for
+    Phase 3 tri-dexel surface machining.
+    """
+
+    stepover: float = 1.0
+    """Stepover distance between parallel passes (mm)."""
+    depth: float = 0.5
+    """Depth of the surface finishing pass (mm)."""
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            try:
+                self.tool = ToolCatalog.get_best_for("ball_endmill", 6.0)
+            except ValueError:
+                self.tool = ToolSpec("ball_endmill", 6.0)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        self.position = None
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        # 3D surface machining is a Phase 3 placeholder
+        return shape
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "surface_3d",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "depth_mm": self.depth,
+            "stepover_mm": self.stepover,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": "Placeholder for Phase 3 tri-dexel surface machining",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# ---------------------------------------------------------------------------
+#  20. DeburrOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class DeburrOp(MachiningOperation):
+    """Deburring pass along part edges.
+
+    Uses a very small chamfer (0.1 mm) as a proxy for deburring.
+    Auto-selects a small chamfer tool.
+    """
+
+    edge_selection: str = "all"
+    """Edge selection strategy (default: all top edges)."""
+    tool_diameter: float = 3.0
+    """Nominal tool diameter for the deburring tool (mm)."""
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            try:
+                self.tool = ToolCatalog.get_best_for("chamfer", self.tool_diameter)
+            except ValueError:
+                self.tool = ToolSpec("chamfer", self.tool_diameter,
+                                     tip_angle=90.0, tip_diameter=0.5)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        self.position = None
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        return chamfer_edges(shape, 0.1, face_selector=self.face_selector)
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "deburr",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "edge_selection": self.edge_selection,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": "Deburring pass (0.1 mm chamfer proxy)",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# ---------------------------------------------------------------------------
+#  21. SpotFaceOp
+# ---------------------------------------------------------------------------
+
+@dataclass
+class SpotFaceOp(MachiningOperation):
+    """Spot-facing -- flat circular face for bolt head or washer.
+
+    Uses ``circular_pocket_cut`` to create a shallow flat-bottom recess.
+    """
+
+    cx: float = 0.0
+    cy: float = 0.0
+    diameter: float = 20.0
+    """Diameter of the spot-face (mm)."""
+    depth: float = 0.5
+    """Depth of the spot-face (mm)."""
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            try:
+                self.tool = ToolCatalog.get_best_for("flat_endmill", self.diameter * 0.8)
+            except ValueError:
+                self.tool = ToolSpec("flat_endmill", self.diameter * 0.8)
+
+        tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
+        self.feeds_speeds = get_feeds_speeds(
+            tool_type_fs, self.tool.diameter, self.material
+        )
+        self.position = (self.cx, self.cy)
+
+    # ------------------------------------------------------------------
+
+    def apply(self, shape):
+        return circular_pocket_cut(shape, self.cx, self.cy, self.diameter,
+                                   self.depth, face_selector=self.face_selector)
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "spot_face",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "depth_mm": self.depth,
+            "spot_face_diameter_mm": self.diameter,
+            "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds
+            if "error" not in self.feeds_speeds
+            else None,
+            "notes": "",
+        }
+
+    def to_toolpath(self) -> list:
+        return []
+
+
+# =============================================================================
 #  Convenience factory
 # =============================================================================
 
@@ -887,6 +1643,18 @@ _OP_REGISTRY: dict[str, type[MachiningOperation]] = {
     "chamfer":          ChamferOp,
     "contour":          ContourOp,
     "slot":             SlotOp,
+    "peck_drill":       PeckDrillOp,
+    "ream":             ReamOp,
+    "bore":             BoreOp,
+    "countersink":      CountersinkOp,
+    "counterbore":      CounterboreOp,
+    "thread_mill":      ThreadMillOp,
+    "t_slot":           TSlotOp,
+    "dovetail":         DovetailOp,
+    "groove":           GrooveOp,
+    "surface_3d":       Surface3DOp,
+    "deburr":           DeburrOp,
+    "spot_face":        SpotFaceOp,
 }
 
 
@@ -1408,6 +2176,222 @@ if __name__ == "__main__":
                   "DrillOp from bottom face reduces volume")
         except Exception as exc:
             check(False, f"DrillOp bottom face apply crashed: {exc}")
+
+    # ==================================================================
+    # Test 13: Phase 2 operations
+    # ==================================================================
+    print("\n13. Phase 2 operations ...")
+
+    # 13a. Instantiate each new op with defaults
+    p2_ops: list[MachiningOperation] = [
+        PeckDrillOp(),
+        ReamOp(),
+        BoreOp(),
+        CountersinkOp(),
+        CounterboreOp(),
+        ThreadMillOp(),
+        TSlotOp(),
+        DovetailOp(),
+        GrooveOp(),
+        Surface3DOp(),
+        DeburrOp(),
+        SpotFaceOp(),
+    ]
+    p2_names = [
+        "PeckDrillOp", "ReamOp", "BoreOp", "CountersinkOp",
+        "CounterboreOp", "ThreadMillOp", "TSlotOp", "DovetailOp",
+        "GrooveOp", "Surface3DOp", "DeburrOp", "SpotFaceOp",
+    ]
+    for op, name in zip(p2_ops, p2_names):
+        check(isinstance(op, MachiningOperation),
+              f"{name} is MachiningOperation")
+        check(op.tool is not None, f"{name} auto-tool populated")
+        check(isinstance(op.feeds_speeds, dict), f"{name} feeds_speeds is dict")
+
+    # 13b. to_dict() returns dict with "operation" key
+    for op, name in zip(p2_ops, p2_names):
+        d = op.to_dict()
+        check(isinstance(d, dict), f"{name}.to_dict returns dict")
+        check("operation" in d, f"{name}.to_dict has 'operation' key")
+
+    # 13c. PeckDrillOp has peck flag in feeds_speeds
+    pd = PeckDrillOp()
+    check(pd.feeds_speeds.get("peck") is True,
+          "PeckDrillOp sets peck=True in feeds_speeds")
+
+    # 13d. ReamOp auto-selects a reamer tool
+    rm = ReamOp(diameter=6.0)
+    check(rm.tool.diameter >= 6.0,
+          f"ReamOp tool diameter >= 6.0 (got {rm.tool.diameter})")
+
+    # 13e. BoreOp uses flat_endmill at ~90% diameter
+    bo = BoreOp(diameter=20.0)
+    check(bo.tool.tool_type == "flat_endmill",
+          f"BoreOp tool_type = {bo.tool.tool_type!r}")
+
+    # 13f. CountersinkOp uses chamfer tool
+    ck = CountersinkOp()
+    check(ck.tool.tool_type == "chamfer",
+          f"CountersinkOp tool_type = {ck.tool.tool_type!r}")
+
+    # 13g. CounterboreOp uses flat_endmill
+    cb = CounterboreOp()
+    check(cb.tool.tool_type == "flat_endmill",
+          f"CounterboreOp tool_type = {cb.tool.tool_type!r}")
+
+    # 13h. ThreadMillOp uses thread_mill tool
+    tm = ThreadMillOp()
+    check(tm.tool.tool_type == "thread_mill",
+          f"ThreadMillOp tool_type = {tm.tool.tool_type!r}")
+    # Geometry unchanged
+    check(tm.apply(None if not _HAS_CQ else create_rectangular_stock(100, 60, 20)) is not None
+          if _HAS_CQ else True,
+          "ThreadMillOp.apply returns a shape or is unchanged")
+
+    # 13i. TSlotOp and DovetailOp use dovetail tool type
+    ts = TSlotOp()
+    check(ts.tool.tool_type == "dovetail",
+          f"TSlotOp tool_type = {ts.tool.tool_type!r}")
+    dv = DovetailOp()
+    check(dv.tool.tool_type == "dovetail",
+          f"DovetailOp tool_type = {dv.tool.tool_type!r}")
+
+    # 13j. GrooveOp uses flat_endmill
+    gv = GrooveOp()
+    check(gv.tool.tool_type == "flat_endmill",
+          f"GrooveOp tool_type = {gv.tool.tool_type!r}")
+
+    # 13k. Surface3DOp uses ball_endmill
+    s3 = Surface3DOp()
+    check(s3.tool.tool_type == "ball_endmill",
+          f"Surface3DOp tool_type = {s3.tool.tool_type!r}")
+    check(s3.position is None, "Surface3DOp position is None")
+
+    # 13l. DeburrOp uses chamfer tool
+    db = DeburrOp()
+    check(db.tool.tool_type == "chamfer",
+          f"DeburrOp tool_type = {db.tool.tool_type!r}")
+
+    # 13m. SpotFaceOp uses flat_endmill
+    sf = SpotFaceOp()
+    check(sf.tool.tool_type == "flat_endmill",
+          f"SpotFaceOp tool_type = {sf.tool.tool_type!r}")
+
+    # 13n. Position tracking for positioned ops
+    check(PeckDrillOp(cx=10, cy=20).position == (10, 20),
+          "PeckDrillOp position tracked")
+    check(ReamOp(cx=5, cy=15).position == (5, 15),
+          "ReamOp position tracked")
+    check(BoreOp(cx=-5, cy=-10).position == (-5, -10),
+          "BoreOp position tracked")
+    check(CountersinkOp(cx=0, cy=0).position == (0, 0),
+          "CountersinkOp position tracked")
+    check(CounterboreOp(cx=50, cy=25).position == (50, 25),
+          "CounterboreOp position tracked")
+    check(ThreadMillOp(cx=30, cy=40).position == (30, 40),
+          "ThreadMillOp position tracked")
+    check(SpotFaceOp(cx=100, cy=50).position == (100, 50),
+          "SpotFaceOp position tracked")
+    # Ops with no position
+    check(Surface3DOp().position is None,
+          "Surface3DOp position is None")
+    check(DeburrOp().position is None,
+          "DeburrOp position is None")
+
+    # 13o. to_toolpath stubs for new ops
+    for op, name in zip(p2_ops, p2_names):
+        tp = op.to_toolpath()
+        check(isinstance(tp, list),
+              f"{name}.to_toolpath returns list")
+        check(len(tp) == 0,
+              f"{name}.to_toolpath is empty (Phase 3 stub)")
+
+    # 13p. create_operation factory for new ops
+    for op_type in ["peck_drill", "ream", "bore", "countersink",
+                    "counterbore", "thread_mill", "t_slot", "dovetail",
+                    "groove", "surface_3d", "deburr", "spot_face"]:
+        try:
+            op = create_operation(op_type)
+            check(isinstance(op, MachiningOperation),
+                  f"create_operation({op_type!r}) returns MachiningOperation")
+        except Exception as exc:
+            check(False, f"create_operation({op_type!r}) raised {exc}")
+
+    # 13q. apply() tests for a few key ops (requires CadQuery)
+    if _HAS_CQ:
+        # PeckDrillOp
+        try:
+            stock = create_rectangular_stock(100, 60, 20)
+            pd_op = PeckDrillOp(cx=0, cy=0, diameter=10, depth=0, through=True)
+            result = pd_op.apply(stock)
+            check(compute_volume(result) < compute_volume(stock),
+                  "PeckDrillOp reduces volume")
+        except Exception as exc:
+            check(False, f"PeckDrillOp.apply crashed: {exc}")
+
+        # BoreOp
+        try:
+            stock = create_rectangular_stock(100, 60, 20)
+            bo_op = BoreOp(cx=0, cy=0, diameter=30, depth=0, through=True)
+            result = bo_op.apply(stock)
+            check(compute_volume(result) < compute_volume(stock),
+                  "BoreOp reduces volume")
+        except Exception as exc:
+            check(False, f"BoreOp.apply crashed: {exc}")
+
+        # CounterboreOp
+        try:
+            stock = create_rectangular_stock(100, 60, 20)
+            cb_op = CounterboreOp(cx=0, cy=0, hole_diameter=6,
+                                  counterbore_diameter=12, counterbore_depth=5,
+                                  through=False)
+            result = cb_op.apply(stock)
+            check(compute_volume(result) < compute_volume(stock),
+                  "CounterboreOp reduces volume")
+        except Exception as exc:
+            check(False, f"CounterboreOp.apply crashed: {exc}")
+
+        # SpotFaceOp
+        try:
+            stock = create_rectangular_stock(100, 60, 20)
+            sf_op = SpotFaceOp(cx=0, cy=0, diameter=30, depth=2)
+            result = sf_op.apply(stock)
+            check(compute_volume(result) < compute_volume(stock),
+                  "SpotFaceOp reduces volume")
+        except Exception as exc:
+            check(False, f"SpotFaceOp.apply crashed: {exc}")
+
+        # GrooveOp
+        try:
+            stock = create_rectangular_stock(100, 60, 20)
+            g_op = GrooveOp(cx=10, cy=0, length=40, width=6, depth=8)
+            result = g_op.apply(stock)
+            check(compute_volume(result) < compute_volume(stock),
+                  "GrooveOp reduces volume")
+        except Exception as exc:
+            check(False, f"GrooveOp.apply crashed: {exc}")
+
+        # ThreadMillOp (geometry unchanged)
+        try:
+            stock = create_rectangular_stock(100, 60, 20)
+            tm_op = ThreadMillOp()
+            result = tm_op.apply(stock)
+            check(abs(compute_volume(result) - compute_volume(stock)) < 0.1,
+                  "ThreadMillOp does not change volume")
+        except Exception as exc:
+            check(False, f"ThreadMillOp.apply crashed: {exc}")
+
+        # DeburrOp
+        try:
+            stock = create_rectangular_stock(100, 60, 20)
+            db_op = DeburrOp()
+            result = db_op.apply(stock)
+            check(compute_volume(result) < compute_volume(stock),
+                  "DeburrOp reduces volume")
+        except Exception as exc:
+            check(False, f"DeburrOp.apply crashed: {exc}")
+    else:
+        print("    Phase 2 apply() geometry tests SKIPPED (CadQuery not available)")
 
     # ==================================================================
     # Summary

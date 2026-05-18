@@ -45,6 +45,16 @@ from .material import (
     get_melting_point,
     get_machinability,
 )
+from .fixturing import (
+    FixtureType,
+    FixtureSpec,
+    FixtureCatalog,
+    ClampingZone,
+    Setup,
+    fixture_to_mesh,
+    check_operation_against_fixture,
+    WORK_OFFSET_NAMES,
+)
 
 __all__ = [
     # Core classes
@@ -77,4 +87,13 @@ __all__ = [
     "is_metal",
     "get_melting_point",
     "get_machinability",
+    # Fixturing API
+    "FixtureType",
+    "FixtureSpec",
+    "FixtureCatalog",
+    "ClampingZone",
+    "Setup",
+    "fixture_to_mesh",
+    "check_operation_against_fixture",
+    "WORK_OFFSET_NAMES",
 ]

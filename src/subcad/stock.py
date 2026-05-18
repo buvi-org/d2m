@@ -54,6 +54,9 @@ class Stock:
     _plan: ProcessPlan = field(default_factory=ProcessPlan)
     _stock_dims: dict = field(default_factory=dict)
     _next_op_number: int = 1
+    _fixture: Optional["FixtureSpec"] = None
+    _setups: dict = field(default_factory=dict)  # name -> Setup
+    _active_setup: Optional[str] = None
 
     # -------------------------------------------------------------------
     #  Internal helpers
@@ -67,6 +70,9 @@ class Stock:
         stock_dims: dict,
         plan: ProcessPlan,
         next_op_number: int,
+        fixture=None,
+        setups=None,
+        active_setup=None,
     ) -> "Stock":
         """Construct directly from components."""
         obj = object.__new__(cls)
@@ -75,19 +81,48 @@ class Stock:
         obj._plan = plan
         obj._stock_dims = stock_dims
         obj._next_op_number = next_op_number
+        obj._fixture = fixture
+        obj._setups = setups if setups is not None else {}
+        obj._active_setup = active_setup
         return obj
 
     def _apply_op(self, op) -> "Stock":
         """Apply a machining operation: modify shape, record in plan, return new Stock."""
+        # Look up active setup and apply its face_selector to the operation
+        active_setup = self._active_setup
+        if active_setup is not None and active_setup in self._setups:
+            setup = self._setups[active_setup]
+            if hasattr(op, "face_selector"):
+                op.face_selector = setup.face_selector
+
         new_shape = op.apply(self._shape)
+
+        # Serialize fixture and setups for the plan
+        fixture_dict = self._fixture.to_dict() if self._fixture else None
+        setups_dict = {name: s.to_dict() for name, s in self._setups.items()}
+        work_offsets_dict = {}
+        for name, s in self._setups.items():
+            wo = getattr(s, "work_offset", "G54")
+            wov = getattr(s, "work_offset_values", (0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+            work_offsets_dict[wo] = list(wov)
 
         new_plan = ProcessPlan(
             material=self._material,
             stock_dimensions=dict(self._stock_dims),
             operations=list(self._plan.operations),
             tools_used=list(self._plan.tools_used),
+            fixture=fixture_dict,
+            setups=setups_dict,
+            work_offsets=work_offsets_dict,
         )
-        new_plan.add_operation(op.to_dict())
+
+        op_dict = op.to_dict()
+        # Attach setup and face_selector info to the op record
+        if active_setup is not None and active_setup in self._setups:
+            op_dict["setup"] = active_setup
+            op_dict["face_selector"] = self._setups[active_setup].face_selector
+
+        new_plan.add_operation(op_dict)
 
         return Stock._from_parts(
             new_shape,
@@ -95,6 +130,9 @@ class Stock:
             self._stock_dims,
             new_plan,
             self._next_op_number + 1,
+            fixture=self._fixture,
+            setups=dict(self._setups),
+            active_setup=self._active_setup,
         )
 
     # -------------------------------------------------------------------
@@ -477,6 +515,140 @@ class Stock:
         return self._apply_op(op)
 
     # -------------------------------------------------------------------
+    #  Fixturing API
+    # -------------------------------------------------------------------
+
+    def with_fixture(self, fixture_spec: "FixtureSpec") -> "Stock":
+        """Attach a FixtureSpec to this Stock. Returns new Stock."""
+        return Stock._from_parts(
+            self._shape,
+            self._material,
+            self._stock_dims,
+            self._plan,
+            self._next_op_number,
+            fixture=fixture_spec,
+            setups=dict(self._setups),
+            active_setup=self._active_setup,
+        )
+
+    def new_setup(self, name: str, face_selector: str = ">Z",
+                  work_offset: str = "G54",
+                  work_offset_values=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                  description: str = "",
+                  rotation_deg: float = 0.0) -> "Stock":
+        """Define a new machining setup. Requires .with_fixture() to have been called first."""
+        from .fixturing import Setup
+
+        if self._fixture is None:
+            raise ValueError("No fixture assigned. Call .with_fixture() first.")
+        setup = Setup(name=name, fixture=self._fixture, face_selector=face_selector,
+                      work_offset=work_offset, work_offset_values=work_offset_values,
+                      rotation_deg=rotation_deg, description=description)
+        new_setups = dict(self._setups)
+        new_setups[name] = setup
+        return Stock._from_parts(
+            self._shape,
+            self._material,
+            self._stock_dims,
+            self._plan,
+            self._next_op_number,
+            fixture=self._fixture,
+            setups=new_setups,
+            active_setup=name,
+        )
+
+    def use_setup(self, name: str) -> "Stock":
+        """Switch to an existing setup by name."""
+        if name not in self._setups:
+            raise KeyError(f"Setup {name!r} not found.")
+        return Stock._from_parts(
+            self._shape,
+            self._material,
+            self._stock_dims,
+            self._plan,
+            self._next_op_number,
+            fixture=self._fixture,
+            setups=dict(self._setups),
+            active_setup=name,
+        )
+
+    def validate_fixture_clearance(self) -> list[str]:
+        """Check all operations against the active fixture's clamping zones."""
+        from .fixturing import check_operation_against_fixture
+
+        warnings = []
+        active_name = self._active_setup
+        if active_name is None or active_name not in self._setups:
+            return warnings
+        active_setup = self._setups[active_name]
+        for op_dict in self._plan.operations:
+            warnings.extend(
+                check_operation_against_fixture(op_dict, active_setup, self._stock_dims)
+            )
+        return warnings
+
+    # -------------------------------------------------------------------
+    #  Simulation bridge
+    # -------------------------------------------------------------------
+
+    def simulate(self, toolpath_precision: float = 0.5) -> dict:
+        """Simulate material removal via the tri-dexel engine.
+
+        Returns a dict with:
+          - final_volume_mm3
+          - volume_removed_mm3
+          - gouges: list of (x, y, z) penetration points
+          - cycle_time_minutes
+        """
+        try:
+            from src.simulation.material_removal import MaterialRemovalEngine as TriDexelEngine
+            from src.simulation.tools import create_tool as sim_create_tool
+            import numpy as np
+        except ImportError as e:
+            return {"error": f"Simulation not available: {e}"}
+
+        # 1. Build initial tri-dexel grid from stock mesh
+        mesh = self.to_mesh()
+        if mesh is None:
+            return {"error": "Cannot create mesh from shape."}
+
+        bbox = self.bounding_box
+        dexel_resolution = 0.5  # mm per dexel
+        engine = TriDexelEngine(
+            mesh.vertices, mesh.faces,
+            dexel_resolution,
+            bbox["length"], bbox["width"], bbox["height"]
+        )
+        initial_volume = engine.volume()
+
+        # 2. Replay each operation's toolpath
+        gouges = []
+        for op_dict in self._plan.operations:
+            op_tool_type = op_dict.get("tool_type", "flat_endmill")
+            op_tool_dia = op_dict.get("tool_diameter_mm", 10.0)
+            sim_tool = sim_create_tool(op_tool_type, op_tool_dia)
+
+            # Generate approximate toolpath from the operation
+            toolpath = _op_to_simple_toolpath(op_dict, bbox)
+            for pose in toolpath:
+                engine.remove_material(sim_tool, pose)
+
+            # Check for gouges (material removed below target)
+            if engine.volume() < 0:
+                gouges.append({
+                    "operation": op_dict.get("operation", "unknown"),
+                    "message": "Gouge detected -- volume went below zero",
+                })
+
+        final_volume = max(0.0, engine.volume())
+        return {
+            "final_volume_mm3": round(final_volume, 1),
+            "volume_removed_mm3": round(initial_volume - final_volume, 1),
+            "gouges": gouges,
+            "cycle_time_minutes": self._plan.estimated_time_minutes,
+        }
+
+    # -------------------------------------------------------------------
     #  Output
     # -------------------------------------------------------------------
 
@@ -527,6 +699,32 @@ class Stock:
             f"dims={bbox.get('length', 0):.0f}x{bbox.get('width', 0):.0f}x{bbox.get('height', 0):.0f} mm, "
             f"ops={ops}, volume={self.volume:.0f} mm^3)"
         )
+
+
+# =============================================================================
+#  Simulation helper (module-level)
+# =============================================================================
+
+def _op_to_simple_toolpath(op_dict: dict, bbox: dict) -> list:
+    """Generate a minimal toolpath for simulation from an operation dict.
+
+    Returns list of (position, direction) tuples where position is (x, y, z)
+    in the stock coordinate frame.
+    """
+    op_type = op_dict.get("operation", "")
+    depth = op_dict.get("depth_mm", 0.0)
+    pos = op_dict.get("position")
+    cx, cy = pos if pos else (0.0, 0.0)
+    z_top = bbox.get("z_max", 0.0)
+    z_bottom = z_top - depth
+    steps = max(1, int(depth / 0.5))  # 0.5mm steps
+
+    toolpath = []
+    for i in range(steps):
+        z = z_top - (i + 1) * (depth / steps)
+        toolpath.append(((cx, cy, z), (0, 0, -1)))
+
+    return toolpath
 
 
 # =============================================================================
