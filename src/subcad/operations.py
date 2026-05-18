@@ -28,6 +28,7 @@ from .geometry import (
     rectangular_pocket_cut,
     circular_pocket_cut,
     drill_hole,
+    countersink_cut,
     slot_cut,
     contour_cut_outer,
     chamfer_edges,
@@ -51,6 +52,8 @@ _TOOL_TYPE_FS_MAP: dict[str, str] = {
     "thread_mill":  "tap",
     "bull_nose":    "end_mill",
     "dovetail":     "end_mill",
+    "reamer":       "drill",
+    "spot_drill":   "drill",
 }
 
 
@@ -92,6 +95,29 @@ def _pick_slot_tool(slot_width: float) -> ToolSpec:
     return candidates[0]
 
 
+def _pick_reamer(hole_diameter: float) -> ToolSpec:
+    """Pick the closest reamer tool for a given hole diameter.
+
+    Searches the catalog for tools whose name starts with ``REAM_`` and
+    returns the smallest reamer whose diameter >= *hole_diameter*.  If no
+    reamer is large enough, the largest available reamer is returned.
+    Falls back to a generic drill-type tool with a 45-degree tip angle
+    when the catalog contains no reamers at all.
+    """
+    ToolCatalog._ensure_initialised()
+    reamers = sorted(
+        (t for name, t in ToolCatalog._tools.items() if name.startswith("REAM_")),
+        key=lambda t: t.diameter,
+    )
+    if reamers:
+        for r in reamers:
+            if r.diameter >= hole_diameter:
+                return r
+        return reamers[-1]
+    # Fallback: no reamers in catalog
+    return ToolSpec("drill", hole_diameter, tip_angle=45.0)
+
+
 # =============================================================================
 #  Abstract base class
 # =============================================================================
@@ -111,6 +137,7 @@ class MachiningOperation(ABC):
     tool: Optional[ToolSpec] = None
     feeds_speeds: dict = field(default_factory=dict)
     position: Optional[Tuple[float, float]] = None
+    face_selector: str = ">Z"
 
     # -- abstract interface --------------------------------------------------
 
@@ -183,7 +210,7 @@ class FaceMillOp(MachiningOperation):
     # ------------------------------------------------------------------
 
     def apply(self, shape):
-        return face_mill_cut(shape, self.depth)
+        return face_mill_cut(shape, self.depth, face_selector=self.face_selector)
 
     def to_dict(self) -> dict:
         return {
@@ -199,6 +226,7 @@ class FaceMillOp(MachiningOperation):
             if "error" not in self.feeds_speeds
             else None,
             "finish_pass": self.finish_pass,
+            "face_selector": self.face_selector,
             "notes": "Finishing pass included" if self.finish_pass else "",
         }
 
@@ -279,9 +307,11 @@ class PocketOp(MachiningOperation):
             self.width, self.length,
             self.depth,
             self.corner_radius,
+            face_selector=self.face_selector,
         )
         # Apply finish pass if one was created
         if self.finish_op is not None:
+            self.finish_op.face_selector = self.face_selector
             result = self.finish_op.apply(result)
         return result
 
@@ -298,6 +328,7 @@ class PocketOp(MachiningOperation):
             },
             "corner_radius_mm": self.corner_radius,
             "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
             "feeds_speeds": self.feeds_speeds
             if "error" not in self.feeds_speeds
             else None,
@@ -347,7 +378,8 @@ class CircularPocketOp(MachiningOperation):
     # ------------------------------------------------------------------
 
     def apply(self, shape):
-        return circular_pocket_cut(shape, self.cx, self.cy, self.diameter, self.depth)
+        return circular_pocket_cut(shape, self.cx, self.cy, self.diameter, self.depth,
+                                   face_selector=self.face_selector)
 
     def to_dict(self) -> dict:
         return {
@@ -357,6 +389,7 @@ class CircularPocketOp(MachiningOperation):
             "depth_mm": self.depth,
             "pocket_diameter_mm": self.diameter,
             "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
             "feeds_speeds": self.feeds_speeds
             if "error" not in self.feeds_speeds
             else None,
@@ -418,6 +451,7 @@ class SpotDrillOp(MachiningOperation):
             "tool_diameter_mm": self.tool.diameter,
             "depth_mm": 1.0,  # spot-drill is shallow
             "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
             "feeds_speeds": self.feeds_speeds
             if "error" not in self.feeds_speeds
             else None,
@@ -494,8 +528,10 @@ class DrillOp(MachiningOperation):
 
     def apply(self, shape):
         if self.spot_op is not None:
+            self.spot_op.face_selector = self.face_selector
             shape = self.spot_op.apply(shape)
-        return drill_hole(shape, self.cx, self.cy, self.diameter, self.depth, self.through)
+        return drill_hole(shape, self.cx, self.cy, self.diameter, self.depth, self.through,
+                          face_selector=self.face_selector)
 
     def to_dict(self) -> dict:
         return {
@@ -507,6 +543,7 @@ class DrillOp(MachiningOperation):
             "through": self.through,
             "peck_drilling": self.peck,
             "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
             "feeds_speeds": self.feeds_speeds
             if "error" not in self.feeds_speeds
             else None,
@@ -627,6 +664,7 @@ class TapOp(MachiningOperation):
             "depth_mm": self.depth,
             "through": self.through,
             "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
             "feeds_speeds": self.feeds_speeds
             if "error" not in self.feeds_speeds
             else None,
@@ -672,7 +710,7 @@ class ChamferOp(MachiningOperation):
     # ------------------------------------------------------------------
 
     def apply(self, shape):
-        return chamfer_edges(shape, self.width)
+        return chamfer_edges(shape, self.width, face_selector=self.face_selector)
 
     def to_dict(self) -> dict:
         return {
@@ -681,6 +719,7 @@ class ChamferOp(MachiningOperation):
             "tool_diameter_mm": self.tool.diameter,
             "chamfer_width_mm": self.width,
             "tool_tip_angle_deg": self.tool.tip_angle,
+            "face_selector": self.face_selector,
             "feeds_speeds": self.feeds_speeds
             if "error" not in self.feeds_speeds
             else None,
@@ -729,7 +768,8 @@ class ContourOp(MachiningOperation):
     # ------------------------------------------------------------------
 
     def apply(self, shape):
-        return contour_cut_outer(shape, self.depth, self.stepdown)
+        return contour_cut_outer(shape, self.depth, self.stepdown,
+                                 face_selector=self.face_selector)
 
     def to_dict(self) -> dict:
         return {
@@ -738,6 +778,7 @@ class ContourOp(MachiningOperation):
             "tool_diameter_mm": self.tool.diameter,
             "depth_mm": self.depth,
             "stepdown_mm": self.stepdown,
+            "face_selector": self.face_selector,
             "feeds_speeds": self.feeds_speeds
             if "error" not in self.feeds_speeds
             else None,
@@ -807,6 +848,7 @@ class SlotOp(MachiningOperation):
             self.depth,
             self.angle,
             self.through,
+            face_selector=self.face_selector,
         )
 
     def to_dict(self) -> dict:
@@ -820,6 +862,7 @@ class SlotOp(MachiningOperation):
             "slot_angle_deg": self.angle,
             "through": self.through,
             "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
             "feeds_speeds": self.feeds_speeds
             if "error" not in self.feeds_speeds
             else None,
@@ -880,6 +923,7 @@ def threaded_hole_ops(
     position: Tuple[float, float],
     material: str = "aluminum_6061",
     through: bool = False,
+    face_selector: str = ">Z",
 ) -> list[MachiningOperation]:
     """Generate the full sequence for a threaded hole.
 
@@ -897,6 +941,7 @@ def threaded_hole_ops(
         position: (cx, cy) on the top workplane.
         material: Workpiece material key.
         through: If True, drill and tap through the entire part.
+        face_selector: CadQuery face selector (e.g. \">Z\", \"<Z\").
 
     Returns:
         A list of 3 ``MachiningOperation`` instances: [spot, drill, tap].
@@ -910,6 +955,7 @@ def threaded_hole_ops(
         cy=cy,
         hole_diameter=tap_drill,
         material=material,
+        face_selector=face_selector,
     )
 
     drill = DrillOp(
@@ -920,6 +966,7 @@ def threaded_hole_ops(
         through=through,
         spot_drill=False,  # we already create a separate spot op
         material=material,
+        face_selector=face_selector,
     )
 
     tap = TapOp(
@@ -931,6 +978,7 @@ def threaded_hole_ops(
         through=through,
         tap_drill_diameter=tap_drill,
         material=material,
+        face_selector=face_selector,
     )
 
     return [spot, drill, tap]
@@ -1330,6 +1378,36 @@ if __name__ == "__main__":
     s_pos = SlotOp(cx=30.0, cy=-15.0)
     check(s_pos.position == (30.0, -15.0),
           f"SlotOp position = {s_pos.position}")
+
+    # ==================================================================
+    # Test 12: face_selector in operations
+    # ==================================================================
+    print("\n12. face_selector ...")
+    check(FaceMillOp().face_selector == ">Z", "default face_selector is >Z")
+    check(FaceMillOp(face_selector="<Z").to_dict()["face_selector"] == "<Z",
+          "to_dict includes face_selector")
+    check(DrillOp(face_selector=">X").to_dict()["face_selector"] == ">X",
+          "DrillOp face_selector in dict")
+    check(ChamferOp(face_selector="<Z").to_dict()["face_selector"] == "<Z",
+          "ChamferOp face_selector in dict")
+
+    # threaded_hole_ops with face_selector
+    seq = threaded_hole_ops(diameter=6, depth=10, position=(0, 0),
+                            face_selector="<Z")
+    for op in seq:
+        check(op.face_selector == "<Z",
+              f"{op.__class__.__name__} face_selector forwarded")
+
+    if _HAS_CQ:
+        try:
+            stock = create_rectangular_stock(100, 60, 20)
+            d_op = DrillOp(cx=0, cy=0, diameter=10, depth=0, through=True,
+                          spot_drill=False, face_selector="<Z")
+            result = d_op.apply(stock)
+            check(compute_volume(result) < compute_volume(stock),
+                  "DrillOp from bottom face reduces volume")
+        except Exception as exc:
+            check(False, f"DrillOp bottom face apply crashed: {exc}")
 
     # ==================================================================
     # Summary

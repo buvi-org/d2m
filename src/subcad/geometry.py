@@ -69,12 +69,10 @@ def face_mill_cut(shape: "cq.Workplane", depth: float, *, face_selector: str = "
     face_length = (bbox.xmax - bbox.xmin) + 2.0
     face_width = (bbox.ymax - bbox.ymin) + 2.0
 
-    cut_dir = +depth if face_selector.startswith("<") else -depth
-
     return (
         shape.faces(face_selector).workplane()
         .rect(face_length, face_width)
-        .cutBlind(cut_dir)
+        .cutBlind(-depth)
     )
 
 
@@ -93,13 +91,11 @@ def rectangular_pocket_cut(
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
 
-    cut_dir = +depth if face_selector.startswith("<") else -depth
-
     result = (
         shape.faces(face_selector).workplane()
         .center(cx, cy)
         .rect(width, length)
-        .cutBlind(cut_dir)
+        .cutBlind(-depth)
     )
 
     if corner_radius > 0:
@@ -134,13 +130,11 @@ def circular_pocket_cut(
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
 
-    cut_dir = +depth if face_selector.startswith("<") else -depth
-
     return (
         shape.faces(face_selector).workplane()
         .center(cx, cy)
         .circle(diameter / 2.0)
-        .cutBlind(cut_dir)
+        .cutBlind(-depth)
     )
 
 
@@ -168,8 +162,36 @@ def drill_hole(
     if through:
         return wp.cutThruAll()
     else:
-        cut_dir = +depth if face_selector.startswith("<") else -depth
-        return wp.cutBlind(cut_dir)
+        return wp.cutBlind(-depth)
+
+
+def countersink_cut(
+    shape: "cq.Workplane",
+    cx: float,
+    cy: float,
+    hole_diameter: float,
+    sink_diameter: float,
+    depth: float,
+    sink_angle: float = 82.0,
+    *,
+    face_selector: str = ">Z",
+) -> "cq.Workplane":
+    """Cut a countersink: drill through-hole + conical recess.
+
+    The through-hole is drilled first, then a shallow circular pocket
+    creates the conical countersink recess.  The *sink_angle* parameter
+    is recorded in the operation metadata but does not affect the
+    simple CSG geometry.
+    """
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+    # Drill the through hole first
+    result = drill_hole(shape, cx, cy, hole_diameter, depth=0, through=True,
+                        face_selector=face_selector)
+    # Then a shallow circular pocket for the countersink recess
+    result = circular_pocket_cut(result, cx, cy, sink_diameter, depth,
+                                 face_selector=face_selector)
+    return result
 
 
 def slot_cut(
@@ -199,14 +221,15 @@ def slot_cut(
     if through:
         return slot_profile.cutThruAll()
     else:
-        cut_dir = +depth if face_selector.startswith("<") else -depth
-        return slot_profile.cutBlind(cut_dir)
+        return slot_profile.cutBlind(-depth)
 
 
 def contour_cut_outer(
     shape: "cq.Workplane",
     depth: float,
     stepdown: float = 0.0,
+    *,
+    face_selector: str = ">Z",
 ) -> "cq.Workplane":
     """Trim the outer profile of the part by `depth` from the top face.
 
@@ -216,6 +239,10 @@ def contour_cut_outer(
     """
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
+
+    # TODO: non-Z contour needs reorientation logic.
+    if face_selector != ">Z":
+        pass  # face_selector accepted but contour logic is Z-axis based
 
     bb = shape.val().BoundingBox()
     part_length = bb.xmax - bb.xmin
@@ -265,11 +292,11 @@ def contour_cut_outer(
     return result
 
 
-def chamfer_edges(shape: "cq.Workplane", width: float) -> "cq.Workplane":
+def chamfer_edges(shape: "cq.Workplane", width: float, *, face_selector: str = ">Z") -> "cq.Workplane":
     """Apply chamfer to top edges."""
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
-    return shape.faces(">Z").edges().chamfer(width)
+    return shape.faces(face_selector).edges().chamfer(width)
 
 
 def fillet_edges(shape: "cq.Workplane", radius: float) -> "cq.Workplane":
@@ -708,6 +735,54 @@ if __name__ == "__main__":
         passed += 1
     except Exception as e:
         print(f"  FAIL: import_step (callable) -- {e}")
+        failed += 1
+
+    # ------------------------------------------------------------------
+    # Test 22: face_selector multi-face support
+    # ------------------------------------------------------------------
+    try:
+        stock = create_rectangular_stock(100, 60, 20)
+        # Drill from bottom face
+        drilled = drill_hole(stock, 0, 0, 10, depth=10, through=False,
+                            face_selector="<Z")
+        vol_after = compute_volume(drilled)
+        assert vol_after < compute_volume(stock), "Bottom-face drill should reduce volume"
+        print("  PASS: drill_hole (bottom face <Z)")
+        passed += 1
+    except Exception as e:
+        print(f"  FAIL: drill_hole (bottom face <Z) -- {e}")
+        failed += 1
+
+    # ------------------------------------------------------------------
+    # Test 23: face_mill_cut from bottom face reduces height
+    # ------------------------------------------------------------------
+    try:
+        stock = create_rectangular_stock(100, 60, 20)
+        faced = face_mill_cut(stock, 5, face_selector="<Z")
+        bb = compute_bounding_box(faced)
+        assert abs(bb["height"] - 15) < 0.01, (
+            f"Height after bottom face_mill: {bb['height']}"
+        )
+        print("  PASS: face_mill_cut (bottom face <Z)")
+        passed += 1
+    except Exception as e:
+        print(f"  FAIL: face_mill_cut (bottom face <Z) -- {e}")
+        failed += 1
+
+    # ------------------------------------------------------------------
+    # Test 24: chamfer_edges from bottom face
+    # ------------------------------------------------------------------
+    try:
+        stock = create_rectangular_stock(100, 60, 20)
+        chamfered = chamfer_edges(stock, 2.0, face_selector="<Z")
+        vol_chamfered = compute_volume(chamfered)
+        assert vol_chamfered < compute_volume(stock), (
+            "Bottom chamfer should reduce volume"
+        )
+        print("  PASS: chamfer_edges (bottom face <Z)")
+        passed += 1
+    except Exception as e:
+        print(f"  FAIL: chamfer_edges (bottom face <Z) -- {e}")
         failed += 1
 
     # ------------------------------------------------------------------
