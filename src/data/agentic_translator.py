@@ -162,10 +162,22 @@ def _extract_measures_block(cq_code: str) -> str:
         r"(m\s*=\s*SimpleNamespace\s*\(.*?^\s*\))",
     ]
 
+    # Also extract the import: from types import SimpleNamespace as Measures
+    import_line = ""
+    import_match = re.search(
+        r"from\s+types\s+import\s+SimpleNamespace\s+as\s+Measures",
+        cq_code,
+    )
+    if import_match:
+        import_line = import_match.group(0)
+
     for pat in patterns:
         match = re.search(pat, cq_code, re.MULTILINE | re.DOTALL)
         if match:
-            return match.group(1).strip()
+            block = match.group(1).strip()
+            if import_line:
+                block = import_line + "\n" + block
+            return block
 
     # Fallback: return just the first few lines that define measures
     lines = cq_code.split("\n")
