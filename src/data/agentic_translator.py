@@ -199,13 +199,12 @@ def _extract_measures_block(cq_code: str) -> str:
 
 def build_system_prompt() -> str:
     """Build the system prompt with subCAD API reference."""
-    return f"""You are an expert CAD/CAM translator. Convert CadQuery programs to subCAD.
+    return f"""CRITICAL: You are a code generator. Output ONLY Python code in ```python fences.
+Never explain, analyze, or describe. Just output code. Start immediately with ```python.
 
 {SUBCAD_API_REFERENCE}
 
-OUTPUT ONLY VALID PYTHON CODE. No explanation, no analysis.
-`Stock` is pre-imported — use `Stock.rectangular(...)` directly.
-DO NOT write import statements. DO NOT use .contour()."""
+`Stock` is pre-imported. DO NOT write import statements. DO NOT use .contour()."""
 
 
 def build_user_prompt(
