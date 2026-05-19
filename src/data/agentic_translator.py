@@ -201,15 +201,11 @@ def build_system_prompt() -> str:
     """Build the system prompt with subCAD API reference."""
     return f"""You are an expert CAD/CAM translator. Convert CadQuery programs to subCAD.
 
-{SUBCAD_API_SHORT}
+{SUBCAD_API_REFERENCE}
 
-## Key Rules
-- Stock XY = final part XY (no margin). Add 2-3 mm Z margin for face_mill.
-- (cx=0, cy=0) = face CENTER.  Negative = left/down.  Use cx=0,cy=0 for center.
-- DO NOT use .contour().  DO NOT write import statements.
-- `Stock` is pre-imported — use `Stock.rectangular(...)` directly.
-- Copy the Measures block from the prompt into your code as-is.
-- OUTPUT ONLY VALID PYTHON CODE. No explanation, no analysis."""
+OUTPUT ONLY VALID PYTHON CODE. No explanation, no analysis.
+`Stock` is pre-imported — use `Stock.rectangular(...)` directly.
+DO NOT write import statements. DO NOT use .contour()."""
 
 
 def build_user_prompt(
