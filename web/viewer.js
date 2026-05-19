@@ -184,9 +184,10 @@ export class Viewer {
     this._disposeStockMesh();
 
     this._originalStockMaterial = new THREE.MeshStandardMaterial({
-      color: 0x8899aa,
-      metalness: 0.7,
-      roughness: 0.35,
+      color: 0xccdde8,
+      metalness: 0.3,
+      roughness: 0.4,
+      flatShading: false,
       side: THREE.DoubleSide,
     });
 
@@ -253,9 +254,9 @@ export class Viewer {
     geom.computeVertexNormals();
 
     this._originalStockMaterial = new THREE.MeshStandardMaterial({
-      color: 0x8899aa,
-      metalness: 0.7,
-      roughness: 0.35,
+      color: 0xccdde8,
+      metalness: 0.3,
+      roughness: 0.4,
     });
 
     this.stockMesh = new THREE.Mesh(geom, this._originalStockMaterial);
@@ -292,6 +293,7 @@ export class Viewer {
 
     // Clone the geometry to own it
     const geom = mesh.geometry.clone();
+    geom.computeVertexNormals();
     const result = new THREE.Mesh(geom, material);
 
     // If the gltf has a transform, apply it

@@ -114,6 +114,40 @@ G00 Z5</textarea>
         </div>
       </div>
 
+      <!-- SubCAD Presets -->
+      <div class="section">
+        <div class="section-header">SubCAD Presets</div>
+        <div class="section-body">
+          <p style="font-size:11px;color:var(--text-muted);margin:0 0 8px 0;">
+            Create a part via SubCAD and simulate CNC machining in one click.
+          </p>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            <button class="btn btn-sm" id="preset-pocket-plate" title="Face mill + pocket + chamfer">
+              Pocket Plate
+            </button>
+            <button class="btn btn-sm" id="preset-drill-pattern" title="Face mill + 4x drill">
+              Drill Pattern
+            </button>
+            <button class="btn btn-sm" id="preset-stepped-block" title="Two-level face mill">
+              Stepped Block
+            </button>
+            <button class="btn btn-sm" id="preset-face-mill" title="Single face mill pass">
+              Face Mill
+            </button>
+          </div>
+          <div style="margin-top:6px; display:flex; gap:6px; align-items:center;">
+            <label style="font-size:11px;white-space:nowrap;">WxLxH:</label>
+            <input type="number" id="preset-width" value="50" min="20" max="200" step="10"
+              style="width:50px;font-size:11px;padding:2px;">
+            <input type="number" id="preset-length" value="80" min="20" max="300" step="10"
+              style="width:50px;font-size:11px;padding:2px;">
+            <input type="number" id="preset-height" value="20" min="5" max="100" step="5"
+              style="width:50px;font-size:11px;padding:2px;">
+            <span style="font-size:10px;color:var(--text-muted);">mm</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Playback controls -->
       <div class="section">
         <div class="section-header">Playback</div>

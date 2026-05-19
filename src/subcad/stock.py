@@ -597,15 +597,24 @@ class Stock:
         Returns a dict with:
           - final_volume_mm3
           - volume_removed_mm3
-          - gouges: list of (x, y, z) penetration points
+          - gouges: list of gouge descriptors
           - cycle_time_minutes
+          - ops_simulated: count of operations that ran through the engine
         """
         try:
-            from src.simulation.material_removal import MaterialRemovalEngine as TriDexelEngine
+            from src.simulation.material_removal import MaterialRemovalEngine
             from src.simulation.tools import create_tool as sim_create_tool
+            from src.simulation.tri_dexel import TriDexelModel
             import numpy as np
-        except ImportError as e:
-            return {"error": f"Simulation not available: {e}"}
+        except ImportError:
+            # Fallback: try without the src. prefix (if running from within src/)
+            try:
+                from simulation.material_removal import MaterialRemovalEngine
+                from simulation.tools import create_tool as sim_create_tool
+                from simulation.tri_dexel import TriDexelModel
+                import numpy as np
+            except ImportError as e:
+                return {"error": f"Simulation not available: {e}"}
 
         # 1. Build initial tri-dexel grid from stock mesh
         mesh = self.to_mesh()
@@ -613,39 +622,76 @@ class Stock:
             return {"error": "Cannot create mesh from shape."}
 
         bbox = self.bounding_box
-        dexel_resolution = 0.5  # mm per dexel
-        engine = TriDexelEngine(
-            mesh.vertices, mesh.faces,
-            dexel_resolution,
-            bbox["length"], bbox["width"], bbox["height"]
+        dexel_resolution = float(toolpath_precision)  # mm per dexel
+
+        # Create TriDexelModel from the mesh, then the MaterialRemovalEngine
+        tri_model = TriDexelModel.from_mesh(mesh, resolution=dexel_resolution)
+        engine = MaterialRemovalEngine(
+            tri_dexel=tri_model,
+            linear_resolution=dexel_resolution,
         )
-        initial_volume = engine.volume()
+        initial_volume = engine.tri_dexel.volume()
+
+        # Tool-type mapping: SubCAD tool_type -> simulation create_tool key
+        _TOOL_TYPE_MAP = {
+            "flat_endmill": "flat_endmill",
+            "ball_endmill": "ball_endmill",
+            "drill": "drill",
+            "chamfer": "chamfer",
+            "thread_mill": "thread_mill",
+            "dovetail": "dovetail",
+            "end_mill": "flat_endmill",       # alias
+            "face_mill": "flat_endmill",      # alias
+            "spot_drill": "drill",            # alias
+        }
 
         # 2. Replay each operation's toolpath
         gouges = []
+        ops_simulated = 0
         for op_dict in self._plan.operations:
             op_tool_type = op_dict.get("tool_type", "flat_endmill")
             op_tool_dia = op_dict.get("tool_diameter_mm", 10.0)
-            sim_tool = sim_create_tool(op_tool_type, op_tool_dia)
+
+            # Map SubCAD tool type to simulation tool type
+            sim_tool_key = _TOOL_TYPE_MAP.get(op_tool_type, None)
+            if sim_tool_key is None:
+                # Unknown tool type - skip with a warning-level note
+                gouges.append({
+                    "operation": op_dict.get("operation", "unknown"),
+                    "message": f"Skipped: unknown tool_type={op_tool_type!r}",
+                })
+                continue
+
+            try:
+                sim_tool = sim_create_tool(sim_tool_key, diameter=float(op_tool_dia))
+            except (TypeError, ValueError) as e:
+                gouges.append({
+                    "operation": op_dict.get("operation", "unknown"),
+                    "message": f"Tool creation failed: {e}",
+                })
+                continue
 
             # Generate approximate toolpath from the operation
             toolpath = _op_to_simple_toolpath(op_dict, bbox)
             for pose in toolpath:
-                engine.remove_material(sim_tool, pose)
+                engine.remove_tool_at_pose(sim_tool, pose)
+
+            ops_simulated += 1
 
             # Check for gouges (material removed below target)
-            if engine.volume() < 0:
+            if engine.tri_dexel.volume() < 0:
                 gouges.append({
                     "operation": op_dict.get("operation", "unknown"),
                     "message": "Gouge detected -- volume went below zero",
                 })
 
-        final_volume = max(0.0, engine.volume())
+        final_volume = max(0.0, engine.tri_dexel.volume())
         return {
             "final_volume_mm3": round(final_volume, 1),
             "volume_removed_mm3": round(initial_volume - final_volume, 1),
             "gouges": gouges,
             "cycle_time_minutes": self._plan.estimated_time_minutes,
+            "ops_simulated": ops_simulated,
         }
 
     # -------------------------------------------------------------------
@@ -708,21 +754,70 @@ class Stock:
 def _op_to_simple_toolpath(op_dict: dict, bbox: dict) -> list:
     """Generate a minimal toolpath for simulation from an operation dict.
 
-    Returns list of (position, direction) tuples where position is (x, y, z)
-    in the stock coordinate frame.
+    Returns a list of ToolPose objects in the stock coordinate frame.
+    Each pose positions the tool tip at (cx, cy, z) with a vertical
+    downward orientation (tool axis = [0, 0, 1] in world, cutting -Z).
+
+    For face_mill and chamfer operations, generates a raster/contour
+    pattern across the stock top face.  For pocket/drill/slot operations,
+    generates a single plunge at the operation position.
     """
+    try:
+        from src.simulation.kinematics import ToolPose
+    except ImportError:
+        from simulation.kinematics import ToolPose
+
+    import numpy as np
+
     op_type = op_dict.get("operation", "")
     depth = op_dict.get("depth_mm", 0.0)
     pos = op_dict.get("position")
     cx, cy = pos if pos else (0.0, 0.0)
     z_top = bbox.get("z_max", 0.0)
-    z_bottom = z_top - depth
-    steps = max(1, int(depth / 0.5))  # 0.5mm steps
 
-    toolpath = []
-    for i in range(steps):
-        z = z_top - (i + 1) * (depth / steps)
-        toolpath.append(((cx, cy, z), (0, 0, -1)))
+    # Default orientation: tool pointing +Z in world, cutting is -Z
+    q_identity = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float64)
+
+    # Sanity check: depth must be positive
+    if depth <= 0.0:
+        depth = 1.0
+
+    toolpath: list = []
+
+    if op_type in ("face_mill", "chamfer"):
+        # Face mill / chamfer: raster across the top face
+        x_min = bbox.get("x_min", 0.0)
+        x_max = bbox.get("x_max", 0.0)
+        y_min = bbox.get("y_min", 0.0)
+        y_max = bbox.get("y_max", 0.0)
+        tool_dia = op_dict.get("tool_diameter_mm", 10.0)
+        stepover = tool_dia * 0.7
+
+        # Generate raster passes in X with stepover in Y
+        steps = max(1, int(depth / 0.5))
+        y = y_min
+        direction = 1  # alternating
+        while y < y_max:
+            z = z_top - depth
+            toolpath.append(ToolPose(
+                position=np.array([x_min, y, z], dtype=np.float64),
+                orientation=q_identity.copy(),
+            ))
+            toolpath.append(ToolPose(
+                position=np.array([x_max, y, z], dtype=np.float64),
+                orientation=q_identity.copy(),
+            ))
+            y += stepover
+            direction *= -1
+    else:
+        # Pocket, drill, slot, contour, etc.: plunge at operation position
+        steps = max(1, int(depth / 0.5))  # 0.5mm steps
+        for i in range(steps):
+            z = z_top - (i + 1) * (depth / steps)
+            toolpath.append(ToolPose(
+                position=np.array([cx, cy, z], dtype=np.float64),
+                orientation=q_identity.copy(),
+            ))
 
     return toolpath
 

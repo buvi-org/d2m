@@ -11,7 +11,7 @@ import { startBrowserSimulation } from './sim-integration.js';
 // Constants
 // ---------------------------------------------------------------------------
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = window.location.origin;  // same-origin for unified server
 
 // ---------------------------------------------------------------------------
 // Application state
@@ -289,6 +289,20 @@ function setupEventListeners() {
   // Simulate button
   els.simulateBtn.addEventListener('click', startSimulation);
 
+  // SubCAD preset buttons
+  const presets = {
+    'preset-pocket-plate': 'pocket_plate',
+    'preset-drill-pattern': 'drill_pattern',
+    'preset-stepped-block': 'stepped_block',
+    'preset-face-mill': 'face_mill_only',
+  };
+  for (const [elId, presetName] of Object.entries(presets)) {
+    const btn = document.getElementById(elId);
+    if (btn) {
+      btn.addEventListener('click', () => runSubcadPreset(presetName));
+    }
+  }
+
   // Playback controls
   els.playBtn.addEventListener('click', () => {
     state.isPaused = false;
@@ -535,6 +549,107 @@ async function _runBrowserSimulation() {
     showToast(`GPU Simulation error: ${err.message}`, true);
     els.simulateBtn.disabled = false;
     els.simulateBtn.textContent = 'Simulate';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// SubCAD preset simulation
+// ---------------------------------------------------------------------------
+
+async function runSubcadPreset(preset) {
+  const width = parseFloat(document.getElementById('preset-width')?.value) || 50;
+  const length = parseFloat(document.getElementById('preset-length')?.value) || 80;
+  const height = parseFloat(document.getElementById('preset-height')?.value) || 20;
+  const resolution = parseFloat(els.resolutionInput.value) || 0.5;
+
+  _resetSimulationState();
+  state.isSimulating = true;
+  state.isBrowserSim = false;
+  els.simulateBtn.disabled = true;
+  els.simulateBtn.textContent = 'Building...';
+  updateUIState();
+
+  showToast(`Building ${preset} via SubCAD and simulating...`);
+
+  try {
+    const resp = await fetch(`${API_BASE}/api/subcad/presets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        preset,
+        width,
+        length,
+        height,
+        resolution,
+      }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error || `Server error ${resp.status}`);
+    }
+
+    const data = await resp.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    // Decode GLB base64 to ArrayBuffer
+    function b64ToBuffer(b64) {
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    // Load initial (stock) mesh first
+    if (data.initial_glb_base64) {
+      await viewer.loadStockMesh(b64ToBuffer(data.initial_glb_base64));
+    }
+
+    // Load simulated result mesh
+    if (data.glb_base64) {
+      await viewer.updateStockMesh(b64ToBuffer(data.glb_base64));
+    }
+
+    // Load target mesh as reference
+    if (data.target_glb_base64) {
+      await viewer.loadTargetMesh(b64ToBuffer(data.target_glb_base64));
+    }
+
+    // Update stats
+    state.completed = true;
+    state.simResult = data;
+    state.totalOps = data.moves_executed || 0;
+    state.operationCount = state.totalOps;
+    state.currentOpIndex = state.totalOps;
+
+    updateStats(
+      data.total_volume_removed || 0,
+      data.gouge_count || 0,
+      data.moves_executed || 0,
+      data.total_time_ms || 0
+    );
+
+    els.progressBar.style.width = '100%';
+    els.progressText.textContent = `SubCAD: ${preset} — ${data.moves_executed || 0} moves`;
+
+    showToast(
+      `SubCAD ${preset}: ${data.moves_executed || 0} moves, ` +
+      `${(data.total_volume_removed || 0).toFixed(1)} mm3 removed, ` +
+      `${(data.total_time_ms || 0).toFixed(0)}ms`
+    );
+
+  } catch (err) {
+    showToast(`Preset error: ${err.message}`, true);
+  } finally {
+    state.isSimulating = false;
+    els.simulateBtn.disabled = false;
+    els.simulateBtn.textContent = 'Simulate';
+    updateUIState();
   }
 }
 

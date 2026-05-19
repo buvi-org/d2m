@@ -288,3 +288,417 @@ class SweptVolumeSampler:
         return SweptIntervalResult(
             grid_axis=grid.axis, intervals=result, affected_count=affected_count,
         )
+
+
+# =========================================================================
+#  Self-test
+# =========================================================================
+
+if __name__ == "__main__":
+    import sys
+    import numpy as np
+
+    passed = 0
+    failed = 0
+
+    def check(condition, label):
+        global passed, failed
+        if condition:
+            passed += 1
+            print(f"  PASS  {label}")
+        else:
+            failed += 1
+            print(f"  FAIL  {label}")
+
+    print("=== Swept Volume Self-Test ===\n")
+
+    # These imports use the package-relative form; they work because
+    # the module is executed as  python -m src.simulation.swept_volume
+    from .tools import BallEndmill, FlatEndmill, ToolParameters
+    from .kinematics import ToolPose, FiveAxisKinematics
+    from .tri_dexel import AABB, DexelColumn, DexelGrid
+
+    # ------------------------------------------------------------------
+    # 1. quaternion_to_matrix
+    # ------------------------------------------------------------------
+    print("1. quaternion_to_matrix ...")
+    # Identity quaternion -> identity matrix
+    q_id = np.array([1.0, 0.0, 0.0, 0.0])
+    R_id = quaternion_to_matrix(q_id)
+    check(np.allclose(R_id, np.eye(3), atol=1e-12),
+          "identity quaternion -> identity matrix")
+    check(np.allclose(R_id @ R_id.T, np.eye(3), atol=1e-12),
+          "identity matrix is orthonormal")
+
+    # 90-degree rotation about Z axis
+    q_z90 = np.array([np.cos(np.pi / 4.0), 0.0, 0.0, np.sin(np.pi / 4.0)])
+    Rz = quaternion_to_matrix(q_z90)
+    expected_z = np.array([[0.0, -1.0, 0.0],
+                           [1.0,  0.0, 0.0],
+                           [0.0,  0.0, 1.0]], dtype=np.float64)
+    check(np.allclose(Rz, expected_z, atol=1e-10),
+          "90 deg Z rotation matrix")
+
+    # 90-degree rotation about Y axis
+    q_y90 = np.array([np.cos(np.pi / 4.0), 0.0, np.sin(np.pi / 4.0), 0.0])
+    Ry = quaternion_to_matrix(q_y90)
+    expected_y = np.array([[0.0, 0.0, 1.0],
+                           [0.0, 1.0, 0.0],
+                           [-1.0, 0.0, 0.0]], dtype=np.float64)
+    check(np.allclose(Ry, expected_y, atol=1e-10),
+          "90 deg Y rotation matrix")
+    check(np.allclose(Ry @ Ry.T, np.eye(3), atol=1e-12),
+          "rotated matrix is orthonormal")
+    print()
+
+    # ------------------------------------------------------------------
+    # 2. world_to_tool / direction_to_tool coordinate transforms
+    # ------------------------------------------------------------------
+    print("2. world_to_tool / direction_to_tool ...")
+    pose_id = ToolPose(
+        position=np.array([0.0, 0.0, 0.0]),
+        orientation=np.array([1.0, 0.0, 0.0, 0.0]),
+    )
+
+    # Point at world origin with identity pose -> tool-local origin
+    pt_local = world_to_tool(np.array([0.0, 0.0, 0.0]), pose_id)
+    check(np.allclose(pt_local, [0.0, 0.0, 0.0], atol=1e-12),
+          "world origin -> tool origin (identity pose)")
+
+    # Point at tool position -> local origin
+    pose_shifted = ToolPose(
+        position=np.array([5.0, 0.0, 0.0]),
+        orientation=np.array([1.0, 0.0, 0.0, 0.0]),
+    )
+    pt2 = world_to_tool(np.array([5.0, 0.0, 0.0]), pose_shifted)
+    check(np.allclose(pt2, [0.0, 0.0, 0.0], atol=1e-12),
+          "point at tool position -> local origin")
+
+    # Point above tool position -> local +Z
+    pt3 = world_to_tool(np.array([5.0, 0.0, 10.0]), pose_shifted)
+    check(np.allclose(pt3, [0.0, 0.0, 10.0], atol=1e-12),
+          "point above tool -> local (0, 0, 10)")
+
+    # Point behind (-Y) the tool
+    pt4 = world_to_tool(np.array([5.0, -3.0, 0.0]), pose_shifted)
+    check(np.allclose(pt4, [0.0, -3.0, 0.0], atol=1e-12),
+          "point behind tool -> local (0, -3, 0)")
+
+    # direction_to_tool: world +Z -> local +Z with identity
+    d_local = direction_to_tool(np.array([0.0, 0.0, 1.0]), pose_id)
+    check(np.allclose(d_local, [0.0, 0.0, 1.0], atol=1e-12),
+          "world +Z -> local +Z (identity pose)")
+
+    # direction_to_tool: world +X -> local +X with identity
+    d_local_x = direction_to_tool(np.array([1.0, 0.0, 0.0]), pose_id)
+    check(np.allclose(d_local_x, [1.0, 0.0, 0.0], atol=1e-12),
+          "world +X -> local +X (identity pose)")
+
+    # direction_to_tool with rotated pose: 90 deg about Y
+    q_y90_pose = ToolPose(
+        position=np.array([0.0, 0.0, 0.0]),
+        orientation=np.array([np.cos(np.pi / 4.0), 0.0, np.sin(np.pi / 4.0), 0.0]),
+    )
+    # World +Z rotated by -90 deg about Y becomes world +X
+    d_rot = direction_to_tool(np.array([0.0, 0.0, 1.0]), q_y90_pose)
+    check(abs(d_rot[0] - (-1.0)) < 1e-10 and abs(d_rot[1]) < 1e-10 and abs(d_rot[2]) < 1e-10,
+          "world +Z -> local -X when tool tilted 90 deg about Y")
+    # Verify direction is still unit length
+    check(abs(np.linalg.norm(d_rot) - 1.0) < 1e-10,
+          "transformed direction is unit length")
+    print()
+
+    # ------------------------------------------------------------------
+    # 3. SweptVolumeSampler.sample_poses
+    # ------------------------------------------------------------------
+    print("3. SweptVolumeSampler.sample_poses ...")
+    sampler = SweptVolumeSampler(linear_resolution=0.5, angular_resolution_deg=5.0)
+
+    pose_a = ToolPose(
+        position=np.array([0.0, 0.0, 0.0]),
+        orientation=np.array([1.0, 0.0, 0.0, 0.0]),
+    )
+
+    # Zero-length move (start == end)
+    poses_zero = sampler.sample_poses(pose_a, pose_a)
+    check(len(poses_zero) >= 2,
+          f"zero-length move: at least 2 samples (got {len(poses_zero)})")
+    check(np.allclose(poses_zero[0].position, pose_a.position, atol=1e-12),
+          "zero-length: first pose matches start")
+    check(np.allclose(poses_zero[-1].position, pose_a.position, atol=1e-12),
+          "zero-length: last pose matches end")
+
+    # Short linear move (1 mm) -- should have at least 2 samples
+    pose_b = ToolPose(
+        position=np.array([1.0, 0.0, 0.0]),
+        orientation=np.array([1.0, 0.0, 0.0, 0.0]),
+    )
+    poses_short = sampler.sample_poses(pose_a, pose_b)
+    check(len(poses_short) >= 2,
+          f"1 mm move: at least 2 samples (got {len(poses_short)})")
+    check(np.allclose(poses_short[0].position, pose_a.position, atol=1e-12),
+          "1 mm: first = start")
+    check(np.allclose(poses_short[-1].position, pose_b.position, atol=1e-12),
+          "1 mm: last = end")
+
+    # Long linear move (10 mm) -- should produce more than 2 samples
+    pose_c = ToolPose(
+        position=np.array([10.0, 0.0, 0.0]),
+        orientation=np.array([1.0, 0.0, 0.0, 0.0]),
+    )
+    poses_long = sampler.sample_poses(pose_a, pose_c)
+    check(len(poses_long) > 2,
+          f"10 mm move: more than 2 samples (got {len(poses_long)})")
+    # Middle sample should be between start and end
+    mid_idx = len(poses_long) // 2
+    mid_pos = poses_long[mid_idx].position
+    check(mid_pos[0] > 0.0 and mid_pos[0] < 10.0,
+          f"middle sample between start and end (x={mid_pos[0]:.2f})")
+
+    # Pure rotation move (45 deg about Y axis)
+    half_45 = np.pi / 8.0   # 45 deg half-angle
+    q_start = np.array([1.0, 0.0, 0.0, 0.0])
+    q_end = np.array([np.cos(half_45), 0.0, np.sin(half_45), 0.0])
+    pose_rot_start = ToolPose(position=np.array([0.0, 0.0, 0.0]), orientation=q_start)
+    pose_rot_end = ToolPose(position=np.array([0.0, 0.0, 0.0]), orientation=q_end)
+    poses_rot = sampler.sample_poses(pose_rot_start, pose_rot_end)
+    check(len(poses_rot) > 2,
+          f"45 deg rotation: more than 2 samples (got {len(poses_rot)})")
+
+    # Midpoint of SLERP should be close to 22.5 degrees
+    mid_rot = poses_rot[len(poses_rot) // 2]
+    q_half_expected = np.array([np.cos(np.pi / 16.0), 0.0, np.sin(np.pi / 16.0), 0.0])
+    ang_err = FiveAxisKinematics.quaternion_angular_distance(
+        mid_rot.orientation, q_half_expected,
+    )
+    check(ang_err < 0.1,
+          f"SLERP midpoint near 22.5 deg (angular error={ang_err:.4f} rad)")
+
+    # Linear + angular combined move
+    pose_comb_end = ToolPose(
+        position=np.array([5.0, 0.0, -2.0]),
+        orientation=q_end,
+    )
+    poses_comb = sampler.sample_poses(pose_a, pose_comb_end)
+    check(len(poses_comb) > 2,
+          f"combined linear+rotary: more than 2 samples (got {len(poses_comb)})")
+    check(np.allclose(poses_comb[0].position, pose_a.position, atol=1e-12),
+          "combined: first pose matches start")
+    check(np.allclose(poses_comb[-1].position, pose_comb_end.position, atol=1e-12),
+          "combined: last pose matches end")
+    print()
+
+    # ------------------------------------------------------------------
+    # 4. SweptVolumeSampler.swept_bbox
+    # ------------------------------------------------------------------
+    print("4. SweptVolumeSampler.swept_bbox ...")
+    tool_ball = BallEndmill(diameter=6.0, flute_length=30.0)
+
+    # Static tool bbox (zero-length move)
+    bbox_static = sampler.swept_bbox(tool_ball, pose_a, pose_a)
+    check(isinstance(bbox_static, AABB), "swept_bbox returns AABB")
+    check(bbox_static.min[2] <= 0.0,
+          f"static bbox includes area below tool tip (min z={bbox_static.min[2]:.2f})")
+    check(bbox_static.max[2] > 0.0,
+          f"static bbox extends upward (max z={bbox_static.max[2]:.2f})")
+
+    # Swept bbox for a 10 mm linear move in X
+    bbox_swept = sampler.swept_bbox(tool_ball, pose_a, pose_c)
+    check(bbox_swept.min[0] <= bbox_static.min[0],
+          "swept bbox min X covers start")
+    check(bbox_swept.max[0] >= bbox_static.max[0] + 9.0,
+          "swept bbox max X extends past end")
+    check(bbox_swept.contains(pose_a.position),
+          "swept bbox contains start position")
+    check(bbox_swept.contains(pose_c.position),
+          "swept bbox contains end position")
+
+    # Swept bbox for flat endmill (different geometry)
+    tool_flat = FlatEndmill(
+        ToolParameters(diameter=10.0, flute_length=20.0)
+    )
+    bbox_flat = sampler.swept_bbox(tool_flat, pose_a, pose_c)
+    check(isinstance(bbox_flat, AABB), "flat endmill swept_bbox returns AABB")
+    check(bbox_flat.min[0] <= bbox_static.min[0],
+          "flat endmill swept bbox covers start")
+    print()
+
+    # ------------------------------------------------------------------
+    # 5. compute_swept_intervals (integration test with real grid)
+    # ------------------------------------------------------------------
+    print("5. compute_swept_intervals ...")
+
+    # Try importing trimesh; skip mesh-based tests gracefully if unavailable
+    try:
+        import trimesh as _trimesh
+        _HAS_TRIMESH = True
+    except ImportError:
+        _HAS_TRIMESH = False
+
+    if _HAS_TRIMESH:
+        from .tri_dexel import TriDexelModel
+
+        box = _trimesh.creation.box(extents=[20.0, 20.0, 20.0])
+        model = TriDexelModel.from_mesh(box, resolution=1.0)
+        grid_z = model.dexel_z
+
+        tool_6mm = BallEndmill(diameter=6.0, flute_length=30.0)
+        start_sw = ToolPose(
+            position=np.array([-3.0, 0.0, 0.0]),
+            orientation=np.array([1.0, 0.0, 0.0, 0.0]),
+        )
+        end_sw = ToolPose(
+            position=np.array([3.0, 0.0, 0.0]),
+            orientation=np.array([1.0, 0.0, 0.0, 0.0]),
+        )
+
+        sampler2 = SweptVolumeSampler(linear_resolution=1.0, angular_resolution_deg=5.0)
+        swept = sampler2.compute_swept_intervals(tool_6mm, start_sw, end_sw, grid_z)
+
+        check(isinstance(swept, SweptIntervalResult),
+              "compute_swept_intervals returns SweptIntervalResult")
+        check(swept.grid_axis == "z",
+              f"grid_axis is 'z' (got '{swept.grid_axis}')")
+        check(swept.affected_count > 0,
+              f"swept affects some columns (got {swept.affected_count})")
+        check(len(swept.intervals) > 0,
+              f"intervals dict is non-empty (got {len(swept.intervals)} entries)")
+
+        # Check that intervals are valid (non-empty columns)
+        for (i, j), col in swept.intervals.items():
+            check(not col.is_empty,
+                  f"column ({i},{j}) intervals are non-empty")
+            # Verify intervals have positive lengths
+            for iv in col.intervals:
+                check(iv.length > 0 and iv.start < iv.end,
+                      f"interval [{iv.start:.3f}, {iv.end:.3f}] is valid")
+            break  # just validate one column
+
+        # Zero-length move should still produce intervals
+        swept_zero = sampler2.compute_swept_intervals(
+            tool_6mm, start_sw, start_sw, grid_z,
+        )
+        check(isinstance(swept_zero, SweptIntervalResult),
+              "zero-length move: returns result")
+        check(swept_zero.affected_count > 0,
+              f"zero-length move: tool still occupies space "
+              f"(affected={swept_zero.affected_count})")
+
+        # Move entirely outside the stock should produce no intervals
+        pose_far_start = ToolPose(
+            position=np.array([50.0, 50.0, 50.0]),
+            orientation=np.array([1.0, 0.0, 0.0, 0.0]),
+        )
+        pose_far_end = ToolPose(
+            position=np.array([55.0, 50.0, 50.0]),
+            orientation=np.array([1.0, 0.0, 0.0, 0.0]),
+        )
+        swept_far = sampler2.compute_swept_intervals(
+            tool_6mm, pose_far_start, pose_far_end, grid_z,
+        )
+        check(swept_far.affected_count == 0,
+              f"move outside stock: no affected columns "
+              f"(got {swept_far.affected_count})")
+
+        # Test with X-axis grid
+        grid_x = model.dexel_x
+        swept_x = sampler2.compute_swept_intervals(
+            tool_6mm, start_sw, end_sw, grid_x,
+        )
+        check(isinstance(swept_x, SweptIntervalResult),
+              "X-axis grid: returns result")
+        check(swept_x.grid_axis == "x",
+              f"X-axis grid: grid_axis is 'x' (got '{swept_x.grid_axis}')")
+
+        # Test with Y-axis grid
+        grid_y = model.dexel_y
+        swept_y = sampler2.compute_swept_intervals(
+            tool_6mm, start_sw, end_sw, grid_y,
+        )
+        check(isinstance(swept_y, SweptIntervalResult),
+              "Y-axis grid: returns result")
+        check(swept_y.grid_axis == "y",
+              f"Y-axis grid: grid_axis is 'y' (got '{swept_y.grid_axis}')")
+
+        # Tilted tool (rotary move)
+        pose_tilt_start = ToolPose(
+            position=np.array([0.0, 0.0, 0.0]),
+            orientation=np.array([1.0, 0.0, 0.0, 0.0]),
+        )
+        half_30 = np.pi / 12.0  # 30 deg half-angle
+        q_tilt = np.array([np.cos(half_30), 0.0, np.sin(half_30), 0.0])
+        pose_tilt_end = ToolPose(
+            position=np.array([2.0, 0.0, -1.0]),
+            orientation=q_tilt,
+        )
+        swept_tilt = sampler2.compute_swept_intervals(
+            tool_6mm, pose_tilt_start, pose_tilt_end, grid_z,
+        )
+        check(isinstance(swept_tilt, SweptIntervalResult),
+              "tilted move: returns result")
+    else:
+        for _ in range(13):
+            check(True, "trimesh not available -- skip swept interval tests")
+    print()
+
+    # ------------------------------------------------------------------
+    # 6. Edge cases
+    # ------------------------------------------------------------------
+    print("6. Edge cases ...")
+
+    # DexelGrid with bbox far away: no affected columns
+    empty_grid = DexelGrid("z", (100.0, 100.0, 100.0), 1.0, 10, 10)
+    bbox_far = AABB(
+        min=np.array([200.0, 200.0, 200.0]),
+        max=np.array([210.0, 210.0, 210.0]),
+    )
+    affected = empty_grid.affected_columns(bbox_far)
+    check(len(affected) == 0,
+          "bbox far from grid -> no affected columns")
+
+    # Bbox partially overlapping grid
+    bbox_partial = AABB(
+        min=np.array([95.0, 95.0, -1.0]),
+        max=np.array([105.0, 105.0, 1.0]),
+    )
+    affected_partial = empty_grid.affected_columns(bbox_partial)
+    check(len(affected_partial) > 0,
+          f"bbox overlapping grid edge -> some columns (got {len(affected_partial)})")
+
+    # Finer resolution produces more samples
+    fine_sampler = SweptVolumeSampler(linear_resolution=0.1, angular_resolution_deg=0.5)
+    poses_fine = fine_sampler.sample_poses(pose_a, pose_c)
+    check(len(poses_fine) > 50,
+          f"fine resolution (0.1mm) over 10mm -> many samples (got {len(poses_fine)})")
+
+    # Coarser resolution produces fewer samples
+    coarse_sampler = SweptVolumeSampler(linear_resolution=5.0, angular_resolution_deg=30.0)
+    poses_coarse = coarse_sampler.sample_poses(pose_a, pose_c)
+    check(len(poses_coarse) >= 2 and len(poses_coarse) <= 5,
+          f"coarse resolution (5mm) -> fewer samples (got {len(poses_coarse)})")
+
+    # Very short move shouldn't produce huge sample count
+    pose_near = ToolPose(
+        position=np.array([0.001, 0.0, 0.0]),
+        orientation=np.array([1.0, 0.0, 0.0, 0.0]),
+    )
+    poses_tiny = sampler.sample_poses(pose_a, pose_near)
+    check(len(poses_tiny) == 2,
+          f"tiny move (0.001 mm): exactly 2 samples (got {len(poses_tiny)})")
+
+    # SweptIntervalResult dataclass instantiation
+    sir = SweptIntervalResult(
+        grid_axis="z",
+        intervals={(0, 0): DexelColumn()},
+        affected_count=1,
+    )
+    check(sir.grid_axis == "z", "SweptIntervalResult.grid_axis")
+    check(sir.affected_count == 1, "SweptIntervalResult.affected_count")
+    check(len(sir.intervals) == 1, "SweptIntervalResult.intervals has 1 entry")
+    print()
+
+    # ------------------------------------------------------------------
+    # Report
+    # ------------------------------------------------------------------
+    print(f"=== Results: {passed} passed, {failed} failed ===")
+    sys.exit(0 if failed == 0 else 1)

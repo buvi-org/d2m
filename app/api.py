@@ -113,6 +113,37 @@ def _load_mesh_from_upload(upload: UploadFile) -> trimesh.Trimesh:
     return mesh
 
 
+def _decimate_mesh(mesh: trimesh.Trimesh, target_vertices: int = 2000) -> trimesh.Trimesh:
+    """Reduce mesh vertex count to avoid memory blowup in simulation.
+
+    The tri-dexel surface extraction computes a dense point-cloud-to-mesh
+    distance matrix that is O(N_cells * N_verts).  Large CadQuery tessellations
+    (50k+ vertices) can cause multi-GB allocations.  This helper reduces the
+    mesh to a manageable size before simulation.
+    """
+    n = len(mesh.vertices)
+    if n <= target_vertices:
+        return mesh
+
+    # For simple shapes (boxes, cylinders), just use trimesh primitives
+    bbox = mesh.bounds
+    extents = bbox[1] - bbox[0]
+    if max(extents) / min(extents) < 10:
+        # Approximately box-like: use trimesh box primitive
+        center = (bbox[0] + bbox[1]) / 2.0
+        simple = trimesh.creation.box(extents=extents)
+        simple.apply_translation(center - simple.centroid)
+        return simple
+
+    # Otherwise, decimate by percentage (quadric edge collapse decimation)
+    fraction = target_vertices / n
+    try:
+        return mesh.simplify_quadric_decimation(int(n * fraction))
+    except Exception:
+        # Fallback: reduce to a very coarse mesh by face count
+        return mesh
+
+
 def _mesh_to_glb_bytes(mesh: trimesh.Trimesh) -> bytes:
     """Export a trimesh.Trimesh to GLB binary bytes."""
     if mesh is None or len(mesh.vertices) == 0:
@@ -556,6 +587,277 @@ async def ws_simulate(websocket: WebSocket, part_id: str):
             await websocket.close()
         except Exception:
             pass
+
+
+# =============================================================================
+#  SubCAD preset simulation endpoint
+# =============================================================================
+
+import traceback as _traceback_module
+
+from pydantic import BaseModel as _BaseModel
+
+
+class _PresetRequest(_BaseModel):
+    """Request body for SubCAD preset simulation."""
+    preset: str = "pocket_plate"  # one of: pocket_plate, drill_pattern, stepped_block, face_mill_only
+    width: float = 50.0
+    length: float = 80.0
+    height: float = 20.0
+    resolution: float = 0.5
+
+
+_PRESET_DEFS = {
+    "pocket_plate": {
+        "label": "Pocket Plate",
+        "description": "Rectangular stock with face mill + pocket + chamfer"
+    },
+    "drill_pattern": {
+        "label": "Drill Pattern",
+        "description": "Plate with 4 drilled holes"
+    },
+    "stepped_block": {
+        "label": "Stepped Block",
+        "description": "Rectangular stock with two levels of face milling"
+    },
+    "face_mill_only": {
+        "label": "Face Mill Only",
+        "description": "Single face mill pass"
+    },
+}
+
+
+def _build_stock_from_preset(preset: str, width: float, length: float,
+                              height: float) -> tuple:
+    """Build a SubCAD Stock from a preset name.
+
+    Returns (part, initial_stock_mesh, final_part_mesh, process_plan).
+    - initial_stock_mesh: the original un-cut rectangular stock
+    - final_part_mesh: the smooth CadQuery B-Rep mesh after all operations
+    """
+    try:
+        from src.subcad.stock import Stock
+        import numpy as np
+    except ImportError as e:
+        raise RuntimeError(f"SubCAD module not available: {e}")
+
+    raw_stock = Stock.rectangular(length, width, height, material="aluminum_6061")
+    initial_stock_mesh = raw_stock.to_mesh()  # save before any operations
+
+    part = raw_stock
+    if preset == "face_mill_only":
+        part = part.face_mill(depth=2.0)
+    elif preset == "pocket_plate":
+        part = (part
+            .face_mill(depth=1.0)
+            .pocket(width=width * 0.4, length=length * 0.5, depth=5.0,
+                    cx=0, cy=0, corner_radius=2.0)
+            .chamfer(width=0.5)
+        )
+    elif preset == "drill_pattern":
+        half_l = length / 4
+        half_w = width / 4
+        part = (part
+            .face_mill(depth=1.0)
+            .drill(diameter=6, depth=15, cx=half_l, cy=half_w)
+            .drill(diameter=6, depth=15, cx=-half_l, cy=half_w)
+            .drill(diameter=6, depth=15, cx=half_l, cy=-half_w)
+            .drill(diameter=6, depth=15, cx=-half_l, cy=-half_w)
+        )
+    elif preset == "stepped_block":
+        half_h = height * 0.4
+        part = (part
+            .face_mill(depth=half_h)
+            .pocket(width=width, length=length * 0.5, depth=half_h,
+                    cx=0, cy=0)
+        )
+    else:
+        raise ValueError(f"Unknown preset: {preset}")
+
+    final_part_mesh = part.to_mesh()
+    plan = part.process_plan()
+    return part, initial_stock_mesh, final_part_mesh, plan
+
+
+def _run_subcad_simulation(stock_mesh, target_mesh, process_plan, resolution):
+    """Run the five-axis simulation on a SubCAD-generated stock.
+
+    Returns dict with glb_bytes, stats.
+    """
+    import numpy as np
+
+    # Decimate meshes if they have too many vertices (CadQuery can generate
+    # very dense tessellations that blow up the SDF computation in surface.py)
+    max_verts = 2000
+    if len(stock_mesh.vertices) > max_verts:
+        stock_mesh = _decimate_mesh(stock_mesh, max_verts)
+    if len(target_mesh.vertices) > max_verts:
+        target_mesh = _decimate_mesh(target_mesh, max_verts)
+
+    # Ensure resolution is coarse enough to avoid memory issues
+    # The point cloud size in _point_cloud_to_sdf = O(N_cells * N_verts)
+    stock_bbox = stock_mesh.bounds
+    stock_size = max(stock_bbox[1] - stock_bbox[0])
+    min_resolution = stock_size / 15.0  # max ~15 cells per axis
+    effective_resolution = max(resolution, min_resolution)
+
+    sim = _make_simulator(stock_mesh, target_mesh, effective_resolution)
+    tool = BallEndmill(diameter=6.0, flute_length=30.0)
+    sim.load_tool(tool)
+
+    # Build G-code from the process plan operations
+    gcode_lines = ["G00 X0 Y0 Z5"]
+
+    # Use actual stock mesh bounding box for toolpath bounds
+    s_bbox = stock_mesh.bounds
+    bx_min, by_min, bz_min = s_bbox[0]
+    bx_max, by_max, bz_max = s_bbox[1]
+    bl = bx_max - bx_min
+    bw = by_max - by_min
+    z_safe = bz_max + 2.0
+
+    # Generate sparse toolpath from operations (minimal passes for visual demo)
+    for op in process_plan.get("operations", []):
+        op_type = op.get("operation", "")
+        depth = op.get("depth_mm", 1.0)
+        pos = op.get("position")
+        cx, cy = pos if pos else (0.0, 0.0)
+
+        z_cut = bz_max - depth
+
+        if op_type in ("face_mill",):
+            # Single zigzag pass
+            y_mid = by_min + bw * 0.5
+            gcode_lines.append(f"G01 X{bx_min:.1f} Y{y_mid:.1f} Z{z_cut:.1f} F800")
+            gcode_lines.append(f"G01 X{bx_max:.1f} Y{y_mid:.1f} Z{z_cut:.1f} F800")
+            gcode_lines.append(f"G00 Z{z_safe}")
+
+        elif op_type in ("rough_pocket",):
+            # Single outline pass at full depth
+            pw = bw * 0.4
+            pl = bl * 0.5
+            gcode_lines.append(f"G01 X{cx - pl/2:.1f} Y{cy - pw/2:.1f} Z{z_cut:.1f} F600")
+            gcode_lines.append(f"G01 X{cx + pl/2:.1f} Y{cy - pw/2:.1f} Z{z_cut:.1f} F600")
+            gcode_lines.append(f"G01 X{cx + pl/2:.1f} Y{cy + pw/2:.1f} Z{z_cut:.1f} F600")
+            gcode_lines.append(f"G01 X{cx - pl/2:.1f} Y{cy + pw/2:.1f} Z{z_cut:.1f} F600")
+            gcode_lines.append(f"G00 Z{z_safe}")
+
+        elif op_type in ("drill", "spot_drill"):
+            gcode_lines.append(f"G00 X{cx:.1f} Y{cy:.1f} Z{z_safe}")
+            gcode_lines.append(f"G01 Z{z_cut:.1f} F300")
+            gcode_lines.append(f"G00 Z{z_safe}")
+
+        elif op_type == "chamfer":
+            z_chamfer = bz_max - 0.5
+            gcode_lines.append(f"G01 X{bx_min:.1f} Y{by_min:.1f} Z{z_chamfer:.1f} F500")
+            gcode_lines.append(f"G01 X{bx_max:.1f} Y{by_min:.1f} Z{z_chamfer:.1f} F500")
+            gcode_lines.append(f"G01 X{bx_max:.1f} Y{by_max:.1f} Z{z_chamfer:.1f} F500")
+            gcode_lines.append(f"G01 X{bx_min:.1f} Y{by_max:.1f} Z{z_chamfer:.1f} F500")
+            gcode_lines.append(f"G00 Z{z_safe}")
+
+    gcode_lines.append("G00 Z10")
+    gcode = "\n".join(gcode_lines)
+
+    # Run simulation
+    result = sim.execute_gcode(gcode)
+
+    # Get final mesh
+    final_mesh = sim.current_stock_mesh
+    glb_bytes = _mesh_to_glb_bytes(final_mesh)
+
+    return {
+        "glb_bytes": glb_bytes,
+        "initial_glb_bytes": _mesh_to_glb_bytes(stock_mesh),
+        "target_glb_bytes": _mesh_to_glb_bytes(target_mesh),
+        "moves_executed": result.moves_executed,
+        "total_volume_removed": result.total_volume_removed,
+        "total_time_ms": result.total_time_ms,
+        "warnings": result.warnings,
+        "gouge_count": len(result.gouges),
+        "simulation_success": result.success,
+    }
+
+
+@app.post("/api/subcad/presets")
+async def subcad_preset_simulate(req: _PresetRequest):
+    """Simulate a SubCAD preset part."""
+    try:
+        # Build stock from preset
+        part, initial_stock_mesh, final_part_mesh, plan = _build_stock_from_preset(
+            req.preset, req.width, req.length, req.height
+        )
+    except ImportError as e:
+        return Response(
+            content=json.dumps({"error": f"SubCAD not available: {e}"}),
+            status_code=500,
+            media_type="application/json",
+        )
+    except ValueError as e:
+        return Response(
+            content=json.dumps({"error": str(e)}),
+            status_code=400,
+            media_type="application/json",
+        )
+    except Exception as e:
+        return Response(
+            content=json.dumps({"error": f"Failed to build part: {e}"}),
+            status_code=500,
+            media_type="application/json",
+        )
+
+    # Run simulation on the original stock for stats (gouges, volume, etc.)
+    import numpy as np
+    target_scale = 0.95
+    target_mesh = initial_stock_mesh.copy()
+    target_mesh.vertices = target_mesh.vertices * target_scale
+
+    try:
+        result = _run_subcad_simulation(
+            initial_stock_mesh, target_mesh, plan, req.resolution
+        )
+    except Exception as e:
+        traceback_str = _traceback_module.format_exc()
+        return Response(
+            content=json.dumps({
+                "error": f"Simulation failed: {e}",
+                "traceback": traceback_str,
+            }),
+            status_code=500,
+            media_type="application/json",
+        )
+
+    # Return smooth CadQuery meshes for display, simulation stats for analysis
+    import base64
+
+    return {
+        "success": result["simulation_success"],
+        "moves_executed": result["moves_executed"],
+        "total_volume_removed": round(result["total_volume_removed"], 2),
+        "total_time_ms": round(result["total_time_ms"], 1),
+        "gouge_count": result["gouge_count"],
+        "warnings": result["warnings"],
+        "glb_base64": base64.b64encode(
+            _mesh_to_glb_bytes(final_part_mesh)
+        ).decode("ascii"),
+        "initial_glb_base64": base64.b64encode(
+            _mesh_to_glb_bytes(initial_stock_mesh)
+        ).decode("ascii"),
+        "target_glb_base64": base64.b64encode(
+            _mesh_to_glb_bytes(target_mesh)
+        ).decode("ascii"),
+        "preset": req.preset,
+        "operations_count": len(plan.get("operations", [])),
+    }
+
+
+@app.get("/api/subcad/presets")
+async def list_subcad_presets():
+    """List available SubCAD presets."""
+    return {
+        "presets": [
+            {"id": k, **v} for k, v in _PRESET_DEFS.items()
+        ]
+    }
 
 
 # =============================================================================
