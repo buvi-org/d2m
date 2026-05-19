@@ -199,16 +199,17 @@ def _extract_measures_block(cq_code: str) -> str:
 
 def build_system_prompt() -> str:
     """Build the system prompt with subCAD API reference."""
-    return f"""You are an expert CAD/CAM translator. Your job is to convert CadQuery
-(constructive CAD) programs into equivalent subCAD (subtractive CAD) programs.
+    return f"""You are an expert CAD/CAM translator. Convert CadQuery programs to subCAD.
 
-{SUBCAD_API_REFERENCE}
+{SUBCAD_API_SHORT}
 
-Always respond with valid Python code inside a markdown code fence.
-The code must assign the final Stock to a variable named `part`.
-IMPORTANT: `Stock` is already imported in the execution environment — do NOT
-write `from subcad import Stock` or `from src.subcad import Stock`.
-Just use `Stock.rectangular(...)` directly."""
+## Key Rules
+- Stock XY = final part XY (no margin). Add 2-3 mm Z margin for face_mill.
+- (cx=0, cy=0) = face CENTER.  Negative = left/down.  Use cx=0,cy=0 for center.
+- DO NOT use .contour().  DO NOT write import statements.
+- `Stock` is pre-imported — use `Stock.rectangular(...)` directly.
+- Copy the Measures block from the prompt into your code as-is.
+- OUTPUT ONLY VALID PYTHON CODE. No explanation, no analysis."""
 
 
 def build_user_prompt(
@@ -282,7 +283,9 @@ subtractive program. Remember:
 - Assign the final Stock to a variable named `part`.
 - Copy the Measures block above and use m.width, m.depth, etc.
 
-Respond with ONLY the subCAD Python code inside a markdown code fence."""
+OUTPUT ONLY valid Python code in a ```python fence.  No explanation, no
+analysis, no markdown besides the code fence.  Start with the Measures
+block, then `part = Stock.rectangular(...`.  Do not include import statements."""
     return prompt
 
 
