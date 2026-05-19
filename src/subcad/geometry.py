@@ -42,10 +42,12 @@ def create_rectangular_stock(length: float, width: float, height: float) -> "cq.
     """Create a rectangular prism stock block centered at origin.
 
     Length=X, Width=Y, Height=Z.
+    Stock extends from (-length/2, -width/2, -height/2) to
+    (length/2, width/2, height/2).
     """
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
-    return cq.Workplane("XY").box(length, width, height)
+    return cq.Workplane("XY").box(length, width, height, centered=True)
 
 
 def create_cylindrical_stock(diameter: float, height: float) -> "cq.Workplane":
@@ -53,6 +55,25 @@ def create_cylindrical_stock(diameter: float, height: float) -> "cq.Workplane":
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
     return cq.Workplane("XY").cylinder(height, diameter / 2.0)
+
+
+# =============================================================================
+#  Helpers
+# =============================================================================
+
+def _to_face_coords(shape: "cq.Workplane", face_selector: str, cx: float, cy: float) -> tuple:
+    """Convert absolute (cx, cy) to face-relative coordinates for .center().
+
+    The subCAD API uses absolute coordinates where (0,0) is the stock corner.
+    CadQuery face workplanes have their origin at the face center.
+    We convert by subtracting half the stock dimensions from absolute coords.
+    """
+    bbox = shape.val().BoundingBox()
+    half_length = (bbox.xmax - bbox.xmin) / 2.0
+    half_width = (bbox.ymax - bbox.ymin) / 2.0
+    return cx - half_length, cy - half_width
+
+
 
 
 # =============================================================================
@@ -91,10 +112,12 @@ def rectangular_pocket_cut(
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
 
+    cx_rel, cy_rel = _to_face_coords(shape, face_selector, cx, cy)
+
     result = (
         shape.faces(face_selector).workplane()
-        .center(cx, cy)
-        .rect(width, length)
+        .center(cx_rel, cy_rel)
+        .rect(length, width)
         .cutBlind(-depth)
     )
 
@@ -107,8 +130,8 @@ def rectangular_pocket_cut(
             z_range = depth + 2.0
             result = result.edges(
                 cq_selectors.BoxSelector(
-                    (cx - half_w, cy - half_l, -z_range),
-                    (cx + half_w, cy + half_l, z_range),
+                    (cx_rel - half_l, cy_rel - half_w, -z_range),
+                    (cx_rel + half_l, cy_rel + half_w, z_range),
                 )
             ).fillet(corner_radius)
         except Exception:
@@ -130,9 +153,11 @@ def circular_pocket_cut(
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
 
+    cx_rel, cy_rel = _to_face_coords(shape, face_selector, cx, cy)
+
     return (
         shape.faces(face_selector).workplane()
-        .center(cx, cy)
+        .center(cx_rel, cy_rel)
         .circle(diameter / 2.0)
         .cutBlind(-depth)
     )
@@ -153,9 +178,11 @@ def drill_hole(
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
 
+    cx_rel, cy_rel = _to_face_coords(shape, face_selector, cx, cy)
+
     wp = (
         shape.faces(face_selector).workplane()
-        .center(cx, cy)
+        .center(cx_rel, cy_rel)
         .circle(diameter / 2.0)
     )
 
@@ -210,7 +237,8 @@ def slot_cut(
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
 
-    wp = shape.faces(face_selector).workplane().center(cx, cy)
+    cx_rel, cy_rel = _to_face_coords(shape, face_selector, cx, cy)
+    wp = shape.faces(face_selector).workplane().center(cx_rel, cy_rel)
 
     # Rotate the workplane if angle is non-zero
     if angle != 0.0:

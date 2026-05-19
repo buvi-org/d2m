@@ -342,8 +342,12 @@ def format_feedback(code: str, exec_result: dict, comparison: dict) -> str:
             if ops:
                 lines.append(f"  Operations recorded: {len(ops)}")
                 for op in ops[:5]:  # show at most 5
-                    op_name = op.get("operation", "?")
-                    op_depth = op.get("depth_mm", "")
+                    if isinstance(op, dict):
+                        op_name = op.get("operation", "?")
+                        op_depth = op.get("depth_mm", "")
+                    else:
+                        op_name = str(op)
+                        op_depth = ""
                     lines.append(f"    - {op_name}" +
                                  (f" (depth={op_depth}mm)" if op_depth else ""))
                 if len(ops) > 5:
