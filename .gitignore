@@ -8,7 +8,7 @@ build/
 venv/
 
 # Data & Models (large files)
-data/
+/data/
 models/
 *.step
 *.stp

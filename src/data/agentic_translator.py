@@ -32,6 +32,23 @@ from .cadquery_to_subcad import (
     _extract_measures,
 )
 
+# Optional imports for richer mesh comparison (requires trimesh + scipy)
+try:
+    from ..simulation.mesh_compare import compare_meshes, generate_error_feedback
+    _HAS_MESH_COMPARE = True
+except ImportError:
+    compare_meshes = None
+    generate_error_feedback = None
+    _HAS_MESH_COMPARE = False
+
+try:
+    from ..simulation.feature_compare import compare_with_features, generate_feature_feedback
+    _HAS_FEATURE_COMPARE = True
+except ImportError:
+    compare_with_features = None
+    generate_feature_feedback = None
+    _HAS_FEATURE_COMPARE = False
+
 
 # =========================================================================
 #  SubCAD API reference (embedded in the system prompt)
@@ -200,6 +217,8 @@ def build_iteration_prompt(
     exec_result: dict,
     comparison: dict,
     target_volume: float,
+    mesh_comparison: dict | None = None,
+    feature_comparison: dict | None = None,
 ) -> str:
     """Build a feedback prompt for iterative refinement.
 
@@ -208,19 +227,52 @@ def build_iteration_prompt(
         exec_result: Result dict from run_subcad().
         comparison: Result dict from compare_to_reference().
         target_volume: The reference STEP volume to match.
+        mesh_comparison: Optional result from compare_meshes() with SDF and/or
+            Z-slice analysis. Includes localized deviation feedback.
+        feature_comparison: Optional result from compare_with_features() with
+            per-feature comparison data. Requires ops trace.
     """
     feedback = format_feedback(previous_code, exec_result, comparison)
 
     vol_ratio = comparison.get("volume_ratio", 0)
     direction = "too small" if vol_ratio < 1.0 else "too large"
 
-    return f"""## Previous Attempt Feedback
+    # Build the base prompt
+    parts = [f"""## Previous Attempt Feedback
 
 {feedback}
 
 The subCAD volume is {direction} (volume ratio: {vol_ratio:.3f}).
-Target volume: {target_volume:.1f} mm^3.
+Target volume: {target_volume:.1f} mm^3."""]
 
+    # --- Include localized mesh deviation feedback ---
+    if mesh_comparison and mesh_comparison.get("feedback"):
+        parts.append("")
+        parts.append("## Localized Shape Deviation")
+        parts.append("The following analysis identifies *where* the candidate "
+                     "shape deviates from the reference. Use this to fix "
+                     "specific dimensions (depths, widths, positions).")
+        score = mesh_comparison.get("score")
+        if score is not None:
+            parts.append(f"Mesh quality score: {score:.0f}/100")
+        parts.append("")
+        parts.append(mesh_comparison["feedback"])
+
+    # --- Include per-feature comparison feedback ---
+    if feature_comparison and feature_comparison.get("feedback"):
+        parts.append("")
+        parts.append("## Per-Feature Comparison")
+        parts.append("The following compares individual features (pockets, holes, "
+                     "chamfers) between the reference and candidate. Features "
+                     "listed as MISSING, WRONG SIZE, or SHIFTED should be fixed.")
+        fscore = feature_comparison.get("score")
+        if fscore is not None:
+            parts.append(f"Feature quality score: {fscore:.0f}/100")
+        parts.append("")
+        parts.append(feature_comparison["feedback"])
+
+    # --- API reference and previous code ---
+    parts.append(f"""
 {SUBCAD_API_SHORT}
 
 ## Previous Code
@@ -234,7 +286,9 @@ Fix the subCAD code so the output volume better matches the target of
 {target_volume:.1f} mm^3. Adjust stock dimensions, operation depths, or
 operation parameters as needed.
 
-Respond with ONLY the corrected subCAD Python code inside a markdown code fence."""
+Respond with ONLY the corrected subCAD Python code inside a markdown code fence.""")
+
+    return "\n".join(parts)
 
 
 # =========================================================================
@@ -527,6 +581,8 @@ class AgenticTranslator:
         divergence_limit: int = 2,
         safety_cap: int = 20,
         verbose: bool = True,
+        comparison_methods: Optional[list[str]] = None,
+        feature_aware: bool = False,
     ):
         """Initialize the translator.
 
@@ -540,6 +596,11 @@ class AgenticTranslator:
             divergence_limit: Worsening attempts before giving up.
             safety_cap: Absolute max attempts regardless of trend.
             verbose: Print progress to stdout.
+            comparison_methods: Mesh comparison methods to use (e.g. ["sdf", "slice"]).
+                Defaults to None (no mesh comparison). Set to ["sdf", "slice"] to
+                enable. Requires trimesh + scipy.
+            feature_aware: If True, run per-feature comparison (requires ops trace,
+                slower). Default False.
         """
         self.llm = LLMClient(
             provider=provider,
@@ -552,6 +613,8 @@ class AgenticTranslator:
         self.divergence_limit = divergence_limit
         self.safety_cap = safety_cap
         self.verbose = verbose
+        self.comparison_methods = comparison_methods
+        self.feature_aware = feature_aware
         self._system_prompt = build_system_prompt()
 
     def translate(
@@ -642,6 +705,8 @@ class AgenticTranslator:
         final_code = None
         final_exec = None
         final_comparison = None
+        final_mesh_comparison = None
+        final_feature_comparison = None
         stop_reason = "not_started"
 
         attempt = 0
@@ -675,6 +740,8 @@ class AgenticTranslator:
                     "attempts": attempt,
                     "exec_result": None,
                     "comparison": None,
+                    "mesh_comparison": None,
+                    "feature_comparison": None,
                     "history": history,
                     "stop_reason": f"LLM API error: {e}",
                     "error": f"LLM API error: {e}",
@@ -697,6 +764,8 @@ class AgenticTranslator:
                     "code": None,
                     "exec_result": None,
                     "comparison": None,
+                    "mesh_comparison": None,
+                    "feature_comparison": None,
                     "error": "No code extracted from LLM response",
                 })
                 # Record a failed attempt for convergence tracking
@@ -730,17 +799,72 @@ class AgenticTranslator:
                 else:
                     print(f"ratio={comparison.get('volume_ratio', 0):.3f}")
 
+            # --- Richer mesh comparison (SDF + Z-slice) ---
+            mesh_comparison = None
+            feature_comparison = None
+
+            if (exec_result["success"]
+                    and self.comparison_methods
+                    and _HAS_MESH_COMPARE):
+                # Get candidate mesh (prefer STL for trimesh compatibility)
+                cand_mesh = None
+                cand_mesh_path = (exec_result.get("stl_path")
+                                  or exec_result.get("step_path"))
+                if cand_mesh_path:
+                    try:
+                        cand_mesh = trimesh.load(cand_mesh_path)
+                    except Exception:
+                        cand_mesh = None
+
+                # Load reference mesh
+                ref_mesh = None
+                try:
+                    ref_mesh = trimesh.load(step_path)
+                except Exception:
+                    ref_mesh = None
+
+                # Run mesh comparison (SDF + slice)
+                if ref_mesh is not None and cand_mesh is not None:
+                    try:
+                        mesh_comparison = compare_meshes(
+                            ref_mesh, cand_mesh,
+                            methods=self.comparison_methods,
+                        )
+                        if self.verbose and mesh_comparison.get("score") is not None:
+                            print(f"mesh_qual={mesh_comparison['score']:.0f}",
+                                  end=" ", flush=True)
+                    except Exception:
+                        mesh_comparison = None
+
+                # Run feature-aware comparison (expensive, opt-in)
+                if (self.feature_aware and _HAS_FEATURE_COMPARE
+                        and cand_mesh is not None):
+                    try:
+                        feature_comparison = compare_with_features(
+                            step_path, cand_mesh, ops_trace,
+                        )
+                        if (self.verbose
+                                and feature_comparison.get("score") is not None):
+                            print(f"feat_qual={feature_comparison['score']:.0f}",
+                                  end=" ", flush=True)
+                    except Exception:
+                        feature_comparison = None
+
             # --- Record history ---
             history.append({
                 "attempt": attempt,
                 "code": code,
                 "exec_result": exec_result,
                 "comparison": comparison,
+                "mesh_comparison": mesh_comparison,
+                "feature_comparison": feature_comparison,
             })
 
             final_code = code
             final_exec = exec_result
             final_comparison = comparison
+            final_mesh_comparison = mesh_comparison
+            final_feature_comparison = feature_comparison
 
             # --- Convergence check (triggers at top of next iteration) ---
             vol_ratio = comparison.get("volume_ratio", 0)
@@ -755,7 +879,9 @@ class AgenticTranslator:
 
             # --- Build iteration prompt for refinement ---
             iteration_prompt = build_iteration_prompt(
-                code, exec_result, comparison, target_volume
+                code, exec_result, comparison, target_volume,
+                mesh_comparison=mesh_comparison,
+                feature_comparison=feature_comparison,
             )
             messages.append({"role": "assistant", "content": response})
             messages.append({"role": "user", "content": iteration_prompt})
@@ -766,6 +892,8 @@ class AgenticTranslator:
             "attempts": len(history),
             "exec_result": final_exec,
             "comparison": final_comparison,
+            "mesh_comparison": final_mesh_comparison,
+            "feature_comparison": final_feature_comparison,
             "history": history,
             "stop_reason": stop_reason,
             "error": None,
