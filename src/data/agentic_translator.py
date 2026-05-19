@@ -414,7 +414,7 @@ class LLMClient:
         self.provider = provider.lower()
 
         if self.provider == "deepseek":
-            self.model = model or "deepseek-chat"
+            self.model = model or "deepseek-v4-flash"
             resolved_key = api_key or os.environ.get("DEEPSEEK_API_KEY")
             if not resolved_key:
                 raise ValueError(
