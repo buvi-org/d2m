@@ -503,6 +503,77 @@ class LLMClient:
             )
             return resp.choices[0].message.content
 
+    def tool_chat(
+        self,
+        messages: list[dict],
+        tools: list[dict],
+        temperature: float = 0.2,
+        max_tokens: int = 4096,
+    ) -> dict | None:
+        """Send a chat request with tool calling. Returns tool call dict or None.
+
+        DeepSeek and OpenAI use the same function-calling API.
+        Anthropic uses native tool_use.
+        """
+        if self._is_anthropic:
+            # Convert OpenAI-style tools to Anthropic format
+            anthropic_tools = []
+            for t in tools:
+                fn = t["function"]
+                anthropic_tools.append({
+                    "name": fn["name"],
+                    "description": fn["description"],
+                    "input_schema": {
+                        "type": "object",
+                        "properties": fn["parameters"]["properties"],
+                        "required": fn["parameters"].get("required", []),
+                    },
+                })
+
+            system = None
+            user_messages = []
+            for m in messages:
+                if m["role"] == "system":
+                    system = m["content"]
+                else:
+                    user_messages.append(m)
+
+            resp = self._client.messages.create(
+                model=self.model,
+                system=system or "",
+                messages=user_messages,
+                tools=anthropic_tools,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+
+            # Extract tool_use block
+            for block in resp.content:
+                if block.type == "tool_use":
+                    return {
+                        "id": block.id,
+                        "name": block.name,
+                        "arguments": block.input,
+                    }
+            return None  # no tool call
+
+        else:
+            # OpenAI-compatible (DeepSeek, OpenAI)
+            resp = self._client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                tools=tools,
+                tool_choice="required",
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            msg = resp.choices[0].message
+            if msg.tool_calls:
+                tc = msg.tool_calls[0]
+                args = json.loads(tc.function.arguments)
+                return {"id": tc.id, "name": tc.function.name, "arguments": args}
+            return None
+
 
 # =========================================================================
 #  Convergence controller
@@ -627,6 +698,36 @@ class ConvergenceController:
     @property
     def attempt_count(self) -> int:
         return len(self._ratios)
+
+
+# =========================================================================
+#  Tool schema for function calling
+# =========================================================================
+
+EXECUTE_SUBCAD_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "execute_subcad",
+        "description": (
+            "Execute subCAD subtractive code and return geometry results. "
+            "Call this with your translated subCAD code to check the output."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": (
+                        "Complete subCAD Python code. Stock is pre-imported — "
+                        "use Stock.rectangular(...) directly. Copy the Measures "
+                        "block from the prompt. Assign final part to 'part'."
+                    ),
+                }
+            },
+            "required": ["code"],
+        },
+    },
+}
 
 
 # =========================================================================
@@ -781,20 +882,17 @@ class AgenticTranslator:
         final_code = None
         final_exec = None
         final_comparison = None
-        final_mesh_comparison = None
-        final_feature_comparison = None
         stop_reason = "not_started"
 
         attempt = 0
         while True:
             attempt += 1
 
-            # --- Check convergence before calling LLM ---
-            if attempt > 1:
-                vol_ratio = final_comparison.get("volume_ratio", 0) if final_comparison else 0
+            # --- Convergence check ---
+            if final_comparison:
+                vol_ratio = final_comparison.get("volume_ratio", 0)
                 exec_ok = final_exec.get("success", False) if final_exec else False
                 decision = conv.record(vol_ratio, exec_ok)
-
                 if decision != "continue":
                     stop_reason = decision
                     if self.verbose:
@@ -802,62 +900,63 @@ class AgenticTranslator:
                     break
 
             if self.verbose:
-                print(f"  [attempt {attempt}] Calling LLM...", end=" ", flush=True)
+                if attempt == 1:
+                    print(f"  [attempt {attempt}] tool-calling LLM...",
+                          end=" ", flush=True)
+                else:
+                    print(f"  [attempt {attempt}] calling LLM...",
+                          end=" ", flush=True)
 
-            # --- Call LLM ---
+            # --- Call LLM with tool ---
             try:
-                response = self.llm.chat(messages)
+                if attempt == 1:
+                    # First attempt: force tool call
+                    tool_result = self.llm.tool_chat(
+                        messages,
+                        tools=[EXECUTE_SUBCAD_TOOL],
+                    )
+                else:
+                    # Subsequent: LLM sees previous tool results and decides
+                    tool_result = self.llm.tool_chat(
+                        messages,
+                        tools=[EXECUTE_SUBCAD_TOOL],
+                    )
             except Exception as e:
                 if self.verbose:
                     print(f"LLM error: {e}")
                 return {
-                    "success": False,
-                    "subcad_code": None,
-                    "attempts": attempt,
-                    "exec_result": None,
-                    "comparison": None,
-                    "mesh_comparison": None,
-                    "feature_comparison": None,
-                    "history": history,
-                    "stop_reason": f"LLM API error: {e}",
+                    "success": False, "subcad_code": None, "attempts": attempt,
+                    "exec_result": None, "comparison": None,
+                    "mesh_comparison": None, "feature_comparison": None,
+                    "history": history, "stop_reason": f"LLM API error: {e}",
                     "error": f"LLM API error: {e}",
                 }
 
-            # --- Extract code ---
-            code = extract_code(response)
-            if code is None:
+            # --- Handle LLM response ---
+            if tool_result is None or "code" not in tool_result.get("arguments", {}):
+                # LLM returned no tool call — try text fallback
                 if self.verbose:
-                    print("no code extracted from response")
-                messages.append({"role": "assistant", "content": response})
-                messages.append({
-                    "role": "user",
-                    "content": "CODE ONLY. No explanation. Output just: "
-                    "```python\\npart = Stock.rectangular(...)\\n```"
-                })
-                history.append({
-                    "attempt": attempt,
-                    "code": None,
-                    "exec_result": None,
-                    "comparison": None,
-                    "mesh_comparison": None,
-                    "feature_comparison": None,
-                    "error": "No code extracted from LLM response",
-                })
-                # Record a failed attempt for convergence tracking
+                    print("(no tool call)", end=" ", flush=True)
                 conv.record(0.0, False)
+                history.append({
+                    "attempt": attempt, "code": None, "exec_result": None,
+                    "comparison": None, "error": "LLM did not call tool",
+                })
                 continue
 
+            code = tool_result["arguments"]["code"]
             if self.verbose:
                 print(f"{len(code)} chars", end=" ", flush=True)
 
-            # --- Execute in REPL ---
+            # --- Execute code ---
             exec_result = run_subcad(code)
 
             if self.verbose:
                 if exec_result["success"]:
                     print(f"vol={exec_result['volume']:.1f}", end=" ", flush=True)
                 else:
-                    print(f"ERROR: {exec_result.get('error', '?')[:80]}", end=" ", flush=True)
+                    print(f"ERR: {exec_result.get('error', '?')[:60]}",
+                          end=" ", flush=True)
 
             # --- Compare to reference ---
             if exec_result["success"] and exec_result.get("step_path"):
@@ -866,109 +965,60 @@ class AgenticTranslator:
                 )
             else:
                 comparison = {"match": False, "volume_ratio": 0.0,
-                              "error": "Execution failed"}
+                              "error": exec_result.get("error", "Execution failed")}
 
+            vol_ratio = comparison.get("volume_ratio", 0)
             if self.verbose:
                 if comparison.get("match"):
-                    print("MATCH!")
+                    print("MATCH!", end=" ", flush=True)
                 else:
-                    print(f"ratio={comparison.get('volume_ratio', 0):.3f}")
+                    print(f"ratio={vol_ratio:.3f}", end=" ", flush=True)
 
-            # --- Richer mesh comparison (SDF + Z-slice) ---
-            mesh_comparison = None
-            feature_comparison = None
-
-            if (exec_result["success"]
-                    and self.comparison_methods
-                    and _HAS_MESH_COMPARE):
-                # Get candidate mesh (prefer STL for trimesh compatibility)
-                cand_mesh = None
-                cand_mesh_path = (exec_result.get("stl_path")
-                                  or exec_result.get("step_path"))
-                if cand_mesh_path:
-                    try:
-                        cand_mesh = trimesh.load(cand_mesh_path)
-                    except Exception:
-                        cand_mesh = None
-
-                # Load reference mesh (use CadQuery for STEP, cascadio unavailable)
-                ref_mesh = None
-                try:
-                    ref_mesh = trimesh.load(step_path)
-                except Exception:
-                    try:
-                        import cadquery as cq
-                        shape = cq.importers.importStep(step_path).val()
-                        verts, faces = shape.tessellate(0.1)
-                        ref_mesh = trimesh.Trimesh(
-                            vertices=[(v.x, v.y, v.z) for v in verts],
-                            faces=faces,
-                        )
-                    except Exception:
-                        ref_mesh = None
-
-                # Run mesh comparison (SDF + slice)
-                if ref_mesh is not None and cand_mesh is not None:
-                    try:
-                        mesh_comparison = compare_meshes(
-                            ref_mesh, cand_mesh,
-                            methods=self.comparison_methods,
-                        )
-                        if self.verbose and mesh_comparison.get("score") is not None:
-                            print(f"mesh_qual={mesh_comparison['score']:.0f}",
-                                  end=" ", flush=True)
-                    except Exception:
-                        mesh_comparison = None
-
-                # Run feature-aware comparison (expensive, opt-in)
-                if (self.feature_aware and _HAS_FEATURE_COMPARE
-                        and cand_mesh is not None):
-                    try:
-                        feature_comparison = compare_with_features(
-                            step_path, cand_mesh, ops_trace,
-                        )
-                        if (self.verbose
-                                and feature_comparison.get("score") is not None):
-                            print(f"feat_qual={feature_comparison['score']:.0f}",
-                                  end=" ", flush=True)
-                    except Exception:
-                        feature_comparison = None
-
-            # --- Record history ---
+            # --- Record ---
             history.append({
-                "attempt": attempt,
-                "code": code,
-                "exec_result": exec_result,
-                "comparison": comparison,
-                "mesh_comparison": mesh_comparison,
-                "feature_comparison": feature_comparison,
+                "attempt": attempt, "code": code,
+                "exec_result": exec_result, "comparison": comparison,
             })
-
             final_code = code
             final_exec = exec_result
             final_comparison = comparison
-            final_mesh_comparison = mesh_comparison
-            final_feature_comparison = feature_comparison
 
-            # --- Convergence check (triggers at top of next iteration) ---
-            vol_ratio = comparison.get("volume_ratio", 0)
+            # --- Add tool result to messages ---
+            tool_result_content = json.dumps({
+                "volume_ratio": round(vol_ratio, 4),
+                "candidate_volume": round(exec_result.get("volume", 0), 1),
+                "target_volume": round(comparison.get("target_volume", target_volume), 1),
+                "success": exec_result["success"],
+                "error": exec_result.get("error") if not exec_result["success"] else None,
+            })
+
+            # OpenAI-compatible tool result format
+            messages.append({
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [{
+                    "id": tool_result["id"],
+                    "type": "function",
+                    "function": {
+                        "name": "execute_subcad",
+                        "arguments": json.dumps({"code": code}),
+                    },
+                }],
+            })
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_result["id"],
+                "content": tool_result_content,
+            })
+
+            # --- Convergence check ---
             exec_ok = exec_result.get("success", False)
             decision = conv.record(vol_ratio, exec_ok)
-
             if decision != "continue":
                 stop_reason = decision
                 if self.verbose:
-                    print(f"  Stop: {decision} ({conv.summary})")
+                    print(f"\n  Stop: {decision} ({conv.summary})")
                 break
-
-            # --- Build iteration prompt for refinement ---
-            iteration_prompt = build_iteration_prompt(
-                code, exec_result, comparison, target_volume,
-                mesh_comparison=mesh_comparison,
-                feature_comparison=feature_comparison,
-            )
-            messages.append({"role": "assistant", "content": response})
-            messages.append({"role": "user", "content": iteration_prompt})
 
         return {
             "success": final_comparison.get("match", False) if final_comparison else False,
@@ -976,8 +1026,6 @@ class AgenticTranslator:
             "attempts": len(history),
             "exec_result": final_exec,
             "comparison": final_comparison,
-            "mesh_comparison": final_mesh_comparison,
-            "feature_comparison": final_feature_comparison,
             "history": history,
             "stop_reason": stop_reason,
             "error": None,
