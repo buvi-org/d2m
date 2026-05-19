@@ -570,7 +570,17 @@ class LLMClient:
             msg = resp.choices[0].message
             if msg.tool_calls:
                 tc = msg.tool_calls[0]
-                args = json.loads(tc.function.arguments)
+                try:
+                    args = json.loads(tc.function.arguments)
+                except json.JSONDecodeError:
+                    # LLM may produce malformed JSON (unescaped code strings).
+                    # Extract code from raw arguments by finding the code value.
+                    raw = tc.function.arguments
+                    code = _extract_code_from_json(raw)
+                    if code:
+                        args = {"code": code}
+                    else:
+                        return None
                 return {"id": tc.id, "name": tc.function.name, "arguments": args}
             return None
 
@@ -698,6 +708,43 @@ class ConvergenceController:
     @property
     def attempt_count(self) -> int:
         return len(self._ratios)
+
+
+def _extract_code_from_json(raw_json: str) -> Optional[str]:
+    """Extract code value from malformed JSON with unescaped code strings.
+
+    Handles the case where the LLM puts raw Python code (with newlines and
+    quotes) directly into the JSON string value without proper escaping.
+    """
+    # Pattern: "code": "...code..."
+    # Try to find the code value between "code": " and the closing "}
+    match = re.search(r'"code"\s*:\s*"(.*?)"\s*\}?\s*$', raw_json, re.DOTALL)
+    if match:
+        code = match.group(1)
+        # Unescape JSON escapes
+        code = code.replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"")
+        code = code.replace("\\\\", "\\")
+        if "Stock.rectangular" in code:
+            return code
+
+    # Try to extract everything after "code": "
+    idx = raw_json.find('"code"')
+    if idx >= 0:
+        # Find the value start after the colon+quote
+        colon = raw_json.find(":", idx)
+        if colon >= 0:
+            value = raw_json[colon + 1:].strip().strip('"')
+            # Remove trailing "} if present
+            if value.endswith('"}'):
+                value = value[:-2]
+            elif value.endswith('}'):
+                value = value[:-1].rstrip().rstrip('"')
+            value = value.replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"")
+            value = value.replace("\\\\", "\\")
+            if "Stock.rectangular" in value or "part" in value:
+                return value
+
+    return None
 
 
 # =========================================================================
