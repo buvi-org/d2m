@@ -345,10 +345,8 @@ Target volume: {target_volume:.1f} mm^3."""]
         parts.append("")
         parts.append(feature_comparison["feedback"])
 
-    # --- API reference and previous code ---
+    # --- Previous code and terse instructions (no API ref — LLM knows it) ---
     parts.append(f"""
-{SUBCAD_API_SHORT}
-
 ## Previous Code
 ```python
 {previous_code}
@@ -356,11 +354,8 @@ Target volume: {target_volume:.1f} mm^3."""]
 
 ## Instructions
 
-Fix the subCAD code so the output volume better matches the target of
-{target_volume:.1f} mm^3. Adjust stock dimensions, operation depths, or
-operation parameters as needed.
-
-Respond with ONLY the corrected subCAD Python code inside a markdown code fence.""")
+Output ONLY the corrected subCAD Python code in a ```python fence.
+No explanation, no analysis. Just the code. Start with `part = Stock.rectangular(...`.""")
 
     return "\n".join(parts)
 
@@ -375,36 +370,48 @@ def extract_code(response: str) -> Optional[str]:
     Handles:
       - ```python ... ``` fences
       - ``` ... ``` fences (no language tag)
-      - Bare code (no fences)
+      - Bare code starting with Stock.rectangular or part =
+      - Code buried in explanatory text
     """
     # Try fenced code first
     fence_pat = re.compile(r"```(?:python)?\s*\n(.*?)\n\s*```", re.DOTALL)
     match = fence_pat.search(response)
     if match:
-        return match.group(1).strip()
+        code = match.group(1).strip()
+        if "Stock.rectangular" in code:
+            return code
 
     # Try any code fence
-    any_fence = re.compile(r"```\s*\n(.*?)\n\s*```", re.DOTALL)
-    match = any_fence.search(response)
-    if match:
-        return match.group(1).strip()
+    any_fence = re.compile(r"```[a-z]*\s*\n(.*?)\n\s*```", re.DOTALL)
+    for match in any_fence.finditer(response):
+        code = match.group(1).strip()
+        if "Stock.rectangular" in code:
+            return code
 
-    # Fallback: look for code patterns
-    if "Stock.rectangular" in response or "from src.subcad" in response:
-        # Try to extract everything between import and part assignment
-        lines = response.split("\n")
+    # Look for lines starting with "part = Stock.rectangular" or similar
+    # even if they're embedded in markdown or explanatory text
+    lines = response.split("\n")
+    code_start = None
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if re.match(r"^(part|stock)\s*=\s*(Stock\.rectangular|\()", stripped):
+            code_start = i
+            break
+        if stripped.startswith("Stock.rectangular"):
+            code_start = i
+            break
+
+    if code_start is not None:
         code_lines = []
-        in_code = False
-        for line in lines:
-            if "from src.subcad" in line or "Stock.rectangular" in line:
-                in_code = True
-            if in_code:
-                code_lines.append(line)
-            if in_code and ")" == line.strip() and len(code_lines) > 3:
-                # Heuristic: standalone ) on its own line = end of chain
+        paren_depth = 0
+        for line in lines[code_start:]:
+            code_lines.append(line)
+            paren_depth += line.count("(") - line.count(")")
+            if paren_depth <= 0 and len(code_lines) > 1:
                 break
-        if code_lines:
-            return "\n".join(code_lines)
+        code = "\n".join(code_lines).strip()
+        if "Stock.rectangular" in code:
+            return code
 
     return None
 
@@ -828,9 +835,8 @@ class AgenticTranslator:
                 messages.append({"role": "assistant", "content": response})
                 messages.append({
                     "role": "user",
-                    "content": "No code found in your response. "
-                    "Please output ONLY the subCAD Python code inside a "
-                    "```python ... ``` code fence."
+                    "content": "CODE ONLY. No explanation. Output just: "
+                    "```python\\npart = Stock.rectangular(...)\\n```"
                 })
                 history.append({
                     "attempt": attempt,
