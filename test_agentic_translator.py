@@ -172,9 +172,9 @@ except Exception:
 print("\n6. REPL integration ...")
 
 valid_code = """from src.subcad import Stock
-part = (Stock.rectangular(100, 50, 20, material="aluminum_6061")
+part = (Stock.rectangular(100, 50, 20, material=\"aluminum_6061\")
     .face_mill(depth=2.0)
-    .drill(diameter=8, cx=30, cy=0, depth=15)
+    .drill(diameter=8, cx=0, cy=0, depth=15)
 )"""
 
 if _HAS_CADQUERY_REPL:

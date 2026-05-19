@@ -333,7 +333,7 @@ def classify_chain(chain: dict) -> str:
 
 def step_to_stock_dims(
     step_input: Union[str, bytes, bytearray],
-    margin: float = 10.0,
+    margin: float = 0.0,
 ) -> dict:
     """Compute oversize stock dimensions from a STEP file.
 

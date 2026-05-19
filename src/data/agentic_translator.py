@@ -100,17 +100,28 @@ Stock instance (immutable/fluent pattern).
 
 ### Translation Rules
 
-1. CadQuery builds UP (extrude, union) — SubCAD cuts DOWN from an oversize stock.
-2. Stock dimensions = final part bounding box + 5-10 mm margin on each side.
-3. The Z-height of stock should be ~5 mm taller than the final part.
-4. face_mill first to achieve the final Z-height.
-5. Pockets replace CadQuery cut/cutBlind operations.
-6. Holes (cboreHole, cskHole) become drill operations.
-7. Chamfers and fillets on edges map directly.
-8. CadQuery "union" (adding a boss) is achieved by NOT cutting that volume away
-   from the stock — the stock already contains the maximum envelope.
-9. The code MUST assign the final Stock to a variable named `part`.
-10. Use only the subCAD API above. Do NOT import cadquery.
+1. CadQuery builds UP (extrude, union) — SubCAD cuts DOWN from stock.
+2. Use stock dimensions = final part XY dimensions (length, width). Do NOT add
+   margin — the stock should match the outer XY envelope of the final part.
+   Only add margin to Z (height): use the measures height + 2-3 mm.
+3. face_mill first to achieve the final Z-height from the stock.
+4. Pockets replace CadQuery cut/cutBlind operations.
+5. Holes (cboreHole, cskHole) become drill operations with cx, cy from the
+   CadQuery source.  Drill through=True for through-holes.
+6. Chamfers map to .chamfer(width).  Fillet has no subCAD equivalent — skip it.
+7. CadQuery "union" (adding a boss) is achieved by NOT cutting that volume away
+   from the stock.
+8. DO NOT use .contour() — it is unreliable.
+9. Coordinate system: (cx=0, cy=0) is the FACE CENTER (CadQuery convention).
+   Positive cx = right (+X), positive cy = up (+Y).  Negative values go
+   left/down from center.  For a 70 x 40 mm face, the bottom-left corner
+   is at (cx=-35, cy=-20), the top-right at (cx=35, cy=20).
+   For example: to center a pocket on a 70x40 face, use cx=0, cy=0.
+   To put a hole at the face center, use cx=0, cy=0.
+10. The code MUST assign the final Stock to a variable named `part`.
+11. Do NOT write any import statements. `Stock` is already imported.
+12. Do NOT call .face_mill(depth=0) — if the stock is already at the right
+    height, just skip face_mill entirely.
 """)
 
 # Shorter reference for iteration prompts (the LLM already saw the full one)
@@ -136,6 +147,44 @@ Assign final Stock to variable named `part`.
 #  Prompt builders
 # =========================================================================
 
+def _extract_measures_block(cq_code: str) -> str:
+    """Extract the Measures class/code from CadQuery source for reuse in subCAD.
+
+    Looks for a block starting with `m = Measures(` or `m = SimpleNamespace(`.
+    Returns the block as a Python code string, or a minimal measures dict.
+    """
+    import re
+
+    # Try to find the CadQuery measures pattern: m = Measures(...)
+    # Match from 'm = Measures(' or similar to the closing ')' that starts a line
+    patterns = [
+        r"(m\s*=\s*(?:Measures|type\([^)]+\)\([^)]*\))\s*\(.*?^\s*\))",
+        r"(m\s*=\s*SimpleNamespace\s*\(.*?^\s*\))",
+    ]
+
+    for pat in patterns:
+        match = re.search(pat, cq_code, re.MULTILINE | re.DOTALL)
+        if match:
+            return match.group(1).strip()
+
+    # Fallback: return just the first few lines that define measures
+    lines = cq_code.split("\n")
+    measure_lines = []
+    in_measures = False
+    for line in lines:
+        if "Measures(" in line or "SimpleNamespace" in line or "= Measures" in line:
+            in_measures = True
+        if in_measures:
+            measure_lines.append(line)
+            if line.rstrip().endswith(")") and not line.rstrip().endswith("()"):
+                break
+    if measure_lines:
+        return "\n".join(measure_lines)
+
+    # Last resort
+    return "# No measures found in source — define your own parameters"
+
+
 def build_system_prompt() -> str:
     """Build the system prompt with subCAD API reference."""
     return f"""You are an expert CAD/CAM translator. Your job is to convert CadQuery
@@ -144,7 +193,10 @@ def build_system_prompt() -> str:
 {SUBCAD_API_REFERENCE}
 
 Always respond with valid Python code inside a markdown code fence.
-The code must be self-contained and assign the final Stock to `part`."""
+The code must assign the final Stock to a variable named `part`.
+IMPORTANT: `Stock` is already imported in the execution environment — do NOT
+write `from subcad import Stock` or `from src.subcad import Stock`.
+Just use `Stock.rectangular(...)` directly."""
 
 
 def build_user_prompt(
@@ -180,16 +232,24 @@ def build_user_prompt(
     # Extract measures for the LLM to reference
     measures = _extract_measures(ops_trace)
 
+    # Extract the Measures block from the CadQuery source for reuse
+    measures_block = _extract_measures_block(cq_code)
+
     prompt = f"""## Task
 
 Translate the following CadQuery program into a subCAD subtractive program.
 
 ## Reference Geometry
 - STEP volume: {ref_vol} mm^3
-- Stock dimensions (with margin): {stock_dims['length']:.0f} x {stock_dims['width']:.0f} x {stock_dims['height']:.0f} mm
+- Stock dimensions (final part XY + small Z margin): {stock_dims['length']:.0f} x {stock_dims['width']:.0f} x {stock_dims['height']:.0f} mm
 
-## Measures (named parameters)
-{json.dumps(measures, indent=2, default=str)}
+## Measures (named parameters — COPY-PASTE into subCAD code)
+```python
+{measures_block}
+```
+
+Use `m.width`, `m.depth`, `m.height`, `m.wall_thickness`, etc. in your
+subCAD code instead of hardcoding values.
 
 ## CadQuery Source Code
 ```python
@@ -203,10 +263,12 @@ Translate the following CadQuery program into a subCAD subtractive program.
 
 Translate this constructive CadQuery program into an equivalent subCAD
 subtractive program. Remember:
-- Start with oversize stock (use the stock dimensions above).
+- Stock XY = final part XY (use {stock_dims['length']:.0f} x {stock_dims['width']:.0f}).
+  Only add extra Z height for face_mill.
 - Cut AWAY material to reveal the final shape.
 - The target volume is approximately {ref_vol} mm^3.
 - Assign the final Stock to a variable named `part`.
+- Copy the Measures block above and use m.width, m.depth, etc.
 
 Respond with ONLY the subCAD Python code inside a markdown code fence."""
     return prompt
@@ -581,7 +643,7 @@ class AgenticTranslator:
         divergence_limit: int = 2,
         safety_cap: int = 20,
         verbose: bool = True,
-        comparison_methods: Optional[list[str]] = None,
+        comparison_methods: Optional[list[str]] = None,  # sentinel, default set below
         feature_aware: bool = False,
     ):
         """Initialize the translator.
@@ -596,9 +658,8 @@ class AgenticTranslator:
             divergence_limit: Worsening attempts before giving up.
             safety_cap: Absolute max attempts regardless of trend.
             verbose: Print progress to stdout.
-            comparison_methods: Mesh comparison methods to use (e.g. ["sdf", "slice"]).
-                Defaults to None (no mesh comparison). Set to ["sdf", "slice"] to
-                enable. Requires trimesh + scipy.
+            comparison_methods: Mesh comparison methods (default ["sdf", "slice"]).
+                Pass None to disable. Requires trimesh + scipy.
             feature_aware: If True, run per-feature comparison (requires ops trace,
                 slower). Default False.
         """
@@ -613,7 +674,7 @@ class AgenticTranslator:
         self.divergence_limit = divergence_limit
         self.safety_cap = safety_cap
         self.verbose = verbose
-        self.comparison_methods = comparison_methods
+        self.comparison_methods = comparison_methods if comparison_methods is not None else ["sdf", "slice"]
         self.feature_aware = feature_aware
         self._system_prompt = build_system_prompt()
 
@@ -816,12 +877,21 @@ class AgenticTranslator:
                     except Exception:
                         cand_mesh = None
 
-                # Load reference mesh
+                # Load reference mesh (use CadQuery for STEP, cascadio unavailable)
                 ref_mesh = None
                 try:
                     ref_mesh = trimesh.load(step_path)
                 except Exception:
-                    ref_mesh = None
+                    try:
+                        import cadquery as cq
+                        shape = cq.importers.importStep(step_path).val()
+                        verts, faces = shape.tessellate(0.1)
+                        ref_mesh = trimesh.Trimesh(
+                            vertices=[(v.x, v.y, v.z) for v in verts],
+                            faces=faces,
+                        )
+                    except Exception:
+                        ref_mesh = None
 
                 # Run mesh comparison (SDF + slice)
                 if ref_mesh is not None and cand_mesh is not None:

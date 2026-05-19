@@ -62,16 +62,12 @@ def create_cylindrical_stock(diameter: float, height: float) -> "cq.Workplane":
 # =============================================================================
 
 def _to_face_coords(shape: "cq.Workplane", face_selector: str, cx: float, cy: float) -> tuple:
-    """Convert absolute (cx, cy) to face-relative coordinates for .center().
+    """Pass-through: cx, cy are face-relative (0,0 = face center).
 
-    The subCAD API uses absolute coordinates where (0,0) is the stock corner.
-    CadQuery face workplanes have their origin at the face center.
-    We convert by subtracting half the stock dimensions from absolute coords.
+    SubCAD uses CadQuery's native convention where .center(cx, cy) positions
+    relative to the face center.  Positive cx = right, positive cy = up.
     """
-    bbox = shape.val().BoundingBox()
-    half_length = (bbox.xmax - bbox.xmin) / 2.0
-    half_width = (bbox.ymax - bbox.ymin) / 2.0
-    return cx - half_length, cy - half_width
+    return cx, cy
 
 
 
@@ -84,6 +80,9 @@ def face_mill_cut(shape: "cq.Workplane", depth: float, *, face_selector: str = "
     """Remove material from the top face down to `depth`."""
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
+
+    if depth <= 0.001:
+        return shape  # nothing to remove
 
     bbox = shape.val().BoundingBox()
     # Cover the entire top face with a slightly oversized rectangle
