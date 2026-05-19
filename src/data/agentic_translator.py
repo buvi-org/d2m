@@ -278,9 +278,7 @@ subtractive program. Remember:
 - Assign the final Stock to a variable named `part`.
 - Copy the Measures block above and use m.width, m.depth, etc.
 
-OUTPUT ONLY valid Python code in a ```python fence.  No explanation, no
-analysis, no markdown besides the code fence.  Start with the Measures
-block, then `part = Stock.rectangular(...`.  Do not include import statements."""
+OUTPUT ONLY CODE. No explanation, no markdown. Start with ```python."""
     return prompt
 
 
@@ -431,7 +429,7 @@ class LLMClient:
         self.provider = provider.lower()
 
         if self.provider == "deepseek":
-            self.model = model or "deepseek-v4-flash"
+            self.model = model or "deepseek-chat"
             resolved_key = api_key or os.environ.get("DEEPSEEK_API_KEY")
             if not resolved_key:
                 raise ValueError(
