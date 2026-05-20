@@ -111,6 +111,9 @@ def _tool_diameter_mm(op: dict) -> Optional[float]:
         value = _as_float(op.get(key))
         if value is not None:
             return value
+    tool = op.get("tool")
+    if isinstance(tool, dict):
+        return _as_float(tool.get("diameter_mm", tool.get("tool_diameter_mm")))
     return None
 
 
@@ -191,6 +194,12 @@ def _tool_flute_length_mm(op: dict, tool_specs: Optional[list] = None) -> Option
         if value is not None:
             return value
 
+    tool = op.get("tool")
+    if isinstance(tool, dict):
+        value = _as_float(tool.get("flute_length_mm", tool.get("flute_length")))
+        if value is not None:
+            return value
+
     if not tool_specs:
         return None
 
@@ -266,6 +275,35 @@ def _check_tool_reach_and_geometry(
                 f"{op_type or 'operation'} at position {i} depth ({depth:g}mm) "
                 f"exceeds tool flute length ({flute:g}mm).",
                 i, op, depth_mm=depth, flute_length_mm=flute,
+            ))
+
+        tool = op.get("tool") if isinstance(op.get("tool"), dict) else {}
+        assembly = tool.get("assembly") if isinstance(tool.get("assembly"), dict) else {}
+        stickout = _as_float(
+            assembly.get("stickout_mm", tool.get("stickout_mm", op.get("tool_stickout_mm")))
+        )
+        holder_length = _as_float(assembly.get("holder_length_mm", tool.get("holder_length_mm")))
+        holder_diameter = _as_float(assembly.get("holder_diameter_mm", tool.get("holder_diameter_mm")))
+        if stickout is not None and depth > stickout:
+            issues.append(_issue(
+                "warning", "tool_holder_stickout",
+                f"{op_type or 'operation'} at position {i} depth ({depth:g}mm) "
+                f"exceeds tool stickout ({stickout:g}mm); holder collision is likely.",
+                i, op, depth_mm=depth, stickout_mm=stickout,
+            ))
+        if holder_length and holder_diameter and depth > max(stickout or 0.0, flute or 0.0):
+            issues.append(_issue(
+                "warning", "tool_holder_envelope",
+                f"{op_type or 'operation'} at position {i} may require holder clearance "
+                f"(holder diameter {holder_diameter:g}mm).",
+                i, op, holder_diameter_mm=holder_diameter,
+            ))
+        if isinstance(tool, dict) and tool.get("inventory_count") == 0:
+            issues.append(_issue(
+                "error", "tool_unavailable",
+                f"{op_type or 'operation'} at position {i} uses unavailable tool "
+                f"'{tool.get('catalog_id') or tool.get('label') or tool.get('tool_type')}'.",
+                i, op,
             ))
 
         reach = _as_float(op.get("tool_reach_mm", op.get("reach_mm")))
@@ -603,6 +641,26 @@ def _check_fixture_clearance(process_plan_dict: dict) -> list[ValidationIssue]:
 
     issues: list[ValidationIssue] = []
     fixture_zones = fixture.get("clamping_zones", []) if isinstance(fixture, dict) else []
+    stock_dims = process_plan_dict.get("stock_dimensions") or {}
+    stock_length = _as_float(stock_dims.get("length"))
+    stock_width = _as_float(stock_dims.get("width"))
+    if isinstance(fixture, dict):
+        max_opening = _as_float(fixture.get("max_opening_mm"))
+        jaw_width = _as_float(fixture.get("jaw_width_mm"))
+        if max_opening is not None and stock_length is not None and stock_length > max_opening:
+            issues.append(_issue(
+                "warning", "fixture_stock_fit",
+                f"Stock length ({stock_length:g}mm) exceeds fixture max opening "
+                f"({max_opening:g}mm).",
+                stock_length_mm=stock_length, max_opening_mm=max_opening,
+            ))
+        if jaw_width is not None and stock_width is not None and stock_width > jaw_width:
+            issues.append(_issue(
+                "warning", "fixture_jaw_width",
+                f"Stock width ({stock_width:g}mm) exceeds fixture jaw width "
+                f"({jaw_width:g}mm).",
+                stock_width_mm=stock_width, jaw_width_mm=jaw_width,
+            ))
     for i, op in enumerate(process_plan_dict.get("operations", [])):
         setup_name = op.get("setup")
         setup = setups.get(setup_name, {}) if setup_name else {}

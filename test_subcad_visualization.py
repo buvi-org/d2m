@@ -6,7 +6,7 @@ import shutil
 import sys
 import tempfile
 
-from src.subcad import Stock
+from src.subcad import FixtureCatalog, Stock
 from src.subcad.geometry import _HAS_CADQUERY
 
 if not _HAS_CADQUERY:
@@ -35,6 +35,8 @@ tmp_dir = tempfile.mkdtemp()
 try:
     part = (
         Stock.rectangular(60, 40, 16, material="aluminum_6061")
+        .with_fixture(FixtureCatalog.get("kurt_dx6_vise"))
+        .new_setup("op1_top", face_selector=">Z", work_offset="G54")
         .face_mill(depth=1.0)
         .pocket(width=18, length=24, depth=4, cx=0, cy=0)
         .drill(diameter=5, depth=10, cx=12, cy=6, spot_drill=False)
@@ -62,6 +64,10 @@ try:
     check("scene references toolpath", scene_json["assets"]["toolpath"]["path"] == "toolpath.json")
     stock_states = scene_json["assets"].get("stock_states", [])
     check("scene references stock state timeline", len(stock_states) == part.process_plan()["total_operations"] + 1)
+    check("scene exports fixtures", len(scene_json.get("fixtures", [])) == 1)
+    check("fixture asset metadata present", "fixtures" in scene_json["assets"])
+    check("fixture clamp zones exported", len(scene_json["fixtures"][0].get("clamping_zones", [])) > 0)
+    check("operation exports tool assembly", all(op.get("tool_assembly") for op in scene_json["operations"]))
     check("timeline starts from initial stock", stock_states[0]["sequence_number"] == 0)
     check("timeline ends after final operation", stock_states[-1]["sequence_number"] == part.process_plan()["total_operations"])
     check(

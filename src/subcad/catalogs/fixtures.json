@@ -1,0 +1,94 @@
+{
+  "schema_version": "subcad.fixture_catalog.v1",
+  "fixtures": [
+    {
+      "id": "kurt_dx6_vise",
+      "fixture_type": "vise",
+      "description": "Kurt DX6 6-inch vise with simplified base and jaws",
+      "base_height_mm": 87.0,
+      "jaw_width_mm": 152.4,
+      "max_opening_mm": 228.6,
+      "max_part_mass_kg": 50.0,
+      "dimensions": {
+        "length_mm": 400.0,
+        "width_mm": 160.0,
+        "height_mm": 87.0,
+        "jaw_thickness_mm": 20.0
+      },
+      "source_path": "catalogs/fixtures/kurt_dx6_vise.py",
+      "visual_mesh_path": null,
+      "collision_mesh_path": null,
+      "coordinate_frame": {
+        "origin": "stock_center_top",
+        "z_up": true
+      },
+      "clamping_zones": [
+        {
+          "label": "vise_fixed_jaw",
+          "x_min": -76.2,
+          "x_max": -56.2,
+          "y_min": -50.0,
+          "y_max": 50.0,
+          "z_min": 3.0,
+          "z_max": 25.0,
+          "margin_mm": 2.0
+        },
+        {
+          "label": "vise_movable_jaw",
+          "x_min": 56.2,
+          "x_max": 76.2,
+          "y_min": -50.0,
+          "y_max": 50.0,
+          "z_min": 3.0,
+          "z_max": 25.0,
+          "margin_mm": 2.0
+        }
+      ],
+      "clearance_zones": [
+        {
+          "label": "vise_envelope",
+          "x_min": -205.0,
+          "x_max": 205.0,
+          "y_min": -85.0,
+          "y_max": 85.0,
+          "z_min": -87.0,
+          "z_max": 0.0,
+          "margin_mm": 0.0
+        }
+      ]
+    },
+    {
+      "id": "toe_clamps_4corner",
+      "fixture_type": "toe_clamps",
+      "description": "Four simplified toe clamps positioned around a rectangular workpiece",
+      "base_height_mm": 20.0,
+      "max_part_mass_kg": 25.0,
+      "dimensions": {
+        "length_mm": 130.0,
+        "width_mm": 90.0,
+        "height_mm": 28.0
+      },
+      "source_path": "catalogs/fixtures/toe_clamps_4corner.py",
+      "clamping_zones": [
+        {"label": "clamp_bl", "x_min": -60.0, "x_max": -40.0, "y_min": -35.0, "y_max": -15.0, "z_min": 18.0, "z_max": 28.0, "margin_mm": 2.0},
+        {"label": "clamp_br", "x_min": -60.0, "x_max": -40.0, "y_min": 15.0, "y_max": 35.0, "z_min": 18.0, "z_max": 28.0, "margin_mm": 2.0},
+        {"label": "clamp_tl", "x_min": 40.0, "x_max": 60.0, "y_min": -35.0, "y_max": -15.0, "z_min": 18.0, "z_max": 28.0, "margin_mm": 2.0},
+        {"label": "clamp_tr", "x_min": 40.0, "x_max": 60.0, "y_min": 15.0, "y_max": 35.0, "z_min": 18.0, "z_max": 28.0, "margin_mm": 2.0}
+      ]
+    },
+    {
+      "id": "vacuum_plate_300x200",
+      "fixture_type": "vacuum_plate",
+      "description": "300x200 mm vacuum chuck plate",
+      "base_height_mm": 35.0,
+      "max_part_mass_kg": 10.0,
+      "dimensions": {
+        "length_mm": 300.0,
+        "width_mm": 200.0,
+        "height_mm": 35.0
+      },
+      "source_path": "catalogs/fixtures/vacuum_plate_300x200.py",
+      "clamping_zones": []
+    }
+  ]
+}

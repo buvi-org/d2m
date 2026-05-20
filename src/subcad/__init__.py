@@ -20,7 +20,7 @@ Usage::
 
 from .stock import Stock
 from .process_plan import ProcessPlan, OperationStep
-from .tool_library import ToolSpec, ToolCatalog, to_sim_tool
+from .tool_library import ToolSpec, ToolAssembly, ToolCatalog, to_sim_tool
 from .toolpath import Toolpath, ToolpathMove
 from .gcode_preview import gcode_preview, to_gcode_preview
 from .postprocessor import PostProcessor, Generic3AxisDebugPost, postprocess
@@ -69,6 +69,7 @@ from .fixturing import (
     ClampingZone,
     Setup,
     fixture_to_mesh,
+    fixture_visualization_payload,
     check_operation_against_fixture,
     WORK_OFFSET_NAMES,
 )
@@ -79,6 +80,7 @@ __all__ = [
     "ProcessPlan",
     "OperationStep",
     "ToolSpec",
+    "ToolAssembly",
     "ToolCatalog",
     "Toolpath",
     "ToolpathMove",
@@ -132,6 +134,7 @@ __all__ = [
     "ClampingZone",
     "Setup",
     "fixture_to_mesh",
+    "fixture_visualization_payload",
     "check_operation_against_fixture",
     "WORK_OFFSET_NAMES",
 ]

@@ -94,8 +94,21 @@ def _new_toolpath(
         feed_mm_min=_feed_rate(feeds_speeds),
         spindle_rpm=_spindle_rpm(feeds_speeds),
         coolant=coolant,
-        metadata=metadata or {},
+        metadata={"tool": _tool_dict(tool), **(metadata or {})},
     )
+
+
+def _tool_dict(tool: Optional[ToolSpec]) -> dict:
+    """Return structured tool metadata for process-plan and viewer consumers."""
+    if tool is None:
+        return {}
+    if hasattr(tool, "to_dict"):
+        return tool.to_dict()
+    return {
+        "tool_type": getattr(tool, "tool_type", ""),
+        "diameter_mm": getattr(tool, "diameter", None),
+        "tool_diameter_mm": getattr(tool, "diameter", None),
+    }
 
 
 def _move(
@@ -275,30 +288,17 @@ def _pick_slot_tool(slot_width: float) -> ToolSpec:
     tool fits, falls back to the smallest available flat endmill and relies
     on the caller's validation note to warn.
     """
-    target_dia = max(slot_width * 0.8, 1.0)
-
-    # Gather all flat endmills sorted by diameter
-    ToolCatalog._ensure_initialised()
-    candidates = sorted(
-        (t for t in ToolCatalog._tools.values() if t.tool_type == "flat_endmill"),
-        key=lambda t: t.diameter,
-    )
-
-    if not candidates:
-        return ToolSpec("flat_endmill", target_dia)
-
-    # 1st choice: largest tool that fits (<= slot_width) AND is >= target_dia
-    fitting = [t for t in candidates if t.diameter <= slot_width]
-    for t in reversed(fitting):
-        if t.diameter >= target_dia:
-            return t
-
-    # 2nd choice: largest tool that fits at all
-    if fitting:
-        return fitting[-1]
-
-    # Fallback: nothing fits -- return the smallest available tool
-    return candidates[0]
+    try:
+        return ToolCatalog.select(
+            "flat_endmill",
+            min_diameter=0.0,
+            max_diameter=slot_width,
+        )
+    except ValueError:
+        try:
+            return ToolCatalog.select("flat_endmill")
+        except ValueError:
+            return ToolSpec("flat_endmill", max(slot_width * 0.8, 1.0))
 
 
 def _pick_reamer(hole_diameter: float) -> ToolSpec:
@@ -424,6 +424,7 @@ class FaceMillOp(MachiningOperation):
             "operation": "face_mill",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "stepover_mm": (
                 self.stepover if self.stepover is not None
@@ -549,6 +550,7 @@ class PocketOp(MachiningOperation):
             "operation": "rough_pocket",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "dimensions": {
                 "length": self.length,
@@ -640,6 +642,7 @@ class CircularPocketOp(MachiningOperation):
             "operation": "circular_pocket",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "pocket_diameter_mm": self.diameter,
             "position": list(self.position) if self.position else None,
@@ -729,6 +732,7 @@ class SpotDrillOp(MachiningOperation):
             "operation": "spot_drill",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": 1.0,  # spot-drill is shallow
             "position": list(self.position) if self.position else None,
             "face_selector": self.face_selector,
@@ -826,6 +830,7 @@ class DrillOp(MachiningOperation):
             "operation": "drill",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "hole_diameter_mm": self.diameter,
             "through": self.through,
@@ -1016,6 +1021,7 @@ class ChamferOp(MachiningOperation):
             "operation": "chamfer",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "chamfer_width_mm": self.width,
             "tool_tip_angle_deg": self.tool.tip_angle,
             "face_selector": self.face_selector,
@@ -1092,6 +1098,7 @@ class ContourOp(MachiningOperation):
             "operation": "contour",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "stepdown_mm": self.stepdown,
             "face_selector": self.face_selector,
@@ -1189,6 +1196,7 @@ class SlotOp(MachiningOperation):
             "operation": "slot",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "slot_length_mm": self.length,
             "slot_width_mm": self.width,
@@ -1282,6 +1290,7 @@ class PeckDrillOp(MachiningOperation):
             "operation": "peck_drill",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "hole_diameter_mm": self.diameter,
             "through": self.through,
@@ -1344,6 +1353,7 @@ class ReamOp(MachiningOperation):
             "operation": "ream",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "hole_diameter_mm": self.diameter,
             "through": self.through,
@@ -1412,6 +1422,7 @@ class BoreOp(MachiningOperation):
             "operation": "bore",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "hole_diameter_mm": self.diameter,
             "through": self.through,
@@ -1505,6 +1516,7 @@ class CountersinkOp(MachiningOperation):
             "operation": "countersink",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "hole_diameter_mm": self.diameter,
             "countersink_diameter_mm": self.countersink_diameter,
             "countersink_angle_deg": self.countersink_angle,
@@ -1602,6 +1614,7 @@ class CounterboreOp(MachiningOperation):
             "operation": "counterbore",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "hole_diameter_mm": self.hole_diameter,
             "counterbore_diameter_mm": self.counterbore_diameter,
             "counterbore_depth_mm": self.counterbore_depth,
@@ -1702,6 +1715,7 @@ class ThreadMillOp(MachiningOperation):
             "operation": "thread_mill",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "thread_diameter_mm": self.diameter,
             "thread_pitch_mm": self.pitch,
             "depth_mm": self.depth,
@@ -1792,6 +1806,7 @@ class TSlotOp(MachiningOperation):
             "operation": "t_slot",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "slot_length_mm": self.length,
             "slot_width_mm": self.width,
@@ -1868,6 +1883,7 @@ class DovetailOp(MachiningOperation):
             "operation": "dovetail",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "slot_length_mm": self.length,
             "slot_width_mm": self.width,
@@ -1942,6 +1958,7 @@ class GrooveOp(MachiningOperation):
             "operation": "groove",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "groove_length_mm": self.length,
             "groove_width_mm": self.width,
@@ -2014,6 +2031,7 @@ class Surface3DOp(MachiningOperation):
             "operation": "surface_3d",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "stepover_mm": self.stepover,
             "face_selector": self.face_selector,
@@ -2084,6 +2102,7 @@ class DeburrOp(MachiningOperation):
             "operation": "deburr",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "edge_selection": self.edge_selection,
             "face_selector": self.face_selector,
             "feeds_speeds": self.feeds_speeds
@@ -2154,6 +2173,7 @@ class SpotFaceOp(MachiningOperation):
             "operation": "spot_face",
             "tool_type": self.tool.tool_type,
             "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
             "spot_face_diameter_mm": self.diameter,
             "position": list(self.position) if self.position else None,

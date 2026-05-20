@@ -850,6 +850,7 @@ class Stock:
             fixture=fixture_spec,
             setups=dict(self._setups),
             active_setup=self._active_setup,
+            state_history=list(self._state_history),
         )
 
     def new_setup(self, name: str, face_selector: str = ">Z",
@@ -876,6 +877,7 @@ class Stock:
             fixture=self._fixture,
             setups=new_setups,
             active_setup=name,
+            state_history=list(self._state_history),
         )
 
     def use_setup(self, name: str) -> "Stock":
@@ -891,6 +893,7 @@ class Stock:
             fixture=self._fixture,
             setups=dict(self._setups),
             active_setup=name,
+            state_history=list(self._state_history),
         )
 
     def validate_fixture_clearance(self) -> list[str]:

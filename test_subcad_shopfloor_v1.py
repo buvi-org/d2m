@@ -148,6 +148,7 @@ def test_schema_v1_required_and_backward_fields() -> None:
         for legacy_key in ("operation", "tool_type", "tool_diameter_mm"):
             check(f"{op_name} keeps {legacy_key}", legacy_key in op)
         check(f"{op_name} has structured tool", isinstance(op.get("tool"), dict))
+        check(f"{op_name} has selected catalog/assembly tool", isinstance(op.get("tool", {}).get("assembly"), dict))
         check(f"{op_name} has validation buckets", isinstance(op.get("validation_buckets"), dict))
 
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>d2m - SubCAD Visualization</title>
-  <link rel="stylesheet" href="style.css?v=20260520-slot-cache">
+  <link rel="stylesheet" href="style.css?v=20260520-fixture-tool-v1">
   <script type="importmap">
   {
     "imports": {
@@ -13,7 +13,7 @@
     }
   }
   </script>
-  <script type="module" src="session-viewer.js?v=20260520-slot-cache"></script>
+  <script type="module" src="session-viewer.js?v=20260520-fixture-tool-v1"></script>
 </head>
 <body>
 <div class="app-container">
@@ -73,6 +73,8 @@
           <label class="check-row"><input type="checkbox" id="show-target" checked> Target overlay</label>
           <label class="check-row"><input type="checkbox" id="show-toolpath" checked> Toolpath</label>
           <label class="check-row"><input type="checkbox" id="show-tool" checked> Tool</label>
+          <label class="check-row"><input type="checkbox" id="show-fixture" checked> Fixture</label>
+          <label class="check-row"><input type="checkbox" id="show-clamps" checked> Clamp zones</label>
           <label class="check-row"><input type="checkbox" id="show-diff" checked> Diff markers</label>
           <button class="btn full-width" id="fit-view">Fit View</button>
           <div class="toolpath-legend" aria-label="Toolpath move legend">

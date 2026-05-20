@@ -17,7 +17,10 @@ const GRID_DIVISIONS = 20;
 const DEFAULT_CAMERA_POS = [70, -90, 60];
 const TOOL_CYLINDER_COLOR = 0xffaa00;
 const TOOL_SPHERE_COLOR = 0xff8800;
+const TOOL_HOLDER_COLOR = 0x708090;
 const TOOL_OPACITY = 0.72;
+const FIXTURE_COLOR = 0x3b4a5a;
+const CLAMP_ZONE_COLOR = 0xff3b30;
 const GOUGE_SPHERE_COLOR = 0xff2222;
 const TOOLPATH_COLOR = 0x00ccff;
 const TOOLPATH_COLORS = {
@@ -55,12 +58,16 @@ export class Viewer {
     this.gougeSpheres = [];
     this.toolpathLine = null;
     this.toolpathObjects = [];
+    this.fixtureGroup = null;
+    this.clampZoneGroup = null;
     this.wireframe = null;
     this.gridHelper = null;
 
     this._showTool = true;
     this._showStock = true;
     this._showTarget = false;
+    this._showFixture = true;
+    this._showClampZones = true;
     this._heatmapMode = false;
     this._wireframeMode = false;
     this._originalStockMaterial = null;
@@ -120,6 +127,10 @@ export class Viewer {
     // Tool group (empty initially)
     this.toolGroup = new THREE.Group();
     this.scene.add(this.toolGroup);
+    this.fixtureGroup = new THREE.Group();
+    this.clampZoneGroup = new THREE.Group();
+    this.scene.add(this.fixtureGroup);
+    this.scene.add(this.clampZoneGroup);
 
     // Animation loop
     this._animate = this._animate.bind(this);
@@ -430,6 +441,99 @@ export class Viewer {
     }
   }
 
+  setFixtureVisible(visible) {
+    this._showFixture = visible;
+    if (this.fixtureGroup) {
+      this.fixtureGroup.visible = visible;
+    }
+  }
+
+  setClampZoneVisible(visible) {
+    this._showClampZones = visible;
+    if (this.clampZoneGroup) {
+      this.clampZoneGroup.visible = visible;
+    }
+  }
+
+  loadFixtures(fixtures) {
+    this._clearGroup(this.fixtureGroup);
+    this._clearGroup(this.clampZoneGroup);
+
+    for (const fixture of fixtures || []) {
+      this._addFixtureBody(fixture);
+      for (const zone of fixture.clamping_zones || []) {
+        this._addZoneBox(zone, CLAMP_ZONE_COLOR, 0.28);
+      }
+      for (const zone of fixture.clearance_zones || []) {
+        this._addZoneBox(zone, 0xffd166, 0.12);
+      }
+      this._addSetupAxes(fixture.setups || {});
+    }
+
+    this.setFixtureVisible(this._showFixture);
+    this.setClampZoneVisible(this._showClampZones);
+  }
+
+  _addFixtureBody(fixture) {
+    const base = fixture?.body?.base;
+    if (!base?.size || !base?.center) return;
+
+    const geom = new THREE.BoxGeometry(...base.size.map(Number));
+    const mat = new THREE.MeshStandardMaterial({
+      color: FIXTURE_COLOR,
+      metalness: 0.45,
+      roughness: 0.55,
+      transparent: true,
+      opacity: 0.36,
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set(...base.center.map(Number));
+    mesh.receiveShadow = true;
+    this.fixtureGroup.add(mesh);
+  }
+
+  _addZoneBox(zone, color, opacity) {
+    const xMin = Number(zone.x_min ?? 0);
+    const xMax = Number(zone.x_max ?? 0);
+    const yMin = Number(zone.y_min ?? 0);
+    const yMax = Number(zone.y_max ?? 0);
+    const zMin = Number(zone.z_min ?? 0);
+    const zMax = Number(zone.z_max ?? 0);
+    const margin = Number(zone.margin_mm ?? 0);
+    const size = [
+      Math.max(0.1, xMax - xMin + margin * 2),
+      Math.max(0.1, yMax - yMin + margin * 2),
+      Math.max(0.1, zMax - zMin),
+    ];
+    const center = [
+      (xMin + xMax) / 2,
+      (yMin + yMax) / 2,
+      (zMin + zMax) / 2,
+    ];
+    const geom = new THREE.BoxGeometry(...size);
+    const mat = new THREE.MeshStandardMaterial({
+      color,
+      transparent: true,
+      opacity,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set(...center);
+    mesh.renderOrder = 15;
+    this.clampZoneGroup.add(mesh);
+  }
+
+  _addSetupAxes(setups) {
+    const names = Object.keys(setups || {});
+    for (let i = 0; i < names.length; i += 1) {
+      const axes = new THREE.AxesHelper(12);
+      axes.position.set(0, 0, 2 + i * 4);
+      this.fixtureGroup.add(axes);
+    }
+  }
+
   /**
    * Update tool position and orientation.
    * @param {number[]} position - [x, y, z] in world space
@@ -438,7 +542,7 @@ export class Viewer {
    * @param {number} diameter - tool diameter in mm
    * @param {number} fluteLength - flute length in mm
    */
-  updateTool(position, orientation, toolType, diameter, fluteLength) {
+  updateTool(position, orientation, toolType, diameter, fluteLength, assembly = {}) {
     // Clear existing tool geometry
     while (this.toolGroup.children.length > 0) {
       const child = this.toolGroup.children[0];
@@ -449,6 +553,10 @@ export class Viewer {
 
     const radius = diameter / 2;
     const fl = fluteLength || 30;
+    const stickout = Math.max(Number(assembly.stickout || assembly.stickout_mm || fl), fl);
+    const shankRadius = Math.max(Number(assembly.shankDiameter || assembly.shank_diameter_mm || diameter) / 2, radius);
+    const holderRadius = Math.max(Number(assembly.holderDiameter || assembly.holder_diameter_mm || diameter * 2) / 2, shankRadius);
+    const holderLength = Math.max(Number(assembly.holderLength || assembly.holder_length_mm || 30), 5);
 
     // Create tool geometry based on type
     if (toolType === 'ball_endmill') {
@@ -511,6 +619,32 @@ export class Viewer {
       cyl.position.z = fl / 2;
       this.toolGroup.add(cyl);
     }
+
+    if (stickout > fl) {
+      const shankGeom = new THREE.CylinderGeometry(shankRadius, shankRadius, stickout - fl, 24);
+      const shank = new THREE.Mesh(shankGeom, new THREE.MeshStandardMaterial({
+        color: 0xc7d0d9,
+        metalness: 0.65,
+        roughness: 0.28,
+        transparent: true,
+        opacity: 0.52,
+      }));
+      shank.rotation.x = Math.PI / 2;
+      shank.position.z = fl + (stickout - fl) / 2;
+      this.toolGroup.add(shank);
+    }
+
+    const holderGeom = new THREE.CylinderGeometry(holderRadius, holderRadius, holderLength, 32);
+    const holder = new THREE.Mesh(holderGeom, new THREE.MeshStandardMaterial({
+      color: TOOL_HOLDER_COLOR,
+      metalness: 0.75,
+      roughness: 0.24,
+      transparent: true,
+      opacity: 0.42,
+    }));
+    holder.rotation.x = Math.PI / 2;
+    holder.position.z = stickout + holderLength / 2;
+    this.toolGroup.add(holder);
 
     // Position and orient the whole tool group
     this.toolGroup.position.set(position[0], position[1], position[2]);
@@ -833,6 +967,8 @@ export class Viewer {
     this._disposeTargetMesh();
     this.clearGougeMarkers();
     this.setToolpath(null);
+    this._clearGroup(this.fixtureGroup);
+    this._clearGroup(this.clampZoneGroup);
 
     while (this.toolGroup.children.length > 0) {
       const child = this.toolGroup.children[0];
@@ -842,6 +978,22 @@ export class Viewer {
     }
 
     this._deviationData = null;
+  }
+
+  _clearGroup(group) {
+    if (!group) return;
+    while (group.children.length > 0) {
+      const child = group.children[0];
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(mat => mat.dispose());
+        } else {
+          child.material.dispose();
+        }
+      }
+      group.remove(child);
+    }
   }
 
   dispose() {

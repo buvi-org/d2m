@@ -19,13 +19,15 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.subcad import Stock  # noqa: E402
+from src.subcad import FixtureCatalog, Stock  # noqa: E402
 
 
 def build_demo_part() -> Stock:
     """Build a representative SubCAD part for browser playback testing."""
     return (
         Stock.rectangular(90, 55, 18, material="aluminum_6061")
+        .with_fixture(FixtureCatalog.get("kurt_dx6_vise"))
+        .new_setup("op1_top", face_selector=">Z", work_offset="G54")
         .face_mill(depth=1.0)
         .pocket(width=22, length=34, depth=5, cx=-12, cy=0)
         .circular_pocket(diameter=14, depth=4, cx=22, cy=0)

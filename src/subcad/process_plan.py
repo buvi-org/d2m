@@ -52,6 +52,13 @@ def _tool_metadata(op_dict: dict) -> dict:
         ("tool_tip_angle_deg", "tip_angle_deg"),
         ("tool_tip_diameter_mm", "tip_diameter_mm"),
         ("tool_flute_length_mm", "flute_length_mm"),
+        ("tool_catalog_id", "catalog_id"),
+        ("tool_number", "tool_number"),
+        ("tool_holder_id", "holder_id"),
+        ("tool_stickout_mm", "stickout_mm"),
+        ("tool_shank_diameter_mm", "shank_diameter_mm"),
+        ("tool_overall_length_mm", "overall_length_mm"),
+        ("tool_reach_mm", "reach_mm"),
     ):
         if old_key in op_dict:
             tool[new_key] = op_dict[old_key]
@@ -75,6 +82,22 @@ def _normalize_tool_entry(tool_dict: dict) -> dict:
         if tool.get("diameter_mm") not in (None, ""):
             label_parts.append(f"D{tool.get('diameter_mm')}mm")
         tool["label"] = " ".join(label_parts)
+    if "assembly" not in tool:
+        tool["assembly"] = {
+            "tool_id": tool.get("catalog_id", ""),
+            "tool_type": tool.get("tool_type", ""),
+            "cutter_diameter_mm": tool.get("diameter_mm", tool.get("tool_diameter_mm")),
+            "flute_length_mm": tool.get("flute_length_mm", 50.0),
+            "shank_diameter_mm": tool.get(
+                "shank_diameter_mm",
+                tool.get("diameter_mm", tool.get("tool_diameter_mm")),
+            ),
+            "stickout_mm": tool.get("stickout_mm", tool.get("flute_length_mm", 35.0)),
+            "holder_id": tool.get("holder_id", "generic_er_collet"),
+            "holder_diameter_mm": tool.get("holder_diameter_mm", 25.0),
+            "holder_length_mm": tool.get("holder_length_mm", 35.0),
+            "tool_number": tool.get("tool_number"),
+        }
     return tool
 
 
@@ -212,7 +235,9 @@ def normalize_operation(op_dict: dict, sequence_number: int) -> dict:
     op["sequence_number"] = int(op.get("sequence_number") or sequence_number)
     op["schema_version"] = SCHEMA_VERSION
     op["feeds_speeds"] = _normalize_feeds_speeds(op.get("feeds_speeds"))
-    op["tool"] = _tool_metadata(op)
+    base_tool = _tool_metadata(op)
+    existing_tool = op.get("tool") if isinstance(op.get("tool"), dict) else {}
+    op["tool"] = _normalize_tool_entry({**base_tool, **existing_tool})
 
     if "toolpath_summary" not in op and "toolpath" in op:
         summary = _toolpath_summary(op.get("toolpath"))

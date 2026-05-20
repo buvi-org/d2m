@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'show-target',
     'show-toolpath',
     'show-tool',
+    'show-fixture',
+    'show-clamps',
     'show-diff',
     'fit-view',
     'timeline-prev',
@@ -45,6 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
     viewer.setToolVisible(els['show-tool'].checked);
     updatePlaybackAt(window.__playback?.elapsedSec || 0);
   });
+  els['show-fixture'].addEventListener('change', () => viewer.setFixtureVisible(els['show-fixture'].checked));
+  els['show-clamps'].addEventListener('change', () => viewer.setClampZoneVisible(els['show-clamps'].checked));
   els['show-toolpath'].addEventListener('change', () => {
     if (!els['show-toolpath'].checked) {
       viewer.setToolpath(null);
@@ -113,6 +117,10 @@ async function loadSession(scenePath) {
       await viewer.loadTargetSTL(await fetchArrayBuffer(assetUrl(scene.assets.target_mesh, baseUrl)));
       viewer.setTargetVisible(els['show-target'].checked);
     }
+
+    viewer.loadFixtures(scene.fixtures || []);
+    viewer.setFixtureVisible(els['show-fixture'].checked);
+    viewer.setClampZoneVisible(els['show-clamps'].checked);
 
     const toolpathAsset = scene.assets?.toolpaths || scene.assets?.toolpath;
     if (toolpathAsset) {
@@ -198,6 +206,7 @@ function extractToolpathMoves(payload) {
         operation: op.operation,
         sequence_number: op.sequence_number,
         tool: op.tool,
+        tool_assembly: op.tool_assembly,
         tool_type: op.tool_type,
         tool_diameter_mm: op.tool_diameter_mm,
         summary: op.summary,
@@ -224,6 +233,7 @@ function renderMetadata(scene, comparison) {
     ['Stock', JSON.stringify(scene.stock_dimensions || {})],
     ['Operations', String((scene.operations || []).length)],
     ['Cycle time', formatMinutes(totalMinutes)],
+    ['Fixtures', String((scene.fixtures || []).length)],
   ];
   if (comparison) {
     rows.push(['Compare', comparison.status || 'unknown']);
@@ -455,6 +465,7 @@ function updatePlaybackAt(elapsedSec) {
       segment.tool.toolType,
       segment.tool.diameter,
       segment.tool.fluteLength,
+      segment.tool,
     );
     viewer.setToolVisible(true);
   } else {
@@ -494,10 +505,18 @@ function segmentAtTime(playback, elapsedSec) {
 
 function toolFromOperation(operation) {
   const tool = operation.tool || {};
+  const assembly = operation.tool_assembly || tool.assembly || {};
   return {
     toolType: tool.tool_type || operation.tool_type || 'flat_endmill',
-    diameter: Number(tool.diameter_mm || operation.tool_diameter_mm || 6),
-    fluteLength: Number(tool.flute_length_mm || tool.fluteLength || 30),
+    diameter: Number(assembly.cutter_diameter_mm || tool.diameter_mm || operation.tool_diameter_mm || 6),
+    fluteLength: Number(assembly.flute_length_mm || tool.flute_length_mm || tool.fluteLength || 30),
+    shankDiameter: Number(assembly.shank_diameter_mm || tool.shank_diameter_mm || tool.diameter_mm || operation.tool_diameter_mm || 6),
+    stickout: Number(assembly.stickout_mm || tool.stickout_mm || tool.flute_length_mm || 35),
+    holderId: assembly.holder_id || tool.holder_id || 'generic_holder',
+    holderDiameter: Number(assembly.holder_diameter_mm || tool.holder_diameter_mm || 25),
+    holderLength: Number(assembly.holder_length_mm || tool.holder_length_mm || 35),
+    toolId: assembly.tool_id || tool.catalog_id || '',
+    toolNumber: assembly.tool_number || tool.tool_number || null,
   };
 }
 

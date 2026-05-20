@@ -68,6 +68,13 @@ def export_visualization_package(
         },
         "stock_states": stock_states,
     }
+    fixtures = _fixture_payloads(stock, plan)
+    if fixtures:
+        assets["fixtures"] = {
+            "format": "procedural",
+            "fixture_count": len(fixtures),
+            "roles": ["fixture_body", "clamping_zones", "setup_axes"],
+        }
     if target_path is not None:
         assets["target_mesh"] = {
             "path": target_path.name,
@@ -111,10 +118,13 @@ def export_visualization_package(
                 "setup": op.get("setup"),
                 "face_selector": op.get("face_selector"),
                 "tool": op.get("tool"),
+                "tool_assembly": (op.get("tool") or {}).get("assembly"),
                 "toolpath_summary": op.get("toolpath_summary"),
             }
             for op in plan.get("operations", [])
         ],
+        "fixtures": fixtures,
+        "setups": plan.get("setups", {}),
         "assets": assets,
         "compare_status": comparison.get("status") if comparison else None,
         "view": _default_view(bbox),
@@ -209,6 +219,7 @@ def _toolpath_payload(plan: dict) -> dict:
             "setup": op.get("setup"),
             "face_selector": op.get("face_selector"),
             "tool": op.get("tool"),
+            "tool_assembly": (op.get("tool") or {}).get("assembly"),
             "tool_type": op.get("tool_type"),
             "tool_diameter_mm": op.get("tool_diameter_mm"),
             "summary": summary,
@@ -226,6 +237,39 @@ def _toolpath_payload(plan: dict) -> dict:
         },
         "operations": operations,
     }
+
+
+def _fixture_payloads(stock: Any, plan: dict) -> list[dict]:
+    fixture = getattr(stock, "_fixture", None)
+    if fixture is None and isinstance(plan.get("fixture"), dict):
+        return [{
+            "name": plan["fixture"].get("name"),
+            "fixture_type": plan["fixture"].get("fixture_type"),
+            "description": plan["fixture"].get("description", ""),
+            "clamping_zones": plan["fixture"].get("clamping_zones", []),
+            "clearance_zones": plan["fixture"].get("clearance_zones", []),
+            "body": {
+                "type": plan["fixture"].get("fixture_type"),
+                "base": {
+                    "center": [0.0, 0.0, -float(plan["fixture"].get("base_height_mm") or 0.0) / 2.0],
+                    "size": [
+                        float((plan["fixture"].get("dimensions") or {}).get("length_mm", 100.0)),
+                        float((plan["fixture"].get("dimensions") or {}).get("width_mm", 80.0)),
+                        float((plan["fixture"].get("dimensions") or {}).get("height_mm", plan["fixture"].get("base_height_mm") or 10.0)),
+                    ],
+                },
+            },
+        }]
+    if fixture is None:
+        return []
+    try:
+        from .fixturing import fixture_visualization_payload
+
+        payload = fixture_visualization_payload(fixture, plan.get("stock_dimensions", {}))
+    except Exception:
+        payload = fixture.to_dict() if hasattr(fixture, "to_dict") else {}
+    payload["setups"] = plan.get("setups", {})
+    return [payload]
 
 
 def _export_target_mesh(target: Any, path: Path) -> None:

@@ -20,7 +20,9 @@ Usage::
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional
 
 
@@ -58,11 +60,103 @@ class ToolSpec:
     material: str = "carbide"
     tip_angle: float = 0.0
     tip_diameter: float = 0.0
+    catalog_id: str = ""
+    tool_number: Optional[int] = None
+    holder_id: str = ""
+    stickout_mm: float = 35.0
+    shank_diameter: float = 0.0
+    overall_length: float = 75.0
+    reach_mm: float = 0.0
+    inventory_count: int = 1
+    preferred_feeds_speeds: dict = field(default_factory=dict)
+    safe_limits: dict = field(default_factory=dict)
 
     @property
     def radius(self) -> float:
         """Nominal tool radius (diameter / 2)."""
         return self.diameter / 2.0
+
+    def to_dict(self) -> dict:
+        """Return structured, JSON-ready tool metadata."""
+        return {
+            "catalog_id": self.catalog_id,
+            "tool_type": self.tool_type,
+            "diameter_mm": self.diameter,
+            "tool_diameter_mm": self.diameter,
+            "corner_radius_mm": self.corner_radius,
+            "flute_length_mm": self.flute_length,
+            "num_flutes": self.num_flutes,
+            "coating": self.coating,
+            "material": self.material,
+            "tip_angle_deg": self.tip_angle,
+            "tip_diameter_mm": self.tip_diameter,
+            "tool_number": self.tool_number,
+            "holder_id": self.holder_id,
+            "stickout_mm": self.stickout_mm,
+            "shank_diameter_mm": self.shank_diameter or self.diameter,
+            "overall_length_mm": self.overall_length,
+            "reach_mm": self.reach_mm or self.flute_length,
+            "inventory_count": self.inventory_count,
+            "preferred_feeds_speeds": dict(self.preferred_feeds_speeds or {}),
+            "safe_limits": dict(self.safe_limits or {}),
+            "assembly": self.default_assembly().to_dict(),
+            "label": self.label,
+        }
+
+    @property
+    def label(self) -> str:
+        label_id = self.catalog_id or self.tool_type
+        return f"{label_id} D{self.diameter:g}mm"
+
+    def default_assembly(self) -> "ToolAssembly":
+        """Build the default cutter+holder assembly for visualization/validation."""
+        holder_diameter = max(self.shank_diameter or self.diameter, self.diameter) * 1.8
+        return ToolAssembly(
+            tool_id=self.catalog_id,
+            tool_type=self.tool_type,
+            cutter_diameter_mm=self.diameter,
+            flute_length_mm=self.flute_length,
+            shank_diameter_mm=self.shank_diameter or self.diameter,
+            stickout_mm=self.stickout_mm,
+            holder_id=self.holder_id or "generic_er_collet",
+            holder_diameter_mm=holder_diameter,
+            holder_length_mm=max(25.0, self.overall_length - self.stickout_mm),
+            tool_number=self.tool_number,
+        )
+
+
+@dataclass
+class ToolAssembly:
+    """Physical cutting tool assembly: cutter, shank, holder, and pocket."""
+
+    tool_id: str = ""
+    tool_type: str = "flat_endmill"
+    cutter_diameter_mm: float = 6.0
+    flute_length_mm: float = 30.0
+    shank_diameter_mm: float = 6.0
+    stickout_mm: float = 35.0
+    holder_id: str = "generic_er_collet"
+    holder_diameter_mm: float = 25.0
+    holder_length_mm: float = 35.0
+    tool_number: Optional[int] = None
+    pocket: Optional[int] = None
+    machine: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "tool_id": self.tool_id,
+            "tool_type": self.tool_type,
+            "cutter_diameter_mm": self.cutter_diameter_mm,
+            "flute_length_mm": self.flute_length_mm,
+            "shank_diameter_mm": self.shank_diameter_mm,
+            "stickout_mm": self.stickout_mm,
+            "holder_id": self.holder_id,
+            "holder_diameter_mm": self.holder_diameter_mm,
+            "holder_length_mm": self.holder_length_mm,
+            "tool_number": self.tool_number,
+            "pocket": self.pocket,
+            "machine": self.machine,
+        }
 
 
 # =========================================================================
@@ -130,6 +224,7 @@ class ToolCatalog:
     # The catalogue of preset tools.  These instances are only created
     # once (lazily) and then cached in ``_tools``.
     _presets: dict[str, ToolSpec] = {}
+    _catalog_loaded: bool = False
 
     # -----------------------------------------------------------------
     #   Lazy initialisation
@@ -205,6 +300,57 @@ class ToolCatalog:
             "SPOT_10mm": _e("drill", 10.0, tip_angle=120.0),
         })
 
+        for name, tool in cls._tools.items():
+            if not tool.catalog_id:
+                tool.catalog_id = name
+
+        cls._load_catalog_files()
+
+    @classmethod
+    def _load_catalog_files(cls) -> None:
+        """Load version-controlled catalog entries, overriding defaults by id."""
+        if cls._catalog_loaded:
+            return
+        cls._catalog_loaded = True
+
+        path = Path(__file__).resolve().parent / "catalogs" / "tools.json"
+        if not path.exists():
+            return
+
+        with path.open("r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+
+        for entry in payload.get("tools", []):
+            tool_id = str(entry.get("id") or entry.get("catalog_id") or "").strip()
+            if not tool_id:
+                continue
+            spec = ToolSpec(
+                tool_type=entry["tool_type"],
+                diameter=float(entry["diameter_mm"]),
+                corner_radius=float(entry.get("corner_radius_mm", 0.0)),
+                flute_length=float(entry.get("flute_length_mm", 50.0)),
+                num_flutes=int(entry.get("num_flutes", 2)),
+                coating=str(entry.get("coating", "uncoated")),
+                material=str(entry.get("material", "carbide")),
+                tip_angle=float(entry.get("tip_angle_deg", 0.0)),
+                tip_diameter=float(entry.get("tip_diameter_mm", 0.0)),
+                catalog_id=tool_id,
+                tool_number=entry.get("tool_number"),
+                holder_id=str(entry.get("holder_id", "")),
+                stickout_mm=float(entry.get("stickout_mm", 35.0)),
+                shank_diameter=float(entry.get("shank_diameter_mm", entry.get("diameter_mm", 0.0))),
+                overall_length=float(entry.get("overall_length_mm", 75.0)),
+                reach_mm=float(entry.get("reach_mm", entry.get("flute_length_mm", 50.0))),
+                inventory_count=int(entry.get("inventory_count", 1)),
+                preferred_feeds_speeds=dict(entry.get("preferred_feeds_speeds") or {}),
+                safe_limits=dict(entry.get("safe_limits") or {}),
+            )
+            cls._tools[tool_id] = spec
+            category = str(entry.get("category", "custom"))
+            cls._categories.setdefault(category, [])
+            if tool_id not in cls._categories[category]:
+                cls._categories[category].append(tool_id)
+
     # -----------------------------------------------------------------
     #   Public API
     # -----------------------------------------------------------------
@@ -272,6 +418,8 @@ class ToolCatalog:
                 f"Tool {name!r} already exists in the catalog. "
                 f"Use a different name or remove it first."
             )
+        if not tool.catalog_id:
+            tool.catalog_id = name
         cls._tools[name] = tool
 
     @classmethod
@@ -315,6 +463,40 @@ class ToolCatalog:
 
         # Fall back to the largest available
         return candidates[-1]
+
+    @classmethod
+    def select(
+        cls,
+        tool_type: str,
+        *,
+        min_diameter: float = 0.0,
+        max_diameter: Optional[float] = None,
+        min_flute_length: float = 0.0,
+    ) -> ToolSpec:
+        """Select an available catalog tool that satisfies physical limits.
+
+        Prefers the largest fitting tool when a max diameter is supplied,
+        otherwise the smallest tool meeting the minimum diameter.
+        """
+        cls._ensure_initialised()
+        candidates = [
+            t for t in cls._tools.values()
+            if t.tool_type == tool_type
+            and t.inventory_count > 0
+            and t.diameter >= min_diameter
+            and (max_diameter is None or t.diameter <= max_diameter)
+            and (not min_flute_length or (t.reach_mm or t.flute_length) >= min_flute_length)
+        ]
+        if not candidates:
+            raise ValueError(
+                f"No available {tool_type!r} satisfies "
+                f"min_diameter={min_diameter:g}, max_diameter={max_diameter}, "
+                f"min_flute_length={min_flute_length:g}."
+            )
+        candidates.sort(key=lambda t: t.diameter)
+        if max_diameter is not None:
+            return candidates[-1]
+        return candidates[0]
 
 
 # =========================================================================

@@ -8,9 +8,11 @@ detection.
 
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import Optional
 
 
@@ -99,6 +101,13 @@ class FixtureSpec:
     max_opening_mm: float = 0.0
     max_part_mass_kg: float = 50.0
     mesh_path: Optional[str] = None
+    dimensions: dict = field(default_factory=dict)
+    source_path: Optional[str] = None
+    visual_mesh_path: Optional[str] = None
+    collision_mesh_path: Optional[str] = None
+    coordinate_frame: dict = field(default_factory=dict)
+    clearance_zones: list[dict] = field(default_factory=list)
+    mounting_pattern: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -111,6 +120,13 @@ class FixtureSpec:
             "max_part_mass_kg": self.max_part_mass_kg,
             "clamping_zones": [z.to_dict() for z in self.clamping_zones],
             "mesh_path": self.mesh_path,
+            "dimensions": dict(self.dimensions or {}),
+            "source_path": self.source_path,
+            "visual_mesh_path": self.visual_mesh_path,
+            "collision_mesh_path": self.collision_mesh_path,
+            "coordinate_frame": dict(self.coordinate_frame or {}),
+            "clearance_zones": list(self.clearance_zones or []),
+            "mounting_pattern": dict(self.mounting_pattern or {}),
         }
 
 
@@ -167,6 +183,7 @@ class FixtureCatalog:
 
     _presets: dict[str, FixtureSpec] = {}
     _initialised: bool = False
+    _catalog_loaded: bool = False
 
     @classmethod
     def _ensure_initialised(cls):
@@ -187,6 +204,12 @@ class FixtureCatalog:
                 base_height_mm=87.0,
                 jaw_width_mm=152.4,
                 max_opening_mm=228.6,
+                dimensions={
+                    "length_mm": 400.0,
+                    "width_mm": 160.0,
+                    "height_mm": 87.0,
+                    "jaw_thickness_mm": 20.0,
+                },
             ),
             "toe_clamps_4corner": FixtureSpec(
                 name="toe_clamps_4corner",
@@ -199,6 +222,7 @@ class FixtureCatalog:
                     ClampingZone("clamp_tr", 40.0, 60.0, 15.0, 35.0, 18.0, 28.0),
                 ],
                 base_height_mm=20.0,
+                dimensions={"length_mm": 130.0, "width_mm": 90.0, "height_mm": 28.0},
             ),
             "vacuum_plate_300x200": FixtureSpec(
                 name="vacuum_plate_300x200",
@@ -207,6 +231,7 @@ class FixtureCatalog:
                 clamping_zones=[],
                 base_height_mm=35.0,
                 max_part_mass_kg=10.0,
+                dimensions={"length_mm": 300.0, "width_mm": 200.0, "height_mm": 35.0},
             ),
             "soft_jaws_aluminum": FixtureSpec(
                 name="soft_jaws_aluminum",
@@ -220,10 +245,68 @@ class FixtureCatalog:
                 ],
                 base_height_mm=87.0,
                 max_part_mass_kg=30.0,
+                dimensions={
+                    "length_mm": 400.0,
+                    "width_mm": 170.0,
+                    "height_mm": 120.0,
+                    "jaw_thickness_mm": 25.0,
+                },
             ),
         })
 
+        cls._load_catalog_files()
         cls._initialised = True
+
+    @classmethod
+    def _load_catalog_files(cls) -> None:
+        """Load version-controlled fixture catalog entries."""
+        if cls._catalog_loaded:
+            return
+        cls._catalog_loaded = True
+
+        path = Path(__file__).resolve().parent / "catalogs" / "fixtures.json"
+        if not path.exists():
+            return
+
+        with path.open("r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+
+        for entry in payload.get("fixtures", []):
+            name = str(entry.get("id") or entry.get("name") or "").strip()
+            if not name:
+                continue
+            fixture_type = FixtureType(entry.get("fixture_type", FixtureType.CUSTOM.value))
+            zones = [
+                ClampingZone(
+                    label=str(zone.get("label", "clamp")),
+                    x_min=float(zone["x_min"]),
+                    x_max=float(zone["x_max"]),
+                    y_min=float(zone["y_min"]),
+                    y_max=float(zone["y_max"]),
+                    z_min=float(zone.get("z_min", 0.0)),
+                    z_max=float(zone.get("z_max", 0.0)),
+                    margin_mm=float(zone.get("margin_mm", 2.0)),
+                )
+                for zone in entry.get("clamping_zones", [])
+            ]
+            cls._presets[name] = FixtureSpec(
+                name=name,
+                fixture_type=fixture_type,
+                description=str(entry.get("description", "")),
+                clamping_zones=zones,
+                base_height_mm=float(entry.get("base_height_mm", 0.0)),
+                jaw_width_mm=float(entry.get("jaw_width_mm", 0.0)),
+                max_opening_mm=float(entry.get("max_opening_mm", 0.0)),
+                max_part_mass_kg=float(entry.get("max_part_mass_kg", 50.0)),
+                mesh_path=entry.get("mesh_path"),
+                dimensions=dict(entry.get("dimensions") or {}),
+                source_path=entry.get("source_path"),
+                visual_mesh_path=entry.get("visual_mesh_path"),
+                collision_mesh_path=entry.get("collision_mesh_path"),
+                coordinate_frame=dict(entry.get("coordinate_frame") or {}),
+                clearance_zones=list(entry.get("clearance_zones") or []),
+                mounting_pattern=dict(entry.get("mounting_pattern") or {}),
+            )
 
     @classmethod
     def get(cls, name: str) -> FixtureSpec:
@@ -333,6 +416,43 @@ def check_operation_against_fixture(
         )
 
     return warnings
+
+
+def fixture_visualization_payload(fixture: FixtureSpec, stock_dims: Optional[dict] = None) -> dict:
+    """Return procedural browser visualization data for a fixture.
+
+    This keeps semantic fixture data as the source of truth. Real mesh paths can
+    be supplied later, while v1 still visualizes base/jaws/clamp zones.
+    """
+    dims = dict(fixture.dimensions or {})
+    stock_dims = dict(stock_dims or {})
+    stock_length = float(stock_dims.get("length", dims.get("stock_length_mm", 100.0)))
+    stock_width = float(stock_dims.get("width", dims.get("stock_width_mm", 60.0)))
+
+    body = {
+        "type": fixture.fixture_type.value,
+        "base": {
+            "center": [0.0, 0.0, -fixture.base_height_mm / 2.0],
+            "size": [
+                float(dims.get("length_mm", max(stock_length + 80.0, fixture.jaw_width_mm or stock_length))),
+                float(dims.get("width_mm", max(stock_width + 80.0, fixture.jaw_width_mm or stock_width))),
+                float(dims.get("height_mm", max(fixture.base_height_mm, 10.0))),
+            ],
+        },
+    }
+
+    return {
+        "name": fixture.name,
+        "fixture_type": fixture.fixture_type.value,
+        "description": fixture.description,
+        "body": body,
+        "clamping_zones": [zone.to_dict() for zone in fixture.clamping_zones],
+        "clearance_zones": list(fixture.clearance_zones or []),
+        "source_path": fixture.source_path,
+        "visual_mesh_path": fixture.visual_mesh_path or fixture.mesh_path,
+        "collision_mesh_path": fixture.collision_mesh_path,
+        "coordinate_frame": dict(fixture.coordinate_frame or {}),
+    }
 
 
 # =========================================================================
