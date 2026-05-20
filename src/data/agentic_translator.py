@@ -86,6 +86,14 @@ Stock instance (immutable/fluent pattern).
 
 - `.contour(depth, *, stepdown=None)` — Profile/contour milling around outer boundary.
 
+- `.spot_drill(diameter, *, cx=0.0, cy=0.0)` — Spot a hole before drilling.
+
+- `.counterbore(diameter, depth, *, pilot_diameter=0.0, cx=0.0, cy=0.0)` —
+  Counterbore a drilled hole.
+
+- `.countersink(diameter, angle=90.0, *, pilot_diameter=0.0, cx=0.0, cy=0.0)` —
+  Countersink a drilled hole.
+
 - `.tap(diameter, thread_pitch=0.0, *, depth=10.0, cx=0.0, cy=0.0)`
   Tap a pre-drilled hole. Geometry unchanged (thread form too fine for B-Rep).
 
@@ -119,9 +127,16 @@ Stock instance (immutable/fluent pattern).
    For example: to center a pocket on a 70x40 face, use cx=0, cy=0.
    To put a hole at the face center, use cx=0, cy=0.
 10. The code MUST assign the final Stock to a variable named `part`.
-11. Do NOT write any import statements. `Stock` is already imported.
-12. Do NOT call .face_mill(depth=0) — if the stock is already at the right
+11. Do NOT import CadQuery or SubCAD. `Stock` is already imported by the REPL.
+    The only allowed import is `from types import SimpleNamespace as Measures`
+    when the prompt provides a Measures block that needs it.
+12. Keep the code as a small executable SubCAD program. Do not include markdown,
+    explanation text, print statements, file writes, or plotting.
+13. Do NOT call .face_mill(depth=0) — if the stock is already at the right
     height, just skip face_mill entirely.
+14. Prefer simple manufacturable features first. If a CadQuery fillet has no
+    direct SubCAD equivalent, omit it and let comparison feedback decide whether
+    a chamfer or pocket adjustment is needed.
 """)
 
 # Shorter reference for iteration prompts (the LLM already saw the full one)
@@ -155,13 +170,6 @@ def _extract_measures_block(cq_code: str) -> str:
     """
     import re
 
-    # Try to find the CadQuery measures pattern: m = Measures(...)
-    # Match from 'm = Measures(' or similar to the closing ')' that starts a line
-    patterns = [
-        r"(m\s*=\s*(?:Measures|type\([^)]+\)\([^)]*\))\s*\(.*?^\s*\))",
-        r"(m\s*=\s*SimpleNamespace\s*\(.*?^\s*\))",
-    ]
-
     # Also extract the import: from types import SimpleNamespace as Measures
     import_line = ""
     import_match = re.search(
@@ -171,13 +179,14 @@ def _extract_measures_block(cq_code: str) -> str:
     if import_match:
         import_line = import_match.group(0)
 
-    for pat in patterns:
-        match = re.search(pat, cq_code, re.MULTILINE | re.DOTALL)
-        if match:
-            block = match.group(1).strip()
-            if import_line:
-                block = import_line + "\n" + block
-            return block
+    block = _extract_balanced_assignment(
+        cq_code,
+        r"\bm\s*=\s*(?:Measures|SimpleNamespace)\s*\(",
+    )
+    if block:
+        if import_line and "SimpleNamespace" in block and import_line not in block:
+            block = import_line + "\n" + block
+        return block
 
     # Fallback: return just the first few lines that define measures
     lines = cq_code.split("\n")
@@ -197,14 +206,55 @@ def _extract_measures_block(cq_code: str) -> str:
     return "# No measures found in source — define your own parameters"
 
 
+def _extract_balanced_assignment(source: str, start_pattern: str) -> str:
+    """Extract an assignment with nested parentheses by balancing parens."""
+    match = re.search(start_pattern, source)
+    if not match:
+        return ""
+
+    line_start = source.rfind("\n", 0, match.start()) + 1
+    idx = match.end() - 1
+    depth = 0
+    in_string: str | None = None
+    escaped = False
+
+    for pos in range(idx, len(source)):
+        ch = source[pos]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == in_string:
+                in_string = None
+            continue
+
+        if ch in {"'", '"'}:
+            in_string = ch
+            continue
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+            if depth == 0:
+                return source[line_start:pos + 1].strip()
+
+    return source[line_start:].strip()
+
+
 def build_system_prompt() -> str:
     """Build the system prompt with subCAD API reference."""
-    return f"""CRITICAL: You are a code generator. Output ONLY Python code in ```python fences.
-Never explain, analyze, or describe. Just output code. Start immediately with ```python.
+    return f"""CRITICAL: You are a tool-using code generator.
+Your job is to translate CadQuery constructive CAD into executable SubCAD.
+You MUST call the `execute_subcad` tool with raw Python code in its `code`
+argument. Do not put markdown fences, explanations, comments about your
+reasoning, JSON outside the tool call, or prose in the code string.
 
 {SUBCAD_API_REFERENCE}
 
-`Stock` is pre-imported. DO NOT write import statements. DO NOT use .contour()."""
+`Stock` is pre-imported. Do not import CadQuery or SubCAD. Avoid `.contour()`
+unless the source clearly requires outer profiling that cannot be represented
+with pockets, holes, slots, or face milling."""
 
 
 def build_user_prompt(
@@ -230,15 +280,11 @@ def build_user_prompt(
             f"  line {c['lineno']}: [{cls}] {c['function_path']}"
         )
 
-    # Load reference mesh for volume info
-    try:
-        ref_mesh = trimesh.load(step_path)
-        ref_vol = round(float(ref_mesh.volume), 1) if ref_mesh else 0.0
-    except Exception:
-        ref_vol = 0.0
+    ref_vol = _load_reference_volume(step_path)
 
     # Extract measures for the LLM to reference
     measures = _extract_measures(ops_trace)
+    measures_json = json.dumps(measures, indent=2, default=str)
 
     # Extract the Measures block from the CadQuery source for reuse
     measures_block = _extract_measures_block(cq_code)
@@ -256,8 +302,15 @@ Translate the following CadQuery program into a subCAD subtractive program.
 {measures_block}
 ```
 
+## Extracted Numeric Measures
+```json
+{measures_json}
+```
+
 Use `m.width`, `m.depth`, `m.height`, `m.wall_thickness`, etc. in your
-subCAD code instead of hardcoding values.
+subCAD code instead of hardcoding values when the names are relevant. If a
+measure is a final part dimension, use it directly; do not add arbitrary stock
+margin in X/Y.
 
 ## CadQuery Source Code
 ```python
@@ -276,10 +329,31 @@ subtractive program. Remember:
 - Cut AWAY material to reveal the final shape.
 - The target volume is approximately {ref_vol} mm^3.
 - Assign the final Stock to a variable named `part`.
-- Copy the Measures block above and use m.width, m.depth, etc.
+- Copy the Measures block above when useful and use m.width, m.depth, etc.
+- Call the `execute_subcad` tool with raw Python code. Do not include markdown
+  fences or explanation text in the tool argument.
+- Use simple SubCAD operations first: face_mill, pocket, circular_pocket,
+  drill, slot, and chamfer. Use counterbore/countersink only when visible in
+  the CadQuery source.
 
-OUTPUT ONLY CODE. No explanation, no markdown. Start with ```python."""
+CALL `execute_subcad` NOW with your best first SubCAD translation."""
     return prompt
+
+
+def _load_reference_volume(step_path: str) -> float:
+    """Load a reference STEP volume using CadQuery first, then mesh fallback."""
+    try:
+        from src.subcad.geometry import import_step
+        ref_shape = import_step(step_path)
+        return round(float(ref_shape.val().Volume()), 1)
+    except Exception:
+        pass
+
+    try:
+        ref_mesh = trimesh.load(step_path)
+        return round(float(ref_mesh.volume), 1) if ref_mesh else 0.0
+    except Exception:
+        return 0.0
 
 
 def build_iteration_prompt(
@@ -350,8 +424,10 @@ Target volume: {target_volume:.1f} mm^3."""]
 
 ## Instructions
 
-Output ONLY the corrected subCAD Python code in a ```python fence.
-No explanation, no analysis. Just the code. Start with `part = Stock.rectangular(...`.""")
+Call the `execute_subcad` tool again with corrected raw SubCAD Python code.
+No markdown fences, no explanation, no analysis, no file writes. The code must
+assign the final Stock to `part` and should start with the Measures block if
+needed, followed by `part = Stock.rectangular(...`.""")
 
     return "\n".join(parts)
 
@@ -1060,17 +1136,7 @@ class AgenticTranslator:
         stock_dims = step_to_stock_dims(step_bytes)
 
         # --- Load reference volume (try CadQuery first, fallback to trimesh) ---
-        target_volume = 0.0
-        try:
-            from src.subcad.geometry import import_step
-            ref_shape = import_step(step_path)
-            target_volume = round(float(ref_shape.val().Volume()), 1)
-        except Exception:
-            try:
-                ref_mesh = trimesh.load(step_path)
-                target_volume = round(float(ref_mesh.volume), 1) if ref_mesh else 0.0
-            except Exception:
-                target_volume = 0.0
+        target_volume = _load_reference_volume(step_path)
 
         # --- Build initial user prompt ---
         user_prompt = build_user_prompt(cq_code, ops_trace, step_path, stock_dims)

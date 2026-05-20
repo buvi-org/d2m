@@ -41,7 +41,9 @@ from src.data.agentic_translator import (
     translate_exploration_sample,
     translate_batch,
     SUBCAD_API_REFERENCE,
+    _extract_measures_block,
 )
+from src.data.run_agentic_translation import build_dry_run_preview
 import src.data.agentic_translator as agentic_mod
 
 from src.data.subcad_repl import run_subcad, compare_to_reference, format_feedback
@@ -62,6 +64,8 @@ check(".pocket" in sys_prompt, "system prompt mentions pocket")
 check(".drill" in sys_prompt, "system prompt mentions drill")
 check(".chamfer" in sys_prompt, "system prompt mentions chamfer")
 check("part" in sys_prompt, "system prompt mentions 'part' variable")
+check("execute_subcad" in sys_prompt, "system prompt requires execute_subcad tool")
+check("markdown fences" in sys_prompt, "system prompt forbids markdown fences in tool code")
 check(len(sys_prompt) > 500, f"system prompt is substantial ({len(sys_prompt)} chars)")
 
 
@@ -122,6 +126,10 @@ with open("data/zero_to_cad_exploration/sample_1/cadquery_code.py", "r", encodin
     cq_code = f.read()
 step_path = "data/zero_to_cad_exploration/sample_1/model.step"
 
+measures_block = _extract_measures_block(cq_code)
+check("hole=Measures" in measures_block, "measures extractor keeps nested Measures block")
+check(measures_block.rstrip().endswith(")"), "measures extractor keeps closing parenthesis")
+
 stock_dims = {"length": 90.0, "width": 40.0, "height": 25.0}
 prompt = build_user_prompt(cq_code, ops_trace, step_path, stock_dims)
 
@@ -129,6 +137,9 @@ check("CadQuery" in prompt, "user prompt mentions CadQuery")
 check(cq_code[:40] in prompt, "user prompt contains CadQuery code snippet")
 check("90" in prompt or "90.0" in prompt, "user prompt includes stock length")
 check("part" in prompt, "user prompt mentions 'part' variable")
+check("execute_subcad" in prompt, "user prompt asks for execute_subcad call")
+check("Extracted Numeric Measures" in prompt, "user prompt includes extracted measures section")
+check("STEP volume: 0.0" not in prompt, "user prompt computes nonzero STEP volume")
 
 
 # =========================================================================
@@ -293,6 +304,19 @@ check("[OK]" in feedback or "[FAIL]" in feedback or "MATCH" in feedback or "MISM
 print("\n10. translate_exploration_sample ...")
 check(callable(translate_exploration_sample), "translate_exploration_sample is callable")
 check(callable(translate_batch), "translate_batch is callable")
+
+
+# =========================================================================
+#  Test 10b: Live-run dry-run wrapper
+# =========================================================================
+
+print("\n10b. live-run dry-run wrapper ...")
+preview = build_dry_run_preview("data/zero_to_cad_exploration/sample_1")
+check(preview["cadquery_chars"] > 100, "dry-run preview reads CadQuery code")
+check(preview["ops_trace_count"] > 0, "dry-run preview reads ops trace")
+check(preview["stock_dims"]["length"] > 0, "dry-run preview computes stock dims")
+check(preview["system_prompt_chars"] > 500, "dry-run preview builds system prompt")
+check(preview["user_prompt_chars"] > 500, "dry-run preview builds user prompt")
 
 
 # =========================================================================
