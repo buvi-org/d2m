@@ -44,12 +44,66 @@ from src.data.agentic_translator import (
     _extract_measures_block,
 )
 from src.data.run_agentic_translation import build_dry_run_preview
+from src.data.run_zero_to_cad_translations import (
+    _apply_match_policy,
+    _parse_methods,
+    compatibility_report,
+)
 import src.data.agentic_translator as agentic_mod
 
 from src.data.subcad_repl import run_subcad, compare_to_reference, format_feedback
 from src.data.cadquery_to_subcad import reconstruct_chains, classify_chain, _extract_measures
 
 check(True, "all imports successful")
+
+
+# =========================================================================
+#  Test 1b: Correct Zero-to-CAD benchmark runner policy
+# =========================================================================
+
+print("\n1b. Zero-to-CAD benchmark runner policy ...")
+blocked = compatibility_report([{"op": "fillet"}], "part = workplane.union(other)")
+check(not blocked["compatible"], "compatibility gate blocks unsupported constructive/fillet samples")
+chamfered = compatibility_report([{"op_name": "chamfer"}], "")
+check(not chamfered["compatible"], "compatibility gate blocks local chamfer samples for exact matching")
+check(_parse_methods("none") == [], "comparison-methods=none disables rich mesh comparison")
+
+volume_only_false_positive = {
+    "success": True,
+    "comparison": {"match": True, "volume_ratio": 0.997},
+    "mesh_comparison": {
+        "score": 0.0,
+        "sdf": {"rms_error": 3.3, "max_overcut": 8.7, "max_undercut": -2.2},
+        "slice": {"problem_slices": [{"z": 1.0}]},
+    },
+}
+strict_result = _apply_match_policy(
+    volume_only_false_positive,
+    comparison_methods=["sdf", "slice"],
+    trusted_tolerance_mm=0.25,
+    min_mesh_score=95.0,
+    volume_only_success=False,
+)
+check(strict_result["translator_success"], "runner preserves raw translator volume success")
+check(not strict_result["success"], "runner rejects volume-only false positive as trusted match")
+check(strict_result["match_policy"]["status"] == "trusted_fail", "runner records trusted failure reason")
+
+trusted_result = _apply_match_policy(
+    {
+        "success": True,
+        "comparison": {"match": True, "volume_ratio": 1.0},
+        "mesh_comparison": {
+            "score": 99.0,
+            "sdf": {"rms_error": 0.01, "max_overcut": 0.02, "max_undercut": -0.01},
+            "slice": {"problem_slices": []},
+        },
+    },
+    comparison_methods=["sdf", "slice"],
+    trusted_tolerance_mm=0.25,
+    min_mesh_score=95.0,
+    volume_only_success=False,
+)
+check(trusted_result["success"], "runner accepts volume and mesh trusted match")
 
 
 # =========================================================================
@@ -63,6 +117,10 @@ check(".face_mill" in sys_prompt, "system prompt mentions face_mill")
 check(".pocket" in sys_prompt, "system prompt mentions pocket")
 check(".drill" in sys_prompt, "system prompt mentions drill")
 check(".chamfer" in sys_prompt, "system prompt mentions chamfer")
+check("counterbore(hole_diameter, counterbore_diameter, counterbore_depth" in sys_prompt,
+      "system prompt documents exact counterbore signature")
+check("pilot_diameter" in sys_prompt and "Never use keyword names" in sys_prompt,
+      "system prompt warns against invalid counterbore kwargs")
 check("part" in sys_prompt, "system prompt mentions 'part' variable")
 check("execute_subcad" in sys_prompt, "system prompt requires execute_subcad tool")
 check("markdown fences" in sys_prompt, "system prompt forbids markdown fences in tool code")

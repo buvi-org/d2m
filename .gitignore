@@ -46,3 +46,6 @@ lightning_logs/
 
 # Logs
 *.log
+
+# Local benchmark/output runs
+runs/

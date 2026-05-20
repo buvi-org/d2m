@@ -21,6 +21,7 @@ Implemented and tested:
 - Phase 1 synthetic dataset generation: 9,994 labeled parts are available in `synthetic_10k_samples.7z`.
 - SubCAD fluent API for subtractive machining operations, STEP/STL export, process-plan JSON, fixtures, tool assemblies, and multi-setup metadata.
 - Agentic CadQuery -> SubCAD translator infrastructure, including LLM provider abstraction, prompt builders, convergence controller, REPL execution, geometry comparison, and optional localized/feature-aware feedback paths.
+- Corrected Zero-to-CAD live benchmark runner that saves each original dataset STEP as the target, compares generated SubCAD output against that original STEP, and records trusted match policy artifacts.
 - Mesh comparison utilities for per-vertex signed deviation and Z-slice feedback.
 
 SubCAD Shop-Floor v1 is now treated as complete for the current prototype contract:
@@ -65,7 +66,9 @@ SubCAD can currently be used as a CadQuery-backed subtractive machining represen
 - Compare alternate SubCAD programs by time/cost tradeoff and Pareto ranking.
 - Run local validation and integration tests for SubCAD, fixturing, shop-floor schema v1, Phase 2 toolpaths, translator infrastructure, and the simulation bridge.
 
-SubCAD is not yet a production CAM/postprocessor or quoting system. Controller-certified G-code, industrial CAM strategy coverage, formal ERP/shop quoting, a full upload-to-plan product UI, live translation success claims, and validated simulation/RL workflows remain future work.
+SubCAD is not yet a production CAM/postprocessor or quoting system. Controller-certified G-code, industrial CAM strategy coverage, formal ERP/shop quoting, a full upload-to-plan product UI, large-scale live translation success claims, and validated simulation/RL workflows remain future work.
+
+Current translator benchmark reality: the corrected runner compares against the original Zero-to-CAD STEP, not a self-generated STEP. A conservative scan of `data/zero_to_cad_100k` currently finds 1,752 rows compatible with the SubCAD features that can be exact-matched today, so reaching 100k externally verified pairs requires expanding SubCAD support for common skipped CAD families such as local chamfers/fillets, retained-stock bosses/unions, shells, revolves, sweeps, lofts, and arbitrary profiles.
 
 ### Visualization workflow
 
@@ -115,7 +118,7 @@ Recent local test status:
 
 | Test | Status |
 |------|--------|
-| `python test_agentic_translator.py` | PASS, 55/55. Non-live tests only; no LLM API translation run. |
+| `python test_agentic_translator.py` | PASS, 76/76. Includes corrected Zero-to-CAD runner policy tests; live LLM runs are separate. |
 | `python test_subcad_integration.py` | PASS, 39/39 |
 | `python test_fixturing_integration.py` | PASS, 19/19 |
 | `python test_sim_bridge.py` | PASS, 51/51 |
@@ -242,7 +245,7 @@ python test_subcad_manufacturing_economics.py
 
 **Current hardening priority** — Manufacturing Trust v1 follow-through: broaden inventory-aware planning to more operations, strengthen fixture-body/stock-envelope clearance, validate simulation/comparison on larger real part examples, and calibrate economics against real shop rates/tool life.
 
-**In progress / prototype** — Agentic CadQuery -> SubCAD translation, STEP-to-SubCAD AI model planning, localized/feature-aware comparison validation, and simulation feedback quality. See [docs/step_to_subcad_ai.md](docs/step_to_subcad_ai.md) for the current decision: STEP/B-Rep JSON is the source of truth, while images/video with projected dimensions are supporting evidence.
+**In progress / prototype** — Agentic CadQuery -> SubCAD translation, STEP-to-SubCAD AI model planning, localized/feature-aware comparison validation, and simulation feedback quality. The corrected live runner now uses original Zero-to-CAD STEP targets and can collect currently compatible execution-scored pairs, but a 100k external benchmark needs broader SubCAD feature coverage. See [docs/step_to_subcad_ai.md](docs/step_to_subcad_ai.md) for the current decision: STEP/B-Rep JSON is the source of truth, while images/video with projected dimensions are supporting evidence.
 
 **Recently fixed** — Simulation bridge zero-volume failure. Core dexel volume and material-removal tests now pass, but simulation/RL claims should still be treated as roadmap until validated on representative real workflows.
 

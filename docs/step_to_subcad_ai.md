@@ -191,6 +191,43 @@ This is the flow that answers: "Can AI generate SubCAD for an existing CAD
 part?" A candidate only counts as successful if it matches the original target
 STEP from the source dataset, not a STEP produced from the generated SubCAD.
 
+Implemented runner: `python -m src.data.run_zero_to_cad_translations`.
+
+Useful commands:
+
+```bash
+python -m src.data.run_zero_to_cad_translations --scan-compatible --source-dir data/zero_to_cad_100k --split train
+python -m src.data.run_zero_to_cad_translations --source-dir data/zero_to_cad_100k --split train --comparison-methods slice --target-successes 100000
+```
+
+Current policy:
+
+- The source artifact for every run is the original Zero-to-CAD STEP bytes saved
+  as `original_model.step`.
+- The translator may converge on volume first, but the batch runner only counts
+  a kept sample after original-STEP comparison passes the trusted match policy.
+- Rich comparison applies translation-only bounding-box alignment because
+  Zero-to-CAD and SubCAD use different local origins for the same physical part.
+- For the current 2.5D collection pass, `--comparison-methods slice` is the
+  practical trusted mode. The existing vertex-based SDF is useful feedback but
+  too noisy on sparse STEP tessellations to be the hard gate.
+- A conservative compatibility gate skips unsupported Zero-to-CAD rows such as
+  local edge chamfers, fillets, shells, constructive unions/bosses, revolve,
+  sweep, loft, cones, spheres, and polygon profiles.
+
+Current scan of `data/zero_to_cad_100k` with the conservative gate:
+
+- train: 1,414 compatible rows out of 81,015.
+- val: 161 compatible rows out of 9,734.
+- test: 177 compatible rows out of 9,767.
+- total: 1,752 compatible rows.
+
+Therefore, 100k externally verified Zero-to-CAD -> SubCAD pairs is not
+reachable with current SubCAD capability coverage alone. Hitting 100k requires
+expanding SubCAD support for the common skipped feature families, especially
+local chamfers/fillets, retained-stock constructive bosses/unions, round stock
+and circle extrusions, shells, revolves, sweeps, lofts, and arbitrary profiles.
+
 ### Self-generated SubCAD-pair flow
 
 This is only for supervised pretraining and regression data:

@@ -298,6 +298,20 @@ The benchmark target must be the original Zero-to-CAD `model.step` for each
 sample. Self-generated SubCAD -> STEP pairs are useful supervised data, but
 they are not evidence that the translator can match external CAD.
 
+Current implementation:
+
+- `src.data.run_zero_to_cad_translations` streams local Zero-to-CAD parquet rows,
+  writes each original STEP as `original_model.step`, runs the agentic
+  translator, exports generated SubCAD/process-plan artifacts, and records
+  trusted match policy results.
+- `--scan-compatible` reports how many rows current SubCAD can reasonably try.
+  The present conservative scan finds 1,752 compatible rows across train/val/test,
+  so 100k externally verified pairs needs more SubCAD feature coverage rather
+  than a blind long-running API job.
+- Use `--comparison-methods slice` for the current 2.5D collection pass; SDF is
+  retained as feedback but is too noisy on sparse STEP tessellations to be the
+  hard success gate today.
+
 ### Build Dataset From Successful Translations
 
 Goal: create reliable training/evaluation pairs only after execution and comparison are trustworthy.

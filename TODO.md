@@ -209,5 +209,8 @@ Still deferred: controller-certified production G-code, formal quoting/ERP integ
   - Generate SubCAD with the agentic translator, execute it, and compare the generated STEP against the original target STEP.
   - Save generated SubCAD, comparison metrics, validation, economics, and repair history.
   - Do not count self-generated SubCAD -> STEP pairs as translator success; they are auxiliary supervised/pretraining data only.
+  - Use `python -m src.data.run_zero_to_cad_translations` for the corrected flow.
+  - Current strict compatibility scan finds 1,752 eligible external Zero-to-CAD rows across train/val/test; 100k externally verified pairs requires broader SubCAD feature support before the full target is reachable.
+  - Next SubCAD capability blockers for 100k: local chamfers/fillets, retained-stock bosses/unions, round stock/circle extrusions, shells, revolves, sweeps, lofts, and arbitrary profile contours.
 - GNN feature recognition and LLM fine-tuning should wait for execution-scored data.
 - RL remains later-stage research after simulator fidelity is validated.

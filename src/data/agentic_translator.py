@@ -88,11 +88,12 @@ Stock instance (immutable/fluent pattern).
 
 - `.spot_drill(diameter, *, cx=0.0, cy=0.0)` — Spot a hole before drilling.
 
-- `.counterbore(diameter, depth, *, pilot_diameter=0.0, cx=0.0, cy=0.0)` —
-  Counterbore a drilled hole.
+- `.counterbore(hole_diameter, counterbore_diameter, counterbore_depth, *,
+  cx=0.0, cy=0.0, through=False)` — Counterbore a hole. Use positional
+  arguments in that exact order.
 
-- `.countersink(diameter, angle=90.0, *, pilot_diameter=0.0, cx=0.0, cy=0.0)` —
-  Countersink a drilled hole.
+- `.countersink(diameter, countersink_diameter, *, depth=0.0,
+  countersink_angle=82.0, cx=0.0, cy=0.0)` — Countersink a drilled hole.
 
 - `.tap(diameter, thread_pitch=0.0, *, depth=10.0, cx=0.0, cy=0.0)`
   Tap a pre-drilled hole. Geometry unchanged (thread form too fine for B-Rep).
@@ -128,8 +129,8 @@ Stock instance (immutable/fluent pattern).
    To put a hole at the face center, use cx=0, cy=0.
 10. The code MUST assign the final Stock to a variable named `part`.
 11. Do NOT import CadQuery or SubCAD. `Stock` is already imported by the REPL.
-    The only allowed import is `from types import SimpleNamespace as Measures`
-    when the prompt provides a Measures block that needs it.
+    Allowed imports are `from types import SimpleNamespace as Measures` and
+    `import math` when needed for source measures.
 12. Keep the code as a small executable SubCAD program. Do not include markdown,
     explanation text, print statements, file writes, or plotting.
 13. Do NOT call .face_mill(depth=0) — if the stock is already at the right
@@ -137,6 +138,10 @@ Stock instance (immutable/fluent pattern).
 14. Prefer simple manufacturable features first. If a CadQuery fillet has no
     direct SubCAD equivalent, omit it and let comparison feedback decide whether
     a chamfer or pocket adjustment is needed.
+15. For `cboreHole`, drill the pilot hole and then call
+    `counterbore(hole_diameter, counterbore_diameter, counterbore_depth, cx=..., cy=...)`.
+    Never use keyword names `diameter`, `depth`, or `pilot_diameter` with
+    `counterbore`.
 """)
 
 # Shorter reference for iteration prompts (the LLM already saw the full one)
@@ -553,6 +558,26 @@ def _coerce_trimesh(mesh):
     return mesh
 
 
+def _align_candidate_mesh_to_reference(candidate_mesh, reference_mesh):
+    """Return a translated candidate mesh aligned by bounding-box minimum.
+
+    Zero-to-CAD STEP files commonly use a bottom-at-Z-zero convention, while
+    SubCAD stock meshes are centered around their local frame. For translation
+    quality we care about shape and feature placement, not this arbitrary origin
+    offset, so rich comparison applies translation-only alignment. Orientation
+    and scale are intentionally left unchanged.
+    """
+    if not hasattr(candidate_mesh, "bounds") or not hasattr(reference_mesh, "bounds"):
+        return candidate_mesh, [0.0, 0.0, 0.0]
+
+    aligned = candidate_mesh.copy()
+    ref_min = reference_mesh.bounds[0]
+    cand_min = candidate_mesh.bounds[0]
+    translation = ref_min - cand_min
+    aligned.apply_translation(translation)
+    return aligned, [float(v) for v in translation]
+
+
 def _comparison_feedback_payload(
     code: str,
     exec_result: dict,
@@ -658,6 +683,7 @@ class LLMClient:
         base_url: Optional[str] = None,
     ):
         self.provider = provider.lower()
+        _load_local_env_if_present()
 
         if self.provider == "deepseek":
             self.model = model or "deepseek-chat"
@@ -816,6 +842,26 @@ class LLMClient:
             return None
 
 
+def _load_local_env_if_present(path: str = ".env") -> None:
+    """Load simple KEY=VALUE lines from .env without printing secrets."""
+    env_path = Path(path)
+    if not env_path.exists():
+        return
+    try:
+        lines = env_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+    except OSError:
+        return
+    for line in lines:
+        text = line.strip()
+        if not text or text.startswith("#") or "=" not in text:
+            continue
+        key, value = text.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
 # =========================================================================
 #  Convergence controller
 # =========================================================================
@@ -941,6 +987,35 @@ class ConvergenceController:
         return len(self._ratios)
 
 
+def _mesh_comparison_is_trusted(
+    mesh_comparison: dict | None,
+    *,
+    min_mesh_score: float,
+    tolerance_mm: float,
+) -> tuple[bool, str]:
+    """Return whether a rich mesh comparison is good enough to stop iterating."""
+    if not mesh_comparison:
+        return False, "missing"
+    if mesh_comparison.get("error"):
+        return False, "error"
+
+    score = float(mesh_comparison.get("score", 0.0) or 0.0)
+    sdf = mesh_comparison.get("sdf") or {}
+    rms = abs(float(sdf.get("rms_error", 0.0) or 0.0))
+    max_overcut = abs(float(sdf.get("max_overcut", 0.0) or 0.0))
+    max_undercut = abs(float(sdf.get("max_undercut", 0.0) or 0.0))
+    slice_result = mesh_comparison.get("slice") or {}
+    problem_slices = slice_result.get("problem_slices") or []
+
+    if score < min_mesh_score:
+        return False, f"score_{score:.1f}"
+    if max(rms, max_overcut, max_undercut) > tolerance_mm:
+        return False, f"deviation_{max(rms, max_overcut, max_undercut):.3f}"
+    if problem_slices:
+        return False, f"slices_{len(problem_slices)}"
+    return True, "trusted"
+
+
 def _extract_code_from_json(raw_json: str) -> Optional[str]:
     """Extract code value from malformed JSON with unescaped code strings.
 
@@ -1039,6 +1114,9 @@ class AgenticTranslator:
         verbose: bool = True,
         comparison_methods: Optional[list[str]] = None,  # sentinel, default set below
         feature_aware: bool = False,
+        strict_mesh_convergence: bool = False,
+        min_mesh_score: float = 95.0,
+        mesh_tolerance_mm: float = 0.25,
     ):
         """Initialize the translator.
 
@@ -1056,6 +1134,10 @@ class AgenticTranslator:
                 Pass None to disable. Requires trimesh + scipy.
             feature_aware: If True, run per-feature comparison (requires ops trace,
                 slower). Default False.
+            strict_mesh_convergence: If True, do not stop on volume-only success
+                when rich mesh comparison reports a shape mismatch.
+            min_mesh_score: Minimum rich comparison score for strict convergence.
+            mesh_tolerance_mm: Maximum SDF deviation for strict convergence.
         """
         self.llm = LLMClient(
             provider=provider,
@@ -1070,6 +1152,9 @@ class AgenticTranslator:
         self.verbose = verbose
         self.comparison_methods = comparison_methods if comparison_methods is not None else ["sdf", "slice"]
         self.feature_aware = feature_aware
+        self.strict_mesh_convergence = strict_mesh_convergence
+        self.min_mesh_score = min_mesh_score
+        self.mesh_tolerance_mm = mesh_tolerance_mm
         self._system_prompt = build_system_prompt()
 
     def translate(
@@ -1233,6 +1318,8 @@ class AgenticTranslator:
             mesh_comparison = None
             feature_comparison = None
             candidate_mesh = None
+            candidate_compare_mesh = None
+            mesh_alignment = None
             reference_comparison_ok = (
                 exec_result["success"]
                 and exec_result.get("step_path")
@@ -1265,11 +1352,20 @@ class AgenticTranslator:
                         except Exception as e:
                             reference_mesh_error = str(e)
                     if reference_mesh is not None:
+                        candidate_compare_mesh, translation = _align_candidate_mesh_to_reference(
+                            candidate_mesh,
+                            reference_mesh,
+                        )
+                        mesh_alignment = {
+                            "method": "bounds_min_translation",
+                            "translation": translation,
+                        }
                         mesh_comparison = compare_meshes(
                             reference_mesh,
-                            candidate_mesh,
+                            candidate_compare_mesh,
                             methods=self.comparison_methods,
                         )
+                        mesh_comparison["alignment"] = mesh_alignment
                     elif reference_mesh_error:
                         mesh_comparison = {"error": reference_mesh_error}
                 except Exception as e:
@@ -1283,9 +1379,11 @@ class AgenticTranslator:
                 try:
                     feature_comparison = compare_with_features(
                         step_path,
-                        candidate_mesh,
+                        candidate_compare_mesh if candidate_compare_mesh is not None else candidate_mesh,
                         ops_trace=ops_trace,
                     )
+                    if mesh_alignment:
+                        feature_comparison["alignment"] = mesh_alignment
                 except Exception as e:
                     feature_comparison = {"error": str(e)}
 
@@ -1352,6 +1450,23 @@ class AgenticTranslator:
             # --- Convergence check ---
             exec_ok = exec_result.get("success", False)
             decision = conv.record(vol_ratio, exec_ok)
+            if (
+                decision == "success"
+                and self.strict_mesh_convergence
+                and self.comparison_methods
+            ):
+                mesh_ok, mesh_reason = _mesh_comparison_is_trusted(
+                    mesh_comparison,
+                    min_mesh_score=self.min_mesh_score,
+                    tolerance_mm=self.mesh_tolerance_mm,
+                )
+                if not mesh_ok:
+                    if attempt >= conv.safety_cap:
+                        decision = "mesh_mismatch_safety_cap"
+                    else:
+                        decision = "continue"
+                        if self.verbose:
+                            print(f"mesh-mismatch={mesh_reason}", end=" ", flush=True)
             if decision != "continue":
                 stop_reason = decision
                 if self.verbose:
