@@ -351,8 +351,9 @@ html, body {
 /* ------------------------------------------------------------------ */
 
 .playback-controls {
-  display: flex;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
   align-items: center;
 }
 
@@ -360,6 +361,25 @@ html, body {
   flex: 0;
   min-width: 36px;
   padding: 6px 10px;
+}
+
+.playback-controls select {
+  min-width: 68px;
+  padding: 6px 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.playback-label {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .slider-row {

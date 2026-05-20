@@ -17,6 +17,7 @@ const GRID_DIVISIONS = 20;
 const DEFAULT_CAMERA_POS = [70, -90, 60];
 const TOOL_CYLINDER_COLOR = 0xffaa00;
 const TOOL_SPHERE_COLOR = 0xff8800;
+const TOOL_OPACITY = 0.72;
 const GOUGE_SPHERE_COLOR = 0xff2222;
 const TOOLPATH_COLOR = 0x00ccff;
 const TOOLPATH_COLORS = {
@@ -440,14 +441,15 @@ export class Viewer {
       // Cylinder body + sphere tip
       const cylGeom = new THREE.CylinderGeometry(radius, radius, fl - radius, 32);
       const cyl = new THREE.Mesh(cylGeom, new THREE.MeshStandardMaterial({
-        color: TOOL_CYLINDER_COLOR, metalness: 0.6, roughness: 0.3,
+        color: TOOL_CYLINDER_COLOR, metalness: 0.6, roughness: 0.3, transparent: true, opacity: TOOL_OPACITY,
       }));
+      cyl.rotation.x = Math.PI / 2;
       cyl.position.z = radius + (fl - radius) / 2;
       this.toolGroup.add(cyl);
 
       const sphereGeom = new THREE.SphereGeometry(radius, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
       const sphere = new THREE.Mesh(sphereGeom, new THREE.MeshStandardMaterial({
-        color: TOOL_SPHERE_COLOR, metalness: 0.6, roughness: 0.3,
+        color: TOOL_SPHERE_COLOR, metalness: 0.6, roughness: 0.3, transparent: true, opacity: TOOL_OPACITY,
       }));
       sphere.position.z = radius;
       this.toolGroup.add(sphere);
@@ -455,23 +457,43 @@ export class Viewer {
       // Cylinder + flat disc
       const cylGeom = new THREE.CylinderGeometry(radius, radius, fl, 32);
       const cyl = new THREE.Mesh(cylGeom, new THREE.MeshStandardMaterial({
-        color: TOOL_CYLINDER_COLOR, metalness: 0.6, roughness: 0.3,
+        color: TOOL_CYLINDER_COLOR, metalness: 0.6, roughness: 0.3, transparent: true, opacity: TOOL_OPACITY,
       }));
+      cyl.rotation.x = Math.PI / 2;
       cyl.position.z = fl / 2;
       this.toolGroup.add(cyl);
 
       const discGeom = new THREE.CylinderGeometry(radius, radius, 0.3, 32);
       const disc = new THREE.Mesh(discGeom, new THREE.MeshStandardMaterial({
-        color: TOOL_SPHERE_COLOR, metalness: 0.6, roughness: 0.3,
+        color: TOOL_SPHERE_COLOR, metalness: 0.6, roughness: 0.3, transparent: true, opacity: TOOL_OPACITY,
       }));
+      disc.rotation.x = Math.PI / 2;
       disc.position.z = 0.15;
       this.toolGroup.add(disc);
+    } else if (toolType === 'drill') {
+      const coneHeight = Math.max(radius * 2.2, 2.0);
+      const coneGeom = new THREE.ConeGeometry(radius, coneHeight, 32);
+      const cone = new THREE.Mesh(coneGeom, new THREE.MeshStandardMaterial({
+        color: TOOL_SPHERE_COLOR, metalness: 0.6, roughness: 0.3, transparent: true, opacity: TOOL_OPACITY,
+      }));
+      cone.rotation.x = -Math.PI / 2;
+      cone.position.z = coneHeight / 2;
+      this.toolGroup.add(cone);
+
+      const cylGeom = new THREE.CylinderGeometry(radius, radius, fl, 32);
+      const cyl = new THREE.Mesh(cylGeom, new THREE.MeshStandardMaterial({
+        color: TOOL_CYLINDER_COLOR, metalness: 0.6, roughness: 0.3, transparent: true, opacity: TOOL_OPACITY,
+      }));
+      cyl.rotation.x = Math.PI / 2;
+      cyl.position.z = coneHeight + fl / 2;
+      this.toolGroup.add(cyl);
     } else {
       // Generic: cylinder
       const cylGeom = new THREE.CylinderGeometry(radius, radius, fl, 32);
       const cyl = new THREE.Mesh(cylGeom, new THREE.MeshStandardMaterial({
-        color: TOOL_CYLINDER_COLOR, metalness: 0.6, roughness: 0.3,
+        color: TOOL_CYLINDER_COLOR, metalness: 0.6, roughness: 0.3, transparent: true, opacity: TOOL_OPACITY,
       }));
+      cyl.rotation.x = Math.PI / 2;
       cyl.position.z = fl / 2;
       this.toolGroup.add(cyl);
     }
@@ -480,6 +502,8 @@ export class Viewer {
     this.toolGroup.position.set(position[0], position[1], position[2]);
     if (orientation) {
       this.toolGroup.quaternion.set(orientation[1], orientation[2], orientation[3], orientation[0]);
+    } else {
+      this.toolGroup.quaternion.identity();
     }
     this.toolGroup.visible = this._showTool;
   }
@@ -543,9 +567,11 @@ export class Viewer {
       linewidth: 1,
       transparent: true,
       opacity: 0.7,
+      depthTest: false,
     });
 
     this.toolpathLine = new THREE.Line(geom, mat);
+    this.toolpathLine.renderOrder = 20;
     this.scene.add(this.toolpathLine);
     this.toolpathObjects.push(this.toolpathLine);
   }
@@ -589,9 +615,11 @@ export class Viewer {
         linewidth: 1,
         transparent: true,
         opacity: moveType === 'rapid' ? 0.38 : 0.88,
+        depthTest: false,
       });
 
       const line = new THREE.LineSegments(geom, mat);
+      line.renderOrder = 20;
       this.scene.add(line);
       this.toolpathObjects.push(line);
     }

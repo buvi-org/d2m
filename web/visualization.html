@@ -48,10 +48,30 @@
       </div>
 
       <div class="section">
+        <div class="section-header">Playback</div>
+        <div class="section-body">
+          <div class="playback-controls">
+            <button class="btn btn-primary" id="playback-play" type="button">Play</button>
+            <button class="btn" id="playback-reset" type="button">Reset</button>
+            <select id="playback-speed" aria-label="Playback speed">
+              <option value="1">1x</option>
+              <option value="5">5x</option>
+              <option value="10" selected>10x</option>
+              <option value="25">25x</option>
+              <option value="50">50x</option>
+            </select>
+          </div>
+          <input id="playback-range" class="timeline-range" type="range" min="0" max="1000" step="1" value="0">
+          <div class="playback-label" id="playback-label">No toolpath loaded</div>
+        </div>
+      </div>
+
+      <div class="section">
         <div class="section-header">View Options</div>
         <div class="section-body">
           <label class="check-row"><input type="checkbox" id="show-target" checked> Target overlay</label>
           <label class="check-row"><input type="checkbox" id="show-toolpath" checked> Toolpath</label>
+          <label class="check-row"><input type="checkbox" id="show-tool" checked> Tool</label>
           <label class="check-row"><input type="checkbox" id="show-diff" checked> Diff markers</label>
           <button class="btn full-width" id="fit-view">Fit View</button>
           <div class="toolpath-legend" aria-label="Toolpath move legend">
