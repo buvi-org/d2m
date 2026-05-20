@@ -42,6 +42,7 @@ from src.data.agentic_translator import (
     translate_batch,
     SUBCAD_API_REFERENCE,
 )
+import src.data.agentic_translator as agentic_mod
 
 from src.data.subcad_repl import run_subcad, compare_to_reference, format_feedback
 from src.data.cadquery_to_subcad import reconstruct_chains, classify_chain, _extract_measures
@@ -155,6 +156,25 @@ check("Previous Attempt" in iter_prompt, "iteration prompt references previous a
 check("too small" in iter_prompt or "0.75" in iter_prompt, "iteration prompt shows mismatch")
 check("Stock.rectangular" in iter_prompt, "iteration prompt has API reference")
 check(prev_code in iter_prompt, "iteration prompt includes previous code")
+
+mesh_comp = {"feedback": "RMS deviation: 0.250 mm near top pocket", "score": 91.0}
+feature_comp = {"feedback": "Hole at (0, 0): MISSING", "score": 75.0}
+rich_iter_prompt = build_iteration_prompt(
+    prev_code,
+    exec_result,
+    comparison,
+    16000.0,
+    mesh_comparison=mesh_comp,
+    feature_comparison=feature_comp,
+)
+check("Localized Shape Deviation" in rich_iter_prompt,
+      "iteration prompt includes mesh comparison section")
+check("RMS deviation" in rich_iter_prompt,
+      "iteration prompt includes mesh feedback text")
+check("Per-Feature Comparison" in rich_iter_prompt,
+      "iteration prompt includes feature comparison section")
+check("MISSING" in rich_iter_prompt,
+      "iteration prompt includes feature feedback text")
 
 
 # Check if CadQuery is available for REPL-dependent tests
@@ -273,6 +293,171 @@ check("[OK]" in feedback or "[FAIL]" in feedback or "MATCH" in feedback or "MISM
 print("\n10. translate_exploration_sample ...")
 check(callable(translate_exploration_sample), "translate_exploration_sample is callable")
 check(callable(translate_batch), "translate_batch is callable")
+
+
+# =========================================================================
+#  Test 11: Agentic loop rich comparison feedback wiring (mocked)
+# =========================================================================
+
+print("\n11. Agentic loop rich comparison feedback ...")
+
+_orig_llm_client = agentic_mod.LLMClient
+_orig_run_subcad = agentic_mod.run_subcad
+_orig_compare_to_reference = agentic_mod.compare_to_reference
+_orig_step_to_stock_dims = agentic_mod.step_to_stock_dims
+_orig_load_step_mesh = agentic_mod._load_step_mesh
+_orig_compare_meshes = agentic_mod.compare_meshes
+_orig_compare_with_features = agentic_mod.compare_with_features
+_orig_has_mesh_compare = agentic_mod._HAS_MESH_COMPARE
+_orig_has_feature_compare = agentic_mod._HAS_FEATURE_COMPARE
+
+
+class _FakePart:
+    def to_mesh(self):
+        return "candidate-mesh"
+
+
+class _FakeLLMClient:
+    instances = []
+
+    def __init__(self, *args, **kwargs):
+        self.calls = 0
+        self.messages_seen = []
+        _FakeLLMClient.instances.append(self)
+
+    def tool_chat(self, messages, tools, temperature=0.2, max_tokens=4096):
+        self.calls += 1
+        self.messages_seen.append(list(messages))
+        return {
+            "id": f"call-{self.calls}",
+            "name": "execute_subcad",
+            "arguments": {"code": "part = Stock.rectangular(10, 10, 10)"},
+        }
+
+
+try:
+    comparisons = [
+        {
+            "match": False,
+            "volume_ratio": 0.5,
+            "target_volume": 2000.0,
+            "candidate_volume": 1000.0,
+        },
+        {
+            "match": True,
+            "volume_ratio": 1.0,
+            "target_volume": 1000.0,
+            "candidate_volume": 1000.0,
+        },
+    ]
+
+    def _fake_run_subcad(code):
+        return {
+            "success": True,
+            "volume": 1000.0,
+            "faces": 6,
+            "part": _FakePart(),
+            "step_path": "candidate.step",
+            "stl_path": None,
+            "process_plan": {"operations": []},
+        }
+
+    def _fake_compare_to_reference(candidate, reference):
+        return comparisons.pop(0)
+
+    def _fake_compare_meshes(ref_mesh, cand_mesh, methods=None, **kwargs):
+        return {
+            "feedback": "RMS deviation: 0.125 mm around pocket floor",
+            "score": 88.0,
+            "sdf": {"per_vertex_deviation": [0.1, -0.1]},
+        }
+
+    def _fake_compare_with_features(ref_step_path, candidate_mesh, ops_trace=None,
+                                    tolerance_mm=0.1):
+        return {
+            "feedback": "Pocket at (0, 0): depth 2.0mm instead of 3.0mm --- WRONG SIZE",
+            "score": 72.0,
+            "feature_comparisons": [{
+                "ref_feature": {
+                    "type": "pocket",
+                    "face_indices": [1, 2, 3],
+                    "submesh": "heavy",
+                },
+                "match_type": "wrong_size",
+                "status": "error",
+            }],
+        }
+
+    agentic_mod.LLMClient = _FakeLLMClient
+    agentic_mod.run_subcad = _fake_run_subcad
+    agentic_mod.compare_to_reference = _fake_compare_to_reference
+    agentic_mod.step_to_stock_dims = lambda step_bytes: {
+        "length": 10.0, "width": 10.0, "height": 10.0
+    }
+    agentic_mod._load_step_mesh = lambda step_path: "reference-mesh"
+    agentic_mod.compare_meshes = _fake_compare_meshes
+    agentic_mod.compare_with_features = _fake_compare_with_features
+    agentic_mod._HAS_MESH_COMPARE = True
+    agentic_mod._HAS_FEATURE_COMPARE = True
+
+    with tempfile.NamedTemporaryFile(suffix=".step", delete=False) as tf:
+        tf.write(b"mock-step")
+        mock_step_path = tf.name
+
+    try:
+        translator = AgenticTranslator(
+            provider="mock",
+            verbose=False,
+            tolerance=0.01,
+            safety_cap=3,
+            comparison_methods=["sdf"],
+            feature_aware=True,
+        )
+        loop_result = translator.translate(
+            {
+                "cadquery_file": "part = cq.Workplane('XY').box(10, 10, 10)",
+                "cadquery_ops_json": "[]",
+            },
+            step_path=mock_step_path,
+        )
+    finally:
+        if os.path.exists(mock_step_path):
+            os.unlink(mock_step_path)
+
+    fake_client = _FakeLLMClient.instances[-1]
+    second_call_messages = fake_client.messages_seen[1]
+    tool_messages = [m for m in second_call_messages if m.get("role") == "tool"]
+    user_messages = [m for m in second_call_messages if m.get("role") == "user"]
+
+    check(loop_result["success"], "mocked loop converges on second attempt")
+    check(loop_result["mesh_comparison"]["score"] == 88.0,
+          "final result includes mesh comparison")
+    check(loop_result["feature_comparison"]["score"] == 72.0,
+          "final result includes feature comparison")
+    check(loop_result["history"][0]["mesh_comparison"]["score"] == 88.0,
+          "history includes mesh comparison")
+    check("per_vertex_deviation" in loop_result["history"][0]["mesh_comparison"]["sdf"],
+          "history keeps compact mesh comparison fields")
+    check(any("mesh_feedback" in m.get("content", "") for m in tool_messages),
+          "tool feedback includes mesh feedback")
+    check(any("feature_feedback" in m.get("content", "") for m in tool_messages),
+          "tool feedback includes feature feedback")
+    check(any("Localized Shape Deviation" in m.get("content", "")
+              for m in user_messages),
+          "next iteration prompt includes mesh comparison feedback")
+    check(any("Per-Feature Comparison" in m.get("content", "")
+              for m in user_messages),
+          "next iteration prompt includes feature comparison feedback")
+finally:
+    agentic_mod.LLMClient = _orig_llm_client
+    agentic_mod.run_subcad = _orig_run_subcad
+    agentic_mod.compare_to_reference = _orig_compare_to_reference
+    agentic_mod.step_to_stock_dims = _orig_step_to_stock_dims
+    agentic_mod._load_step_mesh = _orig_load_step_mesh
+    agentic_mod.compare_meshes = _orig_compare_meshes
+    agentic_mod.compare_with_features = _orig_compare_with_features
+    agentic_mod._HAS_MESH_COMPARE = _orig_has_mesh_compare
+    agentic_mod._HAS_FEATURE_COMPARE = _orig_has_feature_compare
 
 
 # =========================================================================

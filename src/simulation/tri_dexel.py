@@ -541,6 +541,80 @@ class DexelGrid:
                 indices.append((i, j))
         return indices
 
+    @staticmethod
+    def _fallback_intersects_location(
+        mesh: trimesh.Trimesh,
+        ray_origins: np.ndarray,
+        ray_directions: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Ray/triangle intersections used when trimesh has no spatial index.
+
+        trimesh's default ray intersector depends on the optional ``rtree``
+        package.  Keep mesh initialisation working in lean environments by
+        falling back to a vectorised Moller-Trumbore pass over mesh triangles.
+        """
+        triangles = np.asarray(mesh.triangles, dtype=np.float64)
+        if len(triangles) == 0 or len(ray_origins) == 0:
+            return np.empty((0, 3), dtype=np.float64), np.empty(0, dtype=np.int64)
+
+        tri_orig = triangles[:, 0]
+        edge1 = triangles[:, 1] - tri_orig
+        edge2 = triangles[:, 2] - tri_orig
+
+        all_locations: list[np.ndarray] = []
+        all_index_ray: list[np.ndarray] = []
+        tol = 1e-9
+
+        for r, (origin, direction) in enumerate(zip(ray_origins, ray_directions)):
+            pvec = np.cross(direction, edge2)
+            det = np.einsum("ij,ij->i", edge1, pvec)
+            valid = np.abs(det) > tol
+            if not np.any(valid):
+                continue
+
+            inv_det = np.zeros_like(det)
+            inv_det[valid] = 1.0 / det[valid]
+
+            tvec = origin - tri_orig
+            u = np.einsum("ij,ij->i", tvec, pvec) * inv_det
+            valid &= (u >= -tol) & (u <= 1.0 + tol)
+            if not np.any(valid):
+                continue
+
+            qvec = np.cross(tvec, edge1)
+            v = np.einsum("j,ij->i", direction, qvec) * inv_det
+            valid &= (v >= -tol) & ((u + v) <= 1.0 + tol)
+            if not np.any(valid):
+                continue
+
+            t = np.einsum("ij,ij->i", edge2, qvec) * inv_det
+            valid &= t >= -tol
+            if not np.any(valid):
+                continue
+
+            t_hits = t[valid]
+            locations = origin + t_hits[:, None] * direction
+            all_locations.append(locations)
+            all_index_ray.append(np.full(len(t_hits), r, dtype=np.int64))
+
+        if not all_locations:
+            return np.empty((0, 3), dtype=np.float64), np.empty(0, dtype=np.int64)
+
+        return np.vstack(all_locations), np.concatenate(all_index_ray)
+
+    @staticmethod
+    def _unique_sorted_distances(dists: np.ndarray, tol: float = 1e-7) -> np.ndarray:
+        """Sort intersection distances and collapse duplicate face hits."""
+        if len(dists) == 0:
+            return dists
+
+        sorted_dists = np.sort(dists)
+        unique = [float(sorted_dists[0])]
+        for dist in sorted_dists[1:]:
+            if abs(float(dist) - unique[-1]) > tol:
+                unique.append(float(dist))
+        return np.array(unique, dtype=np.float64)
+
     # -----------------------------------------------------------------
     #  Initialisation from mesh (ray-casting)
     # -----------------------------------------------------------------
@@ -560,9 +634,6 @@ class DexelGrid:
             mesh: A watertight trimesh.Trimesh representing the workpiece.
         """
         # Compute an epsilon offset so rays start just outside the mesh
-        bmin = mesh.bounds[0]
-        bmax = mesh.bounds[1]
-        axis_idx = self._ray_axis_idx
         eps = self.resolution * 2.0
 
         ray_dir = self.ray_direction()
@@ -602,21 +673,10 @@ class DexelGrid:
                     multiple_hits=True,
                 )
             except Exception:
-                # Fallback: try per-ray (slower but more robust)
-                locations = np.empty((0, 3))
-                index_ray = np.empty(0, dtype=np.int64)
-                for r in range(n_rays):
-                    try:
-                        hits, _, _ = mesh.ray.intersects_location(
-                            ray_origins=origins_offset[r:r+1],
-                            ray_directions=directions[r:r+1],
-                            multiple_hits=True,
-                        )
-                        if len(hits) > 0:
-                            locations = np.vstack([locations, hits]) if len(locations) > 0 else hits
-                            index_ray = np.append(index_ray, np.full(len(hits), r, dtype=np.int64))
-                    except Exception:
-                        pass
+                # Fallback for environments without trimesh's optional rtree.
+                locations, index_ray = self._fallback_intersects_location(
+                    mesh, origins_offset, directions
+                )
 
             # Group hits by ray index
             if len(locations) > 0:
@@ -625,9 +685,12 @@ class DexelGrid:
                     hits_r = locations[mask]
                     if len(hits_r) == 0:
                         continue
-                    # Project hits onto ray direction to get distances
-                    dists = np.dot(hits_r - origins_offset[r], ray_dir)
-                    dists.sort()
+                    # Store intervals relative to the grid ray origin.  Removal
+                    # and material queries use the same distance frame.
+                    dists = np.dot(hits_r - origins[r], ray_dir)
+                    dists = dists[dists >= -1e-7]
+                    dists[np.abs(dists) < 1e-7] = 0.0
+                    dists = self._unique_sorted_distances(dists)
                     # Pair hits: even indices are entries, odd are exits
                     intervals: list[DexelInterval] = []
                     k = 0

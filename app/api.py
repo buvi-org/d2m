@@ -805,15 +805,16 @@ async def subcad_preset_simulate(req: _PresetRequest):
             media_type="application/json",
         )
 
-    # Run simulation on the original stock for stats (gouges, volume, etc.)
-    import numpy as np
-    target_scale = 0.95
-    target_mesh = initial_stock_mesh.copy()
-    target_mesh.vertices = target_mesh.vertices * target_scale
+    # Preset simulations use a synthetic, scaled stock mesh as a visual
+    # reference for gouge/deviation stats. It is demo-only and must not be
+    # treated as CAD validation of the generated SubCAD part.
+    demo_reference_scale = 0.95
+    demo_reference_mesh = initial_stock_mesh.copy()
+    demo_reference_mesh.vertices = demo_reference_mesh.vertices * demo_reference_scale
 
     try:
         result = _run_subcad_simulation(
-            initial_stock_mesh, target_mesh, plan, req.resolution
+            initial_stock_mesh, demo_reference_mesh, plan, req.resolution
         )
     except Exception as e:
         traceback_str = _traceback_module.format_exc()
@@ -843,8 +844,16 @@ async def subcad_preset_simulate(req: _PresetRequest):
             _mesh_to_glb_bytes(initial_stock_mesh)
         ).decode("ascii"),
         "target_glb_base64": base64.b64encode(
-            _mesh_to_glb_bytes(target_mesh)
+            _mesh_to_glb_bytes(demo_reference_mesh)
         ).decode("ascii"),
+        "target_reference": {
+            "source": "demo_scaled_stock",
+            "scale": demo_reference_scale,
+            "validation": False,
+            "description": (
+                "Synthetic preset reference only; not real CAD validation."
+            ),
+        },
         "preset": req.preset,
         "operations_count": len(plan.get("operations", [])),
     }

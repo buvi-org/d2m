@@ -357,6 +357,161 @@ No explanation, no analysis. Just the code. Start with `part = Stock.rectangular
 
 
 # =========================================================================
+#  Optional rich comparison helpers
+# =========================================================================
+
+_OMIT_JSON_KEYS = {
+    "per_vertex_deviation",
+    "submesh",
+    "mesh",
+    "reference_mesh",
+    "candidate_mesh",
+    "part",
+}
+
+
+def _compact_for_history(value):
+    """Return a JSON-friendly copy of comparison data for results/history."""
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+
+    if isinstance(value, dict):
+        compact = {}
+        for key, item in value.items():
+            if key in _OMIT_JSON_KEYS:
+                compact[key] = _describe_omitted_value(item)
+            elif key == "face_indices" and hasattr(item, "__len__"):
+                compact[key] = f"<{len(item)} face indices omitted>"
+            else:
+                compact[key] = _compact_for_history(item)
+        return compact
+
+    if isinstance(value, (list, tuple)):
+        return [_compact_for_history(item) for item in value]
+
+    if hasattr(value, "shape"):
+        shape = getattr(value, "shape", None)
+        size = getattr(value, "size", None)
+        if size is not None and size <= 20 and hasattr(value, "tolist"):
+            return value.tolist()
+        return f"<array shape={shape} omitted>"
+
+    if hasattr(value, "vertices") and hasattr(value, "faces"):
+        try:
+            return (
+                f"<mesh vertices={len(value.vertices)} "
+                f"faces={len(value.faces)} omitted>"
+            )
+        except Exception:
+            return "<mesh omitted>"
+
+    return str(value)
+
+
+def _describe_omitted_value(value) -> str:
+    if hasattr(value, "shape"):
+        return f"<array shape={getattr(value, 'shape', '?')} omitted>"
+    if hasattr(value, "vertices") and hasattr(value, "faces"):
+        try:
+            return (
+                f"<mesh vertices={len(value.vertices)} "
+                f"faces={len(value.faces)} omitted>"
+            )
+        except Exception:
+            return "<mesh omitted>"
+    if hasattr(value, "__len__") and not isinstance(value, (str, bytes, dict)):
+        return f"<{len(value)} values omitted>"
+    return "<omitted>"
+
+
+def _mesh_from_execution(exec_result: dict):
+    """Best-effort conversion of a successful REPL result into a Trimesh."""
+    part = exec_result.get("part")
+    if part is not None:
+        to_mesh = getattr(part, "to_mesh", None)
+        if callable(to_mesh):
+            mesh = to_mesh()
+            if mesh is not None:
+                return _coerce_trimesh(mesh)
+
+        try:
+            from src.subcad.geometry import to_mesh as geometry_to_mesh
+            mesh = geometry_to_mesh(part)
+            if mesh is not None:
+                return _coerce_trimesh(mesh)
+        except Exception:
+            pass
+
+    stl_path = exec_result.get("stl_path")
+    if stl_path and os.path.exists(stl_path):
+        mesh = trimesh.load(stl_path)
+        if mesh is not None:
+            return _coerce_trimesh(mesh)
+
+    raise RuntimeError("candidate mesh unavailable")
+
+
+def _load_step_mesh(step_path: str):
+    """Load a STEP reference as a Trimesh using CadQuery first, then trimesh."""
+    try:
+        from src.subcad.geometry import import_step, to_mesh
+        mesh = to_mesh(import_step(step_path))
+        if mesh is not None:
+            return _coerce_trimesh(mesh)
+    except Exception:
+        pass
+
+    mesh = trimesh.load(step_path)
+    if mesh is None:
+        raise RuntimeError("reference mesh unavailable")
+    return _coerce_trimesh(mesh)
+
+
+def _coerce_trimesh(mesh):
+    """Convert Trimesh scenes into a single mesh; pass meshes through."""
+    if hasattr(mesh, "geometry"):
+        geometries = list(mesh.geometry.values())
+        if not geometries:
+            raise RuntimeError("mesh scene has no geometry")
+        return trimesh.util.concatenate(geometries)
+    return mesh
+
+
+def _comparison_feedback_payload(
+    code: str,
+    exec_result: dict,
+    comparison: dict,
+    target_volume: float,
+    mesh_comparison: dict | None,
+    feature_comparison: dict | None,
+) -> dict:
+    """Build compact tool feedback for the next LLM turn."""
+    payload = {
+        "volume_ratio": round(comparison.get("volume_ratio", 0), 4),
+        "candidate_volume": round(exec_result.get("volume", 0), 1),
+        "target_volume": round(
+            comparison.get("target_volume", target_volume), 1
+        ),
+        "success": exec_result.get("success", False),
+        "error": exec_result.get("error")
+        if not exec_result.get("success", False) else None,
+        "feedback": format_feedback(code, exec_result, comparison),
+    }
+
+    if mesh_comparison and mesh_comparison.get("feedback"):
+        payload["mesh_feedback"] = mesh_comparison["feedback"]
+        if mesh_comparison.get("score") is not None:
+            payload["mesh_score"] = mesh_comparison["score"]
+
+    if feature_comparison and feature_comparison.get("feedback"):
+        payload["feature_feedback"] = feature_comparison["feedback"]
+        if feature_comparison.get("score") is not None:
+            payload["feature_score"] = feature_comparison["score"]
+
+    return payload
+
+
+# =========================================================================
 #  Code extraction
 # =========================================================================
 
@@ -929,22 +1084,15 @@ class AgenticTranslator:
         final_code = None
         final_exec = None
         final_comparison = None
+        final_mesh_comparison = None
+        final_feature_comparison = None
+        reference_mesh = None
+        reference_mesh_error = None
         stop_reason = "not_started"
 
         attempt = 0
         while True:
             attempt += 1
-
-            # --- Convergence check ---
-            if final_comparison:
-                vol_ratio = final_comparison.get("volume_ratio", 0)
-                exec_ok = final_exec.get("success", False) if final_exec else False
-                decision = conv.record(vol_ratio, exec_ok)
-                if decision != "continue":
-                    stop_reason = decision
-                    if self.verbose:
-                        print(f"\n  Stop: {decision} ({conv.summary})")
-                    break
 
             if self.verbose:
                 if attempt == 1:
@@ -970,7 +1118,7 @@ class AgenticTranslator:
                     )
             except Exception as e:
                 if self.verbose:
-                    print(f"LLM error: {e}")
+                    print(f"LLM error: {str(e).encode('ascii', errors='replace').decode('ascii')}")
                 return {
                     "success": False, "subcad_code": None, "attempts": attempt,
                     "exec_result": None, "comparison": None,
@@ -1002,8 +1150,9 @@ class AgenticTranslator:
                 if exec_result["success"]:
                     print(f"vol={exec_result['volume']:.1f}", end=" ", flush=True)
                 else:
-                    print(f"ERR: {exec_result.get('error', '?')[:60]}",
-                          end=" ", flush=True)
+                    err_msg = str(exec_result.get('error', '?'))[:80]
+                    err_msg = err_msg.encode('ascii', errors='replace').decode('ascii')
+                    print(f"ERR: {err_msg}", end=" ", flush=True)
 
             # --- Compare to reference ---
             if exec_result["success"] and exec_result.get("step_path"):
@@ -1013,6 +1162,66 @@ class AgenticTranslator:
             else:
                 comparison = {"match": False, "volume_ratio": 0.0,
                               "error": exec_result.get("error", "Execution failed")}
+
+            # --- Optional richer mesh / feature comparison ---
+            mesh_comparison = None
+            feature_comparison = None
+            candidate_mesh = None
+            reference_comparison_ok = (
+                exec_result["success"]
+                and exec_result.get("step_path")
+                and not comparison.get("error")
+            )
+            needs_candidate_mesh = (
+                reference_comparison_ok
+                and (
+                    (self.comparison_methods and _HAS_MESH_COMPARE)
+                    or (self.feature_aware and _HAS_FEATURE_COMPARE)
+                )
+            )
+            if needs_candidate_mesh:
+                try:
+                    candidate_mesh = _mesh_from_execution(exec_result)
+                except Exception as e:
+                    if self.verbose:
+                        msg = str(e).encode("ascii", errors="replace").decode("ascii")
+                        print(f"mesh-skip={msg[:50]}", end=" ", flush=True)
+
+            if (
+                candidate_mesh is not None
+                and self.comparison_methods
+                and _HAS_MESH_COMPARE
+            ):
+                try:
+                    if reference_mesh is None and reference_mesh_error is None:
+                        try:
+                            reference_mesh = _load_step_mesh(step_path)
+                        except Exception as e:
+                            reference_mesh_error = str(e)
+                    if reference_mesh is not None:
+                        mesh_comparison = compare_meshes(
+                            reference_mesh,
+                            candidate_mesh,
+                            methods=self.comparison_methods,
+                        )
+                    elif reference_mesh_error:
+                        mesh_comparison = {"error": reference_mesh_error}
+                except Exception as e:
+                    mesh_comparison = {"error": str(e)}
+
+            if (
+                candidate_mesh is not None
+                and self.feature_aware
+                and _HAS_FEATURE_COMPARE
+            ):
+                try:
+                    feature_comparison = compare_with_features(
+                        step_path,
+                        candidate_mesh,
+                        ops_trace=ops_trace,
+                    )
+                except Exception as e:
+                    feature_comparison = {"error": str(e)}
 
             vol_ratio = comparison.get("volume_ratio", 0)
             if self.verbose:
@@ -1025,19 +1234,35 @@ class AgenticTranslator:
             history.append({
                 "attempt": attempt, "code": code,
                 "exec_result": exec_result, "comparison": comparison,
+                "mesh_comparison": _compact_for_history(mesh_comparison),
+                "feature_comparison": _compact_for_history(feature_comparison),
             })
             final_code = code
             final_exec = exec_result
             final_comparison = comparison
+            final_mesh_comparison = _compact_for_history(mesh_comparison)
+            final_feature_comparison = _compact_for_history(feature_comparison)
 
             # --- Add tool result to messages ---
-            tool_result_content = json.dumps({
-                "volume_ratio": round(vol_ratio, 4),
-                "candidate_volume": round(exec_result.get("volume", 0), 1),
-                "target_volume": round(comparison.get("target_volume", target_volume), 1),
-                "success": exec_result["success"],
-                "error": exec_result.get("error") if not exec_result["success"] else None,
-            })
+            feedback_prompt = build_iteration_prompt(
+                code,
+                exec_result,
+                comparison,
+                target_volume,
+                mesh_comparison=mesh_comparison,
+                feature_comparison=feature_comparison,
+            )
+            tool_result_content = json.dumps(
+                _comparison_feedback_payload(
+                    code,
+                    exec_result,
+                    comparison,
+                    target_volume,
+                    mesh_comparison,
+                    feature_comparison,
+                ),
+                default=str,
+            )
 
             # OpenAI-compatible tool result format
             messages.append({
@@ -1067,12 +1292,19 @@ class AgenticTranslator:
                     print(f"\n  Stop: {decision} ({conv.summary})")
                 break
 
+            messages.append({
+                "role": "user",
+                "content": feedback_prompt,
+            })
+
         return {
             "success": final_comparison.get("match", False) if final_comparison else False,
             "subcad_code": final_code,
             "attempts": len(history),
             "exec_result": final_exec,
             "comparison": final_comparison,
+            "mesh_comparison": final_mesh_comparison,
+            "feature_comparison": final_feature_comparison,
             "history": history,
             "stop_reason": stop_reason,
             "error": None,

@@ -1,5 +1,33 @@
 # Session Notes — 2026-05-19
 
+## Status addendum — 2026-05-20
+
+These notes originally captured the work from 2026-05-19. The repository has moved since then, so treat the original "Next Steps" section as historical context, not current status.
+
+Current verified status:
+
+| Area | Status |
+|------|--------|
+| Agentic translator non-live test suite | `python test_agentic_translator.py` passes 55/55. This validates imports, prompts, code extraction, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. It does not prove live LLM translation success. |
+| SubCAD integration | `python test_subcad_integration.py` passes 39/39. Fluent chains, exports, process-plan JSON, volume monotonicity, immutability, threaded holes, and STEP round trip are covered. |
+| Fixture/setup integration | `python test_fixturing_integration.py` passes 19/19. Fixture metadata, setup flip, clearance warning path, JSON round trip, and error handling are covered. |
+| Simulation bridge | `python test_sim_bridge.py` now passes 51/51 after fixing tri-dexel mesh initialization and distance accounting. |
+
+Current doc decision:
+
+- SubCAD and the agentic translator should be described as implemented prototype infrastructure with passing non-live tests.
+- Simulation should be described as a working prototype path with passing bridge tests, not yet a validated production machining simulator.
+- Mesh and feature comparison are no longer just research recommendations; implementation files exist under `src/simulation/mesh_compare.py` and `src/simulation/feature_compare.py`, with translator hooks in `src/data/agentic_translator.py`.
+- GNN feature recognition, fine-tuning, product UI, and RL remain roadmap items, not implemented product status.
+
+Recommended current plan:
+
+1. Validate existing mesh and feature comparison feedback on known translated samples.
+2. Run live translator trials with comparison/simulation signals recorded for scoring.
+3. Harden simulation beyond the bridge tests: real target meshes, representative toolpaths, gouge/deviation validation, and performance checks.
+4. Build training/evaluation pairs from execution-scored translations.
+5. Revisit GNN, fine-tuning, and RL after the executable feedback loop is reliable.
+
 ## What we built today
 
 ### 1. AI Agentic CadQuery->subCAD Translator (`src/data/agentic_translator.py`)
@@ -113,16 +141,18 @@ The research agent explored 4 approaches for going beyond global volume ratio to
 | `src/data/subcad_repl.py` | **Fixed** — `compare_to_reference()` uses CadQuery STEP import |
 | `test_agentic_translator.py` | **Created** — 42 self-tests |
 
-## Next Steps
+## Historical Next Steps
 
-### Immediate (this week)
-1. **Implement Approach 2 (Per-vertex SDF)** — create `src/simulation/mesh_compare.py` with `compute_signed_deviation()`, `cluster_error_regions()`, and `generate_error_feedback()`. Wire into the existing `/api/deviation/` endpoint.
-2. **Implement Approach 1 (Z-slicing)** — add to the same module. This gives the convergence controller a richer signal than volume ratio alone.
-3. **Wire richer comparison into agentic translator** — replace `compare_to_reference()` volume-only check with multi-metric comparison. Update `build_iteration_prompt()` to include localized feedback.
+The following list is retained to preserve the 2026-05-19 session history. It is not the current plan verbatim.
+
+### Immediate (historical)
+1. **Implement Approach 2 (Per-vertex SDF)** — now represented by `src/simulation/mesh_compare.py`; current work is validation and integration, not first implementation.
+2. **Implement Approach 1 (Z-slicing)** — now represented by `src/simulation/mesh_compare.py`; current work is validation and integration, not first implementation.
+3. **Wire richer comparison into agentic translator** — hooks now exist; current work is to validate feedback quality and avoid overclaiming translator success.
 
 ### Medium-term
 4. **Implement Approach 3 (Feature-aware)** — integrate with `pipeline.py` feature extraction and `operations.py` serialization. This is the endgame: per-operation feedback that tells the LLM exactly which operation to fix.
-5. **Run live translations** — set `DEEPSEEK_API_KEY` and translate the 5 exploration samples. Measure success rate, iteration count, and convergence behavior.
+5. **Run live translations** — set `DEEPSEEK_API_KEY` and translate the 5 exploration samples. Measure success rate, iteration count, and convergence behavior. The former simulation bridge blocker is now fixed; the remaining concern is whether the feedback metrics are meaningful on representative samples.
 6. **Scale to dataset** — once success rate is solid on exploration samples, run `translate_batch()` on the ADSKAILab Zero-To-CAD-100k dataset to generate training pairs.
 
 ### Eventual

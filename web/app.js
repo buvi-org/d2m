@@ -635,11 +635,16 @@ async function runSubcadPreset(preset) {
     );
 
     els.progressBar.style.width = '100%';
-    els.progressText.textContent = `SubCAD: ${preset} — ${data.moves_executed || 0} moves`;
+    const targetNote = data.target_reference?.validation === false
+      ? 'demo reference, not validation'
+      : 'target reference';
+    els.progressText.textContent =
+      `SubCAD: ${preset} — ${data.moves_executed || 0} moves (${targetNote})`;
 
     showToast(
       `SubCAD ${preset}: ${data.moves_executed || 0} moves, ` +
       `${(data.total_volume_removed || 0).toFixed(1)} mm3 removed, ` +
+      `${targetNote}, ` +
       `${(data.total_time_ms || 0).toFixed(0)}ms`
     );
 

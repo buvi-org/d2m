@@ -1,16 +1,40 @@
 # d2m — Design to Manufacturing AI
 
-An AI-powered **Computer-Aided Process Planning (CAPP)** system that automatically generates manufacturing process plans from CAD designs. Upload a STEP file with material and volume specs, and d2m outputs ranked, rule-compliant process plans — sequence of operations, machines, tools, cost estimates, and DFM (Design for Manufacturability) feedback.
+An AI-powered **Computer-Aided Process Planning (CAPP)** project for turning CAD designs into manufacturing process plans. The long-term target is: upload a STEP file with material and volume specs, and d2m outputs ranked, rule-compliant process plans — sequence of operations, machines, tools, cost estimates, and DFM (Design for Manufacturability) feedback.
+
+This repository is currently a prototype/research codebase. Some foundational pieces are implemented and tested; the full end-to-end AI planning product is not yet complete.
 
 ## What It Does
 
-1. **Ingest CAD** — Accept STEP/IGES files + metadata (material, tolerances, production volume)
-2. **Recognize Features** — GNN-based extraction of machinable features (holes, pockets, slots, bosses, chamfers, fillets)
-3. **Generate Process Plans** — Multimodal LLM reasons over features + visual renders to produce full manufacturing plans
-4. **Validate & Explain** — Rule engine checks DFM violations, explains why each process was chosen
-5. **Simulate & Improve** — Digital simulation validates plans; RL fine-tuning improves accuracy over time
+1. **Ingest CAD** — Accept STEP files and metadata (material, tolerances, production volume)
+2. **Generate/translate subtractive CAD** — SubCAD represents machining operations as executable subtractive programs
+3. **Compare outputs** — Candidate geometry can be compared against reference STEP geometry with global and localized metrics
+4. **Simulate machining** — A tri-dexel/five-axis simulation stack is under active development
+5. **Plan with AI** — Agentic CadQuery -> SubCAD translation exists for LLM-driven code generation, with execution feedback
 
-Initial scope targets **CNC machining (metals)** and **injection molding (plastics)**, expandable to casting, 3D printing, and sheet metal.
+Initial implemented scope is concentrated on **CNC/subtractive manufacturing**. Injection molding, casting, 3D printing, sheet metal, RL fine-tuning, and production UI are aspirational roadmap items.
+
+## Current Reality
+
+Implemented and tested:
+
+- Phase 1 synthetic dataset generation: 9,994 labeled parts are available in `synthetic_10k_samples.7z`.
+- SubCAD fluent API for subtractive machining operations, STEP/STL export, process-plan JSON, fixtures, and multi-setup metadata.
+- Agentic CadQuery -> SubCAD translator infrastructure, including LLM provider abstraction, prompt builders, convergence controller, REPL execution, geometry comparison, and optional localized/feature-aware feedback paths.
+- Mesh comparison utilities for per-vertex signed deviation and Z-slice feedback.
+
+Recently fixed blocker:
+
+- The previous tri-dexel zero-volume failure has been fixed. `test_sim_bridge.py` now verifies nonzero stock volume, modified columns, and positive material removal. Simulation is still a prototype, but the core volume/material-removal path is no longer blocked.
+
+Recent local test status:
+
+| Test | Status |
+|------|--------|
+| `python test_agentic_translator.py` | PASS, 55/55. Non-live tests only; no LLM API translation run. |
+| `python test_subcad_integration.py` | PASS, 39/39 |
+| `python test_fixturing_integration.py` | PASS, 19/19 |
+| `python test_sim_bridge.py` | PASS, 51/51 |
 
 ## Architecture
 
@@ -36,12 +60,13 @@ See [docs/architecture.md](docs/architecture.md) for full technical architecture
 
 | Layer | Technology |
 |-------|-----------|
+| CAD/SubCAD Geometry | CadQuery-backed SubCAD operations, STEP/STL export |
 | CAD Parsing | pythonOCC / CadQuery |
-| Feature Recognition | PyTorch Geometric (GNN / GAT) |
+| Feature Recognition | Planned: PyTorch Geometric (GNN / GAT) |
 | Knowledge Graph | Neo4j + custom Python rule engine |
-| LLM Planning | DeepSeek V4 Pro, fine-tuned via managed fine-tuning API |
-| Simulation | Multi-fidelity: trimesh voxel + manifold3d + PyBullet (see [docs/simulation.md](docs/simulation.md)) |
-| UI | Streamlit / Gradio (Phase 1), React (later) |
+| LLM Planning | Agentic translator scaffolding; fine-tuning is planned |
+| Simulation | Tri-dexel/five-axis prototype; core volume/material-removal bridge tests now pass |
+| UI | Browser simulation prototype under `web/`; product UI is planned |
 | Deployment | Cloud GPU (Vast.ai / RunPod for training), Render / Hugging Face Spaces for hosting |
 
 [see full architecture documentation](docs/architecture.md) with more details.
@@ -52,12 +77,13 @@ Phased solo build using AI-assisted development (Claude Code, Cursor):
 
 | Phase | Timeline | Scope | Cost (₹) |
 |-------|----------|-------|----------|
-| **0**: Prototype | Week 1-2 | STEP parsing → LLM API → basic plan output. Zero training. | 0 |
+| **0**: Prototype | Week 1-2 | Partially complete — core SubCAD, translator scaffolding, and rule/process-plan primitives exist; full upload-to-plan UX is not complete. | 0 |
 | **1**: Synthetic Data | Week 2-3 | ✅ Complete — 9,994 labeled parts with STEP + JSON. CadQuery CSG engine + rule-based labeling. | 2,000-8,000 |
-| **2**: Feature Recognition | Week 3-5 | Train GNN on synthetic MFCAD++ data for feature extraction | 8,000-15,000 |
-| **3**: LLM Fine-Tuning | Week 5-7 | Fine-tune DeepSeek V4 Pro on planning task via managed API | 3,000-8,000 |
-| **4**: Integration + UI | Week 7-9 | Full pipeline + Streamlit UI + rule engine | 5,000-10,000 |
-| **5**: Simulation + RL | Week 9-12 | Digital validation, RL fine-tuning loop | 15,000-40,000 |
+| **2**: Feature Recognition / Translation | Week 3-5 | In progress — translator and comparison utilities exist; GNN feature recognition remains planned. | 8,000-15,000 |
+| **3**: Simulation Reliability | Next priority | Harden the now-passing tri-dexel/material-removal bridge with real target meshes, deviation/gouge checks, and representative toolpaths. | TBD |
+| **4**: LLM Fine-Tuning | Planned | Fine-tune/evaluate planning or code-generation model after reliable translated pairs and scoring. | 3,000-8,000 |
+| **5**: Product Integration + UI | Planned | Full upload → plan → validation workflow and production UI. | 5,000-10,000 |
+| **6**: Simulation + RL | Aspirational | RL loop after simulator is reliable and validated against real outcomes. | 15,000-40,000 |
 
 **Total estimated training cost**: ₹40,000–1,20,000 ($480–$1,450)
 
@@ -94,24 +120,27 @@ python generate_synthetic_data.py --count 10000 --output-dir ./data/synthetic --
 python convert_dataset.py --input-dir data/synthetic --output data/train.jsonl --val-split 0.1
 ```
 
-### Phase 2: GNN training (requires RTX 4090 or similar)
+### Tests and current validation
 
 ```bash
-# Extract dataset first
-7z x synthetic_10k_samples.7z -odata/synthetic_10k
+# Translator/SubCAD tests that currently pass locally
+python test_agentic_translator.py
+python test_subcad_integration.py
+python test_fixturing_integration.py
 
-# Convert to JSONL for LLM fine-tuning
-python convert_dataset.py --input-dir data/synthetic_10k --output data/train_10k.jsonl --val-split 0.1
-
-# Train GNN feature extractor (coming in Phase 2)
-# python scripts/train_gnn_features.py
+# Simulation bridge test
+python test_sim_bridge.py
 ```
 
 ## Status
 
-**Phase 0 complete** — Rule engine + LLM planner working via DeepSeek API.
+**Completed** — Phase 1 synthetic dataset, SubCAD operation model, process-plan/export basics, fixture/setup metadata, and non-live agentic translator tests.
 
-**Phase 1 complete** — 9,994 labeled synthetic CAD parts generated (STEP + JSON + renders). Dataset available as `synthetic_10k_samples.7z` (67 MB via git-lfs).
+**In progress** — Agentic CadQuery -> SubCAD translation, localized/feature-aware comparison, and simulation reliability hardening.
+
+**Recently fixed** — Simulation bridge zero-volume failure. Core dexel volume and material-removal tests now pass, but simulation/RL claims should still be treated as roadmap until validated on representative real workflows.
+
+**Planned** — GNN feature recognition, LLM fine-tuning, production UI, validated simulation feedback loop, and RL.
 
 ## License
 

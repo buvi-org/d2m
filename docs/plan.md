@@ -1,212 +1,207 @@
 # d2m — Project Plan
 
-## Overview
+## Current Position
 
-Solo build of an AI-powered CAPP (Computer-Aided Process Planning) system using AI-assisted development tools (Claude Code, Cursor, Grok). No ML engineers hired — the AI tools generate code, and the builder orchestrates.
+d2m is no longer just the original CAPP roadmap. The repository now contains a substantial subtractive-CAD and simulation prototype, plus an agentic CadQuery -> SubCAD translator. The docs should therefore separate three things:
 
-**Goal**: Upload STEP file → receive ranked, rule-compliant manufacturing process plans with DFM feedback, cost/time estimates, and explanations.
+1. **Implemented and tested** — code that exists and has passing local tests.
+2. **Implemented prototype** — code that exists and passes local tests but still needs validation on representative workflows.
+3. **Aspirational roadmap** — the original GNN, fine-tuning, UI, and RL plan.
 
-**Initial scope**: CNC machining for metals (aluminum, steel) + injection molding for plastics (ABS, PA6, PP). Expandable to casting, 3D printing, sheet metal.
+## Implemented Status
 
-## Timeline & Phases
+### Synthetic Dataset
 
-### Phase 0: Zero-Training Prototype
-**Week 1-2 | Cost: ₹0 (subscriptions only)**
+- `generate_synthetic_data.py` and `convert_dataset.py` exist.
+- `synthetic_10k_samples.7z` contains the generated synthetic dataset.
+- Current dataset status: 9,994 labeled synthetic CAD parts with STEP/JSON/renders are available.
 
-Build a working pipeline that uses off-the-shelf LLM APIs + hardcoded rules before any training.
+### SubCAD Core
 
-**Deliverables**:
-- [ ] STEP file parser (pythonOCC/CadQuery) extracting basic geometry
-- [ ] Simple rule engine (material → process mapping + basic DFM checks)
-- [ ] DeepSeek V4 Pro API integration for process plan generation from text features
-- [ ] Streamlit UI: upload CAD → view plan
-- [ ] Test on 10-20 real CAD parts
+SubCAD is implemented as the current machining representation layer:
 
-**Milestone**: System produces reasonable-looking process plans. Identify where it fails → informs training priorities.
+- Fluent `Stock` API for subtractive operations.
+- STEP/STL export.
+- Process-plan JSON export and summary.
+- Tool/material helpers.
+- Fixture and multi-setup metadata.
+- Integration bridge toward simulation tools.
 
-**Key risk**: CAD parsing edge cases. Mitigation: Start with simple prismatic parts; expand geometry complexity later.
+Current test status:
 
----
+| Test | Result | Notes |
+|------|--------|-------|
+| `python test_subcad_integration.py` | PASS, 39/39 | Fluent chain, exports, process-plan JSON, volume monotonicity, immutability, threaded holes, round trip. |
+| `python test_fixturing_integration.py` | PASS, 19/19 | Fixture/setup metadata, flip setup, clearance warning path, JSON round trip, error handling. |
 
-### Phase 1: Synthetic Data Generation
-**Week 2-3 | Cost: ₹2,000-8,000 (GPU/CPU hours)**
+### Agentic Translator
 
-Generate labeled training data via automated CadQuery scripts.
+The CadQuery -> SubCAD translator infrastructure exists in `src/data/agentic_translator.py`.
 
-**Deliverables**:
-- [ ] `generate_synthetic_data.py`: Creates 10,000+ parametric parts with randomized features
-  - Prismatic base plate + combinations of: pockets, through holes, blind holes, slots, bosses, fillets, chamfers
-  - 50/50 metal/plastic material split
-  - Variable dimensions, positions, tolerances
-- [ ] Each part exports: STEP file + JSON label + 4 PNG renders (front, top, side, isometric)
-- [ ] JSON labels include: features list, material, tolerances, suggested processes, DFM notes, process dependencies
-- [ ] Dataset conversion script: JSON labels → LLM instruction-response format
+Implemented capabilities:
 
-**Milestone**: 10,000+ labeled parts with multi-modal training data ready.
+- Provider abstraction for DeepSeek, Anthropic, and OpenAI.
+- Prompt builders for system, initial user prompt, and iteration feedback.
+- LLM response code extraction.
+- REPL execution through `run_subcad()`.
+- Convergence controller that tracks success, improvement, stagnation, divergence, execution failure, and safety cap.
+- Geometry comparison through `compare_to_reference()`.
+- Optional richer mesh and feature comparison paths are present in the translator code.
 
-**Key risk**: Generated parts not realistic enough. Mitigation: Use real CAD templates as base shapes; validate with domain expert.
+Current test status:
 
----
+| Test | Result | Notes |
+|------|--------|-------|
+| `python test_agentic_translator.py` | PASS, 55/55 | Covers non-LLM translator components, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
 
-### Phase 2: GNN Feature Extraction Training
-**Week 3-5 | Cost: ₹8,000-15,000**
+Important caveat: the passing translator test is not a live LLM success metric. No live DeepSeek/Anthropic/OpenAI translation batch is documented as passing here.
 
-Train a Graph Neural Network to automatically identify machinable features from CAD B-Rep.
+### Mesh / Feature Comparison
 
-**Deliverables**:
-- [ ] AAG builder: STEP → B-Rep → Attributed Adjacency Graph
-- [ ] GAT/AAGNet model implementation (PyTorch Geometric)
-- [ ] Train on MFCAD/MFCAD++ public datasets + synthetic data
-- [ ] Evaluate: >95% accuracy on held-out test set
-- [ ] Inference wrapper: STEP file → features JSON in <1 second
+The original session note described localized comparison as a recommendation. The repository now contains implementation work:
 
-**Milestone**: GNN reliably extracts features from unseen CAD parts.
+- `src/simulation/mesh_compare.py` implements per-vertex signed deviation, Z-slice comparison, clustering, and feedback formatting.
+- `src/simulation/feature_compare.py` contains feature-aware comparison support.
+- `src/data/agentic_translator.py` has hooks for mesh and feature comparison feedback.
 
-**Training details**:
-- Architecture: Graph Attention Network, 4-6 layers
-- Input: Face nodes with geometric features (area, curvature, normals, position)
-- Output: Per-node feature classification + feature parameter regression
-- Hardware: Single RTX 4090 (2-8 hours)
-- Dataset: MFCAD++ (~60k labeled STEP files) + synthetic augmentation
+Recommended next step is not to build these from scratch; it is to verify them against representative translated samples and tune how their outputs influence translator scoring and iteration prompts.
 
-**Key risk**: GNN overfits to synthetic geometry patterns. Mitigation: Heavy augmentation + public dataset diversity.
+## Recently Fixed Blocker
 
----
+### Simulation Core: Zero Tri-Dexel Volume
 
-### Phase 3: LLM Fine-Tuning (Text + Feature-Based Planner)
-**Week 5-7 | Cost: ₹3,000-8,000**
+`python test_sim_bridge.py` previously failed because tri-dexel initialization produced empty columns and `0.0` volume. That root cause has been fixed by adding an `rtree`-free ray/triangle fallback and storing hit distances relative to the grid ray origin.
 
-Fine-tune DeepSeek V4 Pro for manufacturing process planning using text-based feature descriptions and structured geometry data.
+| Test | Result | Failure |
+|------|--------|---------|
+| `python test_sim_bridge.py` | PASS, 51/51 | Stock volume, modified columns, and positive material removal are verified. |
 
-**Deliverables**:
-- [ ] Dataset formatting: synthetic JSON → Alpaca-style text prompts
-  - Instruction: "Design a manufacturing process. Material: X. Features: [...]. Tolerances: ±Y."
-  - Geometry described via structured text (feature types, dimensions, positions, adjacency)
-  - Response: Full JSON process plan
-- [ ] Fine-tuning via DeepSeek API fine-tuning endpoint
-  - 5,000-20,000 instruction-response pairs
-  - Managed fine-tuning — no GPU provisioning needed
-- [ ] Evaluation: Compare LLM plans against ground-truth rules; >90% rule compliance
-- [ ] Fine-tuned model ID saved for inference
+Verified follow-up tests:
 
-**Milestone**: LLM generates rule-compliant, professional process plans from feature descriptions.
+- `python src\simulation\tri_dexel.py` passes. Box volume error is 0.00%; sphere volume error is 0.14%.
+- `python -m src.simulation.material_removal` passes. Initial stock volume is nonzero and all material removal self-tests pass.
+- `python test_sim_bridge.py` passes 51/51.
 
-**Model choice**:
-- **DeepSeek V4 Pro** — state-of-the-art reasoning, extremely cost-efficient inference, managed fine-tuning API
-- Geometry conveyed through structured text (feature types, dimensions, tolerances, adjacency relationships) rather than images
-- 4-view renders generated for optional human review in the UI, but not required for LLM input
+Simulation should now be described as a passing prototype path, not a production validator. The next work is validation quality: real target meshes, richer toolpaths, gouge/deviation accuracy, and representative performance.
 
-**Key risk**: LLM hallucinates infeasible sequences. Mitigation: Knowledge graph post-validation catches violations before output.
+## Recommended Plan
 
----
+### 1. Harden Simulation Validation
 
-### Phase 4: Integration, Rule Engine & UI
-**Week 7-9 | Cost: ₹5,000-10,000**
+Goal: move beyond “bridge tests pass” toward trustworthy simulation feedback.
 
-Connect all components into a single pipeline with user interface.
+Acceptance criteria:
 
-**Deliverables**:
-- [ ] Full inference pipeline: CAD upload → GNN features → LLM plan → rule validation → output
-- [ ] Neo4j knowledge graph populated with material-process-tool rules
-- [ ] Python rule engine for DFM constraint checking
-- [ ] Streamlit/Gradio UI: drag-drop CAD, view plans, ask questions
-- [ ] FastAPI backend for programmatic access
-- [ ] Error handling, retry logic, logging
+- Use real target meshes instead of demo scaled-stock references for validation endpoints.
+- Compare simulated stock against target meshes with mesh/feature feedback.
+- Add gouge/deviation assertions to tests.
+- Keep `python test_sim_bridge.py`, `python src\simulation\tri_dexel.py`, and `python -m src.simulation.material_removal` passing.
 
-**Milestone**: End-to-end system usable for internal testing on real parts.
+### 2. Validate Mesh and Feature Comparison on Real Samples
 
-**UI features**:
-- CAD file upload (drag & drop)
-- Material/volume/tolerance input form
-- Process plan output with:
-  - Ranked alternatives (by cost, time, quality)
-  - Highlighted features on CAD preview
-  - DFM warnings with explanations
-  - Natural-language Q&A about the plan
+Goal: ensure localized comparison feedback is accurate enough to guide the translator.
 
----
+Acceptance criteria:
 
-### Phase 5: Simulation & RL Fine-Tuning
-**Week 9-12 | Cost: ₹15,000-40,000**
+- Per-vertex/SDF feedback distinguishes overcut vs undercut on known fixtures.
+- Z-slice comparison identifies pocket-depth and through-hole mismatches.
+- Feature-aware comparison produces actionable feedback for holes, pockets, slots, and chamfers.
+- Translator history stores compact comparison output without overwhelming prompts.
 
-Add digital simulation for plan validation and reinforcement learning for continual improvement.
+### 3. Run Live Translation Trials
 
-**Deliverables**:
-- [ ] CNC toolpath simulation (FreeCAD CAM / CadQuery)
-  - Collision detection, tool reachability, fixture interference
-- [ ] Basic molding simulation (fill analysis, thin-wall check)
-- [ ] Simulator → reward function: plan_success * (1 - normalized_cost)
-- [ ] GRPO RL training: LLM generates plan, simulator scores it, model updates
-  - 3-5 training iterations
-- [ ] Before/after accuracy comparison
+Goal: measure whether the agentic loop can translate CadQuery samples into equivalent SubCAD programs.
 
-**Milestone**: System self-improves; simulation catches plans that look good on paper but fail physically.
+Acceptance criteria:
 
-**RL setup**:
-- Agent: Fine-tuned LLM (Phase 3)
-- Environment: Physics simulator (FreeCAD CAM / molding sim)
-- Algorithm: GRPO (Group Relative Policy Optimization)
-- Reward: Feasibility (binary) + cost efficiency + time efficiency
-- Hardware: 1-2 GPUs, 3-5 runs
+- Run live translations on the exploration samples with an API key configured.
+- Record success rate, convergence iterations, failure categories, and token/cost profile.
+- Save successful CadQuery/SubCAD pairs for later training.
+- Do not claim translator success beyond the tested sample set.
 
-**Key risk**: Simulator fidelity vs. real world. Mitigation: Validate against 20-50 real shop-floor outcomes before relying on RL.
+### 4. Build Dataset From Successful Translations
 
----
+Goal: create reliable training/evaluation pairs only after execution and comparison are trustworthy.
 
-## Cost Summary
+Acceptance criteria:
 
-| Phase | Training Cost (₹) | Training Cost ($) |
-|-------|-------------------|-------------------|
-| 0: Prototype | 0 | 0 |
-| 1: Synthetic Data | 2,000 – 8,000 | 24 – 96 |
-| 2: GNN Feature Extraction | 8,000 – 15,000 | 96 – 180 |
-| 3: DeepSeek Fine-Tuning | 3,000 – 8,000 | 36 – 96 |
-| 4: Integration + UI | 5,000 – 10,000 | 60 – 120 |
-| 5: Simulation + RL | 15,000 – 40,000 | 180 – 480 |
-| **Total** | **33,000 – 79,000** | **$396 – $948** |
+- Batch translation pipeline records source CadQuery, generated SubCAD, execution result, comparison metrics, and feedback.
+- Failed translations are retained with reason labels for improvement.
+- Dataset split separates training, validation, and hard negative cases.
 
-**Ongoing monthly costs** (post-launch): ₹5,000-15,000 ($60-180) for inference hosting + occasional retraining.
+### 5. Revisit ML Roadmap
 
-**AI tool subscriptions**: ~₹3,000-5,000/month ($36-60) for DeepSeek API + Cursor Pro.
+Only after reliable execution/comparison data exists:
 
-## Development Methodology
+- Train or fine-tune a code-generation/planning model.
+- Evaluate rule compliance and geometry fidelity separately.
+- Consider GNN feature recognition if it remains necessary for the product workflow.
+- Treat RL as late-stage research after simulation fidelity is validated.
 
-AI-assisted solo development using the following workflow:
+## Roadmap Status
 
-1. **Architecture**: Grok/Claude for high-level design decisions and technical research
-2. **Code generation**: Claude Code (via Cursor or CLI) for all implementation
-3. **Debugging**: Paste errors back to Claude for step-by-step debugging
-4. **Testing**: AI-generated test scripts; manual validation on real CAD files
-5. **Iteration**: Upload failed cases → ask AI "Why did this fail? Fix it."
+| Area | Status | Current Decision |
+|------|--------|------------------|
+| Synthetic data | Complete enough for prototype use | Keep; regenerate only if labels/schema change. |
+| SubCAD API | Implemented and passing integration tests | Continue using as canonical subtractive representation. |
+| Agentic translator | Implemented; non-live tests pass | Run live trials after simulation/comparison validation. |
+| Mesh comparison | Implemented | Verify and tune; no need to reimplement first. |
+| Feature comparison | Implemented | Validate on known samples and feed into translator loop. |
+| Simulation bridge | Prototype passing tests | Harden against representative target meshes, toolpaths, and gouge/deviation cases. |
+| GNN feature recognition | Planned | Defer until subtractive workflow proves what features are needed. |
+| LLM fine-tuning | Planned | Defer until high-quality execution-scored pairs exist. |
+| Product UI | Planned/prototype pieces exist | Defer productization until backend semantics stabilize. |
+| RL fine-tuning | Aspirational | Defer until simulator is reliable and externally validated. |
 
-**Golden rule**: Always ask AI for explanations alongside code. Understanding the "why" prevents cascading bugs.
+## Original Product Goal
 
-## Risk Register
+The long-term CAPP goal remains:
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|------------|------------|
-| CAD parsing fails on real-world files | High | Medium | Start with STEP only; add formats incrementally. pythonOCC is battle-tested. |
-| Synthetic data not representative | High | Medium | Validate with domain expert early; use real CAD templates as base shapes |
-| LLM hallucinates infeasible plans | Medium | High | Knowledge graph post-validation; RL simulation feedback |
-| GPU cost overrun | Low | Low | Use spot instances; limit experiments to 3-5 runs per phase |
-| Feature extraction GNN poor generalization | Medium | Low | Transfer learning from MFCAD++; augment with synthetic data noise |
-| Simulator fidelity gap | Medium | Medium | Validate sim outputs against 20-50 real shop outcomes before RL reliance |
+> Upload a STEP file -> receive ranked, rule-compliant manufacturing process plans with DFM feedback, cost/time estimates, and explanations.
+
+Current repository reality is narrower:
+
+> Translate/generate subtractive SubCAD programs, execute them, compare the resulting geometry to references, and develop a simulation-backed feedback loop.
+
+The recommended plan is to finish the narrower loop first. Once SubCAD execution, comparison, and simulation are reliable, the broader upload-to-plan product roadmap becomes much less speculative.
 
 ## Success Criteria
 
-1. **Phase 0**: System produces any process plan from STEP input (even if not optimal)
-2. **Phase 1**: 10,000+ synthetic parts generated with valid STEP + labels
-3. **Phase 2**: GNN achieves >95% feature recognition accuracy on held-out test set
-4. **Phase 3**: LLM plans are >90% rule-compliant (validated by knowledge graph)
-5. **Phase 4**: End-to-end pipeline runs in <60 seconds per part; UI is responsive
-6. **Phase 5**: Simulation catches >80% of infeasible plans; RL improves plan quality by >10% over SFT baseline
+Near-term success:
 
-## Post-MVP Roadmap (Beyond 12 Weeks)
+1. Translator comparison feedback identifies localized geometry errors, not only volume ratio.
+2. Live translation trials produce measured success/failure data.
+3. Simulation tests include real target-mesh deviation/gouge cases, not only volume/removal sanity checks.
+4. Documentation reports measured status, not hoped-for capability.
 
-- **Expand processes**: Add casting, 3D printing (FDM/SLA), sheet metal forming
-- **Expand materials**: More metals (titanium, brass), engineering plastics (PEEK, PC), composites
-- **ERP integration**: Connect to shop-floor scheduling, inventory, machine availability
-- **Digital twin**: Real-time sensor feedback → plan adaptation
-- **SaaS product**: Multi-tenant web app for manufacturing quoting platforms
-- **CAD plugin**: Direct integration into Fusion 360 / SolidWorks
-- **Batch quotation mode**: Process 100+ designs simultaneously for online manufacturing marketplaces
+Roadmap success:
+
+1. End-to-end CAD/metadata input produces a valid process plan.
+2. Generated operations execute through SubCAD.
+3. Simulation and comparison catch infeasible or geometrically wrong plans.
+4. UI exposes plans, warnings, and geometry feedback clearly.
+5. Any ML fine-tuning is evaluated against executable outcomes, not just text similarity.
+
+## Cost Notes
+
+The previous cost table was tied to the original GNN/fine-tuning-first plan. The immediate recommended work is debugging and validation, so the near-term cost is mainly developer time plus any LLM API usage for live translation trials.
+
+GPU/fine-tuning spend should wait until:
+
+- The simulation bridge is validated beyond sanity tests.
+- Live translation trials identify the real failure modes.
+- There is a clean dataset of execution-scored examples.
+
+## Deferred Aspirational Items
+
+These remain useful future directions but are not implemented product status:
+
+- GNN feature recognition trained on MFCAD/MFCAD++.
+- DeepSeek managed fine-tuning for manufacturing planning.
+- Full Streamlit/React production UI.
+- Neo4j-backed production knowledge graph.
+- Injection molding simulation.
+- RL fine-tuning from simulator rewards.
+- ERP/shop-floor integration.
+- Fusion 360/SolidWorks plugin.
+- Multi-tenant SaaS quoting product.
