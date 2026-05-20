@@ -138,6 +138,9 @@ class Stock:
 
         op_dict = op.to_dict()
         op_dict["sequence_number"] = op.sequence_number
+        tool_selection = getattr(op, "tool_selection", None)
+        if tool_selection is not None and hasattr(tool_selection, "to_dict"):
+            op_dict["tool_selection"] = tool_selection.to_dict()
 
         if hasattr(op, "to_toolpath"):
             try:
@@ -148,6 +151,16 @@ class Stock:
                 serialized_toolpath = _serialize_toolpath(toolpath)
                 if serialized_toolpath:
                     op_dict["toolpath"] = serialized_toolpath
+                    metadata = (
+                        serialized_toolpath.get("metadata", {})
+                        if isinstance(serialized_toolpath, dict)
+                        else {}
+                    )
+                    if isinstance(metadata, dict):
+                        if "pass_plan" in metadata and "pass_plan" not in op_dict:
+                            op_dict["pass_plan"] = metadata["pass_plan"]
+                        if "tool_selection" in metadata and "tool_selection" not in op_dict:
+                            op_dict["tool_selection"] = metadata["tool_selection"]
 
         # Attach setup and face_selector info to the op record
         if active_setup is not None and active_setup in self._setups:
@@ -971,8 +984,20 @@ class Stock:
 
         # 2. Replay each operation's toolpath
         gouges = []
+        operation_results = []
         ops_simulated = 0
         for op_dict in self._plan.operations:
+            op_result = {
+                "sequence_number": op_dict.get("sequence_number"),
+                "operation": op_dict.get("operation", "unknown"),
+                "tool_id": (op_dict.get("tool") or {}).get("catalog_id", ""),
+                "estimated_time_minutes": (
+                    (op_dict.get("toolpath_summary") or {}).get("estimated_time_min")
+                    or (op_dict.get("toolpath_summary") or {}).get("estimated_time_minutes")
+                    or (op_dict.get("pass_plan") or {}).get("estimated_time_min")
+                ),
+                "status": "pending",
+            }
             op_tool_type = op_dict.get("tool_type", "flat_endmill")
             op_tool_dia = op_dict.get("tool_diameter_mm", 10.0)
 
@@ -984,6 +1009,9 @@ class Stock:
                     "operation": op_dict.get("operation", "unknown"),
                     "message": f"Skipped: unknown tool_type={op_tool_type!r}",
                 })
+                op_result["status"] = "skipped"
+                op_result["message"] = f"unknown tool_type={op_tool_type!r}"
+                operation_results.append(op_result)
                 continue
 
             try:
@@ -993,6 +1021,9 @@ class Stock:
                     "operation": op_dict.get("operation", "unknown"),
                     "message": f"Tool creation failed: {e}",
                 })
+                op_result["status"] = "error"
+                op_result["message"] = f"Tool creation failed: {e}"
+                operation_results.append(op_result)
                 continue
 
             # Prefer operation-provided toolpath data when available.
@@ -1008,6 +1039,8 @@ class Stock:
                 engine.remove_tool_at_pose(sim_tool, pose)
 
             ops_simulated += 1
+            op_result["status"] = "simulated"
+            operation_results.append(op_result)
 
             # Check for gouges (material removed below target)
             if engine.tri_dexel.volume() < 0:
@@ -1017,11 +1050,20 @@ class Stock:
                 })
 
         final_volume = max(0.0, engine.tri_dexel.volume())
+        if any(op.get("status") == "error" for op in operation_results):
+            status = "error"
+        elif gouges:
+            status = "warning"
+        else:
+            status = "pass"
         return {
+            "status": status,
             "final_volume_mm3": round(final_volume, 1),
             "volume_removed_mm3": round(initial_volume - final_volume, 1),
             "gouges": gouges,
             "cycle_time_minutes": self._plan.estimated_time_minutes,
+            "operations": operation_results,
+            "per_operation_timing": operation_results,
             "ops_simulated": ops_simulated,
         }
 

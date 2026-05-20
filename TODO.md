@@ -2,12 +2,15 @@
 
 Current baseline:
 
-- Latest pushed commit previously noted: `aa9910c Fix simulation bridge and wire rich translator feedback`
+- Latest pushed viewer commit before the current trust slice: `25de657 Upgrade SubCAD viewer operation review`
 - Core local tests expected to remain green:
   - `python test_agentic_translator.py`
   - `python test_sim_bridge.py`
   - `python test_subcad_integration.py`
   - `python test_fixturing_integration.py`
+  - `python test_subcad_shopfloor_v1.py`
+  - `python test_subcad_phase2_toolpaths.py`
+  - `python test_subcad_visualization.py`
 
 ## SubCAD Shop-Floor v1
 
@@ -47,7 +50,7 @@ Goal: make SubCAD output a shop-floor-ready intermediate package without claimin
 
 ## Phase 2 Toolpaths
 
-Status: complete and passing for the current prototype contract. Keep the acceptance test green while Simulation Reliability becomes the active next priority.
+Status: complete and passing for the current prototype contract. Keep the acceptance test green while Manufacturing Trust v1 hardening continues.
 
 1. Emit neutral toolpaths for every Phase 2 operation.
    - `peck_drill`, `ream`, `bore`, `countersink`, `counterbore`, `thread_mill`, `t_slot`, `dovetail`, `groove`, `surface_3d`, `deburr`, and `spot_face` must all serialize non-empty motion intent.
@@ -71,53 +74,88 @@ Status: complete and passing for the current prototype contract. Keep the accept
 - Keep running `python test_subcad_shopfloor_v1.py` for the completed Shop-Floor v1 contract.
 - Keep running `python test_subcad_phase2_toolpaths.py` for the completed Phase 2 toolpath contract.
 - The Phase 2 test passes and covers non-empty neutral toolpaths, process-plan summaries, preview-only G-code metadata, malformed-toolpath validation, and authored-path time estimation.
+- Keep running `python test_subcad_visualization.py` for browser package coverage, including tool/holder and fixture/clamp-zone review metadata.
 - Continue running the existing SubCAD, fixturing, translator, and simulation bridge tests as regression coverage.
 
-## Active Next Priority: Simulation Reliability
+## Fixture And Tool Inventory v1
 
-Goal: move the now-passing simulation bridge from sanity coverage toward trustworthy prototype validation.
+Status: complete for the current prototype contract. Keep the visualization and process-plan tests green while Manufacturing Trust v1 hardening continues.
 
-1. Validate against representative target meshes.
-   - Use real target meshes instead of demo scaled-stock references for validation endpoints.
-   - Compare simulated stock against target meshes with mesh/feature feedback.
+Goal: make fixtures and tools first-class shop-floor intent without claiming production CAM readiness.
 
-2. Exercise authored neutral toolpaths.
-   - Prefer explicit schema v1/Phase 2 neutral toolpaths when present.
-   - Retain generated simple toolpaths as a fallback for older operation dictionaries.
+1. Maintain structured catalogs.
+   - Use versioned catalog data for fixture and tool definitions.
+   - Preserve fixture/tool semantics such as dimensions, clamp zones, clearance zones, selected catalog id, tool assembly, holder, stickout, flute length, and availability metadata.
+   - Keep catalog JSON as the source of truth for v1; CadQuery/STEP/STL/GLB assets remain optional geometry hooks.
 
-3. Add reliability assertions.
-   - Add gouge/deviation checks for known machining cases.
-   - Keep volume/material-removal coverage green while expanding accuracy checks.
+2. Preserve selected tool and fixture context.
+   - Process plans should keep selected tool id, tool assembly, fixture id, setup/work-offset metadata, and backward-compatible flat tool fields.
+   - Setup sheets should expose selected tool/fixture information clearly enough for review.
 
-4. Track representative performance.
-   - Measure runtime and stability on practical stock sizes and toolpath lengths.
-   - Avoid claiming production simulation validity until these cases are documented.
+3. Visualize shop-floor context.
+   - Browser packages should include fixture bodies, clamp zones, setup context, selected tool/holder metadata, toolpaths, stock states, and operation playback data.
+   - Visualization remains an engineering review aid, not proof of machine safety.
+
+## Manufacturing Trust v1
+
+Status: initial implementation slice complete. Keep the new manufacturing trust tests green while broadening coverage.
+
+Goal: move SubCAD from structured manufacturing intent toward credible engineering validation. The immediate focus is inventory-aware tool planning, realistic pass plans, fixture/tool-holder clearance, and simulation/comparison reliability.
+
+1. Plan from available tools.
+   - Initial selector exists and chooses available catalog tools instead of inventing ideal diameters.
+   - Operation/process-plan records now preserve selected tool id, selected assembly, selection reason, rejected tools, and warnings/errors.
+   - Missing or unsafe tools are surfaced as structured validation issues.
+   - Next: broaden policy controls for preferred machine pockets, tool material/coating, and shop-specific inventory constraints.
+
+2. Generate realistic pass plans.
+   - Core operations now use actual selected tool geometry and safe limits for stepover/stepdown where authored paths exist.
+   - Pass-plan metadata now exposes roughing/finishing/rest flags, depth levels, stepover lanes, total passes, and per-pass timing.
+   - Cycle time is recalculated from generated paths.
+   - Next: make Phase 2 special tools as inventory-aware as the core operations.
+
+3. Check fixture, cutter, shank, and holder clearance.
+   - Authored neutral toolpaths are sampled against clamp and clearance zones.
+   - Cutter, shank, and holder envelope checks return structured warnings/errors with operation number, tool id, fixture id, zone label, component, point, and clearance where available.
+   - Setup sheets and visualization exports carry warning/marker metadata.
+   - Next: extend from semantic zones to simplified fixture-body and stock-envelope collision checks.
+
+4. Harden simulation and comparison.
+   - Simulation result now includes status and per-operation timing metadata while continuing to prefer authored neutral toolpaths.
+   - Benchmark tests cover known-good and known-bad target comparison cases: overcut, undercut, shifted features, wrong drill locations, and clamp/toolpath interference.
+   - Next: validate against larger real CAD/STEP examples and compare simulated stock, not only final authored geometry.
+
+5. Upgrade browser review.
+   - Viewer now shows selected tool id, holder id, pass number, operation time, total time, and warnings for the selected operation.
+   - Toggles cover stock, fixture, clamp zones, toolpath, tool/holder, clearance markers, and comparison diff.
+   - Next: add richer marker labels and comparison heatmap rendering.
 
 ## Visualization
 
-Status: first static browser visualization path is available.
+Status: browser visualization now supports the current review workflow for stock, target, toolpaths, operation playback, selected tools/holders, fixtures, and clamp zones.
 
 1. Export visualization packages from SubCAD.
    - Use `Stock.visualization_package("web/sessions/latest", target=...)`.
-   - Package includes `scene.json`, `stock.stl`, `toolpath.json`, and optional target/comparison/diff assets.
+   - Package includes `scene.json`, stock/state meshes, `toolpath.json`, selected tool/holder metadata, fixture/clamp-zone metadata, and optional target/comparison/diff assets.
 
 2. Review in the browser.
    - Serve `web/` and open `visualization.html?session=sessions/latest/scene.json`.
-   - Inspect stock mesh, transparent target overlay, neutral toolpaths, operation list, and comparison markers.
+   - Inspect stock mesh, transparent target overlay, neutral toolpaths, operation timeline/playback, selected tool/holder, fixture body, clamp zones, and comparison markers.
 
 3. Next visualization improvements.
-   - Add operation-by-operation mesh snapshots for playback.
-   - Add richer per-vertex heatmap rendering in Three.js.
+   - Add pass-level details, warning/clearance markers, and clearer selected-operation timing.
+   - Add richer per-vertex heatmap rendering in Three.js once comparison reliability improves.
    - Add live WebSocket streaming after Python simulation reliability is stronger.
    - Keep WebGPU material removal as a later acceleration path.
 
 ## What SubCAD Can Do Now
 
 - Build subtractive machining programs with the fluent `Stock` API, including core and Phase 2 operations.
-- Represent fixtures, setups, work offsets, stock/material metadata, tools, feeds/speeds, and process-plan summaries.
+- Represent fixtures, setups, work offsets, stock/material metadata, selected tools, tool assemblies, feeds/speeds, and process-plan summaries.
 - Export STEP/STL geometry, `subcad.shop_floor.v1` process-plan JSON, and Markdown/JSON setup sheets.
 - Serialize neutral toolpaths for preview, validation, estimation, and simulation handoff.
 - Render preview-only G-code with explicit non-production warnings.
+- Review fixture bodies, clamp zones, selected tools/holders, operation playback, and stock states in the browser viewer.
 - Validate malformed/empty authored toolpaths and estimate cycle time from authored path length/feed data where available.
 
 Still deferred: controller-certified production G-code, production UI, live translator success claims, and validated simulation/RL workflows.

@@ -35,6 +35,7 @@ from .geometry import (
     chamfer_edges,
 )
 from .tool_library import ToolSpec, ToolCatalog
+from .tool_selection import ToolRequirement, ToolSelectionResult, select_or_fallback, select_tool
 from .material import get_feeds_speeds
 from .toolpath import Toolpath, ToolpathMove
 
@@ -111,6 +112,78 @@ def _tool_dict(tool: Optional[ToolSpec]) -> dict:
     }
 
 
+def _tool_selection_dict(result: Optional[ToolSelectionResult]) -> Optional[dict]:
+    if result is None:
+        return None
+    return result.to_dict()
+
+
+def _tool_safe_limit(tool: ToolSpec, key: str, default: float) -> float:
+    value = (tool.safe_limits or {}).get(key)
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return float(default)
+
+
+def _tool_stepdown(tool: ToolSpec, default_ratio: float = 0.5, minimum: float = 0.5) -> float:
+    return max(
+        min(
+            tool.diameter * default_ratio,
+            _tool_safe_limit(tool, "max_stepdown_mm", tool.diameter * default_ratio),
+        ),
+        minimum,
+    )
+
+
+def _tool_stepover(tool: ToolSpec, default_ratio: float = 0.5, minimum: float = 0.1) -> float:
+    safe_ratio = _tool_safe_limit(tool, "max_stepover_ratio", default_ratio)
+    return max(tool.diameter * min(default_ratio, safe_ratio), minimum)
+
+
+def _pass_plan(
+    *,
+    strategy: str,
+    tool: ToolSpec,
+    depth_levels: list[float],
+    lane_count: int = 1,
+    pass_type: str = "roughing",
+    rest_machining: bool = False,
+    finish_passes: int = 0,
+) -> dict:
+    roughing_passes = max(len(depth_levels) * max(lane_count, 1), 0)
+    total_passes = roughing_passes + max(finish_passes, 0)
+    return {
+        "strategy": strategy,
+        "tool_id": tool.catalog_id,
+        "tool_diameter_mm": tool.diameter,
+        "roughing_passes": roughing_passes,
+        "finishing_passes": max(finish_passes, 0),
+        "rest_machining": bool(rest_machining),
+        "total_passes": total_passes,
+        "depth_levels_mm": [round(abs(z), 6) for z in depth_levels],
+        "stepover_lanes": max(lane_count, 1),
+        "pass_type": pass_type,
+    }
+
+
+def _attach_pass_plan(tp: Toolpath, pass_plan: dict) -> Toolpath:
+    pass_plan = dict(pass_plan)
+    total_passes = max(int(pass_plan.get("total_passes") or 0), 1)
+    pass_plan["estimated_time_min"] = round(tp.estimated_time_min, 6)
+    pass_plan["estimated_time_per_pass_min"] = round(tp.estimated_time_min / total_passes, 6)
+    pass_plan["length_mm"] = round(tp.length_mm, 6)
+    tp.metadata["pass_plan"] = pass_plan
+    return tp
+
+
+def _select_inventory_tool(
+    requirement: ToolRequirement,
+    fallback: ToolSpec,
+) -> tuple[ToolSpec, ToolSelectionResult]:
+    return select_or_fallback(requirement, fallback)
+
+
 def _move(
     tp: Toolpath,
     move_type: str,
@@ -162,15 +235,22 @@ def _drill_toolpath(
     *,
     peck_step: Optional[float] = None,
     dwell_seconds: float = 0.0,
+    metadata: Optional[dict] = None,
 ) -> Toolpath:
-    tp = _new_toolpath(operation, tool, feeds_speeds, metadata={"x": cx, "y": cy})
+    tp = _new_toolpath(
+        operation,
+        tool,
+        feeds_speeds,
+        metadata={"x": cx, "y": cy, **(metadata or {})},
+    )
     feed = _feed_rate(feeds_speeds)
     _move(tp, "rapid", cx, cy, tp.safe_z)
+    levels = _depth_levels(depth, peck_step if peck_step and peck_step > 0 else abs(depth))
     if dwell_seconds:
         _move(tp, "dwell", cx, cy, tp.safe_z, dwell_seconds=dwell_seconds)
     if peck_step and peck_step > 0:
         current = 0.0
-        for level in _depth_levels(depth, peck_step):
+        for level in levels:
             _move(tp, "plunge", cx, cy, level, feed=feed)
             current = level
             _move(tp, "retract", cx, cy, tp.safe_z)
@@ -179,7 +259,13 @@ def _drill_toolpath(
     else:
         _move(tp, "plunge", cx, cy, -abs(depth), feed=feed)
         _move(tp, "retract", cx, cy, tp.safe_z)
-    return tp
+    return _attach_pass_plan(tp, _pass_plan(
+        strategy="peck_drill" if peck_step else "drill",
+        tool=tool,
+        depth_levels=levels,
+        lane_count=1,
+        pass_type="drilling",
+    ))
 
 
 def _slot_endpoints(cx: float, cy: float, length: float, angle_deg: float) -> tuple[tuple[float, float], tuple[float, float]]:
@@ -204,8 +290,8 @@ def _linear_slot_toolpath(
     metadata: Optional[dict] = None,
 ) -> Toolpath:
     """Generate a conservative neutral slot/groove/form-cutter path."""
-    stepdown = max(tool.diameter * 0.5, 0.5)
-    stepover = max(min(tool.diameter * 0.5, max(width * 0.25, 0.1)), 0.1)
+    stepdown = _tool_stepdown(tool, 0.5, 0.5)
+    stepover = max(min(_tool_stepover(tool, 0.5, 0.1), max(width * 0.25, 0.1)), 0.1)
     (x0, y0), (x1, y1) = _slot_endpoints(cx, cy, length, angle)
     theta = math.radians(angle)
     nx = -math.sin(theta)
@@ -231,7 +317,8 @@ def _linear_slot_toolpath(
     feed = _feed_rate(feeds_speeds)
     _move(tp, "rapid", x0, y0, tp.safe_z)
     direction = 1
-    for z in _depth_levels(depth, stepdown):
+    depth_levels = _depth_levels(depth, stepdown)
+    for z in depth_levels:
         for offset in offsets:
             sx = x0 + nx * offset
             sy = y0 + ny * offset
@@ -244,7 +331,13 @@ def _linear_slot_toolpath(
             _move(tp, "feed", end[0], end[1], z, feed=feed)
             _move(tp, "retract", end[0], end[1], tp.safe_z)
             direction *= -1
-    return tp
+    return _attach_pass_plan(tp, _pass_plan(
+        strategy=operation,
+        tool=tool,
+        depth_levels=depth_levels,
+        lane_count=len(offsets),
+        pass_type="slotting",
+    ))
 
 
 def _rect_raster_toolpath(
@@ -267,9 +360,11 @@ def _rect_raster_toolpath(
     feed = _feed_rate(feeds_speeds)
     y = -half_w
     direction = 1
+    lane_count = 0
     _move(tp, "rapid", -half_l, y, tp.safe_z)
     _move(tp, "plunge", -half_l, y, z, feed=feed)
     while y <= half_w + 1e-9:
+        lane_count += 1
         x = half_l if direction > 0 else -half_l
         _move(tp, "feed", x, y, z, feed=feed)
         y += stepover
@@ -278,7 +373,13 @@ def _rect_raster_toolpath(
         direction *= -1
     last_x, last_y, _ = tp.moves[-1].position
     _move(tp, "retract", last_x, last_y, tp.safe_z)
-    return tp
+    return _attach_pass_plan(tp, _pass_plan(
+        strategy=operation,
+        tool=tool,
+        depth_levels=[z],
+        lane_count=lane_count,
+        pass_type="finishing",
+    ))
 
 
 def _pick_slot_tool(slot_width: float) -> ToolSpec:
@@ -344,6 +445,7 @@ class MachiningOperation(ABC):
     feeds_speeds: dict = field(default_factory=dict)
     position: Optional[Tuple[float, float]] = None
     face_selector: str = ">Z"
+    tool_selection: Optional[ToolSelectionResult] = field(default=None, repr=False)
 
     # -- abstract interface --------------------------------------------------
 
@@ -400,13 +502,18 @@ class FaceMillOp(MachiningOperation):
 
     def __post_init__(self):
         if self.tool is None:
-            try:
-                self.tool = ToolCatalog.get("EM_50mm_FACE")
-            except KeyError:
-                try:
-                    self.tool = ToolCatalog.get_best_for("flat_endmill", 10.0)
-                except ValueError:
-                    self.tool = ToolSpec("flat_endmill", 10.0)
+            fallback = ToolCatalog.get("EM_50mm_FACE")
+            self.tool, self.tool_selection = _select_inventory_tool(
+                ToolRequirement(
+                    "flat_endmill",
+                    min_diameter_mm=10.0,
+                    min_flute_length_mm=self.depth,
+                    feature="face_mill",
+                    reason="prefer widest available tool for facing",
+                    prefer_largest=True,
+                ),
+                fallback,
+            )
 
         tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
         self.feeds_speeds = get_feeds_speeds(
@@ -439,21 +546,27 @@ class FaceMillOp(MachiningOperation):
         }
 
     def to_toolpath(self) -> Toolpath:
-        stepover = self.stepover if self.stepover is not None else self.tool.diameter * 0.7
+        stepover = self.stepover if self.stepover is not None else _tool_stepover(self.tool, 0.7, 0.1)
         span_x = max(self.tool.diameter * 4.0, stepover * 4.0)
         span_y = max(self.tool.diameter * 2.0, stepover * 2.0)
         tp = _new_toolpath(
             "face_mill",
             self.tool,
             self.feeds_speeds,
-            metadata={"nominal_span_x_mm": span_x, "nominal_span_y_mm": span_y},
+            metadata={
+                "nominal_span_x_mm": span_x,
+                "nominal_span_y_mm": span_y,
+                "tool_selection": _tool_selection_dict(self.tool_selection),
+            },
         )
         feed = _feed_rate(self.feeds_speeds)
         y = -span_y / 2.0
         direction = 1
+        lane_count = 0
         _move(tp, "rapid", -span_x / 2.0, y, tp.safe_z)
         _move(tp, "plunge", -span_x / 2.0, y, -abs(self.depth), feed=feed)
         while y <= span_y / 2.0 + 1e-9:
+            lane_count += 1
             x = span_x / 2.0 if direction > 0 else -span_x / 2.0
             _move(tp, "feed", x, y, -abs(self.depth), feed=feed)
             y += stepover
@@ -461,7 +574,13 @@ class FaceMillOp(MachiningOperation):
                 _move(tp, "feed", x, y, -abs(self.depth), feed=feed)
             direction *= -1
         _move(tp, "retract", tp.moves[-1].position[0], tp.moves[-1].position[1], tp.safe_z)
-        return tp
+        return _attach_pass_plan(tp, _pass_plan(
+            strategy="face_mill",
+            tool=self.tool,
+            depth_levels=[-abs(self.depth)],
+            lane_count=lane_count,
+            pass_type="facing",
+        ))
 
 
 # ---------------------------------------------------------------------------
@@ -492,11 +611,19 @@ class PocketOp(MachiningOperation):
 
     def __post_init__(self):
         if self.tool is None:
-            min_tool_dia = min(self.width, self.length) * 0.8
-            try:
-                self.tool = ToolCatalog.get_best_for("flat_endmill", min_tool_dia)
-            except ValueError:
-                self.tool = ToolSpec("flat_endmill", min_tool_dia)
+            max_tool_dia = min(self.width, self.length) * 0.8
+            fallback = ToolSpec("flat_endmill", max_tool_dia)
+            self.tool, self.tool_selection = _select_inventory_tool(
+                ToolRequirement(
+                    "flat_endmill",
+                    max_diameter_mm=max_tool_dia,
+                    min_flute_length_mm=self.depth,
+                    feature="rectangular_pocket",
+                    reason="largest available end mill that fits pocket opening",
+                    prefer_largest=True,
+                ),
+                fallback,
+            )
 
         tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
         self.feeds_speeds = get_feeds_speeds(
@@ -572,32 +699,49 @@ class PocketOp(MachiningOperation):
         return d
 
     def to_toolpath(self) -> Toolpath:
-        stepover = max(self.tool.diameter * 0.5, 0.1)
-        stepdown = max(self.tool.diameter * 0.5, 0.5)
+        stepover = _tool_stepover(self.tool, 0.5, 0.1)
+        stepdown = _tool_stepdown(self.tool, 0.5, 0.5)
         half_w = max(self.width / 2.0 - self.tool.radius, 0.0)
         half_l = max(self.length / 2.0 - self.tool.radius, 0.0)
         tp = _new_toolpath(
             "rough_pocket",
             self.tool,
             self.feeds_speeds,
-            metadata={"width_mm": self.width, "length_mm": self.length},
+            metadata={
+                "width_mm": self.width,
+                "length_mm": self.length,
+                "tool_selection": _tool_selection_dict(self.tool_selection),
+            },
         )
         feed = _feed_rate(self.feeds_speeds)
         _move(tp, "rapid", self.cx, self.cy, tp.safe_z)
-        for z in _depth_levels(self.depth, stepdown):
+        depth_levels = _depth_levels(self.depth, stepdown)
+        max_lanes = 1
+        for z in depth_levels:
             _move(tp, "plunge", self.cx, self.cy, z, feed=feed)
             inset = 0.0
+            lane_count = 0
             while inset <= min(half_w, half_l) + 1e-9:
+                lane_count += 1
                 x0, x1 = self.cx - half_w + inset, self.cx + half_w - inset
                 y0, y1 = self.cy - half_l + inset, self.cy + half_l - inset
                 for x, y in ((x1, y0), (x1, y1), (x0, y1), (x0, y0), (x1, y0)):
                     _move(tp, "feed", x, y, z, feed=feed)
                 inset += stepover
+            max_lanes = max(max_lanes, lane_count)
             _move(tp, "feed", self.cx, self.cy, z, feed=feed)
         _move(tp, "retract", self.cx, self.cy, tp.safe_z)
         if self.finish_op is not None:
             tp.metadata["finish_toolpath"] = self.finish_op.to_toolpath().to_dict()
-        return tp
+        return _attach_pass_plan(tp, _pass_plan(
+            strategy="rectangular_pocket",
+            tool=self.tool,
+            depth_levels=depth_levels,
+            lane_count=max_lanes,
+            pass_type="roughing",
+            rest_machining=self.finish_op is not None,
+            finish_passes=1 if self.finish_op is not None else 0,
+        ))
 
 
 # ---------------------------------------------------------------------------
@@ -620,10 +764,18 @@ class CircularPocketOp(MachiningOperation):
         if self.tool is None:
             # Prefer a tool no larger than ~80% of the pocket diameter
             tool_dia = self.diameter * 0.8
-            try:
-                self.tool = ToolCatalog.get_best_for("flat_endmill", tool_dia)
-            except ValueError:
-                self.tool = ToolSpec("flat_endmill", tool_dia)
+            fallback = ToolSpec("flat_endmill", tool_dia)
+            self.tool, self.tool_selection = _select_inventory_tool(
+                ToolRequirement(
+                    "flat_endmill",
+                    max_diameter_mm=tool_dia,
+                    min_flute_length_mm=self.depth,
+                    feature="circular_pocket",
+                    reason="largest available end mill below circular pocket diameter",
+                    prefer_largest=True,
+                ),
+                fallback,
+            )
 
         tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
         self.feeds_speeds = get_feeds_speeds(
@@ -654,18 +806,23 @@ class CircularPocketOp(MachiningOperation):
         }
 
     def to_toolpath(self) -> Toolpath:
-        stepdown = max(self.tool.diameter * 0.5, 0.5)
-        stepover = max(self.tool.diameter * 0.5, 0.1)
+        stepdown = _tool_stepdown(self.tool, 0.5, 0.5)
+        stepover = _tool_stepover(self.tool, 0.5, 0.1)
         radius = max(self.diameter / 2.0 - self.tool.radius, 0.0)
         tp = _new_toolpath(
             "circular_pocket",
             self.tool,
             self.feeds_speeds,
-            metadata={"pocket_diameter_mm": self.diameter},
+            metadata={
+                "pocket_diameter_mm": self.diameter,
+                "tool_selection": _tool_selection_dict(self.tool_selection),
+            },
         )
         feed = _feed_rate(self.feeds_speeds)
         _move(tp, "rapid", self.cx, self.cy, tp.safe_z)
-        for z in _depth_levels(self.depth, stepdown):
+        depth_levels = _depth_levels(self.depth, stepdown)
+        lane_count = max(1, math.ceil(radius / stepover)) if stepover else 1
+        for z in depth_levels:
             _move(tp, "plunge", self.cx, self.cy, z, feed=feed)
             r = min(stepover, radius)
             while r <= radius + 1e-9:
@@ -680,7 +837,13 @@ class CircularPocketOp(MachiningOperation):
                     _move(tp, "arc", x, y, z, feed=feed, arc_center=center, arc_direction="ccw")
                 r += stepover
         _move(tp, "retract", self.cx, self.cy, tp.safe_z)
-        return tp
+        return _attach_pass_plan(tp, _pass_plan(
+            strategy="circular_pocket",
+            tool=self.tool,
+            depth_levels=depth_levels,
+            lane_count=lane_count,
+            pass_type="roughing",
+        ))
 
 
 # ---------------------------------------------------------------------------
@@ -709,10 +872,16 @@ class SpotDrillOp(MachiningOperation):
         if self.tool is None:
             # Pick a spot drill whose diameter covers the hole
             spot_dia = self.hole_diameter + 2.0  # slightly larger
-            try:
-                self.tool = ToolCatalog.get_best_for("drill", spot_dia)
-            except ValueError:
-                self.tool = ToolSpec("drill", spot_dia, tip_angle=120.0)
+            fallback = ToolSpec("drill", spot_dia, tip_angle=120.0)
+            self.tool, self.tool_selection = _select_inventory_tool(
+                ToolRequirement(
+                    "drill",
+                    min_diameter_mm=spot_dia,
+                    feature="spot_drill",
+                    reason="spot drill diameter should cover the target hole",
+                ),
+                fallback,
+            )
 
         tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
         self.feeds_speeds = get_feeds_speeds(
@@ -788,10 +957,18 @@ class DrillOp(MachiningOperation):
 
     def __post_init__(self):
         if self.tool is None:
-            try:
-                self.tool = ToolCatalog.get_best_for("drill", self.diameter)
-            except ValueError:
-                self.tool = ToolSpec("drill", self.diameter, tip_angle=118.0)
+            fallback = ToolSpec("drill", self.diameter, tip_angle=118.0)
+            self.tool, self.tool_selection = _select_inventory_tool(
+                ToolRequirement(
+                    "drill",
+                    min_diameter_mm=self.diameter,
+                    max_diameter_mm=self.diameter,
+                    min_flute_length_mm=self.depth,
+                    feature="drill",
+                    reason="drill diameter must match requested hole diameter",
+                ),
+                fallback,
+            )
 
         tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
         self.feeds_speeds = get_feeds_speeds(
@@ -853,6 +1030,7 @@ class DrillOp(MachiningOperation):
             self.cy,
             self.depth,
             peck_step=(max(self.diameter, 1.0) if self.peck else None),
+            metadata={"tool_selection": _tool_selection_dict(self.tool_selection)},
         )
         if self.spot_op is not None:
             tp.metadata["spot_toolpath"] = self.spot_op.to_toolpath().to_dict()
@@ -1000,10 +1178,16 @@ class ChamferOp(MachiningOperation):
 
     def __post_init__(self):
         if self.tool is None:
-            try:
-                self.tool = ToolCatalog.get_best_for("chamfer", 6.0)
-            except ValueError:
-                self.tool = ToolSpec("chamfer", 6.0, tip_angle=90.0, tip_diameter=1.0)
+            fallback = ToolSpec("chamfer", 6.0, tip_angle=90.0, tip_diameter=1.0)
+            self.tool, self.tool_selection = _select_inventory_tool(
+                ToolRequirement(
+                    "chamfer",
+                    min_diameter_mm=6.0,
+                    feature="chamfer",
+                    reason="standard 90 degree chamfer tool for edge break",
+                ),
+                fallback,
+            )
 
         tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
         self.feeds_speeds = get_feeds_speeds(
@@ -1039,7 +1223,11 @@ class ChamferOp(MachiningOperation):
             "chamfer",
             self.tool,
             self.feeds_speeds,
-            metadata={"nominal_square_mm": span, "chamfer_width_mm": self.width},
+            metadata={
+                "nominal_square_mm": span,
+                "chamfer_width_mm": self.width,
+                "tool_selection": _tool_selection_dict(self.tool_selection),
+            },
         )
         feed = _feed_rate(self.feeds_speeds)
         x0, x1 = -span / 2.0 - offset, span / 2.0 + offset
@@ -1049,7 +1237,13 @@ class ChamferOp(MachiningOperation):
         for x, y in ((x1, y0), (x1, y1), (x0, y1), (x0, y0)):
             _move(tp, "feed", x, y, z, feed=feed)
         _move(tp, "retract", x0, y0, tp.safe_z)
-        return tp
+        return _attach_pass_plan(tp, _pass_plan(
+            strategy="chamfer",
+            tool=self.tool,
+            depth_levels=[z],
+            lane_count=4,
+            pass_type="finishing",
+        ))
 
 
 # ---------------------------------------------------------------------------
@@ -1076,10 +1270,18 @@ class ContourOp(MachiningOperation):
 
     def __post_init__(self):
         if self.tool is None:
-            try:
-                self.tool = ToolCatalog.get_best_for("flat_endmill", 10.0)
-            except ValueError:
-                self.tool = ToolSpec("flat_endmill", 10.0)
+            fallback = ToolSpec("flat_endmill", 10.0)
+            self.tool, self.tool_selection = _select_inventory_tool(
+                ToolRequirement(
+                    "flat_endmill",
+                    min_diameter_mm=6.0,
+                    min_flute_length_mm=self.depth,
+                    feature="contour",
+                    reason="rigid available end mill for profile contouring",
+                    prefer_largest=True,
+                ),
+                fallback,
+            )
 
         tool_type_fs = _resolve_fs_tool_type(self.tool.tool_type)
         self.feeds_speeds = get_feeds_speeds(
@@ -1115,18 +1317,29 @@ class ContourOp(MachiningOperation):
             "contour",
             self.tool,
             self.feeds_speeds,
-            metadata={"nominal_square_mm": span, "offset_mm": offset},
+            metadata={
+                "nominal_square_mm": span,
+                "offset_mm": offset,
+                "tool_selection": _tool_selection_dict(self.tool_selection),
+            },
         )
         feed = _feed_rate(self.feeds_speeds)
         x0, x1 = -span / 2.0 - offset, span / 2.0 + offset
         y0, y1 = -span / 2.0 - offset, span / 2.0 + offset
         _move(tp, "rapid", x0, y0, tp.safe_z)
-        for z in _depth_levels(self.depth, self.stepdown):
+        depth_levels = _depth_levels(self.depth, self.stepdown)
+        for z in depth_levels:
             _move(tp, "plunge", x0, y0, z, feed=feed)
             for x, y in ((x1, y0), (x1, y1), (x0, y1), (x0, y0)):
                 _move(tp, "feed", x, y, z, feed=feed)
         _move(tp, "retract", x0, y0, tp.safe_z)
-        return tp
+        return _attach_pass_plan(tp, _pass_plan(
+            strategy="contour",
+            tool=self.tool,
+            depth_levels=depth_levels,
+            lane_count=1,
+            pass_type="profiling",
+        ))
 
 
 # ---------------------------------------------------------------------------
@@ -1161,9 +1374,18 @@ class SlotOp(MachiningOperation):
 
     def __post_init__(self):
         if self.tool is None:
-            # Choose the best tool that still fits within the slot width.
-            # Prefer a tool close to 80% of the slot width, but never exceed it.
-            self.tool = _pick_slot_tool(self.width)
+            fallback = _pick_slot_tool(self.width)
+            self.tool, self.tool_selection = _select_inventory_tool(
+                ToolRequirement(
+                    "flat_endmill",
+                    max_diameter_mm=self.width,
+                    min_flute_length_mm=self.depth,
+                    feature="slot",
+                    reason="largest available end mill that fits slot width",
+                    prefer_largest=True,
+                ),
+                fallback,
+            )
 
         # Validate: tool must not exceed slot width
         if self.tool.diameter > self.width:
@@ -1211,26 +1433,18 @@ class SlotOp(MachiningOperation):
         }
 
     def to_toolpath(self) -> Toolpath:
-        stepdown = max(self.tool.diameter * 0.5, 0.5)
-        (x0, y0), (x1, y1) = _slot_endpoints(self.cx, self.cy, self.length, self.angle)
-        tp = _new_toolpath(
+        return _linear_slot_toolpath(
             "slot",
             self.tool,
             self.feeds_speeds,
-            metadata={"slot_length_mm": self.length, "slot_width_mm": self.width},
+            self.cx,
+            self.cy,
+            self.length,
+            self.width,
+            self.depth,
+            self.angle,
+            metadata={"tool_selection": _tool_selection_dict(self.tool_selection)},
         )
-        feed = _feed_rate(self.feeds_speeds)
-        _move(tp, "rapid", x0, y0, tp.safe_z)
-        direction = 1
-        for z in _depth_levels(self.depth, stepdown):
-            start = (x0, y0) if direction > 0 else (x1, y1)
-            end = (x1, y1) if direction > 0 else (x0, y0)
-            _move(tp, "plunge", start[0], start[1], z, feed=feed)
-            _move(tp, "feed", end[0], end[1], z, feed=feed)
-            direction *= -1
-        last_x, last_y, _ = tp.moves[-1].position
-        _move(tp, "retract", last_x, last_y, tp.safe_z)
-        return tp
 
 
 # =============================================================================

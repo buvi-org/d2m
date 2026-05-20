@@ -24,7 +24,7 @@ SubCAD is implemented as the current machining representation layer:
 - STEP/STL export.
 - Process-plan JSON export and summary.
 - Tool/material helpers.
-- Fixture and multi-setup metadata.
+- Fixture, tool assembly, and multi-setup metadata.
 - Integration bridge toward simulation tools.
 
 ### SubCAD Shop-Floor v1
@@ -60,6 +60,22 @@ The Phase 2 contract includes:
 
 Production postprocessing remains deferred. The preview adapter is a review aid only, not a controller-certified NC output.
 
+### Fixture And Tool Inventory v1
+
+Status: complete for the current prototype contract.
+
+SubCAD now treats shop-floor fixtures and tools as structured manufacturing intent instead of arbitrary viewer objects.
+
+The current contract includes:
+
+- Versioned fixture and tool catalog data.
+- Fixture semantics for dimensions, clamping zones, clearance zones, setup context, and visualization payloads.
+- Selected tool identity and tool assembly metadata, including holder/stickout/flute information where available.
+- Backward-compatible operation/process-plan fields for existing tests and downstream callers.
+- Browser visualization metadata for fixture bodies, clamp zones, setup context, selected tools, shank/holder geometry, stock states, and operation playback.
+
+This is still not production CAM. The catalogs and viewer provide reviewable intent and validation context; they do not certify that a real machine setup is safe.
+
 Current test status:
 
 | Test | Result | Notes |
@@ -68,6 +84,7 @@ Current test status:
 | `python test_fixturing_integration.py` | PASS, 19/19 | Fixture/setup metadata, flip setup, clearance warning path, JSON round trip, error handling. |
 | `python test_subcad_shopfloor_v1.py` | PASS | Acceptance coverage for the completed Shop-Floor v1 contract. |
 | `python test_subcad_phase2_toolpaths.py` | PASS | Acceptance coverage for completed Phase 2 toolpaths, preview-only G-code, validation, and estimation work. |
+| `python test_subcad_visualization.py` | PASS | Visualization package coverage, including current fixture/tool review metadata. |
 
 ### What SubCAD Can Do Now
 
@@ -78,9 +95,9 @@ SubCAD is now usable as the repository's subtractive machining representation an
 - Preserve neutral toolpaths with summaries for preview, validation, cycle-time estimation, and simulation handoff.
 - Render preview-only G-code from neutral motion intent while clearly deferring production controller-specific postprocessing.
 - Validate schema and authored toolpath issues before simulation or downstream CAM handoff.
-- Export static browser visualization packages for Three.js review of stock, target, toolpaths, comparison data, and diff markers.
+- Export static browser visualization packages for Three.js review of stock, target, toolpaths, selected tools/holders, fixtures, clamp zones, comparison data, and diff markers.
 
-SubCAD is still a prototype layer. It does not yet provide production-certified G-code, a complete upload-to-plan UI, or validated simulation/RL outcomes.
+SubCAD is still a prototype layer. It is best described as a programmable manufacturing-intent and validation layer, not a Fusion/SolidWorks CAM replacement. It does not yet provide production-certified G-code, industrial CAM strategy coverage, a complete upload-to-plan UI, or validated simulation/RL outcomes.
 
 ### Visualization Direction
 
@@ -91,9 +108,10 @@ This gives immediate interactive review without waiting for browser-side simulat
 - Stock and target STL display.
 - Neutral toolpath overlay.
 - Operation metadata and setup context.
+- Selected tool/holder and fixture/clamp-zone review.
 - Comparison JSON and overcut/undercut marker display.
 
-The longer-term visualization roadmap is operation-by-operation mesh snapshots, richer per-vertex heatmaps, live WebSocket streaming from Python simulation, then WebGPU material removal once the Python simulator is validated.
+The longer-term visualization roadmap is pass-level warning/clearance markers, richer per-vertex heatmaps, live WebSocket streaming from Python simulation, then WebGPU material removal once the Python simulator is validated.
 
 ### Agentic Translator
 
@@ -145,60 +163,102 @@ Verified follow-up tests:
 
 Simulation should now be described as a passing prototype path, not a production validator. The next work is validation quality: real target meshes, richer toolpaths, gouge/deviation accuracy, and representative performance.
 
-## Recommended Plan
+## Manufacturing Trust v1
 
-### 1. Harden Simulation Validation
+Status: initial implementation slice complete.
 
-Goal: move beyond “bridge tests pass” toward trustworthy simulation feedback.
+This phase moves SubCAD from structured manufacturing intent toward credible engineering validation. Correctness remains more important than adding broad new operation families.
 
-Acceptance criteria:
+### 1. Inventory-Aware Tool Planning
 
-- Use real target meshes instead of demo scaled-stock references for validation endpoints.
-- Compare simulated stock against target meshes with mesh/feature feedback.
-- Add gouge/deviation assertions to tests.
-- Prefer explicit neutral toolpaths from schema v1 and Phase 2 operations when present, with the existing generated simple toolpath path retained as a fallback for older operation dictionaries.
+Goal: choose from available catalog tools instead of inventing ideal cutters.
+
+Current coverage:
+
+- Operation/process-plan records include selected tool id, selected assembly, selection reason, rejected tools, required feature constraints, and warnings/errors when no available tool can satisfy the operation.
+- Core operations such as slots, pockets, circular pockets, drilling, facing, contouring, and chamfers use selected tool geometry and safe limits.
+- Missing or unsafe tools produce structured validation errors instead of fake-valid toolpaths.
+
+Next hardening:
+
+- Add shop-specific tool preference policy for machine pockets, material/coating, and inventory reservations.
+- Bring the same selection metadata depth to more Phase 2 special operations.
+
+### 2. Realistic Pass Planning
+
+Goal: make toolpaths and cycle time reflect actual tool choice.
+
+Current coverage:
+
+- Operations expose roughing, finishing, rest-machining, depth-level, stepover-lane, and per-pass timing metadata.
+- Slot and pocket toolpaths visibly change when a selected tool is smaller than the feature.
+- Estimated time is derived from generated passes and feed/plunge data.
+
+Next hardening:
+
+- Add more explicit rest-machining records when a second finishing tool is required.
+- Validate pass plans against representative shop limits instead of generic safe defaults.
+
+### 3. Fixture, Tool, And Holder Clearance
+
+Goal: detect obvious physical conflicts before simulation or CAM handoff.
+
+Current coverage:
+
+- Sample authored neutral toolpaths against clamp and clearance zones.
+- Check cutter, shank, and holder envelopes conservatively.
+- Return structured warnings/errors with operation number, tool id, fixture id, zone label, and clearance where available.
+- Show warnings in setup sheets and visualization metadata.
+
+Next hardening:
+
+- Extend sampled checks from clamp/clearance zones to simplified fixture-body and stock-envelope collision shapes.
+- Add visible marker labels and severity filtering in the viewer.
+
+### 4. Simulation And Comparison Reliability
+
+Goal: harden the now-passing simulation bridge into a useful validation loop.
+
+Current coverage:
+
+- Target-comparison tests cover direct Stock targets plus STEP-path acceptance instead of demo scaled-stock references.
+- Prefer explicit neutral toolpaths and selected tool assemblies during simulation, retaining generated simple toolpaths as fallback for legacy dictionaries.
+- Add known-good and known-bad cases for pocket depth, overcut slots, wrong drill locations, excessive tool diameter, and clamp/toolpath interference.
+- Report final volume, removed volume, overcut/undercut metrics, collision/clearance issues, per-operation timing, and pass/fail status.
 - Keep `python test_sim_bridge.py`, `python src\simulation\tri_dexel.py`, and `python -m src.simulation.material_removal` passing.
 
-### 2. Validate Mesh and Feature Comparison on Real Samples
+Next hardening:
+
+- Compare simulated stock against the target, not only final authored geometry.
+- Expand benchmark parts from small synthetic examples to real CadQuery/STEP samples.
+
+### 5. Visualization Review Upgrade
+
+Goal: make the browser viewer explain questionable plans, not only draw them.
+
+Current coverage:
+
+- Viewer shows selected tool id, holder id, pass number, operation time, total time, and warnings for the selected operation.
+- Toggles cover stock, fixture, clamp zones, toolpath, tool/holder, clearance markers, and comparison diff.
+- Visualization packages export pass-plan and clearance-marker data.
+
+## Following Plan After Manufacturing Trust v1
+
+### Validate Mesh and Feature Comparison on Real Samples
 
 Goal: ensure localized comparison feedback is accurate enough to guide the translator.
 
-Acceptance criteria:
-
-- Per-vertex/SDF feedback distinguishes overcut vs undercut on known fixtures.
-- Z-slice comparison identifies pocket-depth and through-hole mismatches.
-- Feature-aware comparison produces actionable feedback for holes, pockets, slots, and chamfers.
-- Translator history stores compact comparison output without overwhelming prompts.
-
-### 3. Run Live Translation Trials
+### Run Live Translation Trials
 
 Goal: measure whether the agentic loop can translate CadQuery samples into equivalent SubCAD programs.
 
-Acceptance criteria:
-
-- Run live translations on the exploration samples with an API key configured.
-- Record success rate, convergence iterations, failure categories, and token/cost profile.
-- Save successful CadQuery/SubCAD pairs for later training.
-- Do not claim translator success beyond the tested sample set.
-
-### 4. Build Dataset From Successful Translations
+### Build Dataset From Successful Translations
 
 Goal: create reliable training/evaluation pairs only after execution and comparison are trustworthy.
 
-Acceptance criteria:
+### Revisit ML Roadmap
 
-- Batch translation pipeline records source CadQuery, generated SubCAD, execution result, comparison metrics, and feedback.
-- Failed translations are retained with reason labels for improvement.
-- Dataset split separates training, validation, and hard negative cases.
-
-### 5. Revisit ML Roadmap
-
-Only after reliable execution/comparison data exists:
-
-- Train or fine-tune a code-generation/planning model.
-- Evaluate rule compliance and geometry fidelity separately.
-- Consider GNN feature recognition if it remains necessary for the product workflow.
-- Treat RL as late-stage research after simulation fidelity is validated.
+Only after reliable execution/comparison data exists, revisit fine-tuning, GNN feature recognition, and RL.
 
 ## Completed Near-Term Slice
 
@@ -223,10 +283,12 @@ Acceptance criteria met:
 | SubCAD API | Implemented and passing integration tests | Continue using as canonical subtractive representation. |
 | SubCAD Shop-Floor v1 | Complete | Maintain schema, neutral toolpaths, setup sheets, validation, and deferred production G-code contract. |
 | Phase 2 toolpaths | Complete | Maintain authored neutral paths, summaries, preview-only G-code adapter, malformed-path validation, and path-based estimates. |
+| Fixture/tool inventory v1 | Complete | Maintain structured catalogs, selected tool assemblies, fixture/clamp visualization, and browser review metadata. |
 | Agentic translator | Implemented; non-live tests pass | Run live trials after simulation/comparison validation. |
 | Mesh comparison | Implemented | Verify and tune; no need to reimplement first. |
 | Feature comparison | Implemented | Validate on known samples and feed into translator loop. |
-| Simulation bridge | Active next priority; prototype passing tests | Harden against representative target meshes, authored toolpaths, and gouge/deviation cases. |
+| Manufacturing Trust v1 | Active next priority | Add inventory-aware planning, realistic passes, fixture/tool-holder clearance, simulation comparison reliability, and warning-focused visualization. |
+| Simulation bridge | Prototype passing tests | Harden as part of Manufacturing Trust v1 against representative target meshes, authored toolpaths, and gouge/deviation cases. |
 | GNN feature recognition | Planned | Defer until subtractive workflow proves what features are needed. |
 | LLM fine-tuning | Planned | Defer until high-quality execution-scored pairs exist. |
 | Product UI | Planned/prototype pieces exist | Defer productization until backend semantics stabilize. |

@@ -33,6 +33,12 @@ def export_visualization_package(
     toolpath = _toolpath_payload(plan)
     toolpath_path = out / "toolpath.json"
     _write_json(toolpath_path, toolpath)
+    validation_issues = _validation_issue_payloads(stock, plan)
+    clearance_markers = _clearance_markers(
+        validation_issues,
+        plan,
+        z_offset=_stock_z_offset(plan),
+    )
 
     comparison = None
     target_path = None
@@ -120,9 +126,15 @@ def export_visualization_package(
                 "tool": op.get("tool"),
                 "tool_assembly": (op.get("tool") or {}).get("assembly"),
                 "toolpath_summary": op.get("toolpath_summary"),
+                "tool_selection": op.get("tool_selection"),
+                "pass_plan": op.get("pass_plan"),
+                "validation": _operation_validation(op, validation_issues),
+                "warnings": _operation_warnings(op, validation_issues),
             }
             for op in plan.get("operations", [])
         ],
+        "clearance_markers": clearance_markers,
+        "validation_issues": validation_issues,
         "fixtures": fixtures,
         "setups": plan.get("setups", {}),
         "assets": assets,
@@ -222,6 +234,10 @@ def _toolpath_payload(plan: dict) -> dict:
             "tool_assembly": (op.get("tool") or {}).get("assembly"),
             "tool_type": op.get("tool_type"),
             "tool_diameter_mm": op.get("tool_diameter_mm"),
+            "tool_selection": op.get("tool_selection"),
+            "pass_plan": op.get("pass_plan"),
+            "validation": op.get("validation_buckets"),
+            "warnings": op.get("validation_buckets", {}).get("warnings", []),
             "summary": summary,
             "moves": moves,
         })
@@ -270,6 +286,82 @@ def _fixture_payloads(stock: Any, plan: dict) -> list[dict]:
         payload = fixture.to_dict() if hasattr(fixture, "to_dict") else {}
     payload["setups"] = plan.get("setups", {})
     return [payload]
+
+
+def _validation_issue_payloads(stock: Any, plan: dict) -> list[dict]:
+    try:
+        report = stock.validate_shop_floor(structured=True)
+        issues = getattr(report, "issues", []) or []
+    except Exception:
+        return []
+
+    operations = plan.get("operations", [])
+    payloads = []
+    for issue in issues:
+        op_index = getattr(issue, "operation_index", None)
+        op = operations[op_index] if isinstance(op_index, int) and 0 <= op_index < len(operations) else {}
+        payloads.append({
+            "severity": getattr(issue, "severity", "warning"),
+            "code": getattr(issue, "code", "validation"),
+            "message": getattr(issue, "message", str(issue)),
+            "operation_index": op_index,
+            "sequence_number": op.get("sequence_number"),
+            "operation": getattr(issue, "operation", "") or op.get("operation"),
+            "context": getattr(issue, "context", {}),
+        })
+    return payloads
+
+
+def _operation_validation(op: dict, issues: list[dict]) -> dict:
+    selected = op.get("sequence_number")
+    related = [issue for issue in issues if issue.get("sequence_number") == selected]
+    return {
+        "errors": [issue for issue in related if issue.get("severity") == "error"],
+        "warnings": [issue for issue in related if issue.get("severity") != "error"],
+    }
+
+
+def _operation_warnings(op: dict, issues: list[dict]) -> list:
+    selected = op.get("sequence_number")
+    warnings = list((op.get("validation_buckets") or {}).get("warnings", []))
+    warnings.extend(issue for issue in issues if issue.get("sequence_number") == selected)
+    return warnings
+
+
+def _clearance_markers(issues: list[dict], plan: dict, *, z_offset: float) -> list[dict]:
+    markers = []
+    for issue in issues:
+        if not str(issue.get("code", "")).startswith("fixture_toolpath_clearance"):
+            continue
+        context = issue.get("context") or {}
+        point = context.get("point")
+        if not isinstance(point, list) or len(point) < 3:
+            continue
+        markers.append({
+            "marker_type": "collision" if issue.get("severity") == "error" else "clearance",
+            "severity": issue.get("severity", "warning"),
+            "position": [
+                _round_float(point[0]),
+                _round_float(point[1]),
+                _round_float(point[2] + z_offset),
+            ],
+            "sequence_number": issue.get("sequence_number"),
+            "operation": issue.get("operation"),
+            "message": issue.get("message"),
+            "code": issue.get("code"),
+            "fixture_id": context.get("fixture_id"),
+            "tool_id": context.get("tool_id"),
+            "zone": context.get("zone"),
+            "component": context.get("component"),
+            "clearance_mm": context.get("clearance_mm"),
+            "radius_mm": max(abs(float(context.get("clearance_mm", 0.0) or 0.0)), 1.2),
+        })
+    return markers
+
+
+def _stock_z_offset(plan: dict) -> float:
+    stock = plan.get("stock_dimensions") or {}
+    return float(stock.get("height") or stock.get("z") or 0.0) / 2.0
 
 
 def _export_target_mesh(target: Any, path: Path) -> None:

@@ -1,6 +1,7 @@
 """SubCAD validation -- pre-operation feasibility and DFM checks."""
 
 from __future__ import annotations
+import math
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -633,6 +634,236 @@ def _zone_contains(zone: dict, x: float, y: float) -> bool:
     )
 
 
+def _zone_bounds(zone: dict) -> Optional[dict[str, float]]:
+    keys = ("x_min", "x_max", "y_min", "y_max", "z_min", "z_max")
+    values = {key: _as_float(zone.get(key)) for key in keys}
+    if any(value is None for value in values.values()):
+        return None
+    x_min, x_max = sorted((values["x_min"], values["x_max"]))
+    y_min, y_max = sorted((values["y_min"], values["y_max"]))
+    z_min, z_max = sorted((values["z_min"], values["z_max"]))
+    return {
+        "x_min": x_min,
+        "x_max": x_max,
+        "y_min": y_min,
+        "y_max": y_max,
+        "z_min": z_min,
+        "z_max": z_max,
+    }
+
+
+def _distance_to_rect_xy(bounds: dict[str, float], x: float, y: float) -> float:
+    dx = max(bounds["x_min"] - x, 0.0, x - bounds["x_max"])
+    dy = max(bounds["y_min"] - y, 0.0, y - bounds["y_max"])
+    return (dx * dx + dy * dy) ** 0.5
+
+
+def _intervals_overlap(a_min: float, a_max: float, b_min: float, b_max: float) -> bool:
+    return max(a_min, b_min) <= min(a_max, b_max)
+
+
+def _tool_id(op: dict) -> str:
+    tool = op.get("tool") if isinstance(op.get("tool"), dict) else {}
+    assembly = tool.get("assembly") if isinstance(tool.get("assembly"), dict) else {}
+    for source in (assembly, tool, op):
+        for key in ("tool_id", "catalog_id", "selected_tool_id", "tool_number", "label"):
+            value = source.get(key) if isinstance(source, dict) else None
+            if value not in (None, ""):
+                return str(value)
+    return ""
+
+
+def _tool_assembly(op: dict) -> dict:
+    tool = op.get("tool") if isinstance(op.get("tool"), dict) else {}
+    assembly = tool.get("assembly") if isinstance(tool.get("assembly"), dict) else {}
+    return {
+        "tool_id": _tool_id(op),
+        "cutter_diameter_mm": _as_float(
+            assembly.get("cutter_diameter_mm",
+                         tool.get("diameter_mm", tool.get("tool_diameter_mm", op.get("tool_diameter_mm")))),
+            0.0,
+        ) or 0.0,
+        "flute_length_mm": _as_float(
+            assembly.get("flute_length_mm",
+                         tool.get("flute_length_mm", op.get("flute_length_mm"))),
+            0.0,
+        ) or 0.0,
+        "shank_diameter_mm": _as_float(
+            assembly.get("shank_diameter_mm",
+                         tool.get("shank_diameter_mm", op.get("shank_diameter_mm"))),
+            0.0,
+        ) or 0.0,
+        "stickout_mm": _as_float(
+            assembly.get("stickout_mm", tool.get("stickout_mm", op.get("stickout_mm"))),
+            0.0,
+        ) or 0.0,
+        "holder_id": str(assembly.get("holder_id", tool.get("holder_id", ""))),
+        "holder_diameter_mm": _as_float(
+            assembly.get("holder_diameter_mm", tool.get("holder_diameter_mm")),
+            0.0,
+        ) or 0.0,
+        "holder_length_mm": _as_float(
+            assembly.get("holder_length_mm", tool.get("holder_length_mm")),
+            0.0,
+        ) or 0.0,
+    }
+
+
+def _tool_envelopes(op: dict, *, include_cutter: bool = True) -> list[dict[str, Any]]:
+    assembly = _tool_assembly(op)
+    cutter_dia = assembly["cutter_diameter_mm"]
+    flute = assembly["flute_length_mm"]
+    shank_dia = assembly["shank_diameter_mm"] or cutter_dia
+    stickout = assembly["stickout_mm"] or flute
+    holder_dia = assembly["holder_diameter_mm"]
+    holder_len = assembly["holder_length_mm"]
+
+    envelopes: list[dict[str, Any]] = []
+    if include_cutter and cutter_dia > 0:
+        envelopes.append({
+            "component": "cutter",
+            "radius_mm": cutter_dia / 2.0,
+            "z_start_mm": 0.0,
+            "z_end_mm": max(flute, 0.0),
+        })
+    elif include_cutter:
+        envelopes.append({
+            "component": "centerline",
+            "radius_mm": 0.0,
+            "z_start_mm": 0.0,
+            "z_end_mm": 0.0,
+        })
+    if shank_dia > 0 and stickout > flute:
+        envelopes.append({
+            "component": "shank",
+            "radius_mm": shank_dia / 2.0,
+            "z_start_mm": max(flute, 0.0),
+            "z_end_mm": stickout,
+        })
+    if holder_dia > 0 and holder_len > 0:
+        envelopes.append({
+            "component": "holder",
+            "radius_mm": holder_dia / 2.0,
+            "z_start_mm": max(stickout, flute, 0.0),
+            "z_end_mm": max(stickout, flute, 0.0) + holder_len,
+        })
+    return envelopes
+
+
+def _sample_toolpath_points(points: list[tuple[float, float, float]],
+                            max_step_mm: float = 2.0) -> list[tuple[float, float, float]]:
+    if len(points) < 2:
+        return points
+
+    samples: list[tuple[float, float, float]] = []
+    for start, end in zip(points, points[1:]):
+        sx, sy, sz = start
+        ex, ey, ez = end
+        length = ((ex - sx) ** 2 + (ey - sy) ** 2 + (ez - sz) ** 2) ** 0.5
+        steps = max(1, math.ceil(length / max(max_step_mm, 0.1)))
+        for step in range(steps):
+            t = step / steps
+            samples.append((
+                sx + (ex - sx) * t,
+                sy + (ey - sy) * t,
+                sz + (ez - sz) * t,
+            ))
+    samples.append(points[-1])
+    return samples
+
+
+def _check_tool_envelope_against_zones(
+    op: dict,
+    op_index: int,
+    zones: list[dict],
+    *,
+    zone_type: str,
+    code: str,
+    fixture_id: str,
+    include_cutter: bool,
+) -> list[ValidationIssue]:
+    records = _toolpath_records(op.get("toolpath"))
+    points = [p for p in (_toolpath_xyz(record) for record in records or []) if p is not None]
+    if not points:
+        return []
+
+    tool_id = _tool_id(op)
+    samples = _sample_toolpath_points(points)
+    envelopes = _tool_envelopes(op, include_cutter=include_cutter)
+    if not envelopes:
+        return []
+
+    issues: list[ValidationIssue] = []
+    emitted: set[tuple[str, str]] = set()
+    for zone in zones:
+        if not isinstance(zone, dict):
+            continue
+        bounds = _zone_bounds(zone)
+        if bounds is None:
+            continue
+        label = str(zone.get("label") or zone_type)
+        margin = _as_float(zone.get("margin_mm"), 0.0) or 0.0
+        severity = str(zone.get("severity", "warning")).lower()
+        if severity not in ("warning", "error"):
+            severity = "warning"
+
+        best_by_component: dict[str, dict[str, Any]] = {}
+        for x, y, tip_z in samples:
+            for envelope in envelopes:
+                component = envelope["component"]
+                component_z_min = tip_z + envelope["z_start_mm"]
+                component_z_max = tip_z + envelope["z_end_mm"]
+                if not _intervals_overlap(
+                    component_z_min, component_z_max, bounds["z_min"], bounds["z_max"]
+                ):
+                    continue
+                radius = envelope["radius_mm"]
+                clearance = _distance_to_rect_xy(bounds, x, y) - radius - margin
+                if clearance > 0.0:
+                    continue
+                previous = best_by_component.get(component)
+                if previous is None or clearance < previous["clearance_mm"]:
+                    best_by_component[component] = {
+                        "x": x,
+                        "y": y,
+                        "z": tip_z,
+                        "clearance_mm": clearance,
+                        "radius_mm": radius,
+                        "component_z_min": component_z_min,
+                        "component_z_max": component_z_max,
+                    }
+
+        for component, hit in best_by_component.items():
+            key = (label, component)
+            if key in emitted:
+                continue
+            emitted.add(key)
+            issues.append(_issue(
+                severity,
+                code,
+                f"{_op_name(op) or 'operation'} at position {op_index} has "
+                f"{component} envelope within {abs(hit['clearance_mm']):g}mm of "
+                f"{zone_type} '{label}' using tool '{tool_id or 'unknown'}'.",
+                op_index,
+                op,
+                fixture_id=fixture_id,
+                tool_id=tool_id or None,
+                zone=label,
+                zone_type=zone_type,
+                component=component,
+                clearance_mm=round(hit["clearance_mm"], 6),
+                envelope_radius_mm=hit["radius_mm"],
+                point=[round(hit["x"], 6), round(hit["y"], 6), round(hit["z"], 6)],
+                component_z_range_mm=[
+                    round(hit["component_z_min"], 6),
+                    round(hit["component_z_max"], 6),
+                ],
+                zone_bounds=bounds,
+            ))
+
+    return issues
+
+
 def _check_fixture_clearance(process_plan_dict: dict) -> list[ValidationIssue]:
     fixture = process_plan_dict.get("fixture")
     setups = process_plan_dict.get("setups") or {}
@@ -641,6 +872,8 @@ def _check_fixture_clearance(process_plan_dict: dict) -> list[ValidationIssue]:
 
     issues: list[ValidationIssue] = []
     fixture_zones = fixture.get("clamping_zones", []) if isinstance(fixture, dict) else []
+    fixture_clearance_zones = fixture.get("clearance_zones", []) if isinstance(fixture, dict) else []
+    fixture_id = str(fixture.get("name") or fixture.get("id") or "") if isinstance(fixture, dict) else ""
     stock_dims = process_plan_dict.get("stock_dimensions") or {}
     stock_length = _as_float(stock_dims.get("length"))
     stock_width = _as_float(stock_dims.get("width"))
@@ -667,8 +900,11 @@ def _check_fixture_clearance(process_plan_dict: dict) -> list[ValidationIssue]:
         zones = fixture_zones
         if isinstance(setup, dict) and setup.get("clamping_zones"):
             zones = setup.get("clamping_zones", zones)
+        clearance_zones = fixture_clearance_zones
+        if isinstance(setup, dict) and setup.get("clearance_zones"):
+            clearance_zones = setup.get("clearance_zones", clearance_zones)
         if not zones:
-            continue
+            zones = []
 
         op_type = _op_name(op)
         pos = op.get("position")
@@ -686,22 +922,24 @@ def _check_fixture_clearance(process_plan_dict: dict) -> list[ValidationIssue]:
                             i, op, zone=label, x=x, y=y,
                         ))
 
-        records = _toolpath_records(op.get("toolpath"))
-        points = [p for p in (_toolpath_xyz(record) for record in records or []) if p is not None]
-        for x, y, _z in points:
-            for zone in zones:
-                if isinstance(zone, dict) and _zone_contains(zone, x, y):
-                    label = zone.get("label", "clamping zone")
-                    issues.append(_issue(
-                        "warning", "fixture_toolpath_clearance",
-                        f"{op_type or 'operation'} at position {i} has authored "
-                        f"toolpath through fixture clamping zone '{label}'.",
-                        i, op, zone=label, x=x, y=y,
-                    ))
-                    break
-            else:
-                continue
-            break
+        issues.extend(_check_tool_envelope_against_zones(
+            op,
+            i,
+            zones,
+            zone_type="clamping zone",
+            code="fixture_toolpath_clearance",
+            fixture_id=fixture_id,
+            include_cutter=True,
+        ))
+        issues.extend(_check_tool_envelope_against_zones(
+            op,
+            i,
+            clearance_zones,
+            zone_type="clearance zone",
+            code="fixture_toolpath_clearance_zone",
+            fixture_id=fixture_id,
+            include_cutter=False,
+        ))
 
         if op_type in ("face_mill", "contour"):
             issues.append(_issue(
@@ -749,6 +987,41 @@ def _check_plan_metadata(process_plan_dict: dict) -> list[ValidationIssue]:
     return issues
 
 
+def _check_tool_selection(operations: list[dict]) -> list[ValidationIssue]:
+    """Surface inventory-selection failures from operation records."""
+    issues: list[ValidationIssue] = []
+    for i, op in enumerate(operations):
+        selection = op.get("tool_selection")
+        if not isinstance(selection, dict):
+            selection = (op.get("tool") or {}).get("selection") if isinstance(op.get("tool"), dict) else None
+        if not isinstance(selection, dict):
+            continue
+
+        requirement = selection.get("requirement") if isinstance(selection.get("requirement"), dict) else {}
+        for message in selection.get("errors") or []:
+            issues.append(_issue(
+                "error",
+                "tool_selection_unavailable",
+                f"{_op_name(op) or 'operation'} at position {i} has no safe inventory tool: {message}",
+                i,
+                op,
+                selected_tool_id=selection.get("selected_tool_id"),
+                requirement=requirement,
+                rejected_tools=selection.get("rejected_tools", []),
+            ))
+        for message in selection.get("warnings") or []:
+            issues.append(_issue(
+                "warning",
+                "tool_selection_warning",
+                f"{_op_name(op) or 'operation'} at position {i}: {message}",
+                i,
+                op,
+                selected_tool_id=selection.get("selected_tool_id"),
+                requirement=requirement,
+            ))
+    return issues
+
+
 def validate_all(process_plan_dict: dict, stock_dims: dict,
                  tool_specs: Optional[list] = None,
                  structured: bool = False):
@@ -764,6 +1037,7 @@ def validate_all(process_plan_dict: dict, stock_dims: dict,
 
     report.extend(_check_plan_metadata(process_plan_dict))
     report.extend(_check_operation_order(ops))
+    report.extend(_check_tool_selection(ops))
     report.extend(_check_tool_reach_and_geometry(ops, merged_stock, tool_specs))
     report.extend(_check_toolpaths(ops, merged_stock))
     report.extend(_check_setup_accessibility(process_plan_dict))

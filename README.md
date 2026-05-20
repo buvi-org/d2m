@@ -19,7 +19,7 @@ Initial implemented scope is concentrated on **CNC/subtractive manufacturing**. 
 Implemented and tested:
 
 - Phase 1 synthetic dataset generation: 9,994 labeled parts are available in `synthetic_10k_samples.7z`.
-- SubCAD fluent API for subtractive machining operations, STEP/STL export, process-plan JSON, fixtures, and multi-setup metadata.
+- SubCAD fluent API for subtractive machining operations, STEP/STL export, process-plan JSON, fixtures, tool assemblies, and multi-setup metadata.
 - Agentic CadQuery -> SubCAD translator infrastructure, including LLM provider abstraction, prompt builders, convergence controller, REPL execution, geometry comparison, and optional localized/feature-aware feedback paths.
 - Mesh comparison utilities for per-vertex signed deviation and Z-slice feedback.
 
@@ -37,11 +37,18 @@ SubCAD Shop-Floor v1 is now treated as complete for the current prototype contra
 - A preview-only G-code adapter renders controller-neutral intent for review and warns that production postprocessing remains deferred.
 - Validation and time estimation use authored toolpath data, including malformed-path checks and path-length-based cycle-time estimates.
 
+**Fixture and tool inventory v1 is now complete for the current prototype contract**:
+
+- Versioned catalog files describe shop-floor fixtures and available tools as structured data, rather than treating them as arbitrary generated objects.
+- Fixtures now carry semantic dimensions, clamping/clearance zones, setup context, and visualization payloads for the browser review workflow.
+- Tools now preserve selected catalog identity, tool assembly metadata, holder/stickout/flute data, and backward-compatible flat fields in process plans.
+- The browser viewer can show fixture bodies, clamp zones, setup context, neutral toolpaths, and cutter/shank/holder geometry for review.
+
 Recently fixed blocker:
 
 - The previous tri-dexel zero-volume failure has been fixed. `test_sim_bridge.py` now verifies nonzero stock volume, modified columns, and positive material removal. Simulation is still a prototype, but the core volume/material-removal path is no longer blocked.
 
-The active next priority is **Simulation Reliability**: harden the now-passing simulation path against representative target meshes, authored neutral toolpaths, gouge/deviation checks, and realistic machining cases.
+**Manufacturing Trust v1 has its first implementation slice in place**: inventory-aware tool selection, realistic pass planning for core operations, sampled fixture/tool-holder clearance, benchmark comparison cases, and review visualization that exposes tools, holders, passes, timing, and warnings.
 
 ## What SubCAD Can Do Now
 
@@ -49,11 +56,12 @@ SubCAD can currently be used as a CadQuery-backed subtractive machining represen
 
 - Author machining programs with the fluent `Stock` API, including core operations, Phase 2 operations, fixtures, setups, work offsets, and tool/material metadata.
 - Export STEP/STL geometry plus JSON process plans using the `subcad.shop_floor.v1` schema.
-- Preserve neutral toolpaths for shop-floor review, estimation, validation, preview-only G-code rendering, and simulation handoff.
-- Export Markdown/JSON setup sheets with stock, material, tools, operations, setup/work-offset data, validation messages, and deferred-production-G-code notes.
+- Preserve neutral toolpaths for shop-floor review, estimation, validation, preview-only G-code rendering, browser playback, and simulation handoff.
+- Export Markdown/JSON setup sheets with stock, material, selected tools, tool assemblies, fixtures, operations, setup/work-offset data, validation messages, and deferred-production-G-code notes.
+- Review fixture bodies, clamp zones, selected tools, holder/cutter assemblies, operation timelines, and stock states in the browser visualization workflow.
 - Run local validation and integration tests for SubCAD, fixturing, shop-floor schema v1, Phase 2 toolpaths, translator infrastructure, and the simulation bridge.
 
-SubCAD is not yet a production CAM/postprocessor. Controller-certified G-code, a full upload-to-plan product UI, live translation success claims, and validated simulation/RL workflows remain future work.
+SubCAD is not yet a production CAM/postprocessor. Controller-certified G-code, industrial CAM strategy coverage, a full upload-to-plan product UI, live translation success claims, and validated simulation/RL workflows remain future work.
 
 ### Visualization workflow
 
@@ -80,7 +88,7 @@ python -m http.server 8080
 
 Open `http://localhost:8080/visualization.html?session=sessions/latest/scene.json`.
 
-The viewer loads stock/target STL assets, neutral toolpaths, comparison JSON, and diff markers. WebGPU remains the longer-term path for browser-side material removal; the current reliable path is Python export plus Three.js review.
+The viewer loads stock/target STL assets, neutral toolpaths, selected tool/holder metadata, fixture/clamp-zone data, comparison JSON, and diff markers. WebGPU remains the longer-term path for browser-side material removal; the current reliable path is Python export plus Three.js review.
 
 Recent local test status:
 
@@ -92,6 +100,7 @@ Recent local test status:
 | `python test_sim_bridge.py` | PASS, 51/51 |
 | `python test_subcad_shopfloor_v1.py` | PASS. Acceptance test for completed SubCAD Shop-Floor v1 contract. |
 | `python test_subcad_phase2_toolpaths.py` | PASS. Acceptance test for completed Phase 2 toolpaths, preview-only G-code adapter, validation, and estimation. |
+| `python test_subcad_visualization.py` | PASS. Browser visualization package coverage, including current fixture/tool review metadata. |
 
 ## Architecture
 
@@ -117,13 +126,13 @@ See [docs/architecture.md](docs/architecture.md) for full technical architecture
 
 | Layer | Technology |
 |-------|-----------|
-| CAD/SubCAD Geometry | CadQuery-backed SubCAD operations, STEP/STL export, shop-floor schema v1 in progress |
+| CAD/SubCAD Geometry | CadQuery-backed SubCAD operations, STEP/STL export, shop-floor schema v1, neutral toolpaths, fixture/tool catalogs |
 | CAD Parsing | pythonOCC / CadQuery |
 | Feature Recognition | Planned: PyTorch Geometric (GNN / GAT) |
 | Knowledge Graph | Neo4j + custom Python rule engine |
 | LLM Planning | Agentic translator scaffolding; fine-tuning is planned |
 | Simulation | Tri-dexel/five-axis prototype; core volume/material-removal bridge tests now pass; neutral-toolpath preference/fallback is part of Shop-Floor v1 |
-| UI | Browser simulation prototype under `web/`; product UI is planned |
+| UI | Browser review prototype under `web/` for stock, target, toolpaths, tools/holders, fixtures, clamp zones, and operation playback; product UI is planned |
 | Deployment | Cloud GPU (Vast.ai / RunPod for training), Render / Hugging Face Spaces for hosting |
 
 [see full architecture documentation](docs/architecture.md) with more details.
@@ -139,7 +148,8 @@ Phased solo build using AI-assisted development (Claude Code, Cursor):
 | **2**: Feature Recognition / Translation | Week 3-5 | In progress — translator and comparison utilities exist; GNN feature recognition remains planned. | 8,000-15,000 |
 | **2.5**: SubCAD Shop-Floor v1 | Complete | Schema v1, neutral toolpaths, setup-sheet export, validation buckets, and deferred production G-code contract. | TBD |
 | **2.6**: Phase 2 Toolpaths | ✅ Complete | Non-empty neutral paths for Phase 2 ops, plan summaries, preview-only G-code adapter, malformed-path validation, and authored-path estimation. | TBD |
-| **3**: Simulation Reliability | Active next priority | Harden the now-passing tri-dexel/material-removal bridge with real target meshes, deviation/gouge checks, and representative toolpaths. | TBD |
+| **2.7**: Fixture + Tool Inventory v1 | ✅ Complete | Structured fixture/tool catalogs, selected tool assemblies, fixture/clamp visualization, and browser review metadata. | TBD |
+| **3**: Manufacturing Trust v1 | Initial slice complete | Inventory-aware tool planning, realistic pass plans, sampled fixture/tool-holder clearance, stronger simulation comparison tests, and warning-focused visualization. | TBD |
 | **4**: LLM Fine-Tuning | Planned | Fine-tune/evaluate planning or code-generation model after reliable translated pairs and scoring. | 3,000-8,000 |
 | **5**: Product Integration + UI | Planned | Full upload → plan → validation workflow and production UI. | 5,000-10,000 |
 | **6**: Simulation + RL | Aspirational | RL loop after simulator is reliable and validated against real outcomes. | 15,000-40,000 |
@@ -195,19 +205,22 @@ python test_subcad_shopfloor_v1.py
 
 # Phase 2 toolpath acceptance test
 python test_subcad_phase2_toolpaths.py
+
+# Visualization package coverage
+python test_subcad_visualization.py
 ```
 
 ## Status
 
-**Completed** — Phase 1 synthetic dataset, SubCAD operation model, process-plan/export basics, fixture/setup metadata, SubCAD Shop-Floor v1, Phase 2 neutral toolpaths, preview-only G-code adapter, authored-path validation/estimation, and non-live agentic translator tests.
+**Completed** — Phase 1 synthetic dataset, SubCAD operation model, process-plan/export basics, fixture/setup metadata, SubCAD Shop-Floor v1, Phase 2 neutral toolpaths, fixture/tool inventory v1, browser fixture/tool review metadata, preview-only G-code adapter, authored-path validation/estimation, and non-live agentic translator tests.
 
-**Active next priority** — Simulation reliability hardening with representative target meshes, authored neutral toolpaths, gouge/deviation checks, and performance/accuracy validation.
+**Current hardening priority** — Manufacturing Trust v1 follow-through: broaden inventory-aware planning to more operations, strengthen fixture-body/stock-envelope clearance, and validate simulation/comparison on larger real part examples.
 
 **In progress / prototype** — Agentic CadQuery -> SubCAD translation, localized/feature-aware comparison validation, and simulation feedback quality.
 
 **Recently fixed** — Simulation bridge zero-volume failure. Core dexel volume and material-removal tests now pass, but simulation/RL claims should still be treated as roadmap until validated on representative real workflows.
 
-**Planned** — Production controller-specific G-code postprocessing, GNN feature recognition, LLM fine-tuning, production UI, validated simulation feedback loop, and RL.
+**Planned** — Production controller-specific G-code postprocessing, GNN feature recognition, LLM fine-tuning, production UI, fully validated simulation feedback loop, and RL.
 
 ## License
 

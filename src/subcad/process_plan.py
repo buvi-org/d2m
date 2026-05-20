@@ -243,10 +243,19 @@ def normalize_operation(op_dict: dict, sequence_number: int) -> dict:
         summary = _toolpath_summary(op.get("toolpath"))
         if summary is not None:
             op["toolpath_summary"] = summary
+    if "pass_plan" not in op and isinstance(op.get("toolpath"), dict):
+        metadata = op["toolpath"].get("metadata")
+        if isinstance(metadata, dict) and isinstance(metadata.get("pass_plan"), dict):
+            op["pass_plan"] = metadata["pass_plan"]
+    if "tool_selection" not in op and isinstance(op.get("toolpath"), dict):
+        metadata = op["toolpath"].get("metadata")
+        if isinstance(metadata, dict) and isinstance(metadata.get("tool_selection"), dict):
+            op["tool_selection"] = metadata["tool_selection"]
 
     buckets = _empty_validation_buckets()
     _merge_validation_buckets(buckets, op.get("validation"))
     _merge_validation_buckets(buckets, op.get("validation_buckets"))
+    _merge_validation_buckets(buckets, op.get("tool_selection"))
     _append_bucket(buckets, "notes", op.get("notes"))
     op["validation_buckets"] = buckets
     return op
@@ -486,6 +495,8 @@ class ProcessPlan:
                 "tool": op.get("tool", _tool_metadata(op)),
                 "feeds_speeds": op.get("feeds_speeds"),
                 "toolpath_summary": op.get("toolpath_summary"),
+                "pass_plan": op.get("pass_plan"),
+                "tool_selection": op.get("tool_selection"),
                 "notes": op.get("notes", ""),
                 "validation_buckets": op.get("validation_buckets", _empty_validation_buckets()),
             }
@@ -545,6 +556,11 @@ class ProcessPlan:
                 for op in ops:
                     tool = op.get("tool") or {}
                     detail = f"{op['sequence_number']}. {op['operation']} - {tool.get('label', '?')}"
+                    pass_plan = op.get("pass_plan") or {}
+                    if pass_plan.get("total_passes"):
+                        detail += f" - {pass_plan.get('total_passes')} passes"
+                    if pass_plan.get("estimated_time_min") is not None:
+                        detail += f" - {pass_plan.get('estimated_time_min')} min"
                     if op.get("face_selector"):
                         detail += f" - face {op['face_selector']}"
                     if op.get("notes"):
