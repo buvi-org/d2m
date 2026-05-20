@@ -149,16 +149,36 @@ check("9+ ops (4 drills + pocket + face + possible spot/finish)", multi_plan["to
 check("volume decreased", multi.volume > 0)
 print()
 
-# 9. Plan summary
-print("9. Plan summary ...")
+# 9. Coordinate stability after prior cuts
+print("9. Coordinate stability after prior cuts ...")
+slot_part = (Stock.rectangular(90, 55, 18)
+    .face_mill(depth=1.0)
+    .pocket(width=22, length=34, depth=5, cx=-12, cy=0)
+    .circular_pocket(diameter=14, depth=4, cx=22, cy=0)
+    .slot(length=42, width=8, depth=6, cx=0, cy=16)
+)
+slot_floor = None
+for face in slot_part._shape.val().Faces():
+    bb = face.BoundingBox()
+    if abs(bb.zmin - 2.0) < 0.01 and abs(bb.zmax - 2.0) < 0.01 and bb.ymin > 8:
+        slot_floor = bb
+        break
+check("slot floor found", slot_floor is not None)
+if slot_floor is not None:
+    check("slot centered on requested X", abs((slot_floor.xmin + slot_floor.xmax) / 2.0) < 0.01)
+    check("slot centered on requested Y", abs((slot_floor.ymin + slot_floor.ymax) / 2.0 - 16.0) < 0.01)
+print()
+
+# 10. Plan summary
+print("10. Plan summary ...")
 summary = part.plan_summary()
 check("summary is string", isinstance(summary, str))
 check("summary mentions material", "aluminum_6061" in summary or "6061" in summary)
 print(summary)
 print()
 
-# 10. from_step roundtrip
-print("10. from_step roundtrip ...")
+# 11. from_step roundtrip
+print("11. from_step roundtrip ...")
 rt = Stock.from_step(step_path, material="aluminum_6061", stock_oversize=5.0)
 check("from_step returns Stock", isinstance(rt, Stock))
 check("from_step has 0 ops", rt.process_plan()["total_operations"] == 0)

@@ -62,11 +62,19 @@ def create_cylindrical_stock(diameter: float, height: float) -> "cq.Workplane":
 # =============================================================================
 
 def _to_face_coords(shape: "cq.Workplane", face_selector: str, cx: float, cy: float) -> tuple:
-    """Pass-through: cx, cy are face-relative (0,0 = face center).
+    """Convert SubCAD stock-centered coordinates to CadQuery face offsets.
 
-    SubCAD uses CadQuery's native convention where .center(cx, cy) positions
-    relative to the face center.  Positive cx = right, positive cy = up.
+    CadQuery's `.faces(...).workplane()` places the local origin from the
+    selected face's workplane.  After previous cuts, that origin can drift
+    away from the original stock origin, so subtract it to keep SubCAD
+    operation coordinates stable in the stock/global XY frame.
     """
+    if face_selector in {">Z", "<Z"}:
+        try:
+            origin = shape.faces(face_selector).workplane().plane.origin
+            return cx - origin.x, cy - origin.y
+        except Exception:
+            pass
     return cx, cy
 
 
