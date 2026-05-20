@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     'show-toolpath',
     'show-diff',
     'fit-view',
+    'timeline-prev',
+    'timeline-next',
+    'timeline-range',
+    'timeline-label',
   ]) {
     els[id] = document.getElementById(id);
   }
@@ -42,13 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
       viewer[els['show-diff'].checked ? 'addDiffMarkers' : 'clearGougeMarkers'](window.__currentDiffRegions);
     }
   });
-  els.operations.addEventListener('click', event => {
+  els.operations.addEventListener('click', async event => {
     const item = event.target.closest('.op-item');
     if (!item) return;
     window.__selectedToolpathOperation = item.dataset.sequence || 'all';
+    await selectTimelineForOperation(window.__selectedToolpathOperation);
     renderSelectedToolpath();
     updateOperationSelection();
   });
+  els['timeline-prev'].addEventListener('click', () => selectTimelineState(Number(els['timeline-range'].value) - 1));
+  els['timeline-next'].addEventListener('click', () => selectTimelineState(Number(els['timeline-range'].value) + 1));
+  els['timeline-range'].addEventListener('input', event => selectTimelineState(Number(event.target.value)));
   els['fit-view'].addEventListener('click', () => viewer.fitView());
 
   loadSession(session);
@@ -62,12 +70,17 @@ async function loadSession(scenePath) {
     const scene = await fetchJson(sceneUrl.href);
 
     viewer.clearScene();
+    window.__sceneBaseUrl = baseUrl;
+    window.__stockStates = scene.assets?.stock_states || [];
+    window.__currentStateIndex = Math.max(0, window.__stockStates.length - 1);
     window.__currentToolpath = [];
     window.__currentToolpathMoves = [];
     window.__currentDiffRegions = [];
     window.__selectedToolpathOperation = 'all';
 
-    if (scene.assets?.stock_mesh) {
+    if (window.__stockStates.length) {
+      await loadTimelineState(window.__currentStateIndex);
+    } else if (scene.assets?.stock_mesh) {
       await viewer.loadStockSTL(await fetchArrayBuffer(assetUrl(scene.assets.stock_mesh, baseUrl)));
     } else {
       viewer.loadDefaultCube();
@@ -104,9 +117,11 @@ async function loadSession(scenePath) {
     }
 
     renderOperations(scene.operations || []);
+    updateTimelineControls();
     setStatus(
       `Loaded ${scene.title || 'SubCAD visualization session'}; `
       + `${window.__currentToolpath.length} toolpath points; `
+      + `${window.__stockStates.length} stock states; `
       + `${window.__currentDiffRegions.length} diff regions`
     );
   } catch (err) {
@@ -199,6 +214,10 @@ function renderSelectedToolpath() {
 
   const operations = window.__currentToolpathMoves || [];
   const selected = window.__selectedToolpathOperation || 'all';
+  if (selected === '0') {
+    viewer.setToolpath(null);
+    return;
+  }
   if (selected === 'all') {
     viewer.setToolpathMoves(operations);
     return;
@@ -213,6 +232,69 @@ function updateOperationSelection() {
   for (const item of els.operations.querySelectorAll('.op-item')) {
     item.classList.toggle('selected', item.dataset.sequence === selected);
   }
+}
+
+async function selectTimelineForOperation(sequence) {
+  const states = window.__stockStates || [];
+  if (!states.length) return;
+
+  if (sequence === 'all') {
+    await selectTimelineState(states.length - 1, { keepSelection: true });
+    return;
+  }
+
+  const stateIndex = states.findIndex(state => String(state.sequence_number) === String(sequence));
+  if (stateIndex >= 0) {
+    await selectTimelineState(stateIndex, { keepSelection: true });
+  }
+}
+
+async function selectTimelineState(index, options = {}) {
+  const states = window.__stockStates || [];
+  if (!states.length) return;
+
+  const nextIndex = Math.max(0, Math.min(states.length - 1, Number(index)));
+  await loadTimelineState(nextIndex);
+
+  if (!options.keepSelection) {
+    const state = states[nextIndex];
+    window.__selectedToolpathOperation = String(state.sequence_number || '0');
+    renderSelectedToolpath();
+    updateOperationSelection();
+  }
+  updateTimelineControls();
+}
+
+async function loadTimelineState(index) {
+  const states = window.__stockStates || [];
+  const state = states[index];
+  if (!state || !window.__sceneBaseUrl) return;
+
+  window.__currentStateIndex = index;
+  await viewer.loadStockSTL(await fetchArrayBuffer(assetUrl(state, window.__sceneBaseUrl)));
+  updateTimelineControls();
+}
+
+function updateTimelineControls() {
+  const states = window.__stockStates || [];
+  const index = Math.max(0, Math.min(states.length - 1, window.__currentStateIndex || 0));
+  const state = states[index];
+  const hasTimeline = states.length > 0;
+
+  els['timeline-range'].disabled = !hasTimeline;
+  els['timeline-prev'].disabled = !hasTimeline || index <= 0;
+  els['timeline-next'].disabled = !hasTimeline || index >= states.length - 1;
+  els['timeline-range'].min = 0;
+  els['timeline-range'].max = Math.max(0, states.length - 1);
+  els['timeline-range'].value = index;
+
+  if (!hasTimeline) {
+    els['timeline-label'].textContent = 'No timeline loaded';
+    return;
+  }
+
+  const prefix = state.sequence_number === 0 ? 'Initial' : `OP ${state.sequence_number}`;
+  els['timeline-label'].textContent = `${prefix}: ${state.operation || state.label || 'stock state'}`;
 }
 
 async function fetchJson(url) {

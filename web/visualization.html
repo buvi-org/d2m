@@ -36,6 +36,18 @@
       </div>
 
       <div class="section">
+        <div class="section-header">Operation Timeline</div>
+        <div class="section-body">
+          <div class="timeline-controls">
+            <button class="btn btn-sm" id="timeline-prev" type="button">Prev</button>
+            <div class="timeline-label" id="timeline-label">No timeline loaded</div>
+            <button class="btn btn-sm" id="timeline-next" type="button">Next</button>
+          </div>
+          <input id="timeline-range" class="timeline-range" type="range" min="0" max="0" step="1" value="0">
+        </div>
+      </div>
+
+      <div class="section">
         <div class="section-header">View Options</div>
         <div class="section-body">
           <label class="check-row"><input type="checkbox" id="show-target" checked> Target overlay</label>

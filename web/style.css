@@ -383,6 +383,28 @@ html, body {
   text-align: right;
 }
 
+.timeline-controls {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.timeline-label {
+  min-width: 0;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.timeline-range {
+  width: 100%;
+  margin-top: 10px;
+  accent-color: var(--accent);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Toggle switches                                                   */
 /* ------------------------------------------------------------------ */

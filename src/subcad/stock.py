@@ -57,6 +57,7 @@ class Stock:
     _fixture: Optional["FixtureSpec"] = None
     _setups: dict = field(default_factory=dict)  # name -> Setup
     _active_setup: Optional[str] = None
+    _state_history: list = field(default_factory=list)
 
     # -------------------------------------------------------------------
     #  Internal helpers
@@ -73,6 +74,7 @@ class Stock:
         fixture=None,
         setups=None,
         active_setup=None,
+        state_history=None,
     ) -> "Stock":
         """Construct directly from components."""
         obj = object.__new__(cls)
@@ -84,6 +86,7 @@ class Stock:
         obj._fixture = fixture
         obj._setups = setups if setups is not None else {}
         obj._active_setup = active_setup
+        obj._state_history = state_history if state_history is not None else []
         return obj
 
     def _apply_op(self, op) -> "Stock":
@@ -99,6 +102,20 @@ class Stock:
                 op.face_selector = setup.face_selector
 
         new_shape = op.apply(self._shape)
+        state_history = list(self._state_history)
+        if not state_history:
+            state_history.append({
+                "sequence_number": 0,
+                "operation": "initial_stock",
+                "label": "Initial stock",
+                "shape": self._shape,
+            })
+        state_history.append({
+            "sequence_number": op.sequence_number,
+            "operation": getattr(op, "operation_name", op.__class__.__name__),
+            "label": f"After OP {op.sequence_number}",
+            "shape": new_shape,
+        })
 
         # Serialize fixture and setups for the plan
         fixture_dict = self._fixture.to_dict() if self._fixture else None
@@ -148,6 +165,7 @@ class Stock:
             fixture=self._fixture,
             setups=dict(self._setups),
             active_setup=self._active_setup,
+            state_history=state_history,
         )
 
     # -------------------------------------------------------------------

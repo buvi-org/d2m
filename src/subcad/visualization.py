@@ -29,6 +29,7 @@ def export_visualization_package(
     stock.to_stl(str(stock_path))
 
     plan = stock.process_plan()
+    stock_states = _export_stock_states(stock, out, plan)
     toolpath = _toolpath_payload(plan)
     toolpath_path = out / "toolpath.json"
     _write_json(toolpath_path, toolpath)
@@ -65,6 +66,7 @@ def export_visualization_package(
             "operation_count": len(toolpath["operations"]),
             "move_count": toolpath["summary"]["move_count"],
         },
+        "stock_states": stock_states,
     }
     if target_path is not None:
         assets["target_mesh"] = {
@@ -124,6 +126,54 @@ def export_visualization_package(
     scene_path = out / "scene.json"
     _write_json(scene_path, scene)
     return scene
+
+
+def _export_stock_states(stock: Any, out: Path, plan: dict) -> list[dict]:
+    from .geometry import export_stl
+
+    operations_by_sequence = {
+        op.get("sequence_number"): op
+        for op in plan.get("operations", [])
+    }
+    history = list(getattr(stock, "_state_history", []) or [])
+
+    if not history:
+        history = [{
+            "sequence_number": plan.get("total_operations", 0),
+            "operation": "final_stock",
+            "label": "Final stock",
+            "shape": getattr(stock, "_shape", None),
+        }]
+
+    states_dir = out / "states"
+    states_dir.mkdir(parents=True, exist_ok=True)
+    states = []
+
+    for index, state in enumerate(history):
+        shape = state.get("shape")
+        if shape is None:
+            continue
+
+        sequence_number = state.get("sequence_number", index)
+        filename = f"stock_state_{int(sequence_number):03d}.stl"
+        path = states_dir / filename
+        export_stl(shape, str(path))
+
+        op = operations_by_sequence.get(sequence_number, {})
+        label = state.get("label") or (
+            "Initial stock" if sequence_number == 0 else f"After OP {sequence_number}"
+        )
+        states.append({
+            "index": len(states),
+            "sequence_number": sequence_number,
+            "operation": op.get("operation") or state.get("operation"),
+            "label": label,
+            "path": f"states/{filename}",
+            "format": "stl",
+            "role": "stock_state",
+        })
+
+    return states
 
 
 def _toolpath_payload(plan: dict) -> dict:

@@ -60,6 +60,14 @@ try:
     check("scene schema version present", scene_json.get("schema_version") == "subcad.visualization_package.v1")
     check("scene references stock mesh", scene_json["assets"]["stock_mesh"]["path"] == "stock.stl")
     check("scene references toolpath", scene_json["assets"]["toolpath"]["path"] == "toolpath.json")
+    stock_states = scene_json["assets"].get("stock_states", [])
+    check("scene references stock state timeline", len(stock_states) == part.process_plan()["total_operations"] + 1)
+    check("timeline starts from initial stock", stock_states[0]["sequence_number"] == 0)
+    check("timeline ends after final operation", stock_states[-1]["sequence_number"] == part.process_plan()["total_operations"])
+    check(
+        "timeline state meshes written",
+        all(os.path.getsize(os.path.join(package_dir, state["path"])) > 0 for state in stock_states),
+    )
     check("scene operations mirror plan", len(scene_json["operations"]) == part.process_plan()["total_operations"])
     check("toolpath has operations", len(toolpath_json["operations"]) == part.process_plan()["total_operations"])
     check("toolpath has moves", toolpath_json["summary"]["move_count"] > 0)
