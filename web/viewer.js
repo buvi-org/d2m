@@ -59,6 +59,7 @@ export class Viewer {
     this.gridHelper = null;
 
     this._showTool = true;
+    this._showStock = true;
     this._showTarget = false;
     this._heatmapMode = false;
     this._wireframeMode = false;
@@ -227,6 +228,7 @@ export class Viewer {
     if (this.stockMesh) {
       this.stockMesh.castShadow = true;
       this.stockMesh.receiveShadow = true;
+      this.stockMesh.visible = this._showStock;
       this.scene.add(this.stockMesh);
       this._fitCameraToMesh(this.stockMesh);
     }
@@ -277,6 +279,7 @@ export class Viewer {
     this.stockMesh = new THREE.Mesh(geom, this._originalStockMaterial);
     this.stockMesh.castShadow = true;
     this.stockMesh.receiveShadow = true;
+    this.stockMesh.visible = this._showStock;
     this.scene.add(this.stockMesh);
     this._fitCameraToMesh(this.stockMesh);
     this._updateWireframe();
@@ -336,6 +339,7 @@ export class Viewer {
     this.stockMesh = new THREE.Mesh(geom, this._originalStockMaterial);
     this.stockMesh.castShadow = true;
     this.stockMesh.receiveShadow = true;
+    this.stockMesh.visible = this._showStock;
     this.scene.add(this.stockMesh);
     this._fitCameraToMesh(this.stockMesh);
     this._updateWireframe();
@@ -414,6 +418,16 @@ export class Viewer {
   setToolVisible(visible) {
     this._showTool = visible;
     this.toolGroup.visible = visible;
+  }
+
+  /**
+   * Show or hide the current stock/workpiece mesh.
+   */
+  setStockVisible(visible) {
+    this._showStock = visible;
+    if (this.stockMesh) {
+      this.stockMesh.visible = visible;
+    }
   }
 
   /**
@@ -751,6 +765,7 @@ export class Viewer {
     this.stockMesh = new THREE.Mesh(geom, mat);
     this.stockMesh.castShadow = true;
     this.stockMesh.receiveShadow = true;
+    this.stockMesh.visible = this._showStock;
     this._originalStockMaterial = mat;
     this.scene.add(this.stockMesh);
     this._fitCameraToMesh(this.stockMesh);

@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'status',
     'metadata',
     'operations',
+    'show-stock',
     'show-target',
     'show-toolpath',
     'show-tool',
@@ -37,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   els['session-path'].value = session;
 
   els['load-session'].addEventListener('click', () => loadSession(els['session-path'].value));
+  els['show-stock'].addEventListener('change', () => viewer.setStockVisible(els['show-stock'].checked));
   els['show-target'].addEventListener('change', () => viewer.setTargetVisible(els['show-target'].checked));
   els['show-tool'].addEventListener('change', () => {
     viewer.setToolVisible(els['show-tool'].checked);
@@ -100,8 +102,10 @@ async function loadSession(scenePath) {
       await loadTimelineState(window.__currentStateIndex);
     } else if (scene.assets?.stock_mesh) {
       await viewer.loadStockSTL(await fetchArrayBuffer(assetUrl(scene.assets.stock_mesh, baseUrl)));
+      viewer.setStockVisible(els['show-stock'].checked);
     } else {
       viewer.loadDefaultCube();
+      viewer.setStockVisible(els['show-stock'].checked);
     }
 
     if (scene.assets?.target_mesh) {
@@ -580,6 +584,7 @@ async function loadTimelineState(index) {
 
   window.__currentStateIndex = index;
   await viewer.loadStockSTL(await fetchArrayBuffer(assetUrl(state, window.__sceneBaseUrl)));
+  viewer.setStockVisible(els['show-stock'].checked);
   updateTimelineControls();
 }
 
