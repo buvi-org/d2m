@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const params = new URLSearchParams(window.location.search);
   const session = params.get('session') || 'sessions/latest/scene.json';
+  window.__cacheBust = params.get('v') || String(Date.now());
   els['session-path'].value = session;
 
   els['load-session'].addEventListener('click', () => loadSession(els['session-path'].value));
@@ -83,7 +84,7 @@ async function loadSession(scenePath) {
   try {
     const sceneUrl = new URL(scenePath, window.location.href);
     const baseUrl = new URL('.', sceneUrl);
-    const scene = await fetchJson(sceneUrl.href);
+    const scene = await fetchJson(cacheBustUrl(sceneUrl.href));
 
     viewer.clearScene();
     stopPlayback();
@@ -155,7 +156,15 @@ async function loadSession(scenePath) {
 
 function assetUrl(asset, baseUrl) {
   const path = typeof asset === 'string' ? asset : asset.path;
-  return new URL(path, baseUrl).href;
+  return cacheBustUrl(new URL(path, baseUrl).href);
+}
+
+function cacheBustUrl(url) {
+  const next = new URL(url, window.location.href);
+  if (window.__cacheBust) {
+    next.searchParams.set('v', window.__cacheBust);
+  }
+  return next.href;
 }
 
 function extractToolpathPoints(payload) {
