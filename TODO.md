@@ -11,6 +11,8 @@ Current baseline:
 
 ## SubCAD Shop-Floor v1
 
+Status: complete for the current prototype contract. Keep the acceptance test green while the next slice lands.
+
 Goal: make SubCAD output a shop-floor-ready intermediate package without claiming controller-ready CAM. The v1 handoff is a neutral, validated, JSON-serializable process plan plus setup-sheet exports for machinist review.
 
 1. Lock schema v1.
@@ -43,10 +45,32 @@ Goal: make SubCAD output a shop-floor-ready intermediate package without claimin
    - Do not mix machine dialects into schema v1.
    - Document exported setup sheets as review artifacts, not proof of machine-safe NC output.
 
+## Phase 2 Toolpaths
+
+Current next slice:
+
+1. Emit neutral toolpaths for every Phase 2 operation.
+   - `peck_drill`, `ream`, `bore`, `countersink`, `counterbore`, `thread_mill`, `t_slot`, `dovetail`, `groove`, `surface_3d`, `deburr`, and `spot_face` must all serialize non-empty motion intent.
+   - Include safe Z, move types, feeds/speeds, length/time summaries, and JSON round-trip support.
+
+2. Preserve Phase 2 summaries in process plans.
+   - Each Phase 2 operation record should include a `toolpath_summary`.
+   - Summaries should be useful for review: move/point count, length, estimated time, and bounds when the path provides positions.
+
+3. Add a preview-only G-code adapter.
+   - Include a visible preview/non-production warning.
+   - Include units, setup/work offset, tools, operations, feeds/speeds, and neutral motion lines.
+   - Keep production postprocessing deferred.
+
+4. Improve validation and estimation.
+   - Flag malformed, empty, or unsupported authored toolpaths.
+   - Estimate time from authored toolpath length/feed when available instead of falling back to feature approximations.
+
 ## Integration Checks
 
-- Add and run `python test_subcad_shopfloor_v1.py` once Agents 1-4 finish their integration work.
-- The test covers schema v1 required/backward fields, non-empty neutral toolpaths, setup-sheet content, fluent Phase 2 API, validation warnings/errors, and simulation bridge toolpath fallback/preference.
+- Keep running `python test_subcad_shopfloor_v1.py` for the completed Shop-Floor v1 contract.
+- Add and run `python test_subcad_phase2_toolpaths.py` once Agents 1-4 finish their Phase 2 integration work.
+- The Phase 2 test covers non-empty neutral toolpaths, process-plan summaries, preview-only G-code metadata, malformed-toolpath validation, and authored-path time estimation.
 - Continue running the existing SubCAD, fixturing, translator, and simulation bridge tests as regression coverage.
 
 ## Deferred Roadmap

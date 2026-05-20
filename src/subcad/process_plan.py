@@ -8,6 +8,7 @@ tools. It can be serialized to JSON for interchange.
 from __future__ import annotations
 
 import json
+import math
 import tempfile
 from dataclasses import dataclass, field
 from typing import Optional
@@ -77,26 +78,100 @@ def _normalize_tool_entry(tool_dict: dict) -> dict:
     return tool
 
 
+def _toolpath_records(toolpath) -> Optional[list]:
+    """Return serialized toolpath move/position records as a flat list."""
+    if isinstance(toolpath, dict):
+        if isinstance(toolpath.get("moves"), list):
+            return toolpath["moves"]
+        if isinstance(toolpath.get("positions"), list):
+            return toolpath["positions"]
+        return [toolpath]
+    if isinstance(toolpath, list):
+        return toolpath
+    return None
+
+
+def _toolpath_point_xyz(point):
+    """Return an ``(x, y, z)`` tuple from supported serialized point records."""
+    if isinstance(point, dict):
+        if all(k in point for k in ("x", "y", "z")):
+            return (point["x"], point["y"], point["z"])
+        if "position" in point:
+            return _toolpath_point_xyz(point["position"])
+    if isinstance(point, (list, tuple)) and len(point) >= 3:
+        return (point[0], point[1], point[2])
+    return None
+
+
+def _toolpath_length_mm(toolpath) -> Optional[float]:
+    """Return authored toolpath length when available or computable."""
+    if isinstance(toolpath, dict):
+        for key in ("length_mm", "toolpath_length_mm"):
+            length = toolpath.get(key)
+            if length is not None:
+                return float(length)
+
+    records = _toolpath_records(toolpath)
+    if records is None:
+        return None
+    xyz_points = [
+        (float(p[0]), float(p[1]), float(p[2]))
+        for p in (_toolpath_point_xyz(record) for record in records)
+        if p is not None
+    ]
+    if len(xyz_points) < 2:
+        return 0.0 if xyz_points else None
+    return sum(math.dist(a, b) for a, b in zip(xyz_points[:-1], xyz_points[1:]))
+
+
+def _toolpath_estimated_time_minutes(op: dict, feed_rate: Optional[float]) -> Optional[float]:
+    """Return authored estimated time, or authored path length / feed rate."""
+    toolpath = op.get("toolpath")
+    if isinstance(toolpath, dict):
+        for key in (
+            "estimated_time_min",
+            "estimated_time_minutes",
+            "cycle_time_minutes",
+            "time_minutes",
+        ):
+            value = toolpath.get(key)
+            if value is not None:
+                return float(value)
+
+    summary = op.get("toolpath_summary")
+    if isinstance(summary, dict):
+        for key in ("estimated_time_min", "estimated_time_minutes"):
+            value = summary.get(key)
+            if value is not None:
+                return float(value)
+
+    if feed_rate:
+        length = _toolpath_length_mm(toolpath)
+        if length is not None:
+            return length / float(feed_rate)
+    return None
+
+
 def _toolpath_summary(toolpath) -> Optional[dict]:
     """Summarize a serialized toolpath when an operation provides one."""
-    if not isinstance(toolpath, list):
+    records = _toolpath_records(toolpath)
+    if records is None:
         return None
 
-    summary = {"point_count": len(toolpath)}
-    if not toolpath:
+    summary = {"point_count": len(records)}
+    if isinstance(toolpath, dict):
+        for old_key, new_key in (
+            ("length_mm", "length_mm"),
+            ("toolpath_length_mm", "length_mm"),
+            ("estimated_time_min", "estimated_time_min"),
+            ("estimated_time_minutes", "estimated_time_minutes"),
+        ):
+            if old_key in toolpath:
+                summary[new_key] = toolpath[old_key]
+    if not records:
         return summary
 
-    def point_xyz(point):
-        if isinstance(point, dict):
-            if all(k in point for k in ("x", "y", "z")):
-                return (point["x"], point["y"], point["z"])
-            if "position" in point:
-                return point_xyz(point["position"])
-        if isinstance(point, (list, tuple)) and len(point) >= 3:
-            return (point[0], point[1], point[2])
-        return None
-
-    xyz_points = [p for p in (point_xyz(p) for p in toolpath) if p is not None]
+    xyz_points = [p for p in (_toolpath_point_xyz(p) for p in records) if p is not None]
     if xyz_points:
         xs, ys, zs = zip(*xyz_points)
         summary["start"] = list(xyz_points[0])
@@ -105,6 +180,8 @@ def _toolpath_summary(toolpath) -> Optional[dict]:
             "min": [min(xs), min(ys), min(zs)],
             "max": [max(xs), max(ys), max(zs)],
         }
+        if "length_mm" not in summary:
+            summary["length_mm"] = round(_toolpath_length_mm(toolpath) or 0.0, 6)
     return summary
 
 
@@ -226,13 +303,11 @@ class ProcessPlan:
 
     @property
     def estimated_time_minutes(self) -> float:
-        """Estimate machining time from feeds/speeds and approximate toolpath lengths.
+        """Estimate machining time from authored toolpaths or approximate dimensions.
 
-        Simple model:
-          - For each operation, if a feed rate is present in feeds_speeds,
-            estimate toolpath length from the feature dimensions in the op dict
-            and compute time = length / feed_rate.
-          - If no feed rate data is available, fall back to 2 min per op.
+        Authored toolpath estimates/lengths are preferred. Operations without
+        usable path data fall back to the legacy dimension/feed approximation,
+        then finally to 2 min per operation.
         """
         total = 0.0
         for op in self.operations:
@@ -240,6 +315,12 @@ class ProcessPlan:
             feed_rate = None
             if feeds:
                 feed_rate = feeds.get("feed_rate_mm_per_min", feeds.get("feed_rate_mm_min"))
+
+            authored_time = _toolpath_estimated_time_minutes(op, feed_rate)
+            if authored_time is not None:
+                total += authored_time
+                continue
+
             if feed_rate:
                 # Approximate toolpath length from op dimensions
                 dims = op.get("dimensions", {})
@@ -464,6 +545,16 @@ class ProcessPlan:
         """Compatibility alias for setup_sheet_text."""
         return self.setup_sheet_text()
 
+    def gcode_preview(self) -> str:
+        """Return preview-only G-code-like text from neutral toolpaths."""
+        from .gcode_preview import gcode_preview
+
+        return gcode_preview(self)
+
+    def to_gcode_preview(self) -> str:
+        """Compatibility alias for gcode_preview."""
+        return self.gcode_preview()
+
     # ------------------------------------------------------------------
     # Display
     # ------------------------------------------------------------------
@@ -625,8 +716,35 @@ if __name__ == "__main__":
           "toolpath summary generated")
     check("Verify slot clearance" in legacy_plan.validation_buckets["warnings"],
           "validation buckets merged")
-    check(legacy_plan.estimated_time_minutes == 0.4,
-          f"legacy feed alias used for estimate (got {legacy_plan.estimated_time_minutes})")
+    check(legacy_plan.estimated_time_minutes == 0.07,
+          f"authored toolpath length used for estimate (got {legacy_plan.estimated_time_minutes})")
+
+    authored_time_plan = ProcessPlan(
+        operations=[
+            {
+                "operation": "drill",
+                "tool_type": "drill",
+                "tool_diameter_mm": 6.0,
+                "dimensions": {"length": 200, "width": 200, "depth": 20},
+                "feeds_speeds": {"feed_rate_mm_per_min": 100},
+                "toolpath": {
+                    "safe_z": 5.0,
+                    "estimated_time_min": 1.25,
+                    "length_mm": 42.0,
+                    "moves": [
+                        {"type": "rapid", "position": [0, 0, 5]},
+                        {"type": "plunge", "position": [0, 0, -5]},
+                        {"type": "retract", "position": [0, 0, 5]},
+                    ],
+                },
+            }
+        ],
+    )
+    check(authored_time_plan.operations[0]["toolpath_summary"]["length_mm"] == 42.0,
+          "authored toolpath length summarized")
+    check(authored_time_plan.estimated_time_minutes == 1.25,
+          f"authored toolpath estimated time preferred "
+          f"(got {authored_time_plan.estimated_time_minutes})")
     print()
 
     # --- tool_change_count ---

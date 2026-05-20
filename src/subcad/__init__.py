@@ -22,6 +22,7 @@ from .stock import Stock
 from .process_plan import ProcessPlan, OperationStep
 from .tool_library import ToolSpec, ToolCatalog, to_sim_tool
 from .toolpath import Toolpath, ToolpathMove
+from .gcode_preview import gcode_preview, to_gcode_preview
 from .operations import (
     MachiningOperation,
     FaceMillOp,
@@ -78,6 +79,8 @@ __all__ = [
     "ToolCatalog",
     "Toolpath",
     "ToolpathMove",
+    "gcode_preview",
+    "to_gcode_preview",
     # Operation classes
     "MachiningOperation",
     "FaceMillOp",

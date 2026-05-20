@@ -177,6 +177,97 @@ def _slot_endpoints(cx: float, cy: float, length: float, angle_deg: float) -> tu
     return (cx - dx, cy - dy), (cx + dx, cy + dy)
 
 
+def _linear_slot_toolpath(
+    operation: str,
+    tool: ToolSpec,
+    feeds_speeds: dict,
+    cx: float,
+    cy: float,
+    length: float,
+    width: float,
+    depth: float,
+    angle: float,
+    *,
+    metadata: Optional[dict] = None,
+) -> Toolpath:
+    """Generate a conservative neutral slot/groove/form-cutter path."""
+    stepdown = max(tool.diameter * 0.5, 0.5)
+    stepover = max(min(tool.diameter * 0.5, max(width * 0.25, 0.1)), 0.1)
+    (x0, y0), (x1, y1) = _slot_endpoints(cx, cy, length, angle)
+    theta = math.radians(angle)
+    nx = -math.sin(theta)
+    ny = math.cos(theta)
+    offsets = [0.0]
+    side = stepover
+    max_side = max(width / 2.0 - tool.radius, 0.0)
+    while side <= max_side + 1e-9:
+        offsets.extend([side, -side])
+        side += stepover
+
+    tp = _new_toolpath(
+        operation,
+        tool,
+        feeds_speeds,
+        metadata={
+            "slot_length_mm": length,
+            "slot_width_mm": width,
+            "angle_deg": angle,
+            **(metadata or {}),
+        },
+    )
+    feed = _feed_rate(feeds_speeds)
+    _move(tp, "rapid", x0, y0, tp.safe_z)
+    direction = 1
+    for z in _depth_levels(depth, stepdown):
+        for offset in offsets:
+            sx = x0 + nx * offset
+            sy = y0 + ny * offset
+            ex = x1 + nx * offset
+            ey = y1 + ny * offset
+            start = (sx, sy) if direction > 0 else (ex, ey)
+            end = (ex, ey) if direction > 0 else (sx, sy)
+            _move(tp, "rapid", start[0], start[1], tp.safe_z)
+            _move(tp, "plunge", start[0], start[1], z, feed=feed)
+            _move(tp, "feed", end[0], end[1], z, feed=feed)
+            _move(tp, "retract", end[0], end[1], tp.safe_z)
+            direction *= -1
+    return tp
+
+
+def _rect_raster_toolpath(
+    operation: str,
+    tool: ToolSpec,
+    feeds_speeds: dict,
+    width: float,
+    length: float,
+    depth: float,
+    stepover: float,
+    *,
+    metadata: Optional[dict] = None,
+) -> Toolpath:
+    """Generate a neutral raster finishing/deburring path around the origin."""
+    stepover = max(stepover, 0.1)
+    half_l = length / 2.0
+    half_w = width / 2.0
+    z = -abs(depth)
+    tp = _new_toolpath(operation, tool, feeds_speeds, metadata=metadata or {})
+    feed = _feed_rate(feeds_speeds)
+    y = -half_w
+    direction = 1
+    _move(tp, "rapid", -half_l, y, tp.safe_z)
+    _move(tp, "plunge", -half_l, y, z, feed=feed)
+    while y <= half_w + 1e-9:
+        x = half_l if direction > 0 else -half_l
+        _move(tp, "feed", x, y, z, feed=feed)
+        y += stepover
+        if y <= half_w + 1e-9:
+            _move(tp, "feed", x, y, z, feed=feed)
+        direction *= -1
+    last_x, last_y, _ = tp.moves[-1].position
+    _move(tp, "retract", last_x, last_y, tp.safe_z)
+    return tp
+
+
 def _pick_slot_tool(slot_width: float) -> ToolSpec:
     """Pick the best flat endmill that fits within *slot_width*.
 
@@ -1264,8 +1355,16 @@ class ReamOp(MachiningOperation):
             "notes": "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        return _drill_toolpath(
+            "ream",
+            self.tool,
+            self.feeds_speeds,
+            self.cx,
+            self.cy,
+            self.depth,
+            dwell_seconds=0.2,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -1324,8 +1423,32 @@ class BoreOp(MachiningOperation):
             "notes": "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        stepdown = max(self.tool.diameter * 0.25, 0.5)
+        radius = max(self.diameter / 2.0 - self.tool.radius, 0.0)
+        tp = _new_toolpath(
+            "bore",
+            self.tool,
+            self.feeds_speeds,
+            metadata={"hole_diameter_mm": self.diameter},
+        )
+        feed = _feed_rate(self.feeds_speeds)
+        _move(tp, "rapid", self.cx, self.cy, tp.safe_z)
+        for z in _depth_levels(self.depth, stepdown):
+            _move(tp, "plunge", self.cx, self.cy, z, feed=feed)
+            if radius > 0:
+                _move(tp, "feed", self.cx + radius, self.cy, z, feed=feed)
+                center = (self.cx, self.cy, z)
+                for x, y in (
+                    (self.cx, self.cy + radius),
+                    (self.cx - radius, self.cy),
+                    (self.cx, self.cy - radius),
+                    (self.cx + radius, self.cy),
+                ):
+                    _move(tp, "arc", x, y, z, feed=feed, arc_center=center, arc_direction="ccw")
+                _move(tp, "feed", self.cx, self.cy, z, feed=feed)
+        _move(tp, "retract", self.cx, self.cy, tp.safe_z)
+        return tp
 
 
 # ---------------------------------------------------------------------------
@@ -1394,8 +1517,30 @@ class CountersinkOp(MachiningOperation):
             "notes": "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        if self.depth > 0:
+            sink_depth = self.depth
+        else:
+            angle_rad = math.radians(max(self.countersink_angle, 1.0) / 2.0)
+            sink_depth = ((self.countersink_diameter - self.diameter) / 2.0) / math.tan(angle_rad)
+            sink_depth = max(sink_depth, 0.0)
+
+        tp = _new_toolpath(
+            "countersink",
+            self.tool,
+            self.feeds_speeds,
+            metadata={
+                "hole_diameter_mm": self.diameter,
+                "countersink_diameter_mm": self.countersink_diameter,
+                "countersink_angle_deg": self.countersink_angle,
+            },
+        )
+        feed = _feed_rate(self.feeds_speeds)
+        _move(tp, "rapid", self.cx, self.cy, tp.safe_z)
+        _move(tp, "plunge", self.cx, self.cy, -abs(sink_depth), feed=feed)
+        _move(tp, "dwell", self.cx, self.cy, -abs(sink_depth), dwell_seconds=0.2)
+        _move(tp, "retract", self.cx, self.cy, tp.safe_z)
+        return tp
 
 
 # ---------------------------------------------------------------------------
@@ -1469,8 +1614,39 @@ class CounterboreOp(MachiningOperation):
             "notes": "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        stepdown = max(self.tool.diameter * 0.5, 0.5)
+        stepover = max(self.tool.diameter * 0.5, 0.1)
+        radius = max(self.counterbore_diameter / 2.0 - self.tool.radius, 0.0)
+        tp = _new_toolpath(
+            "counterbore",
+            self.tool,
+            self.feeds_speeds,
+            metadata={
+                "hole_diameter_mm": self.hole_diameter,
+                "counterbore_diameter_mm": self.counterbore_diameter,
+            },
+        )
+        feed = _feed_rate(self.feeds_speeds)
+        _move(tp, "rapid", self.cx, self.cy, tp.safe_z)
+        for z in _depth_levels(self.counterbore_depth, stepdown):
+            _move(tp, "plunge", self.cx, self.cy, z, feed=feed)
+            if radius > 0:
+                r = min(stepover, radius)
+                while r <= radius + 1e-9:
+                    _move(tp, "feed", self.cx + r, self.cy, z, feed=feed)
+                    center = (self.cx, self.cy, z)
+                    for x, y in (
+                        (self.cx, self.cy + r),
+                        (self.cx - r, self.cy),
+                        (self.cx, self.cy - r),
+                        (self.cx + r, self.cy),
+                    ):
+                        _move(tp, "arc", x, y, z, feed=feed, arc_center=center, arc_direction="ccw")
+                    r += stepover
+            _move(tp, "feed", self.cx, self.cy, z, feed=feed)
+        _move(tp, "retract", self.cx, self.cy, tp.safe_z)
+        return tp
 
 
 # ---------------------------------------------------------------------------
@@ -1538,8 +1714,36 @@ class ThreadMillOp(MachiningOperation):
             "notes": "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        radius = max(self.diameter / 2.0 - self.tool.radius, self.pitch * 0.25, 0.1)
+        passes = max(1, math.ceil(abs(self.depth) / max(self.pitch, 0.1)))
+        tp = _new_toolpath(
+            "thread_mill",
+            self.tool,
+            self.feeds_speeds,
+            metadata={
+                "thread_diameter_mm": self.diameter,
+                "thread_pitch_mm": self.pitch,
+                "helix_passes": passes,
+            },
+        )
+        feed = _feed_rate(self.feeds_speeds)
+        _move(tp, "rapid", self.cx, self.cy, tp.safe_z)
+        _move(tp, "plunge", self.cx, self.cy, 0.0, feed=feed)
+        _move(tp, "feed", self.cx + radius, self.cy, 0.0, feed=feed)
+        for i in range(1, passes + 1):
+            z = -min(i * self.pitch, abs(self.depth))
+            center = (self.cx, self.cy, z)
+            for x, y in (
+                (self.cx, self.cy + radius),
+                (self.cx - radius, self.cy),
+                (self.cx, self.cy - radius),
+                (self.cx + radius, self.cy),
+            ):
+                _move(tp, "arc", x, y, z, feed=feed, arc_center=center, arc_direction="ccw")
+        _move(tp, "feed", self.cx, self.cy, -abs(self.depth), feed=feed)
+        _move(tp, "retract", self.cx, self.cy, tp.safe_z)
+        return tp
 
 
 # ---------------------------------------------------------------------------
@@ -1600,8 +1804,22 @@ class TSlotOp(MachiningOperation):
             "notes": "T-slot approximated as rectangular slot",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        return _linear_slot_toolpath(
+            "t_slot",
+            self.tool,
+            self.feeds_speeds,
+            self.cx,
+            self.cy,
+            self.length,
+            self.width,
+            self.depth,
+            self.angle,
+            metadata={
+                "form_tool": "t_slot",
+                "approximation": "rectangular_slot",
+            },
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -1662,8 +1880,23 @@ class DovetailOp(MachiningOperation):
             "notes": "Dovetail approximated as rectangular slot",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        return _linear_slot_toolpath(
+            "dovetail",
+            self.tool,
+            self.feeds_speeds,
+            self.cx,
+            self.cy,
+            self.length,
+            self.width,
+            self.depth,
+            self.angle,
+            metadata={
+                "form_tool": "dovetail",
+                "dovetail_angle_deg": self.angle,
+                "approximation": "rectangular_slot",
+            },
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -1721,8 +1954,19 @@ class GrooveOp(MachiningOperation):
             "notes": "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        return _linear_slot_toolpath(
+            "groove",
+            self.tool,
+            self.feeds_speeds,
+            self.cx,
+            self.cy,
+            self.length,
+            self.width,
+            self.depth,
+            self.angle,
+            metadata={"feature": "groove"},
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -1779,8 +2023,21 @@ class Surface3DOp(MachiningOperation):
             "notes": "Placeholder for Phase 3 tri-dexel surface machining",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        span = max(self.tool.diameter * 8.0, self.stepover * 8.0, 40.0)
+        return _rect_raster_toolpath(
+            "surface_3d",
+            self.tool,
+            self.feeds_speeds,
+            width=span,
+            length=span,
+            depth=self.depth,
+            stepover=self.stepover,
+            metadata={
+                "strategy": "parallel_finishing",
+                "placeholder_geometry": True,
+            },
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -1835,8 +2092,21 @@ class DeburrOp(MachiningOperation):
             "notes": "Deburring pass (0.1 mm chamfer proxy)",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        span = max(self.tool.diameter * 8.0, 40.0)
+        return _rect_raster_toolpath(
+            "deburr",
+            self.tool,
+            self.feeds_speeds,
+            width=span,
+            length=span,
+            depth=0.1,
+            stepover=max(self.tool.diameter, 1.0),
+            metadata={
+                "edge_selection": self.edge_selection,
+                "proxy": "light_edge_break",
+            },
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -1894,8 +2164,34 @@ class SpotFaceOp(MachiningOperation):
             "notes": "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        stepdown = max(min(self.depth, self.tool.diameter * 0.5), 0.1)
+        stepover = max(self.tool.diameter * 0.5, 0.1)
+        radius = max(self.diameter / 2.0 - self.tool.radius, 0.0)
+        tp = _new_toolpath(
+            "spot_face",
+            self.tool,
+            self.feeds_speeds,
+            metadata={"spot_face_diameter_mm": self.diameter},
+        )
+        feed = _feed_rate(self.feeds_speeds)
+        _move(tp, "rapid", self.cx, self.cy, tp.safe_z)
+        for z in _depth_levels(self.depth, stepdown):
+            _move(tp, "plunge", self.cx, self.cy, z, feed=feed)
+            r = min(stepover, radius)
+            while r <= radius + 1e-9:
+                _move(tp, "feed", self.cx + r, self.cy, z, feed=feed)
+                center = (self.cx, self.cy, z)
+                for x, y in (
+                    (self.cx, self.cy + r),
+                    (self.cx - r, self.cy),
+                    (self.cx, self.cy - r),
+                    (self.cx + r, self.cy),
+                ):
+                    _move(tp, "arc", x, y, z, feed=feed, arc_center=center, arc_direction="ccw")
+                r += stepover
+        _move(tp, "retract", self.cx, self.cy, tp.safe_z)
+        return tp
 
 
 # =============================================================================
@@ -2581,9 +2877,14 @@ if __name__ == "__main__":
           "DeburrOp position is None")
 
     # 13o. to_toolpath behavior for new ops
+    implemented_p2_toolpaths = {
+        "PeckDrillOp", "ReamOp", "BoreOp", "CountersinkOp",
+        "CounterboreOp", "ThreadMillOp", "TSlotOp", "DovetailOp",
+        "GrooveOp", "Surface3DOp", "DeburrOp", "SpotFaceOp",
+    }
     for op, name in zip(p2_ops, p2_names):
         tp = op.to_toolpath()
-        if name == "PeckDrillOp":
+        if name in implemented_p2_toolpaths:
             check(hasattr(tp, "to_dict"),
                   f"{name}.to_toolpath returns Toolpath-like object")
             check(len(tp) > 0,

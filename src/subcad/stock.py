@@ -1058,6 +1058,14 @@ class Stock:
         """Return a Markdown setup sheet."""
         return self._plan.setup_sheet_markdown()
 
+    def gcode_preview(self) -> str:
+        """Return preview-only G-code-like text from neutral toolpaths."""
+        return self._plan.gcode_preview()
+
+    def to_gcode_preview(self) -> str:
+        """Compatibility alias for gcode_preview."""
+        return self.gcode_preview()
+
     def plan_summary(self) -> str:
         """Return a human-readable summary of the process plan."""
         return self._plan.summary()

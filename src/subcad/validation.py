@@ -114,6 +114,72 @@ def _tool_diameter_mm(op: dict) -> Optional[float]:
     return None
 
 
+def _toolpath_records(toolpath) -> Optional[list]:
+    if isinstance(toolpath, dict):
+        if isinstance(toolpath.get("moves"), list):
+            return toolpath["moves"]
+        if isinstance(toolpath.get("positions"), list):
+            return toolpath["positions"]
+        return [toolpath]
+    if isinstance(toolpath, list):
+        return toolpath
+    return None
+
+
+def _toolpath_xyz(record) -> Optional[tuple[float, float, float]]:
+    if isinstance(record, dict):
+        if all(k in record for k in ("x", "y", "z")):
+            values = (record.get("x"), record.get("y"), record.get("z"))
+        else:
+            values = record.get("position")
+            if values is None:
+                return None
+    elif isinstance(record, (list, tuple)) and len(record) >= 3:
+        values = record[:3]
+    else:
+        return None
+
+    try:
+        return (float(values[0]), float(values[1]), float(values[2]))
+    except (TypeError, ValueError, IndexError):
+        return None
+
+
+def _toolpath_move_type(record) -> str:
+    if not isinstance(record, dict):
+        return ""
+    return str(record.get("type", record.get("move_type", ""))).lower()
+
+
+def _is_cutting_operation(op: dict) -> bool:
+    op_type = _op_name(op)
+    non_cutting = {"", "inspect", "inspection", "setup", "fixture", "probe"}
+    return op_type not in non_cutting
+
+
+def _stock_limits(stock_dims: dict) -> dict[str, Optional[float]]:
+    return {
+        "length": _as_float(stock_dims.get("length", stock_dims.get("x"))),
+        "width": _as_float(stock_dims.get("width", stock_dims.get("y"))),
+        "height": _as_float(stock_dims.get("height", stock_dims.get("z"))),
+    }
+
+
+def _xy_inside_stock(x: float, y: float, length: Optional[float], width: Optional[float],
+                     margin: float) -> bool:
+    x_ok = True
+    y_ok = True
+    if length is not None:
+        x_ok = (-margin <= x <= length + margin) or (
+            -length / 2.0 - margin <= x <= length / 2.0 + margin
+        )
+    if width is not None:
+        y_ok = (-margin <= y <= width + margin) or (
+            -width / 2.0 - margin <= y <= width / 2.0 + margin
+        )
+    return x_ok and y_ok
+
+
 def _tool_flute_length_mm(op: dict, tool_specs: Optional[list] = None) -> Optional[float]:
     for key in (
         "flute_length_mm",
@@ -275,6 +341,95 @@ def _check_tool_reach_and_geometry(
                 f"{op_type} at position {i} uses a {tool_dia:g}mm tool "
                 f"for a {hole_dia:g}mm hole.",
                 i, op, tool_diameter_mm=tool_dia, hole_diameter_mm=hole_dia,
+            ))
+
+    return issues
+
+
+def _check_toolpaths(operations: list[dict], stock_dims: dict) -> list[ValidationIssue]:
+    """Validate authored toolpath completeness and approximate stock fit."""
+    issues: list[ValidationIssue] = []
+    limits = _stock_limits(stock_dims)
+    margin = _as_float(stock_dims.get("toolpath_margin_mm"), 0.01) or 0.01
+
+    for i, op in enumerate(operations):
+        if "toolpath" not in op:
+            continue
+
+        op_type = _op_name(op) or "operation"
+        records = _toolpath_records(op.get("toolpath"))
+        records = records if records is not None else []
+        points = [p for p in (_toolpath_xyz(record) for record in records) if p is not None]
+
+        if _is_cutting_operation(op) and not records:
+            issues.append(_issue(
+                "warning", "empty_toolpath",
+                f"{op_type} at position {i} has an empty authored toolpath.",
+                i, op,
+            ))
+            continue
+
+        if not points:
+            continue
+
+        toolpath = op.get("toolpath")
+        safe_z = None
+        if isinstance(toolpath, dict):
+            safe_z = _as_float(toolpath.get("safe_z"))
+        safe_z = _as_float(op.get("safe_z_mm", op.get("safe_z")), safe_z)
+        if safe_z is None:
+            positive_z = [z for _, _, z in points if z > 0]
+            safe_z = max(positive_z) if positive_z else 0.0
+
+        final_z = points[-1][2]
+        has_retract = any(_toolpath_move_type(record) == "retract" for record in records)
+        if _is_cutting_operation(op) and final_z < safe_z - 0.01 and not has_retract:
+            issues.append(_issue(
+                "warning", "missing_retract_safe_z",
+                f"{op_type} at position {i} toolpath does not retract to safe Z "
+                f"({safe_z:g}mm).",
+                i, op, final_z_mm=final_z, safe_z_mm=safe_z,
+            ))
+
+        depth = _depth_mm(op)
+        cutting_z = [z for _, _, z in points if z <= 0.0]
+        if depth > 0 and cutting_z:
+            min_z = min(cutting_z)
+            required_z = -depth
+            if min_z > required_z + 0.01:
+                issues.append(_issue(
+                    "warning", "toolpath_above_requested_depth",
+                    f"{op_type} at position {i} toolpath reaches z={min_z:g}mm, "
+                    f"above requested depth z={required_z:g}mm.",
+                    i, op, reached_z_mm=min_z, requested_depth_mm=depth,
+                ))
+
+        x_bad = []
+        y_bad = []
+        z_bad = []
+        for x, y, z in points:
+            if not _xy_inside_stock(x, y, limits["length"], limits["width"], margin):
+                x_bad.append(x)
+                y_bad.append(y)
+            if limits["height"] is not None and z < -limits["height"] - margin:
+                z_bad.append(z)
+        if x_bad or z_bad:
+            context = {
+                "bounds": {
+                    "min": [min(x for x, _, _ in points),
+                            min(y for _, y, _ in points),
+                            min(z for _, _, z in points)],
+                    "max": [max(x for x, _, _ in points),
+                            max(y for _, y, _ in points),
+                            max(z for _, _, z in points)],
+                },
+                "stock_dimensions": limits,
+            }
+            issues.append(_issue(
+                "warning", "toolpath_stock_bounds",
+                f"{op_type} at position {i} has toolpath points outside approximate "
+                "stock bounds.",
+                i, op, **context,
             ))
 
     return issues
@@ -512,6 +667,7 @@ def validate_all(process_plan_dict: dict, stock_dims: dict,
     report.extend(_check_plan_metadata(process_plan_dict))
     report.extend(_check_operation_order(ops))
     report.extend(_check_tool_reach_and_geometry(ops, merged_stock, tool_specs))
+    report.extend(_check_toolpaths(ops, merged_stock))
     report.extend(_check_setup_accessibility(process_plan_dict))
     report.extend(_check_fixture_clearance(process_plan_dict))
     report.extend(_check_requested_wall_thickness(process_plan_dict))
@@ -715,6 +871,38 @@ if __name__ == "__main__":
     _check("missing setup assignment warning", "operation_missing_setup" in codes, f"got {codes}")
     _check("unknown setup warning", "operation_unknown_setup" in codes, f"got {codes}")
     _check("wall thickness placeholder warning", "wall_thickness_placeholder" in codes, f"got {codes}")
+
+    plan_toolpaths = {
+        "schema_version": "subcad.shop_floor.v1",
+        "material": "aluminum_6061",
+        "stock_dimensions": {"length": 50.0, "width": 40.0, "height": 10.0},
+        "operations": [
+            {
+                "operation": "rough_pocket",
+                "depth_mm": 5.0,
+                "toolpath": [],
+            },
+            {
+                "operation": "drill",
+                "depth_mm": 5.0,
+                "toolpath": {
+                    "safe_z": 5.0,
+                    "moves": [
+                        {"type": "rapid", "position": [0, 0, 5.0]},
+                        {"type": "plunge", "position": [60, 0, -2.0]},
+                    ],
+                },
+            },
+        ],
+    }
+    report = validate_all(plan_toolpaths, {}, structured=True)
+    codes = {issue.code for issue in report.issues}
+    legacy_messages = validate_all(plan_toolpaths, {})
+    _check("empty toolpath warning", "empty_toolpath" in codes, f"got {codes}")
+    _check("missing retract/safe-Z warning", "missing_retract_safe_z" in codes, f"got {codes}")
+    _check("toolpath depth warning", "toolpath_above_requested_depth" in codes, f"got {codes}")
+    _check("stock bounds warning", "toolpath_stock_bounds" in codes, f"got {codes}")
+    _check("legacy validate_all remains list output", isinstance(legacy_messages, list))
     print()
 
     # ------------------------------------------------------------------
