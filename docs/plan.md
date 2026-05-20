@@ -294,9 +294,21 @@ Goal: ensure localized comparison feedback is accurate enough to guide the trans
 
 Goal: measure whether the agentic loop can translate CadQuery samples into equivalent SubCAD programs.
 
+The benchmark target must be the original Zero-to-CAD `model.step` for each
+sample. Self-generated SubCAD -> STEP pairs are useful supervised data, but
+they are not evidence that the translator can match external CAD.
+
 ### Build Dataset From Successful Translations
 
 Goal: create reliable training/evaluation pairs only after execution and comparison are trustworthy.
+
+Dataset policy:
+
+- Primary evaluation pairs come from live translator attempts that execute and
+  compare against the original source STEP.
+- Self-generated SubCAD pairs are auxiliary pretraining data only and must be
+  labeled as synthetic/self-generated.
+- Do not report self-generated exact matches as Zero-to-CAD translation success.
 
 ### Revisit ML Roadmap
 
@@ -327,7 +339,7 @@ Acceptance criteria met:
 | Phase 2 toolpaths | Complete | Maintain authored neutral paths, summaries, preview-only G-code adapter, malformed-path validation, and path-based estimates. |
 | Fixture/tool inventory v1 | Complete | Maintain structured catalogs, selected tool assemblies, fixture/clamp visualization, and browser review metadata. |
 | Manufacturing Economics v1 | Initial slice complete | Maintain engineering estimates, setup/tool-change time, material/machine/setup/tooling cost, and program comparison; calibrate against real shop data next. |
-| Agentic translator | Implemented; non-live tests pass | Run live trials after simulation/comparison validation. |
+| Agentic translator | Implemented; non-live tests pass | Run live Zero-to-CAD trials; compare generated SubCAD output against each original `model.step`. |
 | Mesh comparison | Implemented | Verify and tune; no need to reimplement first. |
 | Feature comparison | Implemented | Validate on known samples and feed into translator loop. |
 | Manufacturing Trust v1 | Active next priority | Broaden inventory-aware planning, realistic passes, fixture/tool-holder clearance, simulation comparison reliability, warning-focused visualization, and economics calibration. |

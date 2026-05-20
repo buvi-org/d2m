@@ -167,6 +167,54 @@ sessions/step_evidence/<sample_id>/
 
 This gives us both a product artifact and future training/evaluation data.
 
+## Correct Benchmark Flow
+
+There are two different dataset flows, and they must not be confused.
+
+### Translator benchmark flow
+
+This is the immediate proof path for CadQuery/STEP -> SubCAD:
+
+```text
+Zero-to-CAD sample
+  cadquery_code.py
+  ops_trace.json
+  original model.step
+-> DeepSeek/LLM translator generates SubCAD
+-> execute generated SubCAD
+-> export generated STEP
+-> compare generated STEP against the original Zero-to-CAD model.step
+-> save generated SubCAD, comparison metrics, validation, economics, and repair history
+```
+
+This is the flow that answers: "Can AI generate SubCAD for an existing CAD
+part?" A candidate only counts as successful if it matches the original target
+STEP from the source dataset, not a STEP produced from the generated SubCAD.
+
+### Self-generated SubCAD-pair flow
+
+This is only for supervised pretraining and regression data:
+
+```text
+generate SubCAD program
+-> execute SubCAD
+-> export STEP
+-> save SubCAD + STEP as a pair
+-> verify by re-executing the same SubCAD and comparing to the saved STEP
+```
+
+This proves the pair is reproducible and internally consistent. It does not
+prove translation quality against Zero-to-CAD or any external STEP file. These
+pairs are useful because they provide clean labels, but they are not a live
+translator success metric.
+
+Priority order:
+
+1. Run the translator benchmark on real Zero-to-CAD samples.
+2. Keep only execution-scored successful translations for evaluation/training.
+3. Use self-generated SubCAD pairs as auxiliary supervised data, clearly marked
+   as synthetic/self-generated.
+
 ## Model Strategy
 
 Start with an agentic multimodal LLM workflow:

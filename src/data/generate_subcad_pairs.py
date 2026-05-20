@@ -1,11 +1,16 @@
 """Generate executable SubCAD -> STEP training pairs.
 
-This is the deterministic dataset path for the specialist STEP-to-SubCAD
-model.  It creates pairs without using LLM calls:
+This is the deterministic auxiliary dataset path for the specialist
+STEP-to-SubCAD model.  It creates self-generated pairs without using LLM calls:
 
     SubCAD source code -> executable Stock -> STEP/process plan/economics
 
-The generator is resumable and intended to scale to 100k samples on local
+These pairs are useful for supervised pretraining and regression tests, but
+they are not a translator benchmark.  Translator success must be measured by
+generating SubCAD for an external source part, then comparing the generated
+STEP against that source part's original STEP file.
+
+The generator is resumable and can scale to large sample counts on local
 hardware.  Data output is under ``data/`` by default, which is gitignored.
 """
 
@@ -518,7 +523,11 @@ def _write_dataset_info(root: Path, count: int, seed: int, shard_size: int) -> N
         "target_count": count,
         "seed": seed,
         "shard_size": shard_size,
-        "description": "Deterministic executable SubCAD-to-STEP training pairs.",
+        "description": "Deterministic executable self-generated SubCAD-to-STEP auxiliary training pairs.",
+        "benchmark_warning": (
+            "These pairs verify SubCAD self-consistency only. Do not report "
+            "them as Zero-to-CAD translator success."
+        ),
     })
 
 

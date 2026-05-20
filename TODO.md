@@ -204,6 +204,10 @@ Still deferred: controller-certified production G-code, formal quoting/ERP integ
   - Build a STEP evidence package first: exact B-Rep/feature JSON, rendered views, optional turntable video, and a frame manifest mapping projected labels back to exact dimensions.
   - Treat images/video as supporting evidence, not the source of dimensions.
   - Benchmark JSON-only, JSON plus still images, and JSON plus still images/video before committing to multimodal input as a default.
-- Live translator trials remain next after simulation reliability improves.
+- Live translator trials are the next proof step.
+  - Use each Zero-to-CAD sample's original `model.step` as the target.
+  - Generate SubCAD with the agentic translator, execute it, and compare the generated STEP against the original target STEP.
+  - Save generated SubCAD, comparison metrics, validation, economics, and repair history.
+  - Do not count self-generated SubCAD -> STEP pairs as translator success; they are auxiliary supervised/pretraining data only.
 - GNN feature recognition and LLM fine-tuning should wait for execution-scored data.
 - RL remains later-stage research after simulator fidelity is validated.
