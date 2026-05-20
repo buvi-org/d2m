@@ -22,6 +22,8 @@ const TOOL_OPACITY = 0.72;
 const FIXTURE_COLOR = 0x3b4a5a;
 const CLAMP_ZONE_COLOR = 0xff3b30;
 const GOUGE_SPHERE_COLOR = 0xff2222;
+const CLEARANCE_MARKER_COLOR = 0xffd166;
+const COLLISION_MARKER_COLOR = 0xf85149;
 const TOOLPATH_COLOR = 0x00ccff;
 const TOOLPATH_COLORS = {
   rapid: 0x9aa4b2,
@@ -60,6 +62,7 @@ export class Viewer {
     this.toolpathObjects = [];
     this.fixtureGroup = null;
     this.clampZoneGroup = null;
+    this.clearanceMarkerGroup = null;
     this.wireframe = null;
     this.gridHelper = null;
 
@@ -68,6 +71,7 @@ export class Viewer {
     this._showTarget = false;
     this._showFixture = true;
     this._showClampZones = true;
+    this._showClearanceMarkers = true;
     this._heatmapMode = false;
     this._wireframeMode = false;
     this._originalStockMaterial = null;
@@ -129,8 +133,10 @@ export class Viewer {
     this.scene.add(this.toolGroup);
     this.fixtureGroup = new THREE.Group();
     this.clampZoneGroup = new THREE.Group();
+    this.clearanceMarkerGroup = new THREE.Group();
     this.scene.add(this.fixtureGroup);
     this.scene.add(this.clampZoneGroup);
+    this.scene.add(this.clearanceMarkerGroup);
 
     // Animation loop
     this._animate = this._animate.bind(this);
@@ -455,6 +461,13 @@ export class Viewer {
     }
   }
 
+  setClearanceMarkerVisible(visible) {
+    this._showClearanceMarkers = visible;
+    if (this.clearanceMarkerGroup) {
+      this.clearanceMarkerGroup.visible = visible;
+    }
+  }
+
   loadFixtures(fixtures) {
     this._clearGroup(this.fixtureGroup);
     this._clearGroup(this.clampZoneGroup);
@@ -695,6 +708,58 @@ export class Viewer {
       ),
     }));
     this.addGougeMarkers(markers);
+  }
+
+  clearClearanceMarkers() {
+    this._clearGroup(this.clearanceMarkerGroup);
+  }
+
+  addClearanceMarkers(markers) {
+    this.clearClearanceMarkers();
+
+    for (const marker of markers || []) {
+      const position = this._markerPosition(marker);
+      if (!position) continue;
+
+      const severity = String(marker.severity || marker.level || marker.type || '').toLowerCase();
+      const isCollision = severity.includes('collision')
+        || severity.includes('error')
+        || severity.includes('fail');
+      const color = isCollision ? COLLISION_MARKER_COLOR : CLEARANCE_MARKER_COLOR;
+      const radius = Math.max(Number(marker.radius_mm || marker.radius || marker.size_mm || 1.6), 0.6);
+
+      const geom = new THREE.SphereGeometry(radius, 18, 12);
+      const mat = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: isCollision ? 0.9 : 0.74,
+        depthTest: false,
+      });
+      const sphere = new THREE.Mesh(geom, mat);
+      sphere.position.set(...position);
+      sphere.renderOrder = 35;
+      this.clearanceMarkerGroup.add(sphere);
+
+      const ringGeom = new THREE.TorusGeometry(radius * 1.45, Math.max(radius * 0.08, 0.08), 8, 32);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.78,
+        depthTest: false,
+      });
+      const ring = new THREE.Mesh(ringGeom, ringMat);
+      ring.position.set(...position);
+      ring.renderOrder = 36;
+      this.clearanceMarkerGroup.add(ring);
+    }
+
+    this.setClearanceMarkerVisible(this._showClearanceMarkers);
+  }
+
+  _markerPosition(marker) {
+    const pos = marker?.position || marker?.center || marker?.point || marker?.tool_position;
+    if (!Array.isArray(pos) || pos.length < 3) return null;
+    return [Number(pos[0]), Number(pos[1]), Number(pos[2])];
   }
 
   // -----------------------------------------------------------------------
@@ -966,6 +1031,7 @@ export class Viewer {
     this._disposeStockMesh();
     this._disposeTargetMesh();
     this.clearGougeMarkers();
+    this.clearClearanceMarkers();
     this.setToolpath(null);
     this._clearGroup(this.fixtureGroup);
     this._clearGroup(this.clampZoneGroup);

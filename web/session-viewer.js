@@ -11,12 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
     'status',
     'metadata',
     'operations',
+    'selected-operation',
     'show-stock',
     'show-target',
     'show-toolpath',
     'show-tool',
     'show-fixture',
     'show-clamps',
+    'show-markers',
     'show-diff',
     'fit-view',
     'timeline-prev',
@@ -49,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   els['show-fixture'].addEventListener('change', () => viewer.setFixtureVisible(els['show-fixture'].checked));
   els['show-clamps'].addEventListener('change', () => viewer.setClampZoneVisible(els['show-clamps'].checked));
+  els['show-markers'].addEventListener('change', () => viewer.setClearanceMarkerVisible(els['show-markers'].checked));
   els['show-toolpath'].addEventListener('change', () => {
     if (!els['show-toolpath'].checked) {
       viewer.setToolpath(null);
@@ -100,6 +103,7 @@ async function loadSession(scenePath) {
     window.__currentToolpath = [];
     window.__currentToolpathMoves = [];
     window.__currentDiffRegions = [];
+    window.__currentClearanceMarkers = [];
     window.__selectedToolpathOperation = 'all';
     window.__playback = emptyPlayback();
 
@@ -121,6 +125,10 @@ async function loadSession(scenePath) {
     viewer.loadFixtures(scene.fixtures || []);
     viewer.setFixtureVisible(els['show-fixture'].checked);
     viewer.setClampZoneVisible(els['show-clamps'].checked);
+
+    window.__currentClearanceMarkers = await loadSceneMarkers(scene, baseUrl);
+    viewer.addClearanceMarkers(window.__currentClearanceMarkers);
+    viewer.setClearanceMarkerVisible(els['show-markers'].checked);
 
     const toolpathAsset = scene.assets?.toolpaths || scene.assets?.toolpath;
     if (toolpathAsset) {
@@ -149,12 +157,14 @@ async function loadSession(scenePath) {
 
     renderOperations(scene.operations || []);
     preparePlayback(getSelectedOperations(), { reset: true });
+    updateSelectedOperationDetails();
     updateTimelineControls();
     setStatus(
       `Loaded ${scene.title || 'SubCAD visualization session'}; `
       + `${window.__currentToolpath.length} toolpath points; `
       + `${window.__stockStates.length} stock states; `
-      + `${window.__currentDiffRegions.length} diff regions`
+      + `${window.__currentDiffRegions.length} diff regions; `
+      + `${window.__currentClearanceMarkers.length} clearance markers`
     );
   } catch (err) {
     console.error(err);
@@ -173,6 +183,58 @@ function cacheBustUrl(url) {
     next.searchParams.set('v', window.__cacheBust);
   }
   return next.href;
+}
+
+async function loadSceneMarkers(scene, baseUrl) {
+  const markers = [
+    ...normalizeMarkers(scene.clearance_markers, 'clearance'),
+    ...normalizeMarkers(scene.collision_markers, 'collision'),
+    ...normalizeMarkers(scene.validation_markers, 'clearance'),
+    ...normalizeMarkers(scene.markers, 'clearance'),
+    ...normalizeMarkers(scene.clearance?.markers, 'clearance'),
+    ...normalizeMarkers(scene.collision?.markers, 'collision'),
+  ];
+
+  for (const key of ['clearance_markers', 'collision_markers', 'validation_markers', 'markers']) {
+    const asset = scene.assets?.[key];
+    if (!asset) continue;
+    try {
+      const payload = await fetchJson(assetUrl(asset, baseUrl));
+      const defaultType = key.includes('collision') ? 'collision' : 'clearance';
+      markers.push(...normalizeMarkers(payload, defaultType));
+    } catch (err) {
+      console.warn(`Could not load ${key}:`, err);
+    }
+  }
+
+  return markers;
+}
+
+function normalizeMarkers(payload, defaultType) {
+  if (!payload) return [];
+  if (Array.isArray(payload)) {
+    return payload.flatMap(item => normalizeMarkers(item, defaultType));
+  }
+  if (Array.isArray(payload.markers)) {
+    return normalizeMarkers(payload.markers, defaultType);
+  }
+  if (Array.isArray(payload.clearance_markers) || Array.isArray(payload.collision_markers)) {
+    return [
+      ...normalizeMarkers(payload.clearance_markers, 'clearance'),
+      ...normalizeMarkers(payload.collision_markers, 'collision'),
+    ];
+  }
+  if (typeof payload === 'object') {
+    const position = payload.position || payload.center || payload.point || payload.tool_position;
+    if (Array.isArray(position) && position.length >= 3) {
+      return [{
+        ...payload,
+        marker_type: payload.marker_type || payload.type || defaultType,
+        severity: payload.severity || payload.level || payload.type || defaultType,
+      }];
+    }
+  }
+  return [];
 }
 
 function extractToolpathPoints(payload) {
@@ -205,11 +267,19 @@ function extractToolpathMoves(payload) {
       extractedOperations.push({
         operation: op.operation,
         sequence_number: op.sequence_number,
+        setup: op.setup,
+        face_selector: op.face_selector,
         tool: op.tool,
         tool_assembly: op.tool_assembly,
         tool_type: op.tool_type,
         tool_diameter_mm: op.tool_diameter_mm,
         summary: op.summary,
+        toolpath_summary: op.toolpath_summary,
+        tool_selection: op.tool_selection,
+        pass_plan: op.pass_plan || op.toolpath?.pass_plan,
+        passes: op.passes || op.toolpath?.passes,
+        validation: op.validation,
+        warnings: op.warnings,
         moves: extractedMoves,
       });
     }
@@ -234,6 +304,7 @@ function renderMetadata(scene, comparison) {
     ['Operations', String((scene.operations || []).length)],
     ['Cycle time', formatMinutes(totalMinutes)],
     ['Fixtures', String((scene.fixtures || []).length)],
+    ['Markers', String((window.__currentClearanceMarkers || []).length)],
   ];
   if (comparison) {
     rows.push(['Compare', comparison.status || 'unknown']);
@@ -250,6 +321,7 @@ function renderMetadata(scene, comparison) {
 function renderOperations(operations) {
   if (!operations.length) {
     els.operations.innerHTML = '<div class="op-item pending">No operations in session.</div>';
+    updateSelectedOperationDetails();
     return;
   }
   els.operations.innerHTML = `
@@ -257,13 +329,167 @@ function renderOperations(operations) {
       <div>All operations</div>
       <small>Combined toolpath · ${escapeHtml(formatMinutes(totalOperationMinutes(operations)))}</small>
     </button>
-  ` + operations.map(op => `
+  ` + operations.map(op => {
+    const detailOp = mergedOperationForSequence(op.sequence_number) || op;
+    return `
     <button class="op-item complete" type="button" data-sequence="${escapeHtml(String(op.sequence_number ?? ''))}">
       <div>OP ${escapeHtml(String(op.sequence_number ?? '?'))}: ${escapeHtml(op.operation || '?')}</div>
-      <small>${escapeHtml(formatMinutes(operationMinutes(op)))} · ${escapeHtml(op.setup || 'unassigned')} ${escapeHtml(op.face_selector || '')}</small>
+      <small>${escapeHtml(toolLabel(detailOp))} · ${escapeHtml(passCountLabel(detailOp))} · ${escapeHtml(formatMinutes(operationMinutes(detailOp)))}</small>
+      <small>${escapeHtml(op.setup || 'unassigned')} ${escapeHtml(op.face_selector || '')}</small>
     </button>
-  `).join('');
+  `;
+  }).join('');
   updateOperationSelection();
+}
+
+function updateSelectedOperationDetails() {
+  if (!els['selected-operation']) return;
+
+  const selected = window.__selectedToolpathOperation || 'all';
+  const sceneOps = window.__currentScene?.operations || [];
+  const selectedOps = selected === 'all'
+    ? sceneOps.map(op => mergedOperationForSequence(op.sequence_number) || op)
+    : sceneOps
+      .filter(op => String(op.sequence_number) === selected)
+      .map(op => mergedOperationForSequence(op.sequence_number) || op);
+
+  if (selected === 'all') {
+    const toolIds = uniqueValues(selectedOps.map(op => toolFromOperation(op).toolId).filter(Boolean));
+    const holderIds = uniqueValues(selectedOps.map(op => toolFromOperation(op).holderId).filter(Boolean));
+    const warnings = selectedOps.flatMap(op => collectOperationWarnings(op));
+    els['selected-operation'].innerHTML = `
+      <div class="operation-detail">
+        <div class="detail-title">All operations</div>
+        <div class="detail-grid">
+          ${detailRow('Operations', String(selectedOps.length))}
+          ${detailRow('Tools', toolIds.length ? toolIds.join(', ') : 'n/a')}
+          ${detailRow('Holders', holderIds.length ? holderIds.join(', ') : 'n/a')}
+          ${detailRow('Passes', passCountLabel(selectedOps))}
+          ${detailRow('Time', formatMinutes(totalOperationMinutes(selectedOps)))}
+        </div>
+        ${renderWarnings(warnings)}
+      </div>
+    `;
+    return;
+  }
+
+  const operation = mergedOperationForSequence(selected);
+  if (!operation) {
+    els['selected-operation'].innerHTML = '<div class="detail-empty">Select an operation to inspect tool, passes, time, and warnings.</div>';
+    return;
+  }
+
+  const playback = window.__playback || emptyPlayback();
+  const segment = segmentAtTime(playback, playback.elapsedSec);
+  const currentPass = segment?.operation && String(segment.operation.sequence_number) === String(operation.sequence_number)
+    ? segment.passNumber
+    : null;
+  const tool = toolFromOperation(operation);
+  const warnings = collectOperationWarnings(operation);
+  const selection = operation.tool_selection || operation.tool?.selection || {};
+  const rejectedCount = Array.isArray(selection.rejected_tools) ? selection.rejected_tools.length : 0;
+
+  els['selected-operation'].innerHTML = `
+    <div class="operation-detail">
+      <div class="detail-title">OP ${escapeHtml(operation.sequence_number ?? '?')}: ${escapeHtml(operation.operation || '?')}</div>
+      <div class="detail-grid">
+        ${detailRow('Selected tool', tool.toolId || tool.toolNumber || 'n/a')}
+        ${detailRow('Holder', tool.holderId || 'n/a')}
+        ${detailRow('Tool dia', `${formatNumber(tool.diameter)} mm`)}
+        ${detailRow('Pass', currentPass ? `${currentPass} / ${passCount(operation)}` : passCountLabel(operation))}
+        ${detailRow('Operation time', formatMinutes(operationMinutes(operation)))}
+        ${detailRow('Setup', `${operation.setup || 'unassigned'} ${operation.face_selector || ''}`)}
+        ${detailRow('Selection reason', selection.reason || operation.selection_reason || 'n/a')}
+        ${rejectedCount ? detailRow('Rejected tools', String(rejectedCount)) : ''}
+      </div>
+      ${renderWarnings(warnings)}
+    </div>
+  `;
+}
+
+function mergedOperationForSequence(sequence) {
+  const sceneOp = (window.__currentScene?.operations || [])
+    .find(op => String(op.sequence_number) === String(sequence)) || {};
+  const toolpathOp = (window.__currentToolpathMoves || [])
+    .find(op => String(op.sequence_number) === String(sequence)) || {};
+  if (!sceneOp.sequence_number && !toolpathOp.sequence_number) return null;
+  return {
+    ...sceneOp,
+    ...toolpathOp,
+    tool: toolpathOp.tool || sceneOp.tool,
+    tool_assembly: toolpathOp.tool_assembly || sceneOp.tool_assembly,
+    toolpath_summary: sceneOp.toolpath_summary || toolpathOp.toolpath_summary || toolpathOp.summary,
+    summary: toolpathOp.summary || sceneOp.summary,
+    pass_plan: toolpathOp.pass_plan || sceneOp.pass_plan,
+    passes: toolpathOp.passes || sceneOp.passes,
+    validation: mergeValidation(sceneOp.validation, toolpathOp.validation),
+    warnings: [
+      ...(Array.isArray(sceneOp.warnings) ? sceneOp.warnings : []),
+      ...(Array.isArray(toolpathOp.warnings) ? toolpathOp.warnings : []),
+    ],
+  };
+}
+
+function detailRow(label, value) {
+  return `<div class="detail-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
+}
+
+function renderWarnings(warnings) {
+  if (!warnings.length) {
+    return '<div class="warning-list"><div class="warning-item ok">No warnings for selected operation.</div></div>';
+  }
+  return `<div class="warning-list">${warnings.map(warning => {
+    const level = String(warning.level || warning.severity || warning.type || '').toLowerCase();
+    const isError = level.includes('error') || level.includes('fail') || level.includes('collision');
+    return `<div class="warning-item ${isError ? 'error' : ''}">${escapeHtml(warningText(warning))}</div>`;
+  }).join('')}</div>`;
+}
+
+function warningText(warning) {
+  if (typeof warning === 'string') return warning;
+  return warning.message || warning.text || warning.description || warning.code || JSON.stringify(warning);
+}
+
+function collectOperationWarnings(operation) {
+  if (!operation) return [];
+  const warnings = [];
+  for (const source of [
+    operation.warnings,
+    operation.validation?.warnings,
+    operation.validation?.errors,
+    operation.tool_selection?.warnings,
+    operation.tool_selection?.errors,
+    operation.tool?.selection?.warnings,
+    operation.tool?.selection?.errors,
+  ]) {
+    if (Array.isArray(source)) warnings.push(...source);
+  }
+
+  const selected = String(operation.sequence_number ?? '');
+  for (const marker of window.__currentClearanceMarkers || []) {
+    const markerSeq = marker.sequence_number ?? marker.operation_sequence ?? marker.operation_id ?? marker.op;
+    if (markerSeq !== undefined && String(markerSeq) === selected) {
+      warnings.push({
+        severity: marker.severity || marker.marker_type || 'clearance',
+        message: marker.message || marker.label || `${marker.marker_type || 'clearance'} marker near operation`,
+      });
+    }
+  }
+  return warnings;
+}
+
+function mergeValidation(a, b) {
+  if (!a && !b) return undefined;
+  return {
+    warnings: [
+      ...(Array.isArray(a?.warnings) ? a.warnings : []),
+      ...(Array.isArray(b?.warnings) ? b.warnings : []),
+    ],
+    errors: [
+      ...(Array.isArray(a?.errors) ? a.errors : []),
+      ...(Array.isArray(b?.errors) ? b.errors : []),
+    ],
+  };
 }
 
 function renderSelectedToolpath() {
@@ -275,6 +501,7 @@ function renderSelectedToolpath() {
   }
 
   preparePlayback(getSelectedOperations(), { reset: true });
+  updateSelectedOperationDetails();
 }
 
 function getSelectedOperations() {
@@ -295,6 +522,7 @@ function updateOperationSelection() {
   for (const item of els.operations.querySelectorAll('.op-item')) {
     item.classList.toggle('selected', item.dataset.sequence === selected);
   }
+  updateSelectedOperationDetails();
 }
 
 function emptyPlayback() {
@@ -327,6 +555,7 @@ function buildPlayback(operations) {
   for (const operation of operations) {
     const moves = operation.moves || [];
     const rawSegments = [];
+    const movePassNumbers = inferMovePassNumbers(operation);
     for (let i = 1; i < moves.length; i += 1) {
       const start = moves[i - 1].position;
       const end = moves[i].position;
@@ -353,6 +582,7 @@ function buildPlayback(operations) {
         moveType,
         operation,
         tool: toolFromOperation(operation),
+        passNumber: movePassNumbers[i] || 1,
       });
     }
 
@@ -475,6 +705,7 @@ function updatePlaybackAt(elapsedSec) {
   els['playback-range'].value = playback.totalTimeSec > 0
     ? Math.round((playback.elapsedSec / playback.totalTimeSec) * 1000)
     : 0;
+  updateSelectedOperationDetails();
 }
 
 function updatePlaybackLabel() {
@@ -492,7 +723,8 @@ function updatePlaybackLabel() {
   const opLabel = segment?.operation
     ? `OP ${segment.operation.sequence_number}: ${segment.operation.operation}`
     : 'Toolpath';
-  els['playback-label'].textContent = `${opLabel} · ${segment.moveType} · `
+  const passLabel = segment?.passNumber ? ` · pass ${segment.passNumber}/${passCount(segment.operation)}` : '';
+  els['playback-label'].textContent = `${opLabel} · ${segment.moveType}${passLabel} · `
     + `${formatTime(playback.elapsedSec)} / ${formatTime(playback.totalTimeSec)} `
     + `(${els['playback-speed'].value}x)`;
 }
@@ -520,6 +752,90 @@ function toolFromOperation(operation) {
   };
 }
 
+function toolLabel(operation) {
+  const tool = toolFromOperation(operation || {});
+  const toolId = tool.toolId || (tool.toolNumber ? `T${tool.toolNumber}` : 'tool n/a');
+  const holderId = tool.holderId || 'holder n/a';
+  return `${toolId} / ${holderId}`;
+}
+
+function passCountLabel(operationOrOperations) {
+  if (Array.isArray(operationOrOperations)) {
+    const total = operationOrOperations.reduce((sum, op) => sum + passCount(op), 0);
+    return `${total} pass${total === 1 ? '' : 'es'}`;
+  }
+  const count = passCount(operationOrOperations || {});
+  return `${count} pass${count === 1 ? '' : 'es'}`;
+}
+
+function passCount(operation) {
+  if (!operation) return 0;
+  const explicit = Number(
+    operation.pass_count
+    || operation.summary?.pass_count
+    || operation.toolpath_summary?.pass_count
+    || operation.pass_plan?.pass_count
+  );
+  if (explicit > 0) return explicit;
+  if (Array.isArray(operation.passes)) return Math.max(1, operation.passes.length);
+  if (Array.isArray(operation.pass_plan?.passes)) return Math.max(1, operation.pass_plan.passes.length);
+  if (Array.isArray(operation.pass_plan)) return Math.max(1, operation.pass_plan.length);
+  return Math.max(1, inferMovePassNumbers(operation).reduce((max, value) => Math.max(max, value), 1));
+}
+
+function inferMovePassNumbers(operation) {
+  const moves = operation?.moves || [];
+  if (!moves.length) return [];
+
+  if (Array.isArray(operation.passes) && operation.passes.length) {
+    return mapMovesToExplicitPasses(moves, operation.passes);
+  }
+  if (Array.isArray(operation.pass_plan?.passes) && operation.pass_plan.passes.length) {
+    return mapMovesToExplicitPasses(moves, operation.pass_plan.passes);
+  }
+
+  const passNumbers = [];
+  const depthLevels = new Map();
+  let currentPass = 1;
+  for (let i = 0; i < moves.length; i += 1) {
+    const move = moves[i];
+    const explicit = Number(move.pass_number || move.pass || move.pass_index);
+    if (explicit > 0) {
+      currentPass = Math.max(1, explicit);
+      passNumbers.push(currentPass);
+      continue;
+    }
+
+    const type = moveTypeOf(move);
+    const z = Array.isArray(move.position) ? Number(move.position[2]) : null;
+    if ((type === 'feed' || type === 'plunge' || type === 'arc') && Number.isFinite(z)) {
+      const key = z.toFixed(3);
+      if (!depthLevels.has(key)) {
+        depthLevels.set(key, depthLevels.size + 1);
+      }
+      currentPass = depthLevels.get(key);
+    }
+    passNumbers.push(currentPass);
+  }
+  return passNumbers;
+}
+
+function mapMovesToExplicitPasses(moves, passes) {
+  const labels = moves.map(() => 1);
+  for (let index = 0; index < passes.length; index += 1) {
+    const pass = passes[index] || {};
+    const moveIndexes = pass.move_indexes || pass.move_indices;
+    if (Array.isArray(moveIndexes)) {
+      for (const moveIndex of moveIndexes) {
+        if (moveIndex >= 0 && moveIndex < labels.length) {
+          labels[moveIndex] = index + 1;
+        }
+      }
+    }
+  }
+  return labels;
+}
+
 function operationMinutes(operation) {
   return Number(
     operation?.toolpath_summary?.estimated_time_min
@@ -531,6 +847,16 @@ function operationMinutes(operation) {
 
 function totalOperationMinutes(operations) {
   return (operations || []).reduce((sum, op) => sum + operationMinutes(op), 0);
+}
+
+function uniqueValues(values) {
+  return [...new Set(values.map(value => String(value)).filter(Boolean))];
+}
+
+function formatNumber(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 'n/a';
+  return numeric.toFixed(Math.abs(numeric) >= 10 ? 1 : 2);
 }
 
 function formatMinutes(minutes) {

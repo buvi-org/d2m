@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>d2m - SubCAD Visualization</title>
-  <link rel="stylesheet" href="style.css?v=20260520-fixture-tool-v1">
+  <link rel="stylesheet" href="style.css?v=20260520-manufacturing-trust-v1">
   <script type="importmap">
   {
     "imports": {
@@ -13,7 +13,7 @@
     }
   }
   </script>
-  <script type="module" src="session-viewer.js?v=20260520-fixture-tool-v1"></script>
+  <script type="module" src="session-viewer.js?v=20260520-manufacturing-trust-v1"></script>
 </head>
 <body>
 <div class="app-container">
@@ -67,6 +67,13 @@
       </div>
 
       <div class="section">
+        <div class="section-header">Selected Operation</div>
+        <div class="section-body" id="selected-operation">
+          <div class="detail-empty">No operation selected.</div>
+        </div>
+      </div>
+
+      <div class="section">
         <div class="section-header">View Options</div>
         <div class="section-body">
           <label class="check-row"><input type="checkbox" id="show-stock" checked> Stock material</label>
@@ -75,6 +82,7 @@
           <label class="check-row"><input type="checkbox" id="show-tool" checked> Tool</label>
           <label class="check-row"><input type="checkbox" id="show-fixture" checked> Fixture</label>
           <label class="check-row"><input type="checkbox" id="show-clamps" checked> Clamp zones</label>
+          <label class="check-row"><input type="checkbox" id="show-markers" checked> Clearance markers</label>
           <label class="check-row"><input type="checkbox" id="show-diff" checked> Diff markers</label>
           <button class="btn full-width" id="fit-view">Fit View</button>
           <div class="toolpath-legend" aria-label="Toolpath move legend">
@@ -83,6 +91,8 @@
             <div><span class="legend-swatch plunge"></span>Plunge</div>
             <div><span class="legend-swatch retract"></span>Retract</div>
             <div><span class="legend-swatch arc"></span>Arc</div>
+            <div><span class="legend-swatch clearance"></span>Clearance</div>
+            <div><span class="legend-swatch collision"></span>Collision</div>
           </div>
         </div>
       </div>
