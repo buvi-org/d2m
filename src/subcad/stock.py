@@ -88,6 +88,9 @@ class Stock:
 
     def _apply_op(self, op) -> "Stock":
         """Apply a machining operation: modify shape, record in plan, return new Stock."""
+        if getattr(op, "sequence_number", 0) == 0:
+            op.sequence_number = self._next_op_number
+
         # Look up active setup and apply its face_selector to the operation
         active_setup = self._active_setup
         if active_setup is not None and active_setup in self._setups:
@@ -117,6 +120,18 @@ class Stock:
         )
 
         op_dict = op.to_dict()
+        op_dict["sequence_number"] = op.sequence_number
+
+        if hasattr(op, "to_toolpath"):
+            try:
+                toolpath = op.to_toolpath()
+            except Exception:
+                toolpath = []
+            if toolpath:
+                serialized_toolpath = _serialize_toolpath(toolpath)
+                if serialized_toolpath:
+                    op_dict["toolpath"] = serialized_toolpath
+
         # Attach setup and face_selector info to the op record
         if active_setup is not None and active_setup in self._setups:
             op_dict["setup"] = active_setup
@@ -514,6 +529,294 @@ class Stock:
         op.sequence_number = self._next_op_number
         return self._apply_op(op)
 
+    def peck_drill(
+        self,
+        diameter: float,
+        depth: float = 20.0,
+        *,
+        cx: float = 0.0,
+        cy: float = 0.0,
+        peck_step: float = 2.0,
+        through: bool = False,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Peck-drill a deep hole."""
+        from .operations import PeckDrillOp
+
+        op = PeckDrillOp(
+            cx=cx,
+            cy=cy,
+            diameter=diameter,
+            depth=depth,
+            peck_step=peck_step,
+            through=through,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def ream(
+        self,
+        diameter: float,
+        depth: float = 10.0,
+        *,
+        cx: float = 0.0,
+        cy: float = 0.0,
+        through: bool = False,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Finish a pre-drilled hole with a reamer."""
+        from .operations import ReamOp
+
+        op = ReamOp(
+            cx=cx,
+            cy=cy,
+            diameter=diameter,
+            depth=depth,
+            through=through,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def bore(
+        self,
+        diameter: float,
+        depth: float = 10.0,
+        *,
+        cx: float = 0.0,
+        cy: float = 0.0,
+        through: bool = False,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Bore a hole for trueness and finish."""
+        from .operations import BoreOp
+
+        op = BoreOp(
+            cx=cx,
+            cy=cy,
+            diameter=diameter,
+            depth=depth,
+            through=through,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def countersink(
+        self,
+        diameter: float,
+        countersink_diameter: float,
+        *,
+        depth: float = 0.0,
+        countersink_angle: float = 82.0,
+        cx: float = 0.0,
+        cy: float = 0.0,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Cut a countersunk hole."""
+        from .operations import CountersinkOp
+
+        op = CountersinkOp(
+            cx=cx,
+            cy=cy,
+            diameter=diameter,
+            countersink_diameter=countersink_diameter,
+            depth=depth,
+            countersink_angle=countersink_angle,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def counterbore(
+        self,
+        hole_diameter: float,
+        counterbore_diameter: float,
+        counterbore_depth: float,
+        *,
+        cx: float = 0.0,
+        cy: float = 0.0,
+        through: bool = False,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Cut a flat-bottom counterbore."""
+        from .operations import CounterboreOp
+
+        op = CounterboreOp(
+            cx=cx,
+            cy=cy,
+            hole_diameter=hole_diameter,
+            counterbore_diameter=counterbore_diameter,
+            counterbore_depth=counterbore_depth,
+            through=through,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def thread_mill(
+        self,
+        diameter: float,
+        depth: float = 10.0,
+        *,
+        pitch: float = 0.0,
+        cx: float = 0.0,
+        cy: float = 0.0,
+        through: bool = False,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Thread-mill an internal thread."""
+        from .operations import ThreadMillOp
+
+        op = ThreadMillOp(
+            cx=cx,
+            cy=cy,
+            diameter=diameter,
+            pitch=pitch,
+            depth=depth,
+            through=through,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def t_slot(
+        self,
+        length: float,
+        width: float,
+        depth: float = 8.0,
+        *,
+        angle: float = 0.0,
+        cx: float = 0.0,
+        cy: float = 0.0,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Cut a T-slot, approximated as a rectangular slot."""
+        from .operations import TSlotOp
+
+        op = TSlotOp(
+            cx=cx,
+            cy=cy,
+            length=length,
+            width=width,
+            depth=depth,
+            angle=angle,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def dovetail(
+        self,
+        length: float,
+        width: float,
+        depth: float = 5.0,
+        *,
+        angle: float = 45.0,
+        cx: float = 0.0,
+        cy: float = 0.0,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Cut a dovetail slot."""
+        from .operations import DovetailOp
+
+        op = DovetailOp(
+            cx=cx,
+            cy=cy,
+            length=length,
+            width=width,
+            depth=depth,
+            angle=angle,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def groove(
+        self,
+        length: float,
+        width: float,
+        depth: float = 5.0,
+        *,
+        angle: float = 0.0,
+        cx: float = 0.0,
+        cy: float = 0.0,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Cut a rectangular groove."""
+        from .operations import GrooveOp
+
+        op = GrooveOp(
+            cx=cx,
+            cy=cy,
+            length=length,
+            width=width,
+            depth=depth,
+            angle=angle,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def surface_3d(
+        self,
+        *,
+        stepover: float = 1.0,
+        depth: float = 0.5,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Record a 3D surfacing pass."""
+        from .operations import Surface3DOp
+
+        op = Surface3DOp(
+            stepover=stepover,
+            depth=depth,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def deburr(
+        self,
+        *,
+        edge_selection: str = "all",
+        tool_diameter: float = 3.0,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Deburr edges using a small chamfer proxy."""
+        from .operations import DeburrOp
+
+        op = DeburrOp(
+            edge_selection=edge_selection,
+            tool_diameter=tool_diameter,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def spot_face(
+        self,
+        diameter: float,
+        depth: float = 0.5,
+        *,
+        cx: float = 0.0,
+        cy: float = 0.0,
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Cut a shallow flat spot-face."""
+        from .operations import SpotFaceOp
+
+        op = SpotFaceOp(
+            cx=cx,
+            cy=cy,
+            diameter=diameter,
+            depth=depth,
+            tool=tool,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
     # -------------------------------------------------------------------
     #  Fixturing API
     # -------------------------------------------------------------------
@@ -671,8 +974,15 @@ class Stock:
                 })
                 continue
 
-            # Generate approximate toolpath from the operation
-            toolpath = _op_to_simple_toolpath(op_dict, bbox)
+            # Prefer operation-provided toolpath data when available.
+            toolpath_data = op_dict.get("toolpath")
+            toolpath = (
+                _toolpath_from_serialized(toolpath_data)
+                if toolpath_data
+                else _op_to_simple_toolpath(op_dict, bbox)
+            )
+            if not toolpath:
+                toolpath = _op_to_simple_toolpath(op_dict, bbox)
             for pose in toolpath:
                 engine.remove_tool_at_pose(sim_tool, pose)
 
@@ -718,6 +1028,36 @@ class Stock:
         """Save the process plan as a JSON file."""
         self._plan.save(path)
 
+    def setup_sheet(self) -> dict:
+        """Return a shop-floor setup sheet dictionary."""
+        return self._plan.setup_sheet_dict()
+
+    def to_setup_sheet(self, path: Optional[str] = None):
+        """Return or save a shop-floor setup sheet.
+
+        If *path* is provided, writes JSON to that path and returns the sheet
+        dict. Without *path*, returns the sheet dict directly.
+        """
+        sheet = self._plan.setup_sheet_dict()
+        if path:
+            import json
+
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(sheet, fh, indent=2)
+        return sheet
+
+    def save_setup_sheet(self, path: str) -> dict:
+        """Save the setup sheet JSON to *path* and return the sheet dict."""
+        return self.to_setup_sheet(path)
+
+    def export_setup_sheet(self, path: str) -> dict:
+        """Compatibility alias for save_setup_sheet."""
+        return self.save_setup_sheet(path)
+
+    def setup_sheet_markdown(self) -> str:
+        """Return a Markdown setup sheet."""
+        return self._plan.setup_sheet_markdown()
+
     def plan_summary(self) -> str:
         """Return a human-readable summary of the process plan."""
         return self._plan.summary()
@@ -751,6 +1091,82 @@ class Stock:
 #  Simulation helper (module-level)
 # =============================================================================
 
+def _serialize_toolpath(toolpath):
+    """Convert operation toolpath objects into JSON-serializable records."""
+    if hasattr(toolpath, "to_dict"):
+        return toolpath.to_dict()
+
+    serialized = []
+    for pose in toolpath:
+        if hasattr(pose, "to_dict"):
+            serialized.append(pose.to_dict())
+            continue
+
+        if isinstance(pose, dict):
+            serialized.append(dict(pose))
+            continue
+
+        position = getattr(pose, "position", None)
+        orientation = getattr(pose, "orientation", None)
+        if position is not None and orientation is not None:
+            serialized.append({
+                "position": list(position),
+                "orientation": list(orientation),
+            })
+            continue
+
+        if isinstance(pose, (list, tuple)) and len(pose) >= 3:
+            serialized.append({
+                "position": [pose[0], pose[1], pose[2]],
+                "orientation": [1.0, 0.0, 0.0, 0.0],
+            })
+
+    return serialized
+
+
+def _toolpath_from_serialized(toolpath_data) -> list:
+    """Rehydrate serialized operation toolpath records for simulation."""
+    try:
+        from src.simulation.kinematics import ToolPose
+    except ImportError:
+        from simulation.kinematics import ToolPose
+
+    import numpy as np
+
+    if isinstance(toolpath_data, dict):
+        if "moves" in toolpath_data:
+            toolpath_data = toolpath_data["moves"]
+        elif "positions" in toolpath_data:
+            toolpath_data = toolpath_data["positions"]
+        else:
+            toolpath_data = [toolpath_data]
+
+    toolpath = []
+    for record in toolpath_data:
+        if hasattr(record, "position") and hasattr(record, "orientation"):
+            toolpath.append(record)
+            continue
+
+        if isinstance(record, dict):
+            position = record.get("position")
+            orientation = record.get("orientation", [1.0, 0.0, 0.0, 0.0])
+        elif isinstance(record, (list, tuple)) and len(record) >= 3:
+            position = record[:3]
+            orientation = [1.0, 0.0, 0.0, 0.0]
+        else:
+            continue
+
+        if position is None:
+            continue
+
+        toolpath.append(ToolPose(
+            position=np.array(position, dtype=np.float64),
+            orientation=np.array(orientation, dtype=np.float64),
+        ))
+
+    return toolpath
+
+
 def _op_to_simple_toolpath(op_dict: dict, bbox: dict) -> list:
     """Generate a minimal toolpath for simulation from an operation dict.
 
@@ -762,6 +1178,12 @@ def _op_to_simple_toolpath(op_dict: dict, bbox: dict) -> list:
     pattern across the stock top face.  For pocket/drill/slot operations,
     generates a single plunge at the operation position.
     """
+    authored_toolpath = op_dict.get("toolpath")
+    if authored_toolpath:
+        preferred = _toolpath_from_serialized(authored_toolpath)
+        if preferred:
+            return preferred
+
     try:
         from src.simulation.kinematics import ToolPose
     except ImportError:

@@ -13,6 +13,143 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 
+SCHEMA_VERSION = "subcad.shop_floor.v1"
+
+
+def _jsonable(value):
+    """Return *value* converted to plain JSON-compatible containers."""
+    if isinstance(value, dict):
+        return {str(k): _jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(v) for v in value]
+    return value
+
+
+def _normalize_feeds_speeds(feeds_speeds: Optional[dict]) -> Optional[dict]:
+    """Normalize feed-rate aliases while preserving the original fields."""
+    if feeds_speeds is None:
+        return None
+
+    feeds = dict(feeds_speeds)
+    feed_rate = feeds.get("feed_rate_mm_per_min", feeds.get("feed_rate_mm_min"))
+    if feed_rate is not None:
+        feeds["feed_rate_mm_per_min"] = feed_rate
+        feeds["feed_rate_mm_min"] = feed_rate
+    return feeds
+
+
+def _tool_metadata(op_dict: dict) -> dict:
+    """Build structured tool metadata from the legacy flat operation fields."""
+    tool_type = op_dict.get("tool_type", "")
+    diameter = op_dict.get("tool_diameter_mm")
+    tool: dict = {
+        "tool_type": tool_type,
+        "diameter_mm": diameter,
+    }
+
+    for old_key, new_key in (
+        ("tool_tip_angle_deg", "tip_angle_deg"),
+        ("tool_tip_diameter_mm", "tip_diameter_mm"),
+        ("tool_flute_length_mm", "flute_length_mm"),
+    ):
+        if old_key in op_dict:
+            tool[new_key] = op_dict[old_key]
+
+    label_parts = [str(tool_type) or "tool"]
+    if diameter not in (None, ""):
+        label_parts.append(f"D{diameter}mm")
+    tool["label"] = " ".join(label_parts)
+    return tool
+
+
+def _normalize_tool_entry(tool_dict: dict) -> dict:
+    """Normalize legacy tool entries to structured shop-floor metadata."""
+    tool = dict(tool_dict)
+    if "diameter_mm" not in tool and "tool_diameter_mm" in tool:
+        tool["diameter_mm"] = tool["tool_diameter_mm"]
+    if "tool_diameter_mm" not in tool and "diameter_mm" in tool:
+        tool["tool_diameter_mm"] = tool["diameter_mm"]
+    if "label" not in tool:
+        label_parts = [str(tool.get("tool_type", "")) or "tool"]
+        if tool.get("diameter_mm") not in (None, ""):
+            label_parts.append(f"D{tool.get('diameter_mm')}mm")
+        tool["label"] = " ".join(label_parts)
+    return tool
+
+
+def _toolpath_summary(toolpath) -> Optional[dict]:
+    """Summarize a serialized toolpath when an operation provides one."""
+    if not isinstance(toolpath, list):
+        return None
+
+    summary = {"point_count": len(toolpath)}
+    if not toolpath:
+        return summary
+
+    def point_xyz(point):
+        if isinstance(point, dict):
+            if all(k in point for k in ("x", "y", "z")):
+                return (point["x"], point["y"], point["z"])
+            if "position" in point:
+                return point_xyz(point["position"])
+        if isinstance(point, (list, tuple)) and len(point) >= 3:
+            return (point[0], point[1], point[2])
+        return None
+
+    xyz_points = [p for p in (point_xyz(p) for p in toolpath) if p is not None]
+    if xyz_points:
+        xs, ys, zs = zip(*xyz_points)
+        summary["start"] = list(xyz_points[0])
+        summary["end"] = list(xyz_points[-1])
+        summary["bounds"] = {
+            "min": [min(xs), min(ys), min(zs)],
+            "max": [max(xs), max(ys), max(zs)],
+        }
+    return summary
+
+
+def _empty_validation_buckets() -> dict:
+    return {"errors": [], "warnings": [], "notes": []}
+
+
+def _append_bucket(buckets: dict, bucket_name: str, item) -> None:
+    if item is None or item == "":
+        return
+    if isinstance(item, list):
+        buckets.setdefault(bucket_name, []).extend(str(v) for v in item if v)
+    else:
+        buckets.setdefault(bucket_name, []).append(str(item))
+
+
+def _merge_validation_buckets(buckets: dict, validation) -> None:
+    if isinstance(validation, dict):
+        for key in ("errors", "warnings", "notes"):
+            _append_bucket(buckets, key, validation.get(key))
+    elif isinstance(validation, list):
+        _append_bucket(buckets, "warnings", validation)
+
+
+def normalize_operation(op_dict: dict, sequence_number: int) -> dict:
+    """Return an operation normalized to schema v1 with legacy fields intact."""
+    op = _jsonable(dict(op_dict))
+    op["sequence_number"] = int(op.get("sequence_number") or sequence_number)
+    op["schema_version"] = SCHEMA_VERSION
+    op["feeds_speeds"] = _normalize_feeds_speeds(op.get("feeds_speeds"))
+    op["tool"] = _tool_metadata(op)
+
+    if "toolpath_summary" not in op and "toolpath" in op:
+        summary = _toolpath_summary(op.get("toolpath"))
+        if summary is not None:
+            op["toolpath_summary"] = summary
+
+    buckets = _empty_validation_buckets()
+    _merge_validation_buckets(buckets, op.get("validation"))
+    _merge_validation_buckets(buckets, op.get("validation_buckets"))
+    _append_bucket(buckets, "notes", op.get("notes"))
+    op["validation_buckets"] = buckets
+    return op
+
+
 @dataclass
 class OperationStep:
     """A single step in a subtractive machining process.
@@ -61,11 +198,22 @@ class ProcessPlan:
     stock_dimensions: dict = field(default_factory=dict)  # {"length": 100, "width": 50, "height": 20}
     operations: list[dict] = field(default_factory=list)
     tools_used: list[dict] = field(default_factory=list)
+    schema_version: str = SCHEMA_VERSION
 
     # Fixturing / setup metadata
     fixture: Optional[dict] = None           # serialized FixtureSpec
     setups: dict = field(default_factory=dict)  # setup_name -> serialized Setup
     work_offsets: dict = field(default_factory=dict)  # e.g. {"G54": [300, 200, 50, 0, 0, 0]}
+
+    def __post_init__(self) -> None:
+        """Normalize any operations supplied at construction time."""
+        self.operations = [
+            normalize_operation(op, idx)
+            for idx, op in enumerate(self.operations, start=1)
+        ]
+        self.tools_used = [_normalize_tool_entry(t) for t in self.tools_used]
+        if not self.tools_used:
+            self._rebuild_tools_used()
 
     # ------------------------------------------------------------------
     # Derived properties
@@ -89,8 +237,10 @@ class ProcessPlan:
         total = 0.0
         for op in self.operations:
             feeds = op.get("feeds_speeds")
-            if feeds and feeds.get("feed_rate_mm_per_min"):
-                feed_rate = feeds["feed_rate_mm_per_min"]
+            feed_rate = None
+            if feeds:
+                feed_rate = feeds.get("feed_rate_mm_per_min", feeds.get("feed_rate_mm_min"))
+            if feed_rate:
                 # Approximate toolpath length from op dimensions
                 dims = op.get("dimensions", {})
                 length = float(dims.get("length", 0))
@@ -116,8 +266,9 @@ class ProcessPlan:
         changes = 0
         prev_key = None
         for op in self.operations:
-            tool_type = op.get("tool_type", "")
-            tool_dia = op.get("tool_diameter_mm", 0)
+            tool = op.get("tool", {})
+            tool_type = tool.get("tool_type", op.get("tool_type", ""))
+            tool_dia = tool.get("diameter_mm", op.get("tool_diameter_mm", 0))
             cur_key = (tool_type, tool_dia)
             if prev_key is not None and cur_key != prev_key:
                 changes += 1
@@ -130,19 +281,58 @@ class ProcessPlan:
 
     def add_operation(self, op_dict: dict) -> None:
         """Add an operation to the plan and track its tool."""
+        op_dict = normalize_operation(op_dict, len(self.operations) + 1)
         self.operations.append(op_dict)
         # Register the tool if it hasn't been recorded yet
         tool_type = op_dict.get("tool_type", "")
         tool_dia = op_dict.get("tool_diameter_mm", 0)
         already_tracked = any(
-            t.get("tool_type") == tool_type and t.get("tool_diameter_mm") == tool_dia
+            t.get("tool_type") == tool_type
+            and t.get("diameter_mm", t.get("tool_diameter_mm")) == tool_dia
             for t in self.tools_used
         )
         if not already_tracked and tool_type:
-            self.tools_used.append({
-                "tool_type": tool_type,
-                "tool_diameter_mm": tool_dia,
-            })
+            tool = dict(op_dict["tool"])
+            tool["tool_diameter_mm"] = tool_dia
+            self.tools_used.append(tool)
+
+    def _rebuild_tools_used(self) -> None:
+        """Rebuild structured unique-tool metadata from normalized operations."""
+        self.tools_used = []
+        for op in self.operations:
+            tool = op.get("tool") or _tool_metadata(op)
+            tool_type = tool.get("tool_type", "")
+            tool_dia = tool.get("diameter_mm")
+            if tool_type and not any(
+                t.get("tool_type") == tool_type and t.get("diameter_mm") == tool_dia
+                for t in self.tools_used
+            ):
+                self.tools_used.append(_normalize_tool_entry(tool))
+
+    @property
+    def validation_buckets(self) -> dict:
+        """Return plan-level validation buckets for shop-floor consumers."""
+        buckets = _empty_validation_buckets()
+
+        try:
+            from .validation import validate_all
+
+            _append_bucket(
+                buckets,
+                "warnings",
+                validate_all({
+                    "schema_version": self.schema_version,
+                    "material": self.material,
+                    "stock_dimensions": self.stock_dimensions,
+                    "operations": self.operations,
+                }, self.stock_dimensions),
+            )
+        except Exception:
+            pass
+
+        for op in self.operations:
+            _merge_validation_buckets(buckets, op.get("validation_buckets"))
+        return buckets
 
     # ------------------------------------------------------------------
     # Serialization
@@ -151,6 +341,8 @@ class ProcessPlan:
     def to_dict(self) -> dict:
         """Return a full serializable dict representation of the plan."""
         return {
+            "schema_version": self.schema_version,
+            "units": {"linear": "mm", "time": "min", "angle": "deg"},
             "material": self.material,
             "stock_dimensions": self.stock_dimensions,
             "total_operations": self.total_operations,
@@ -158,6 +350,8 @@ class ProcessPlan:
             "tool_change_count": self.tool_change_count,
             "tools_used": self.tools_used,
             "operations": self.operations,
+            "validation": self.validation_buckets,
+            "validation_buckets": self.validation_buckets,
             "fixture": self.fixture,
             "setups": self.setups,
             "work_offsets": self.work_offsets,
@@ -171,6 +365,104 @@ class ProcessPlan:
         """Save the plan as a JSON file to *path*."""
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(self.to_json())
+
+    def setup_sheet_dict(self) -> dict:
+        """Return a shop-floor setup sheet as a structured JSON-ready dict."""
+        return {
+            "schema_version": self.schema_version,
+            "units": {"linear": "mm", "time": "min", "angle": "deg"},
+            "material": self.material or "unspecified",
+            "stock_dimensions": self.stock_dimensions,
+            "estimated_time_minutes": self.estimated_time_minutes,
+            "tool_change_count": self.tool_change_count,
+            "fixture": self.fixture,
+            "setups": self.setups,
+            "work_offsets": self.work_offsets,
+            "tools": self.tools_used,
+            "operations": [
+                {
+                    "sequence_number": op.get("sequence_number", idx),
+                    "operation": op.get("operation", "?"),
+                    "setup": op.get("setup", ""),
+                    "face_selector": op.get("face_selector", ""),
+                    "tool": op.get("tool", _tool_metadata(op)),
+                    "feeds_speeds": op.get("feeds_speeds"),
+                    "toolpath_summary": op.get("toolpath_summary"),
+                    "notes": op.get("notes", ""),
+                    "validation_buckets": op.get("validation_buckets", _empty_validation_buckets()),
+                }
+                for idx, op in enumerate(self.operations, start=1)
+            ],
+            "validation_buckets": self.validation_buckets,
+            "gcode_status": "G-code export deferred; this setup sheet is neutral shop-floor intent.",
+        }
+
+    def setup_sheet_json(self, indent: int = 2) -> str:
+        """Serialize the setup sheet to JSON."""
+        return json.dumps(self.setup_sheet_dict(), indent=indent)
+
+    def setup_sheet_markdown(self) -> str:
+        """Return a Markdown setup sheet for shop-floor review."""
+        sheet = self.setup_sheet_dict()
+        lines = [
+            "# SubCAD Setup Sheet",
+            "",
+            f"- Schema: {sheet['schema_version']}",
+            f"- Material: {sheet['material']}",
+            f"- Stock: {sheet['stock_dimensions']}",
+            f"- Estimated time: {sheet['estimated_time_minutes']} min",
+            f"- Tool changes: {sheet['tool_change_count']}",
+            f"- G-code: deferred; neutral shop-floor intent only",
+            "",
+            "## Tools",
+        ]
+        if sheet["tools"]:
+            for tool in sheet["tools"]:
+                lines.append(f"- {tool.get('label', tool.get('tool_type', '?'))}")
+        else:
+            lines.append("- None")
+
+        lines.extend(["", "## Operations"])
+        for op in sheet["operations"]:
+            tool = op.get("tool") or {}
+            detail = f"{op['sequence_number']}. {op['operation']} - {tool.get('label', '?')}"
+            if op.get("setup"):
+                detail += f" - setup {op['setup']}"
+            if op.get("notes"):
+                detail += f" - {op['notes']}"
+            lines.append(detail)
+        lines.extend(["", "## Warnings"])
+        warnings = sheet.get("validation_buckets", {}).get("warnings", [])
+        if warnings:
+            for warning in warnings:
+                lines.append(f"- {warning}")
+        else:
+            lines.append("- No blocking warnings recorded.")
+        return "\n".join(lines)
+
+    def setup_sheet_text(self) -> str:
+        """Return a plain-text setup sheet."""
+        lines = []
+        for line in self.setup_sheet_markdown().splitlines():
+            if line.startswith("## "):
+                lines.append(line[3:])
+            elif line.startswith("# "):
+                lines.append(line[2:])
+            else:
+                lines.append(line)
+        return "\n".join(lines)
+
+    def to_setup_sheet_json(self, indent: int = 2) -> str:
+        """Compatibility alias for setup_sheet_json."""
+        return self.setup_sheet_json(indent=indent)
+
+    def to_setup_sheet_markdown(self) -> str:
+        """Compatibility alias for setup_sheet_markdown."""
+        return self.setup_sheet_markdown()
+
+    def to_setup_sheet_text(self) -> str:
+        """Compatibility alias for setup_sheet_text."""
+        return self.setup_sheet_text()
 
     # ------------------------------------------------------------------
     # Display
@@ -281,6 +573,12 @@ if __name__ == "__main__":
     check("tools_used" in d, "tools_used key present")
     check("estimated_time_minutes" in d, "estimated_time_minutes key present")
     check("tool_change_count" in d, "tool_change_count key present")
+    check(d["schema_version"] == SCHEMA_VERSION, "schema_version in dict")
+    check(d["operations"][0]["sequence_number"] == 1, "sequence number assigned")
+    check(d["operations"][0]["tool"]["diameter_mm"] == 50.0, "structured tool metadata present")
+    check("tool_diameter_mm" in d["operations"][0], "legacy tool_diameter_mm preserved")
+    check(d["tools_used"][0]["tool_diameter_mm"] == 50.0, "legacy tool list diameter preserved")
+    check("validation_buckets" in d, "plan validation_buckets present")
     print()
 
     # --- to_json ---
@@ -301,6 +599,34 @@ if __name__ == "__main__":
     # Third op: no feed data -> 2.0 fallback
     # Total = 0.6 + 3.0 + 2.0 = 5.6
     check(abs(est - 5.6) < 0.01, f"estimated_time ~ 5.6 (got {est})")
+    print()
+
+    # --- schema v1 normalization ---
+    print("4b. schema v1 normalization")
+    legacy_plan = ProcessPlan(
+        operations=[
+            {
+                "operation": "slot",
+                "tool_type": "flat_endmill",
+                "tool_diameter_mm": 8.0,
+                "dimensions": {"length": 20, "width": 8, "depth": 2.0},
+                "feeds_speeds": {"feed_rate_mm_min": 280, "step_down_mm": 1.0},
+                "toolpath": [[0, 0, 0], [10, 0, -1], [20, 0, -2]],
+                "validation": {"warnings": ["Verify slot clearance"]},
+            }
+        ],
+    )
+    legacy_op = legacy_plan.operations[0]
+    check(legacy_op["feeds_speeds"]["feed_rate_mm_per_min"] == 280,
+          "feed_rate_mm_min normalized to feed_rate_mm_per_min")
+    check(legacy_op["feeds_speeds"]["feed_rate_mm_min"] == 280,
+          "feed_rate_mm_min preserved")
+    check(legacy_op["toolpath_summary"]["point_count"] == 3,
+          "toolpath summary generated")
+    check("Verify slot clearance" in legacy_plan.validation_buckets["warnings"],
+          "validation buckets merged")
+    check(legacy_plan.estimated_time_minutes == 0.4,
+          f"legacy feed alias used for estimate (got {legacy_plan.estimated_time_minutes})")
     print()
 
     # --- tool_change_count ---
@@ -349,6 +675,20 @@ if __name__ == "__main__":
     check(sd["operation"] == "face_mill", "OperationStep operation")
     check(sd["position"] == [0, 0], "OperationStep position serialized as list")
     check("feeds_speeds" in sd, "OperationStep feeds_speeds present")
+    print()
+
+    # --- setup sheet exports ---
+    print("9. setup sheet exports")
+    sheet = plan.setup_sheet_dict()
+    sheet_json = plan.setup_sheet_json()
+    sheet_md = plan.setup_sheet_markdown()
+    sheet_text = plan.setup_sheet_text()
+    check(sheet["schema_version"] == SCHEMA_VERSION, "setup_sheet_dict schema_version")
+    check(json.loads(sheet_json)["operations"][0]["operation"] == "face_mill",
+          "setup_sheet_json valid")
+    check("# SubCAD Setup Sheet" in sheet_md, "setup_sheet_markdown heading")
+    check("SubCAD Setup Sheet" in sheet_text and "#" not in sheet_text.splitlines()[0],
+          "setup_sheet_text plain heading")
     print()
 
     # --- Report ---

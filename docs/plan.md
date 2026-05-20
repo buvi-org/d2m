@@ -27,6 +27,21 @@ SubCAD is implemented as the current machining representation layer:
 - Fixture and multi-setup metadata.
 - Integration bridge toward simulation tools.
 
+### SubCAD Shop-Floor v1
+
+Current integration target: turn SubCAD process plans into a shop-floor-ready intermediate handoff while keeping controller-specific G-code out of scope.
+
+The v1 contract should include:
+
+- Schema identifier `subcad.shop_floor.v1`.
+- Required plan fields for material, stock dimensions, units, tools, operations, setup/work-offset metadata, validation buckets, estimated time, and tool changes.
+- Backward-compatible fields already used by prototype tests: `operation`, `tool_type`, `tool_diameter_mm`, `depth_mm`, `position`, `feeds_speeds`, `total_operations`, and `tools_used`.
+- Neutral toolpath data for rapid/feed/plunge/retract/dwell/arc moves with safe Z, feed/spindle/coolant intent, length/time summaries, and JSON round-trip support.
+- Setup-sheet export in Markdown and JSON containing stock, material, tools, operations, setups, work offsets, warnings/errors, and a deferred-G-code note.
+- Validation buckets that distinguish blocking errors from warnings and notes.
+
+Acceptance coverage is tracked in `test_subcad_shopfloor_v1.py`. It is intentionally focused on the integration contract rather than the internal implementation.
+
 Current test status:
 
 | Test | Result | Notes |
@@ -95,6 +110,7 @@ Acceptance criteria:
 - Use real target meshes instead of demo scaled-stock references for validation endpoints.
 - Compare simulated stock against target meshes with mesh/feature feedback.
 - Add gouge/deviation assertions to tests.
+- Prefer explicit neutral toolpaths from schema v1 when present, with the existing generated simple toolpath path retained as a fallback for older operation dictionaries.
 - Keep `python test_sim_bridge.py`, `python src\simulation\tri_dexel.py`, and `python -m src.simulation.material_removal` passing.
 
 ### 2. Validate Mesh and Feature Comparison on Real Samples
@@ -144,6 +160,7 @@ Only after reliable execution/comparison data exists:
 |------|--------|------------------|
 | Synthetic data | Complete enough for prototype use | Keep; regenerate only if labels/schema change. |
 | SubCAD API | Implemented and passing integration tests | Continue using as canonical subtractive representation. |
+| SubCAD Shop-Floor v1 | Current integration | Lock schema, neutral toolpaths, setup sheets, validation, and deferred G-code. |
 | Agentic translator | Implemented; non-live tests pass | Run live trials after simulation/comparison validation. |
 | Mesh comparison | Implemented | Verify and tune; no need to reimplement first. |
 | Feature comparison | Implemented | Validate on known samples and feed into translator loop. |

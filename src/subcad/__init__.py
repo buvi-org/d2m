@@ -21,6 +21,7 @@ Usage::
 from .stock import Stock
 from .process_plan import ProcessPlan, OperationStep
 from .tool_library import ToolSpec, ToolCatalog, to_sim_tool
+from .toolpath import Toolpath, ToolpathMove
 from .operations import (
     MachiningOperation,
     FaceMillOp,
@@ -32,6 +33,18 @@ from .operations import (
     ChamferOp,
     ContourOp,
     SlotOp,
+    PeckDrillOp,
+    ReamOp,
+    BoreOp,
+    CountersinkOp,
+    CounterboreOp,
+    ThreadMillOp,
+    TSlotOp,
+    DovetailOp,
+    GrooveOp,
+    Surface3DOp,
+    DeburrOp,
+    SpotFaceOp,
     create_operation,
     threaded_hole_ops,
 )
@@ -63,6 +76,8 @@ __all__ = [
     "OperationStep",
     "ToolSpec",
     "ToolCatalog",
+    "Toolpath",
+    "ToolpathMove",
     # Operation classes
     "MachiningOperation",
     "FaceMillOp",
@@ -74,6 +89,18 @@ __all__ = [
     "ChamferOp",
     "ContourOp",
     "SlotOp",
+    "PeckDrillOp",
+    "ReamOp",
+    "BoreOp",
+    "CountersinkOp",
+    "CounterboreOp",
+    "ThreadMillOp",
+    "TSlotOp",
+    "DovetailOp",
+    "GrooveOp",
+    "Surface3DOp",
+    "DeburrOp",
+    "SpotFaceOp",
     # Factory & helpers
     "create_operation",
     "threaded_hole_ops",

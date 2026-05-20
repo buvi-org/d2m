@@ -23,6 +23,13 @@ Implemented and tested:
 - Agentic CadQuery -> SubCAD translator infrastructure, including LLM provider abstraction, prompt builders, convergence controller, REPL execution, geometry comparison, and optional localized/feature-aware feedback paths.
 - Mesh comparison utilities for per-vertex signed deviation and Z-slice feedback.
 
+SubCAD Shop-Floor v1 is being integrated as the next contract layer:
+
+- Schema v1 process plans use `subcad.shop_floor.v1` while preserving legacy plan fields used by the current tests.
+- Neutral toolpaths describe motion intent without committing to a controller-specific G-code dialect.
+- Setup-sheet exports are intended to include stock, material, tools, operations, setups, work offsets, validation warnings, and a clear note that G-code posting is deferred.
+- Validation should produce actionable errors/warnings before simulation or downstream CAM handoff.
+
 Recently fixed blocker:
 
 - The previous tri-dexel zero-volume failure has been fixed. `test_sim_bridge.py` now verifies nonzero stock volume, modified columns, and positive material removal. Simulation is still a prototype, but the core volume/material-removal path is no longer blocked.
@@ -35,6 +42,7 @@ Recent local test status:
 | `python test_subcad_integration.py` | PASS, 39/39 |
 | `python test_fixturing_integration.py` | PASS, 19/19 |
 | `python test_sim_bridge.py` | PASS, 51/51 |
+| `python test_subcad_shopfloor_v1.py` | New acceptance test for SubCAD Shop-Floor v1; expected to pass after Agents 1-4 integrate schema/toolpath/setup-sheet APIs. |
 
 ## Architecture
 
@@ -60,12 +68,12 @@ See [docs/architecture.md](docs/architecture.md) for full technical architecture
 
 | Layer | Technology |
 |-------|-----------|
-| CAD/SubCAD Geometry | CadQuery-backed SubCAD operations, STEP/STL export |
+| CAD/SubCAD Geometry | CadQuery-backed SubCAD operations, STEP/STL export, shop-floor schema v1 in progress |
 | CAD Parsing | pythonOCC / CadQuery |
 | Feature Recognition | Planned: PyTorch Geometric (GNN / GAT) |
 | Knowledge Graph | Neo4j + custom Python rule engine |
 | LLM Planning | Agentic translator scaffolding; fine-tuning is planned |
-| Simulation | Tri-dexel/five-axis prototype; core volume/material-removal bridge tests now pass |
+| Simulation | Tri-dexel/five-axis prototype; core volume/material-removal bridge tests now pass; neutral-toolpath preference/fallback is part of Shop-Floor v1 |
 | UI | Browser simulation prototype under `web/`; product UI is planned |
 | Deployment | Cloud GPU (Vast.ai / RunPod for training), Render / Hugging Face Spaces for hosting |
 
@@ -80,6 +88,7 @@ Phased solo build using AI-assisted development (Claude Code, Cursor):
 | **0**: Prototype | Week 1-2 | Partially complete — core SubCAD, translator scaffolding, and rule/process-plan primitives exist; full upload-to-plan UX is not complete. | 0 |
 | **1**: Synthetic Data | Week 2-3 | ✅ Complete — 9,994 labeled parts with STEP + JSON. CadQuery CSG engine + rule-based labeling. | 2,000-8,000 |
 | **2**: Feature Recognition / Translation | Week 3-5 | In progress — translator and comparison utilities exist; GNN feature recognition remains planned. | 8,000-15,000 |
+| **2.5**: SubCAD Shop-Floor v1 | Current integration | Schema v1, neutral toolpaths, setup-sheet export, validation buckets, and deferred G-code contract. | TBD |
 | **3**: Simulation Reliability | Next priority | Harden the now-passing tri-dexel/material-removal bridge with real target meshes, deviation/gouge checks, and representative toolpaths. | TBD |
 | **4**: LLM Fine-Tuning | Planned | Fine-tune/evaluate planning or code-generation model after reliable translated pairs and scoring. | 3,000-8,000 |
 | **5**: Product Integration + UI | Planned | Full upload → plan → validation workflow and production UI. | 5,000-10,000 |
@@ -130,17 +139,20 @@ python test_fixturing_integration.py
 
 # Simulation bridge test
 python test_sim_bridge.py
+
+# Shop-floor v1 acceptance test after integration lands
+python test_subcad_shopfloor_v1.py
 ```
 
 ## Status
 
 **Completed** — Phase 1 synthetic dataset, SubCAD operation model, process-plan/export basics, fixture/setup metadata, and non-live agentic translator tests.
 
-**In progress** — Agentic CadQuery -> SubCAD translation, localized/feature-aware comparison, and simulation reliability hardening.
+**In progress** — SubCAD Shop-Floor v1, agentic CadQuery -> SubCAD translation, localized/feature-aware comparison, and simulation reliability hardening.
 
 **Recently fixed** — Simulation bridge zero-volume failure. Core dexel volume and material-removal tests now pass, but simulation/RL claims should still be treated as roadmap until validated on representative real workflows.
 
-**Planned** — GNN feature recognition, LLM fine-tuning, production UI, validated simulation feedback loop, and RL.
+**Planned** — Controller-specific G-code posting, GNN feature recognition, LLM fine-tuning, production UI, validated simulation feedback loop, and RL.
 
 ## License
 

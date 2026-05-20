@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+import math
 from typing import Optional, Tuple
 
 from .geometry import (
@@ -35,6 +36,7 @@ from .geometry import (
 )
 from .tool_library import ToolSpec, ToolCatalog
 from .material import get_feeds_speeds
+from .toolpath import Toolpath, ToolpathMove
 
 # ---------------------------------------------------------------------------
 # Tool-type mapping for feeds/speeds lookup
@@ -60,6 +62,119 @@ _TOOL_TYPE_FS_MAP: dict[str, str] = {
 def _resolve_fs_tool_type(tool_type: str) -> str:
     """Map a ToolSpec tool_type to the key expected by get_feeds_speeds."""
     return _TOOL_TYPE_FS_MAP.get(tool_type, tool_type)
+
+
+def _feed_rate(feeds_speeds: dict, fallback: float = 100.0) -> float:
+    if "error" in feeds_speeds:
+        return fallback
+    return float(feeds_speeds.get("feed_rate_mm_min") or fallback)
+
+
+def _spindle_rpm(feeds_speeds: dict) -> Optional[float]:
+    if "error" in feeds_speeds:
+        return None
+    rpm = feeds_speeds.get("spindle_rpm", feeds_speeds.get("rpm"))
+    return float(rpm) if rpm else None
+
+
+def _new_toolpath(
+    operation: str,
+    tool: ToolSpec,
+    feeds_speeds: dict,
+    *,
+    safe_z: float = 5.0,
+    coolant: bool = True,
+    metadata: Optional[dict] = None,
+) -> Toolpath:
+    return Toolpath(
+        operation=operation,
+        safe_z=safe_z,
+        tool_type=tool.tool_type,
+        tool_diameter_mm=tool.diameter,
+        feed_mm_min=_feed_rate(feeds_speeds),
+        spindle_rpm=_spindle_rpm(feeds_speeds),
+        coolant=coolant,
+        metadata=metadata or {},
+    )
+
+
+def _move(
+    tp: Toolpath,
+    move_type: str,
+    x: float,
+    y: float,
+    z: float,
+    *,
+    feed: Optional[float] = None,
+    dwell_seconds: float = 0.0,
+    arc_center: Optional[Tuple[float, float, float]] = None,
+    arc_direction: Optional[str] = None,
+    metadata: Optional[dict] = None,
+) -> None:
+    tp.append(ToolpathMove(
+        move_type=move_type,
+        position=(x, y, z),
+        feed=feed,
+        spindle_rpm=tp.spindle_rpm,
+        coolant=tp.coolant,
+        dwell_seconds=dwell_seconds,
+        arc_center=arc_center,
+        arc_direction=arc_direction,
+        metadata=metadata or {},
+    ))
+
+
+def _depth_levels(depth: float, stepdown: Optional[float]) -> list[float]:
+    depth = abs(depth)
+    if depth <= 0:
+        return [0.0]
+    if stepdown is None or stepdown <= 0:
+        return [-depth]
+    levels: list[float] = []
+    current = min(stepdown, depth)
+    while current < depth:
+        levels.append(-current)
+        current += stepdown
+    levels.append(-depth)
+    return levels
+
+
+def _drill_toolpath(
+    operation: str,
+    tool: ToolSpec,
+    feeds_speeds: dict,
+    cx: float,
+    cy: float,
+    depth: float,
+    *,
+    peck_step: Optional[float] = None,
+    dwell_seconds: float = 0.0,
+) -> Toolpath:
+    tp = _new_toolpath(operation, tool, feeds_speeds, metadata={"x": cx, "y": cy})
+    feed = _feed_rate(feeds_speeds)
+    _move(tp, "rapid", cx, cy, tp.safe_z)
+    if dwell_seconds:
+        _move(tp, "dwell", cx, cy, tp.safe_z, dwell_seconds=dwell_seconds)
+    if peck_step and peck_step > 0:
+        current = 0.0
+        for level in _depth_levels(depth, peck_step):
+            _move(tp, "plunge", cx, cy, level, feed=feed)
+            current = level
+            _move(tp, "retract", cx, cy, tp.safe_z)
+            if level != -abs(depth):
+                _move(tp, "rapid", cx, cy, min(current + peck_step * 0.25, -0.1))
+    else:
+        _move(tp, "plunge", cx, cy, -abs(depth), feed=feed)
+        _move(tp, "retract", cx, cy, tp.safe_z)
+    return tp
+
+
+def _slot_endpoints(cx: float, cy: float, length: float, angle_deg: float) -> tuple[tuple[float, float], tuple[float, float]]:
+    theta = math.radians(angle_deg)
+    half = length / 2.0
+    dx = math.cos(theta) * half
+    dy = math.sin(theta) * half
+    return (cx - dx, cy - dy), (cx + dx, cy + dy)
 
 
 def _pick_slot_tool(slot_width: float) -> ToolSpec:
@@ -152,10 +267,11 @@ class MachiningOperation(ABC):
         ...
 
     @abstractmethod
-    def to_toolpath(self) -> list:
-        """Generate approximate toolpath waypoints for simulation.
+    def to_toolpath(self):
+        """Generate a neutral toolpath for simulation or shop-floor handoff.
 
-        Phase 3 stub -- returns an empty list.
+        Implemented operations return a :class:`Toolpath`; operations that have
+        not been mapped yet may still return an empty list.
         """
         ...
 
@@ -230,8 +346,30 @@ class FaceMillOp(MachiningOperation):
             "notes": "Finishing pass included" if self.finish_pass else "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        stepover = self.stepover if self.stepover is not None else self.tool.diameter * 0.7
+        span_x = max(self.tool.diameter * 4.0, stepover * 4.0)
+        span_y = max(self.tool.diameter * 2.0, stepover * 2.0)
+        tp = _new_toolpath(
+            "face_mill",
+            self.tool,
+            self.feeds_speeds,
+            metadata={"nominal_span_x_mm": span_x, "nominal_span_y_mm": span_y},
+        )
+        feed = _feed_rate(self.feeds_speeds)
+        y = -span_y / 2.0
+        direction = 1
+        _move(tp, "rapid", -span_x / 2.0, y, tp.safe_z)
+        _move(tp, "plunge", -span_x / 2.0, y, -abs(self.depth), feed=feed)
+        while y <= span_y / 2.0 + 1e-9:
+            x = span_x / 2.0 if direction > 0 else -span_x / 2.0
+            _move(tp, "feed", x, y, -abs(self.depth), feed=feed)
+            y += stepover
+            if y <= span_y / 2.0 + 1e-9:
+                _move(tp, "feed", x, y, -abs(self.depth), feed=feed)
+            direction *= -1
+        _move(tp, "retract", tp.moves[-1].position[0], tp.moves[-1].position[1], tp.safe_z)
+        return tp
 
 
 # ---------------------------------------------------------------------------
@@ -340,8 +478,33 @@ class PocketOp(MachiningOperation):
         }
         return d
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        stepover = max(self.tool.diameter * 0.5, 0.1)
+        stepdown = max(self.tool.diameter * 0.5, 0.5)
+        half_w = max(self.width / 2.0 - self.tool.radius, 0.0)
+        half_l = max(self.length / 2.0 - self.tool.radius, 0.0)
+        tp = _new_toolpath(
+            "rough_pocket",
+            self.tool,
+            self.feeds_speeds,
+            metadata={"width_mm": self.width, "length_mm": self.length},
+        )
+        feed = _feed_rate(self.feeds_speeds)
+        _move(tp, "rapid", self.cx, self.cy, tp.safe_z)
+        for z in _depth_levels(self.depth, stepdown):
+            _move(tp, "plunge", self.cx, self.cy, z, feed=feed)
+            inset = 0.0
+            while inset <= min(half_w, half_l) + 1e-9:
+                x0, x1 = self.cx - half_w + inset, self.cx + half_w - inset
+                y0, y1 = self.cy - half_l + inset, self.cy + half_l - inset
+                for x, y in ((x1, y0), (x1, y1), (x0, y1), (x0, y0), (x1, y0)):
+                    _move(tp, "feed", x, y, z, feed=feed)
+                inset += stepover
+            _move(tp, "feed", self.cx, self.cy, z, feed=feed)
+        _move(tp, "retract", self.cx, self.cy, tp.safe_z)
+        if self.finish_op is not None:
+            tp.metadata["finish_toolpath"] = self.finish_op.to_toolpath().to_dict()
+        return tp
 
 
 # ---------------------------------------------------------------------------
@@ -396,8 +559,34 @@ class CircularPocketOp(MachiningOperation):
             "notes": "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        stepdown = max(self.tool.diameter * 0.5, 0.5)
+        stepover = max(self.tool.diameter * 0.5, 0.1)
+        radius = max(self.diameter / 2.0 - self.tool.radius, 0.0)
+        tp = _new_toolpath(
+            "circular_pocket",
+            self.tool,
+            self.feeds_speeds,
+            metadata={"pocket_diameter_mm": self.diameter},
+        )
+        feed = _feed_rate(self.feeds_speeds)
+        _move(tp, "rapid", self.cx, self.cy, tp.safe_z)
+        for z in _depth_levels(self.depth, stepdown):
+            _move(tp, "plunge", self.cx, self.cy, z, feed=feed)
+            r = min(stepover, radius)
+            while r <= radius + 1e-9:
+                _move(tp, "feed", self.cx + r, self.cy, z, feed=feed)
+                center = (self.cx, self.cy, z)
+                for x, y in (
+                    (self.cx, self.cy + r),
+                    (self.cx - r, self.cy),
+                    (self.cx, self.cy - r),
+                    (self.cx + r, self.cy),
+                ):
+                    _move(tp, "arc", x, y, z, feed=feed, arc_center=center, arc_direction="ccw")
+                r += stepover
+        _move(tp, "retract", self.cx, self.cy, tp.safe_z)
+        return tp
 
 
 # ---------------------------------------------------------------------------
@@ -458,8 +647,16 @@ class SpotDrillOp(MachiningOperation):
             "notes": "Spot drill for hole alignment",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        return _drill_toolpath(
+            "spot_drill",
+            self.tool,
+            self.feeds_speeds,
+            self.cx,
+            self.cy,
+            1.0,
+            dwell_seconds=0.2,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -551,8 +748,19 @@ class DrillOp(MachiningOperation):
             "notes": "Peck drilling" if self.peck else "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        tp = _drill_toolpath(
+            "drill",
+            self.tool,
+            self.feeds_speeds,
+            self.cx,
+            self.cy,
+            self.depth,
+            peck_step=(max(self.diameter, 1.0) if self.peck else None),
+        )
+        if self.spot_op is not None:
+            tp.metadata["spot_toolpath"] = self.spot_op.to_toolpath().to_dict()
+        return tp
 
 
 # ---------------------------------------------------------------------------
@@ -726,8 +934,25 @@ class ChamferOp(MachiningOperation):
             "notes": "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        span = max(self.tool.diameter * 8.0, 40.0)
+        offset = self.width + self.tool.radius
+        z = -abs(self.width)
+        tp = _new_toolpath(
+            "chamfer",
+            self.tool,
+            self.feeds_speeds,
+            metadata={"nominal_square_mm": span, "chamfer_width_mm": self.width},
+        )
+        feed = _feed_rate(self.feeds_speeds)
+        x0, x1 = -span / 2.0 - offset, span / 2.0 + offset
+        y0, y1 = -span / 2.0 - offset, span / 2.0 + offset
+        _move(tp, "rapid", x0, y0, tp.safe_z)
+        _move(tp, "plunge", x0, y0, z, feed=feed)
+        for x, y in ((x1, y0), (x1, y1), (x0, y1), (x0, y0)):
+            _move(tp, "feed", x, y, z, feed=feed)
+        _move(tp, "retract", x0, y0, tp.safe_z)
+        return tp
 
 
 # ---------------------------------------------------------------------------
@@ -785,8 +1010,25 @@ class ContourOp(MachiningOperation):
             "notes": f"Multi-pass (stepdown={self.stepdown} mm)" if self.stepdown > 0 else "",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        span = max(self.tool.diameter * 8.0, 50.0)
+        offset = self.tool.radius
+        tp = _new_toolpath(
+            "contour",
+            self.tool,
+            self.feeds_speeds,
+            metadata={"nominal_square_mm": span, "offset_mm": offset},
+        )
+        feed = _feed_rate(self.feeds_speeds)
+        x0, x1 = -span / 2.0 - offset, span / 2.0 + offset
+        y0, y1 = -span / 2.0 - offset, span / 2.0 + offset
+        _move(tp, "rapid", x0, y0, tp.safe_z)
+        for z in _depth_levels(self.depth, self.stepdown):
+            _move(tp, "plunge", x0, y0, z, feed=feed)
+            for x, y in ((x1, y0), (x1, y1), (x0, y1), (x0, y0)):
+                _move(tp, "feed", x, y, z, feed=feed)
+        _move(tp, "retract", x0, y0, tp.safe_z)
+        return tp
 
 
 # ---------------------------------------------------------------------------
@@ -869,8 +1111,27 @@ class SlotOp(MachiningOperation):
             "notes": self._validation_note,
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        stepdown = max(self.tool.diameter * 0.5, 0.5)
+        (x0, y0), (x1, y1) = _slot_endpoints(self.cx, self.cy, self.length, self.angle)
+        tp = _new_toolpath(
+            "slot",
+            self.tool,
+            self.feeds_speeds,
+            metadata={"slot_length_mm": self.length, "slot_width_mm": self.width},
+        )
+        feed = _feed_rate(self.feeds_speeds)
+        _move(tp, "rapid", x0, y0, tp.safe_z)
+        direction = 1
+        for z in _depth_levels(self.depth, stepdown):
+            start = (x0, y0) if direction > 0 else (x1, y1)
+            end = (x1, y1) if direction > 0 else (x0, y0)
+            _move(tp, "plunge", start[0], start[1], z, feed=feed)
+            _move(tp, "feed", end[0], end[1], z, feed=feed)
+            direction *= -1
+        last_x, last_y, _ = tp.moves[-1].position
+        _move(tp, "retract", last_x, last_y, tp.safe_z)
+        return tp
 
 
 # =============================================================================
@@ -942,8 +1203,16 @@ class PeckDrillOp(MachiningOperation):
             "notes": f"Peck drilling (step={self.peck_step}mm)",
         }
 
-    def to_toolpath(self) -> list:
-        return []
+    def to_toolpath(self) -> Toolpath:
+        return _drill_toolpath(
+            "peck_drill",
+            self.tool,
+            self.feeds_speeds,
+            self.cx,
+            self.cy,
+            self.depth,
+            peck_step=self.peck_step,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -2117,15 +2386,28 @@ if __name__ == "__main__":
         check(True, "Tool fits (unexpected but valid)")
 
     # ==================================================================
-    # Test 10: to_toolpath stubs
+    # Test 10: core to_toolpath implementations
     # ==================================================================
-    print("\n10. to_toolpath stubs ...")
-    for op in ops_default:
+    print("\n10. core to_toolpath implementations ...")
+    core_toolpath_ops = (
+        FaceMillOp(),
+        PocketOp(),
+        CircularPocketOp(),
+        DrillOp(spot_drill=False),
+        ChamferOp(),
+        ContourOp(),
+        SlotOp(),
+    )
+    for op in core_toolpath_ops:
         tp = op.to_toolpath()
-        check(isinstance(tp, list),
-              f"{op.__class__.__name__}.to_toolpath returns list")
-        check(len(tp) == 0,
-              f"{op.__class__.__name__}.to_toolpath is empty (Phase 3 stub)")
+        check(hasattr(tp, "to_dict"),
+              f"{op.__class__.__name__}.to_toolpath returns Toolpath-like object")
+        check(len(tp) > 0,
+              f"{op.__class__.__name__}.to_toolpath is non-empty")
+
+    tp = TapOp().to_toolpath()
+    check(isinstance(tp, list), "TapOp.to_toolpath returns list")
+    check(len(tp) == 0, "TapOp.to_toolpath remains empty")
 
     # ==================================================================
     # Test 11: Position tracking
@@ -2298,13 +2580,19 @@ if __name__ == "__main__":
     check(DeburrOp().position is None,
           "DeburrOp position is None")
 
-    # 13o. to_toolpath stubs for new ops
+    # 13o. to_toolpath behavior for new ops
     for op, name in zip(p2_ops, p2_names):
         tp = op.to_toolpath()
-        check(isinstance(tp, list),
-              f"{name}.to_toolpath returns list")
-        check(len(tp) == 0,
-              f"{name}.to_toolpath is empty (Phase 3 stub)")
+        if name == "PeckDrillOp":
+            check(hasattr(tp, "to_dict"),
+                  f"{name}.to_toolpath returns Toolpath-like object")
+            check(len(tp) > 0,
+                  f"{name}.to_toolpath is non-empty")
+        else:
+            check(isinstance(tp, list),
+                  f"{name}.to_toolpath returns list")
+            check(len(tp) == 0,
+                  f"{name}.to_toolpath is empty (future mapping)")
 
     # 13p. create_operation factory for new ops
     for op_type in ["peck_drill", "ream", "bore", "countersink",
