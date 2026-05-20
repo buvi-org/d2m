@@ -242,7 +242,7 @@ python test_subcad_manufacturing_economics.py
 
 **Current hardening priority** — Manufacturing Trust v1 follow-through: broaden inventory-aware planning to more operations, strengthen fixture-body/stock-envelope clearance, validate simulation/comparison on larger real part examples, and calibrate economics against real shop rates/tool life.
 
-**In progress / prototype** — Agentic CadQuery -> SubCAD translation, localized/feature-aware comparison validation, and simulation feedback quality.
+**In progress / prototype** — Agentic CadQuery -> SubCAD translation, STEP-to-SubCAD AI model planning, localized/feature-aware comparison validation, and simulation feedback quality. See [docs/step_to_subcad_ai.md](docs/step_to_subcad_ai.md) for the current decision: STEP/B-Rep JSON is the source of truth, while images/video with projected dimensions are supporting evidence.
 
 **Recently fixed** — Simulation bridge zero-volume failure. Core dexel volume and material-removal tests now pass, but simulation/RL claims should still be treated as roadmap until validated on representative real workflows.
 

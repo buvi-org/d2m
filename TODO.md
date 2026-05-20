@@ -200,6 +200,10 @@ Still deferred: controller-certified production G-code, formal quoting/ERP integ
 
 ## Deferred Roadmap
 
+- STEP-to-SubCAD AI model planning is documented in `docs/step_to_subcad_ai.md`.
+  - Build a STEP evidence package first: exact B-Rep/feature JSON, rendered views, optional turntable video, and a frame manifest mapping projected labels back to exact dimensions.
+  - Treat images/video as supporting evidence, not the source of dimensions.
+  - Benchmark JSON-only, JSON plus still images, and JSON plus still images/video before committing to multimodal input as a default.
 - Live translator trials remain next after simulation reliability improves.
 - GNN feature recognition and LLM fine-tuning should wait for execution-scored data.
 - RL remains later-stage research after simulator fidelity is validated.

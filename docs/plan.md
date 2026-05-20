@@ -332,6 +332,7 @@ Acceptance criteria met:
 | Feature comparison | Implemented | Validate on known samples and feed into translator loop. |
 | Manufacturing Trust v1 | Active next priority | Broaden inventory-aware planning, realistic passes, fixture/tool-holder clearance, simulation comparison reliability, warning-focused visualization, and economics calibration. |
 | Simulation bridge | Prototype passing tests | Harden as part of Manufacturing Trust v1 against representative target meshes, authored toolpaths, and gouge/deviation cases. |
+| STEP-to-SubCAD AI model | Planned | Use STEP/B-Rep feature JSON as source of truth, with rendered views/video as supporting evidence; see `docs/step_to_subcad_ai.md`. |
 | GNN feature recognition | Planned | Defer until subtractive workflow proves what features are needed. |
 | LLM fine-tuning | Planned | Defer until high-quality execution-scored pairs exist. |
 | Product UI | Planned/prototype pieces exist | Defer productization until backend semantics stabilize. |
@@ -366,6 +367,7 @@ Roadmap success:
 4. Economics reports allow alternate valid programs to be compared by time, cost, and tradeoff score.
 5. UI exposes plans, warnings, geometry feedback, and estimate assumptions clearly.
 6. Any ML fine-tuning is evaluated against executable outcomes, not just text similarity.
+7. STEP-to-SubCAD generation uses exact STEP/B-Rep evidence as the primary input, with vision/video benchmarked as supporting context rather than treated as geometry truth.
 
 ## Cost Notes
 
