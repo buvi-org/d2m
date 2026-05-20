@@ -55,6 +55,33 @@ SubCAD can currently be used as a CadQuery-backed subtractive machining represen
 
 SubCAD is not yet a production CAM/postprocessor. Controller-certified G-code, a full upload-to-plan product UI, live translation success claims, and validated simulation/RL workflows remain future work.
 
+### Visualization workflow
+
+The primary visualization direction is browser-based Three.js with Python exporting the session assets. This keeps CadQuery/trimesh/simulation logic in Python while using the browser for interactive inspection.
+
+```python
+from src.subcad import Stock
+
+part = (
+    Stock.rectangular(60, 40, 16)
+    .face_mill(depth=1)
+    .pocket(width=18, length=24, depth=4)
+)
+
+part.visualization_package("web/sessions/latest", target=part)
+```
+
+Then serve `web/` and open the session viewer:
+
+```bash
+cd web
+python -m http.server 8080
+```
+
+Open `http://localhost:8080/visualization.html?session=sessions/latest/scene.json`.
+
+The viewer loads stock/target STL assets, neutral toolpaths, comparison JSON, and diff markers. WebGPU remains the longer-term path for browser-side material removal; the current reliable path is Python export plus Three.js review.
+
 Recent local test status:
 
 | Test | Status |

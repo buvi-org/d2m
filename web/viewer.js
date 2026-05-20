@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -53,6 +54,7 @@ export class Viewer {
     this._originalStockMaterial = null;
 
     this._gltfLoader = new GLTFLoader();
+    this._stlLoader = new STLLoader();
   }
 
   // -----------------------------------------------------------------------
@@ -227,6 +229,48 @@ export class Viewer {
       this.targetMesh.visible = this._showTarget;
       this.scene.add(this.targetMesh);
     }
+  }
+
+  /**
+   * Load an STL ArrayBuffer into the scene as the stock mesh.
+   */
+  async loadStockSTL(arrayBuffer) {
+    this._disposeStockMesh();
+    const geom = this._stlLoader.parse(arrayBuffer);
+    geom.computeVertexNormals();
+    this._originalStockMaterial = new THREE.MeshStandardMaterial({
+      color: 0xccdde8,
+      metalness: 0.25,
+      roughness: 0.45,
+      side: THREE.DoubleSide,
+    });
+    this.stockMesh = new THREE.Mesh(geom, this._originalStockMaterial);
+    this.stockMesh.castShadow = true;
+    this.stockMesh.receiveShadow = true;
+    this.scene.add(this.stockMesh);
+    this._fitCameraToMesh(this.stockMesh);
+    this._updateWireframe();
+  }
+
+  /**
+   * Load an STL ArrayBuffer into the scene as the transparent target mesh.
+   */
+  async loadTargetSTL(arrayBuffer) {
+    this._disposeTargetMesh();
+    const geom = this._stlLoader.parse(arrayBuffer);
+    geom.computeVertexNormals();
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x44aa44,
+      metalness: 0.1,
+      roughness: 0.6,
+      transparent: true,
+      opacity: 0.35,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    this.targetMesh = new THREE.Mesh(geom, mat);
+    this.targetMesh.visible = this._showTarget;
+    this.scene.add(this.targetMesh);
   }
 
   /**
@@ -439,6 +483,17 @@ export class Viewer {
       this.scene.add(sphere);
       this.gougeSpheres.push(sphere);
     }
+  }
+
+  addDiffMarkers(regions) {
+    const markers = (regions || []).map(region => ({
+      position: region.center || region.position || [0, 0, 0],
+      depth: Math.max(
+        Math.abs(region.max_deviation_mm || region.max_deviation || 0),
+        0.2,
+      ),
+    }));
+    this.addGougeMarkers(markers);
   }
 
   // -----------------------------------------------------------------------

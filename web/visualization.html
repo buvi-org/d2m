@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>d2m - SubCAD Visualization</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="session-viewer.js"></script>
+</head>
+<body>
+<div class="app-container">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>d2m</h1>
+      <div class="subtitle">SubCAD Visualization</div>
+    </div>
+    <div class="sidebar-content">
+      <div class="section">
+        <div class="section-header">Session</div>
+        <div class="section-body">
+          <div class="setting-row vertical">
+            <label for="session-path">scene.json</label>
+            <input id="session-path" type="text" value="sessions/latest/scene.json">
+          </div>
+          <button class="btn btn-primary full-width" id="load-session">Load Session</button>
+          <div class="status" id="status">Ready</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">View Options</div>
+        <div class="section-body">
+          <label class="check-row"><input type="checkbox" id="show-target" checked> Target overlay</label>
+          <label class="check-row"><input type="checkbox" id="show-toolpath" checked> Toolpath</label>
+          <label class="check-row"><input type="checkbox" id="show-diff" checked> Diff markers</label>
+          <button class="btn full-width" id="fit-view">Fit View</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Metadata</div>
+        <div class="section-body" id="metadata">
+          <div class="meta-row"><span>Status</span><strong>Not loaded</strong></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Operations</div>
+        <div class="section-body">
+          <div class="op-list" id="operations">
+            <div class="op-item pending">No session loaded.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="viewport" id="viewport">
+    <div class="camera-controls">
+      <button class="cam-btn" onclick="document.getElementById('fit-view').click()" title="Fit">Fit</button>
+    </div>
+  </main>
+</div>
+</body>
+</html>

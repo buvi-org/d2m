@@ -455,6 +455,11 @@ html, body {
   margin-bottom: 8px;
 }
 
+.setting-row.vertical {
+  align-items: stretch;
+  flex-direction: column;
+}
+
 .setting-row label {
   font-size: 12px;
   color: var(--text-secondary);
@@ -462,7 +467,8 @@ html, body {
 }
 
 .setting-row select,
-.setting-row input[type="number"] {
+.setting-row input[type="number"],
+.setting-row input[type="text"] {
   flex: 1;
   padding: 5px 8px;
   background: var(--bg-input);
@@ -473,9 +479,51 @@ html, body {
 }
 
 .setting-row select:focus,
-.setting-row input[type="number"]:focus {
+.setting-row input[type="number"]:focus,
+.setting-row input[type="text"]:focus {
   outline: none;
   border-color: var(--accent);
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.status {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.status.error {
+  color: var(--accent-red);
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+  padding: 6px 0;
+  font-size: 12px;
+}
+
+.meta-row span {
+  color: var(--text-secondary);
+}
+
+.meta-row strong {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 
 /* ------------------------------------------------------------------ */

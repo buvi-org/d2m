@@ -1085,6 +1085,25 @@ class Stock:
 
         return compare_to_target(self, target, tolerance_mm=tolerance_mm)
 
+    def visualization_package(
+        self,
+        output_dir: str,
+        *,
+        target=None,
+        tolerance_mm: float = 0.25,
+        include_diff_mesh: bool = True,
+    ) -> dict:
+        """Export browser-friendly visualization assets into a directory."""
+        from .visualization import export_visualization_package
+
+        return export_visualization_package(
+            self,
+            output_dir,
+            target=target,
+            tolerance_mm=tolerance_mm,
+            include_diff_mesh=include_diff_mesh,
+        )
+
     def validate_shop_floor(self, structured: bool = False):
         """Run shop-floor validation against the current process plan."""
         from .validation import validate_all

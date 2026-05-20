@@ -93,6 +93,24 @@ Goal: move the now-passing simulation bridge from sanity coverage toward trustwo
    - Measure runtime and stability on practical stock sizes and toolpath lengths.
    - Avoid claiming production simulation validity until these cases are documented.
 
+## Visualization
+
+Status: first static browser visualization path is available.
+
+1. Export visualization packages from SubCAD.
+   - Use `Stock.visualization_package("web/sessions/latest", target=...)`.
+   - Package includes `scene.json`, `stock.stl`, `toolpath.json`, and optional target/comparison/diff assets.
+
+2. Review in the browser.
+   - Serve `web/` and open `visualization.html?session=sessions/latest/scene.json`.
+   - Inspect stock mesh, transparent target overlay, neutral toolpaths, operation list, and comparison markers.
+
+3. Next visualization improvements.
+   - Add operation-by-operation mesh snapshots for playback.
+   - Add richer per-vertex heatmap rendering in Three.js.
+   - Add live WebSocket streaming after Python simulation reliability is stronger.
+   - Keep WebGPU material removal as a later acceleration path.
+
 ## What SubCAD Can Do Now
 
 - Build subtractive machining programs with the fluent `Stock` API, including core and Phase 2 operations.

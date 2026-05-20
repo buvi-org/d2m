@@ -25,6 +25,7 @@ from .toolpath import Toolpath, ToolpathMove
 from .gcode_preview import gcode_preview, to_gcode_preview
 from .postprocessor import PostProcessor, Generic3AxisDebugPost, postprocess
 from .target_compare import compare_to_target
+from .visualization import export_visualization_package
 from .operations import (
     MachiningOperation,
     FaceMillOp,
@@ -87,6 +88,7 @@ __all__ = [
     "Generic3AxisDebugPost",
     "postprocess",
     "compare_to_target",
+    "export_visualization_package",
     # Operation classes
     "MachiningOperation",
     "FaceMillOp",

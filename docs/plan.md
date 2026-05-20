@@ -78,8 +78,22 @@ SubCAD is now usable as the repository's subtractive machining representation an
 - Preserve neutral toolpaths with summaries for preview, validation, cycle-time estimation, and simulation handoff.
 - Render preview-only G-code from neutral motion intent while clearly deferring production controller-specific postprocessing.
 - Validate schema and authored toolpath issues before simulation or downstream CAM handoff.
+- Export static browser visualization packages for Three.js review of stock, target, toolpaths, comparison data, and diff markers.
 
 SubCAD is still a prototype layer. It does not yet provide production-certified G-code, a complete upload-to-plan UI, or validated simulation/RL outcomes.
+
+### Visualization Direction
+
+Use the browser viewer as the primary visualization surface. Python remains the geometry/simulation source of truth and exports static sessions through `Stock.visualization_package(...)`; `web/visualization.html` loads the package with Three.js.
+
+This gives immediate interactive review without waiting for browser-side simulation:
+
+- Stock and target STL display.
+- Neutral toolpath overlay.
+- Operation metadata and setup context.
+- Comparison JSON and overcut/undercut marker display.
+
+The longer-term visualization roadmap is operation-by-operation mesh snapshots, richer per-vertex heatmaps, live WebSocket streaming from Python simulation, then WebGPU material removal once the Python simulator is validated.
 
 ### Agentic Translator
 
