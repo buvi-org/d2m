@@ -23,6 +23,8 @@ from .process_plan import ProcessPlan, OperationStep
 from .tool_library import ToolSpec, ToolCatalog, to_sim_tool
 from .toolpath import Toolpath, ToolpathMove
 from .gcode_preview import gcode_preview, to_gcode_preview
+from .postprocessor import PostProcessor, Generic3AxisDebugPost, postprocess
+from .target_compare import compare_to_target
 from .operations import (
     MachiningOperation,
     FaceMillOp,
@@ -81,6 +83,10 @@ __all__ = [
     "ToolpathMove",
     "gcode_preview",
     "to_gcode_preview",
+    "PostProcessor",
+    "Generic3AxisDebugPost",
+    "postprocess",
+    "compare_to_target",
     # Operation classes
     "MachiningOperation",
     "FaceMillOp",

@@ -523,6 +523,12 @@ def _check_setup_accessibility(process_plan_dict: dict) -> list[ValidationIssue]
                 f"Setup '{name}' is missing a work offset.",
                 setup=name,
             ))
+        if face and face not in {">Z", "<Z", ">X", "<X", ">Y", "<Y"}:
+            issues.append(_issue(
+                "warning", "setup_unsupported_face",
+                f"Setup '{name}' uses unsupported face selector '{face}'.",
+                setup=name, face_selector=face,
+            ))
 
     referenced_faces = set()
     for i, op in enumerate(operations):
@@ -551,6 +557,13 @@ def _check_setup_accessibility(process_plan_dict: dict) -> list[ValidationIssue]
             ))
         if face and face != ">Z":
             referenced_faces.add(face)
+        if face and face not in {">Z", "<Z", ">X", "<X", ">Y", "<Y"}:
+            issues.append(_issue(
+                "warning", "operation_unsupported_face",
+                f"{_op_name(op) or 'operation'} at position {i} uses unsupported "
+                f"face selector '{face}'.",
+                i, op, face_selector=face,
+            ))
 
     if referenced_faces and not setups:
         issues.append(_issue(
@@ -558,6 +571,16 @@ def _check_setup_accessibility(process_plan_dict: dict) -> list[ValidationIssue]
             "Operations reference non-top faces but no setup metadata is defined.",
             faces=sorted(referenced_faces),
         ))
+    elif referenced_faces:
+        for i, op in enumerate(operations):
+            face = op.get("face_selector")
+            if face and face != ">Z" and not op.get("setup"):
+                issues.append(_issue(
+                    "warning", "non_top_face_missing_setup",
+                    f"{_op_name(op) or 'operation'} at position {i} machines face "
+                    f"'{face}' but has no setup assignment.",
+                    i, op, face_selector=face,
+                ))
 
     return issues
 
@@ -604,6 +627,23 @@ def _check_fixture_clearance(process_plan_dict: dict) -> list[ValidationIssue]:
                             f"fixture clamping zone '{label}'.",
                             i, op, zone=label, x=x, y=y,
                         ))
+
+        records = _toolpath_records(op.get("toolpath"))
+        points = [p for p in (_toolpath_xyz(record) for record in records or []) if p is not None]
+        for x, y, _z in points:
+            for zone in zones:
+                if isinstance(zone, dict) and _zone_contains(zone, x, y):
+                    label = zone.get("label", "clamping zone")
+                    issues.append(_issue(
+                        "warning", "fixture_toolpath_clearance",
+                        f"{op_type or 'operation'} at position {i} has authored "
+                        f"toolpath through fixture clamping zone '{label}'.",
+                        i, op, zone=label, x=x, y=y,
+                    ))
+                    break
+            else:
+                continue
+            break
 
         if op_type in ("face_mill", "contour"):
             issues.append(_issue(

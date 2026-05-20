@@ -46,9 +46,11 @@ Acceptance coverage is tracked in `test_subcad_shopfloor_v1.py`. It is intention
 
 ### Phase 2 Toolpaths
 
-Current integration target: extend the completed shop-floor handoff so every Phase 2 operation has authored neutral motion intent that can be previewed, validated, estimated, and passed toward simulation.
+Status: complete and passing for the current prototype contract.
 
-The Phase 2 contract should include:
+The completed Phase 2 contract extends the shop-floor handoff so every Phase 2 operation has authored neutral motion intent that can be previewed, validated, estimated, and passed toward simulation.
+
+The Phase 2 contract includes:
 
 - Non-empty neutral toolpaths for `peck_drill`, `ream`, `bore`, `countersink`, `counterbore`, `thread_mill`, `t_slot`, `dovetail`, `groove`, `surface_3d`, `deburr`, and `spot_face`.
 - Process-plan operation records with serialized toolpaths plus summaries that expose move/point count, length, estimated time, and bounds where applicable.
@@ -64,8 +66,20 @@ Current test status:
 |------|--------|-------|
 | `python test_subcad_integration.py` | PASS, 39/39 | Fluent chain, exports, process-plan JSON, volume monotonicity, immutability, threaded holes, round trip. |
 | `python test_fixturing_integration.py` | PASS, 19/19 | Fixture/setup metadata, flip setup, clearance warning path, JSON round trip, error handling. |
-| `python test_subcad_shopfloor_v1.py` | PASS target | Acceptance coverage for the completed Shop-Floor v1 contract. |
-| `python test_subcad_phase2_toolpaths.py` | New acceptance | Expected to pass after Agents 1-4 integrate Phase 2 toolpath, preview, validation, and estimation work. |
+| `python test_subcad_shopfloor_v1.py` | PASS | Acceptance coverage for the completed Shop-Floor v1 contract. |
+| `python test_subcad_phase2_toolpaths.py` | PASS | Acceptance coverage for completed Phase 2 toolpaths, preview-only G-code, validation, and estimation work. |
+
+### What SubCAD Can Do Now
+
+SubCAD is now usable as the repository's subtractive machining representation and shop-floor handoff prototype:
+
+- Build CadQuery-backed subtractive programs with the fluent `Stock` API, including core operations, Phase 2 operations, fixtures, setups, work offsets, tools, feeds/speeds, stock, and material metadata.
+- Export STEP/STL geometry, `subcad.shop_floor.v1` process-plan JSON, and Markdown/JSON setup sheets for review.
+- Preserve neutral toolpaths with summaries for preview, validation, cycle-time estimation, and simulation handoff.
+- Render preview-only G-code from neutral motion intent while clearly deferring production controller-specific postprocessing.
+- Validate schema and authored toolpath issues before simulation or downstream CAM handoff.
+
+SubCAD is still a prototype layer. It does not yet provide production-certified G-code, a complete upload-to-plan UI, or validated simulation/RL outcomes.
 
 ### Agentic Translator
 
@@ -119,20 +133,7 @@ Simulation should now be described as a passing prototype path, not a production
 
 ## Recommended Plan
 
-### 1. Integrate Phase 2 Toolpaths
-
-Goal: make Phase 2 operations first-class shop-floor intent, not just geometry modifiers.
-
-Acceptance criteria:
-
-- Every Phase 2 operation emits non-empty neutral toolpath data.
-- Process plans preserve Phase 2 toolpaths and expose useful summaries.
-- Preview-only G-code export contains warnings and review metadata without claiming production postprocessing.
-- Validation catches malformed authored toolpaths.
-- Estimated time changes with authored path length and feed rates.
-- `python test_subcad_phase2_toolpaths.py` passes after implementation lands.
-
-### 2. Harden Simulation Validation
+### 1. Harden Simulation Validation
 
 Goal: move beyond “bridge tests pass” toward trustworthy simulation feedback.
 
@@ -141,10 +142,10 @@ Acceptance criteria:
 - Use real target meshes instead of demo scaled-stock references for validation endpoints.
 - Compare simulated stock against target meshes with mesh/feature feedback.
 - Add gouge/deviation assertions to tests.
-- Prefer explicit neutral toolpaths from schema v1 when present, with the existing generated simple toolpath path retained as a fallback for older operation dictionaries.
+- Prefer explicit neutral toolpaths from schema v1 and Phase 2 operations when present, with the existing generated simple toolpath path retained as a fallback for older operation dictionaries.
 - Keep `python test_sim_bridge.py`, `python src\simulation\tri_dexel.py`, and `python -m src.simulation.material_removal` passing.
 
-### 3. Validate Mesh and Feature Comparison on Real Samples
+### 2. Validate Mesh and Feature Comparison on Real Samples
 
 Goal: ensure localized comparison feedback is accurate enough to guide the translator.
 
@@ -155,7 +156,7 @@ Acceptance criteria:
 - Feature-aware comparison produces actionable feedback for holes, pockets, slots, and chamfers.
 - Translator history stores compact comparison output without overwhelming prompts.
 
-### 4. Run Live Translation Trials
+### 3. Run Live Translation Trials
 
 Goal: measure whether the agentic loop can translate CadQuery samples into equivalent SubCAD programs.
 
@@ -166,7 +167,7 @@ Acceptance criteria:
 - Save successful CadQuery/SubCAD pairs for later training.
 - Do not claim translator success beyond the tested sample set.
 
-### 5. Build Dataset From Successful Translations
+### 4. Build Dataset From Successful Translations
 
 Goal: create reliable training/evaluation pairs only after execution and comparison are trustworthy.
 
@@ -176,7 +177,7 @@ Acceptance criteria:
 - Failed translations are retained with reason labels for improvement.
 - Dataset split separates training, validation, and hard negative cases.
 
-### 6. Revisit ML Roadmap
+### 5. Revisit ML Roadmap
 
 Only after reliable execution/comparison data exists:
 
@@ -185,6 +186,21 @@ Only after reliable execution/comparison data exists:
 - Consider GNN feature recognition if it remains necessary for the product workflow.
 - Treat RL as late-stage research after simulation fidelity is validated.
 
+## Completed Near-Term Slice
+
+### Integrate Phase 2 Toolpaths
+
+Goal: make Phase 2 operations first-class shop-floor intent, not just geometry modifiers.
+
+Acceptance criteria met:
+
+- Every Phase 2 operation emits non-empty neutral toolpath data.
+- Process plans preserve Phase 2 toolpaths and expose useful summaries.
+- Preview-only G-code export contains warnings and review metadata without claiming production postprocessing.
+- Validation catches malformed authored toolpaths.
+- Estimated time changes with authored path length and feed rates.
+- `python test_subcad_phase2_toolpaths.py` passes.
+
 ## Roadmap Status
 
 | Area | Status | Current Decision |
@@ -192,11 +208,11 @@ Only after reliable execution/comparison data exists:
 | Synthetic data | Complete enough for prototype use | Keep; regenerate only if labels/schema change. |
 | SubCAD API | Implemented and passing integration tests | Continue using as canonical subtractive representation. |
 | SubCAD Shop-Floor v1 | Complete | Maintain schema, neutral toolpaths, setup sheets, validation, and deferred production G-code contract. |
-| Phase 2 toolpaths | Current integration | Add authored neutral paths, summaries, preview-only G-code adapter, malformed-path validation, and path-based estimates. |
+| Phase 2 toolpaths | Complete | Maintain authored neutral paths, summaries, preview-only G-code adapter, malformed-path validation, and path-based estimates. |
 | Agentic translator | Implemented; non-live tests pass | Run live trials after simulation/comparison validation. |
 | Mesh comparison | Implemented | Verify and tune; no need to reimplement first. |
 | Feature comparison | Implemented | Validate on known samples and feed into translator loop. |
-| Simulation bridge | Prototype passing tests | Harden against representative target meshes, toolpaths, and gouge/deviation cases. |
+| Simulation bridge | Active next priority; prototype passing tests | Harden against representative target meshes, authored toolpaths, and gouge/deviation cases. |
 | GNN feature recognition | Planned | Defer until subtractive workflow proves what features are needed. |
 | LLM fine-tuning | Planned | Defer until high-quality execution-scored pairs exist. |
 | Product UI | Planned/prototype pieces exist | Defer productization until backend semantics stabilize. |
@@ -218,9 +234,9 @@ The recommended plan is to finish the narrower loop first. Once SubCAD execution
 
 Near-term success:
 
-1. Translator comparison feedback identifies localized geometry errors, not only volume ratio.
-2. Live translation trials produce measured success/failure data.
-3. Simulation tests include real target-mesh deviation/gouge cases, not only volume/removal sanity checks.
+1. Simulation tests include real target-mesh deviation/gouge cases, not only volume/removal sanity checks.
+2. Translator comparison feedback identifies localized geometry errors, not only volume ratio.
+3. Live translation trials produce measured success/failure data.
 4. Documentation reports measured status, not hoped-for capability.
 
 Roadmap success:

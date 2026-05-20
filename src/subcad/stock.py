@@ -1066,6 +1066,35 @@ class Stock:
         """Compatibility alias for gcode_preview."""
         return self.gcode_preview()
 
+    def postprocess(
+        self,
+        controller: str = "generic_3axis_debug",
+        machine: str = "generic_3axis_mill",
+        safe_mode: bool = True,
+    ) -> str:
+        """Return debug-only postprocessor output from the process plan."""
+        return self._plan.postprocess(
+            controller=controller,
+            machine=machine,
+            safe_mode=safe_mode,
+        )
+
+    def compare_to_target(self, target, tolerance_mm: float = 0.25) -> dict:
+        """Compare this stock geometry against a target mesh/STEP/STL/Stock."""
+        from .target_compare import compare_to_target
+
+        return compare_to_target(self, target, tolerance_mm=tolerance_mm)
+
+    def validate_shop_floor(self, structured: bool = False):
+        """Run shop-floor validation against the current process plan."""
+        from .validation import validate_all
+
+        return validate_all(
+            self._plan.to_dict(),
+            self._stock_dims,
+            structured=structured,
+        )
+
     def plan_summary(self) -> str:
         """Return a human-readable summary of the process plan."""
         return self._plan.summary()

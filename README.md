@@ -30,16 +30,30 @@ SubCAD Shop-Floor v1 is now treated as complete for the current prototype contra
 - Setup-sheet exports include stock, material, tools, operations, setups, work offsets, validation warnings, and a clear note that production G-code posting is deferred.
 - Validation produces actionable errors/warnings before simulation or downstream CAM handoff.
 
-The next slice is **Phase 2 toolpaths**:
+**Phase 2 toolpaths are now complete and passing for the current prototype contract**:
 
-- Every Phase 2 operation should emit a non-empty neutral toolpath suitable for preview, estimating, validation, and simulation handoff.
-- Process plans should include toolpath summaries for Phase 2 operations.
-- A preview-only G-code adapter may render controller-neutral intent for review, but it must warn that production postprocessing remains deferred.
-- Validation and time estimation should use authored toolpath data, including malformed-path checks and path-length-based cycle-time estimates.
+- Every Phase 2 operation emits a non-empty neutral toolpath suitable for preview, estimating, validation, and simulation handoff.
+- Process plans include useful toolpath summaries for Phase 2 operations.
+- A preview-only G-code adapter renders controller-neutral intent for review and warns that production postprocessing remains deferred.
+- Validation and time estimation use authored toolpath data, including malformed-path checks and path-length-based cycle-time estimates.
 
 Recently fixed blocker:
 
 - The previous tri-dexel zero-volume failure has been fixed. `test_sim_bridge.py` now verifies nonzero stock volume, modified columns, and positive material removal. Simulation is still a prototype, but the core volume/material-removal path is no longer blocked.
+
+The active next priority is **Simulation Reliability**: harden the now-passing simulation path against representative target meshes, authored neutral toolpaths, gouge/deviation checks, and realistic machining cases.
+
+## What SubCAD Can Do Now
+
+SubCAD can currently be used as a CadQuery-backed subtractive machining representation for prototype workflows:
+
+- Author machining programs with the fluent `Stock` API, including core operations, Phase 2 operations, fixtures, setups, work offsets, and tool/material metadata.
+- Export STEP/STL geometry plus JSON process plans using the `subcad.shop_floor.v1` schema.
+- Preserve neutral toolpaths for shop-floor review, estimation, validation, preview-only G-code rendering, and simulation handoff.
+- Export Markdown/JSON setup sheets with stock, material, tools, operations, setup/work-offset data, validation messages, and deferred-production-G-code notes.
+- Run local validation and integration tests for SubCAD, fixturing, shop-floor schema v1, Phase 2 toolpaths, translator infrastructure, and the simulation bridge.
+
+SubCAD is not yet a production CAM/postprocessor. Controller-certified G-code, a full upload-to-plan product UI, live translation success claims, and validated simulation/RL workflows remain future work.
 
 Recent local test status:
 
@@ -49,8 +63,8 @@ Recent local test status:
 | `python test_subcad_integration.py` | PASS, 39/39 |
 | `python test_fixturing_integration.py` | PASS, 19/19 |
 | `python test_sim_bridge.py` | PASS, 51/51 |
-| `python test_subcad_shopfloor_v1.py` | Acceptance test for completed SubCAD Shop-Floor v1 contract. |
-| `python test_subcad_phase2_toolpaths.py` | New acceptance test for Phase 2 toolpaths, preview-only G-code adapter, validation, and estimation; expected to pass after Agents 1-4 integrate. |
+| `python test_subcad_shopfloor_v1.py` | PASS. Acceptance test for completed SubCAD Shop-Floor v1 contract. |
+| `python test_subcad_phase2_toolpaths.py` | PASS. Acceptance test for completed Phase 2 toolpaths, preview-only G-code adapter, validation, and estimation. |
 
 ## Architecture
 
@@ -97,8 +111,8 @@ Phased solo build using AI-assisted development (Claude Code, Cursor):
 | **1**: Synthetic Data | Week 2-3 | ✅ Complete — 9,994 labeled parts with STEP + JSON. CadQuery CSG engine + rule-based labeling. | 2,000-8,000 |
 | **2**: Feature Recognition / Translation | Week 3-5 | In progress — translator and comparison utilities exist; GNN feature recognition remains planned. | 8,000-15,000 |
 | **2.5**: SubCAD Shop-Floor v1 | Complete | Schema v1, neutral toolpaths, setup-sheet export, validation buckets, and deferred production G-code contract. | TBD |
-| **2.6**: Phase 2 Toolpaths | Current integration | Non-empty neutral paths for Phase 2 ops, plan summaries, preview-only G-code adapter, malformed-path validation, and authored-path estimation. | TBD |
-| **3**: Simulation Reliability | Next priority | Harden the now-passing tri-dexel/material-removal bridge with real target meshes, deviation/gouge checks, and representative toolpaths. | TBD |
+| **2.6**: Phase 2 Toolpaths | ✅ Complete | Non-empty neutral paths for Phase 2 ops, plan summaries, preview-only G-code adapter, malformed-path validation, and authored-path estimation. | TBD |
+| **3**: Simulation Reliability | Active next priority | Harden the now-passing tri-dexel/material-removal bridge with real target meshes, deviation/gouge checks, and representative toolpaths. | TBD |
 | **4**: LLM Fine-Tuning | Planned | Fine-tune/evaluate planning or code-generation model after reliable translated pairs and scoring. | 3,000-8,000 |
 | **5**: Product Integration + UI | Planned | Full upload → plan → validation workflow and production UI. | 5,000-10,000 |
 | **6**: Simulation + RL | Aspirational | RL loop after simulator is reliable and validated against real outcomes. | 15,000-40,000 |
@@ -149,18 +163,20 @@ python test_fixturing_integration.py
 # Simulation bridge test
 python test_sim_bridge.py
 
-# Shop-floor v1 acceptance test after integration lands
+# Shop-floor v1 acceptance test
 python test_subcad_shopfloor_v1.py
 
-# Phase 2 toolpath acceptance test after integration lands
+# Phase 2 toolpath acceptance test
 python test_subcad_phase2_toolpaths.py
 ```
 
 ## Status
 
-**Completed** — Phase 1 synthetic dataset, SubCAD operation model, process-plan/export basics, fixture/setup metadata, SubCAD Shop-Floor v1, and non-live agentic translator tests.
+**Completed** — Phase 1 synthetic dataset, SubCAD operation model, process-plan/export basics, fixture/setup metadata, SubCAD Shop-Floor v1, Phase 2 neutral toolpaths, preview-only G-code adapter, authored-path validation/estimation, and non-live agentic translator tests.
 
-**In progress** — Phase 2 neutral toolpaths, preview-only G-code adapter, validation/estimation improvements, agentic CadQuery -> SubCAD translation, localized/feature-aware comparison, and simulation reliability hardening.
+**Active next priority** — Simulation reliability hardening with representative target meshes, authored neutral toolpaths, gouge/deviation checks, and performance/accuracy validation.
+
+**In progress / prototype** — Agentic CadQuery -> SubCAD translation, localized/feature-aware comparison validation, and simulation feedback quality.
 
 **Recently fixed** — Simulation bridge zero-volume failure. Core dexel volume and material-removal tests now pass, but simulation/RL claims should still be treated as roadmap until validated on representative real workflows.
 

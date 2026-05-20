@@ -406,6 +406,9 @@ class ProcessPlan:
                     "material": self.material,
                     "stock_dimensions": self.stock_dimensions,
                     "operations": self.operations,
+                    "fixture": self.fixture,
+                    "setups": self.setups,
+                    "work_offsets": self.work_offsets,
                 }, self.stock_dimensions),
             )
         except Exception:
@@ -449,6 +452,25 @@ class ProcessPlan:
 
     def setup_sheet_dict(self) -> dict:
         """Return a shop-floor setup sheet as a structured JSON-ready dict."""
+        operations = [
+            {
+                "sequence_number": op.get("sequence_number", idx),
+                "operation": op.get("operation", "?"),
+                "setup": op.get("setup", ""),
+                "face_selector": op.get("face_selector", ""),
+                "tool": op.get("tool", _tool_metadata(op)),
+                "feeds_speeds": op.get("feeds_speeds"),
+                "toolpath_summary": op.get("toolpath_summary"),
+                "notes": op.get("notes", ""),
+                "validation_buckets": op.get("validation_buckets", _empty_validation_buckets()),
+            }
+            for idx, op in enumerate(self.operations, start=1)
+        ]
+        operations_by_setup: dict[str, list[dict]] = {}
+        for op in operations:
+            setup_name = op.get("setup") or "unassigned"
+            operations_by_setup.setdefault(setup_name, []).append(op)
+
         return {
             "schema_version": self.schema_version,
             "units": {"linear": "mm", "time": "min", "angle": "deg"},
@@ -460,20 +482,8 @@ class ProcessPlan:
             "setups": self.setups,
             "work_offsets": self.work_offsets,
             "tools": self.tools_used,
-            "operations": [
-                {
-                    "sequence_number": op.get("sequence_number", idx),
-                    "operation": op.get("operation", "?"),
-                    "setup": op.get("setup", ""),
-                    "face_selector": op.get("face_selector", ""),
-                    "tool": op.get("tool", _tool_metadata(op)),
-                    "feeds_speeds": op.get("feeds_speeds"),
-                    "toolpath_summary": op.get("toolpath_summary"),
-                    "notes": op.get("notes", ""),
-                    "validation_buckets": op.get("validation_buckets", _empty_validation_buckets()),
-                }
-                for idx, op in enumerate(self.operations, start=1)
-            ],
+            "operations": operations,
+            "operations_by_setup": operations_by_setup,
             "validation_buckets": self.validation_buckets,
             "gcode_status": "G-code export deferred; this setup sheet is neutral shop-floor intent.",
         }
@@ -504,14 +514,26 @@ class ProcessPlan:
             lines.append("- None")
 
         lines.extend(["", "## Operations"])
-        for op in sheet["operations"]:
-            tool = op.get("tool") or {}
-            detail = f"{op['sequence_number']}. {op['operation']} - {tool.get('label', '?')}"
-            if op.get("setup"):
-                detail += f" - setup {op['setup']}"
-            if op.get("notes"):
-                detail += f" - {op['notes']}"
-            lines.append(detail)
+        if sheet.get("operations_by_setup"):
+            for setup_name, ops in sheet["operations_by_setup"].items():
+                lines.append(f"### Setup {setup_name}")
+                for op in ops:
+                    tool = op.get("tool") or {}
+                    detail = f"{op['sequence_number']}. {op['operation']} - {tool.get('label', '?')}"
+                    if op.get("face_selector"):
+                        detail += f" - face {op['face_selector']}"
+                    if op.get("notes"):
+                        detail += f" - {op['notes']}"
+                    lines.append(detail)
+        else:
+            for op in sheet["operations"]:
+                tool = op.get("tool") or {}
+                detail = f"{op['sequence_number']}. {op['operation']} - {tool.get('label', '?')}"
+                if op.get("setup"):
+                    detail += f" - setup {op['setup']}"
+                if op.get("notes"):
+                    detail += f" - {op['notes']}"
+                lines.append(detail)
         lines.extend(["", "## Warnings"])
         warnings = sheet.get("validation_buckets", {}).get("warnings", [])
         if warnings:
@@ -554,6 +576,17 @@ class ProcessPlan:
     def to_gcode_preview(self) -> str:
         """Compatibility alias for gcode_preview."""
         return self.gcode_preview()
+
+    def postprocess(
+        self,
+        controller: str = "generic_3axis_debug",
+        machine: str = "generic_3axis_mill",
+        safe_mode: bool = True,
+    ) -> str:
+        """Return debug-only postprocessor output for this process plan."""
+        from .postprocessor import postprocess
+
+        return postprocess(self, controller=controller, machine=machine, safe_mode=safe_mode)
 
     # ------------------------------------------------------------------
     # Display

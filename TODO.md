@@ -47,7 +47,7 @@ Goal: make SubCAD output a shop-floor-ready intermediate package without claimin
 
 ## Phase 2 Toolpaths
 
-Current next slice:
+Status: complete and passing for the current prototype contract. Keep the acceptance test green while Simulation Reliability becomes the active next priority.
 
 1. Emit neutral toolpaths for every Phase 2 operation.
    - `peck_drill`, `ream`, `bore`, `countersink`, `counterbore`, `thread_mill`, `t_slot`, `dovetail`, `groove`, `surface_3d`, `deburr`, and `spot_face` must all serialize non-empty motion intent.
@@ -69,12 +69,43 @@ Current next slice:
 ## Integration Checks
 
 - Keep running `python test_subcad_shopfloor_v1.py` for the completed Shop-Floor v1 contract.
-- Add and run `python test_subcad_phase2_toolpaths.py` once Agents 1-4 finish their Phase 2 integration work.
-- The Phase 2 test covers non-empty neutral toolpaths, process-plan summaries, preview-only G-code metadata, malformed-toolpath validation, and authored-path time estimation.
+- Keep running `python test_subcad_phase2_toolpaths.py` for the completed Phase 2 toolpath contract.
+- The Phase 2 test passes and covers non-empty neutral toolpaths, process-plan summaries, preview-only G-code metadata, malformed-toolpath validation, and authored-path time estimation.
 - Continue running the existing SubCAD, fixturing, translator, and simulation bridge tests as regression coverage.
+
+## Active Next Priority: Simulation Reliability
+
+Goal: move the now-passing simulation bridge from sanity coverage toward trustworthy prototype validation.
+
+1. Validate against representative target meshes.
+   - Use real target meshes instead of demo scaled-stock references for validation endpoints.
+   - Compare simulated stock against target meshes with mesh/feature feedback.
+
+2. Exercise authored neutral toolpaths.
+   - Prefer explicit schema v1/Phase 2 neutral toolpaths when present.
+   - Retain generated simple toolpaths as a fallback for older operation dictionaries.
+
+3. Add reliability assertions.
+   - Add gouge/deviation checks for known machining cases.
+   - Keep volume/material-removal coverage green while expanding accuracy checks.
+
+4. Track representative performance.
+   - Measure runtime and stability on practical stock sizes and toolpath lengths.
+   - Avoid claiming production simulation validity until these cases are documented.
+
+## What SubCAD Can Do Now
+
+- Build subtractive machining programs with the fluent `Stock` API, including core and Phase 2 operations.
+- Represent fixtures, setups, work offsets, stock/material metadata, tools, feeds/speeds, and process-plan summaries.
+- Export STEP/STL geometry, `subcad.shop_floor.v1` process-plan JSON, and Markdown/JSON setup sheets.
+- Serialize neutral toolpaths for preview, validation, estimation, and simulation handoff.
+- Render preview-only G-code with explicit non-production warnings.
+- Validate malformed/empty authored toolpaths and estimate cycle time from authored path length/feed data where available.
+
+Still deferred: controller-certified production G-code, production UI, live translator success claims, and validated simulation/RL workflows.
 
 ## Deferred Roadmap
 
-- Live translator trials remain next after shop-floor v1 stabilizes.
+- Live translator trials remain next after simulation reliability improves.
 - GNN feature recognition and LLM fine-tuning should wait for execution-scored data.
 - RL remains later-stage research after simulator fidelity is validated.
