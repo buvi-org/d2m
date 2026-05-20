@@ -50,6 +50,8 @@ Recently fixed blocker:
 
 **Manufacturing Trust v1 has its first implementation slice in place**: inventory-aware tool selection, realistic pass planning for core operations, sampled fixture/tool-holder clearance, benchmark comparison cases, and review visualization that exposes tools, holders, passes, timing, and warnings.
 
+**Manufacturing Economics v1 has its first implementation slice in place**: local machine/material/tool cost catalogs, tool-change time, setup/load-unload time, material cost, tool wear cost, total time/cost estimates, setup-sheet economics output, visualization metadata, and ranked program comparison by fastest, cheapest, weighted score, and Pareto status.
+
 ## What SubCAD Can Do Now
 
 SubCAD can currently be used as a CadQuery-backed subtractive machining representation for prototype workflows:
@@ -59,9 +61,11 @@ SubCAD can currently be used as a CadQuery-backed subtractive machining represen
 - Preserve neutral toolpaths for shop-floor review, estimation, validation, preview-only G-code rendering, browser playback, and simulation handoff.
 - Export Markdown/JSON setup sheets with stock, material, selected tools, tool assemblies, fixtures, operations, setup/work-offset data, validation messages, and deferred-production-G-code notes.
 - Review fixture bodies, clamp zones, selected tools, holder/cutter assemblies, operation timelines, and stock states in the browser visualization workflow.
+- Estimate engineering time/cost from local catalogs, including cutting time, tool-change time, setup/load-unload time, material, machine, setup, and tooling cost.
+- Compare alternate SubCAD programs by time/cost tradeoff and Pareto ranking.
 - Run local validation and integration tests for SubCAD, fixturing, shop-floor schema v1, Phase 2 toolpaths, translator infrastructure, and the simulation bridge.
 
-SubCAD is not yet a production CAM/postprocessor. Controller-certified G-code, industrial CAM strategy coverage, a full upload-to-plan product UI, live translation success claims, and validated simulation/RL workflows remain future work.
+SubCAD is not yet a production CAM/postprocessor or quoting system. Controller-certified G-code, industrial CAM strategy coverage, formal ERP/shop quoting, a full upload-to-plan product UI, live translation success claims, and validated simulation/RL workflows remain future work.
 
 ### Visualization workflow
 
@@ -77,6 +81,8 @@ part = (
 )
 
 part.visualization_package("web/sessions/latest", target=part)
+economics = part.estimate_cost(machine="generic_3axis_mill", quantity=5)
+part.visualization_package("web/sessions/latest", target=part, economics=economics)
 ```
 
 Then serve `web/` and open the session viewer:
@@ -90,6 +96,21 @@ Open `http://localhost:8080/visualization.html?session=sessions/latest/scene.jso
 
 The viewer loads stock/target STL assets, neutral toolpaths, selected tool/holder metadata, fixture/clamp-zone data, comparison JSON, and diff markers. WebGPU remains the longer-term path for browser-side material removal; the current reliable path is Python export plus Three.js review.
 
+Economics is available as an engineering estimate:
+
+```python
+from src.subcad import compare_programs
+
+estimate = part.estimate_cost(machine="generic_3axis_mill", quantity=10)
+print(estimate["time_breakdown"]["total_time_per_part_min"])
+print(estimate["cost_breakdown"]["total_cost"])
+
+comparison = compare_programs([program_a, program_b], weights={"time": 0.6, "cost": 0.4})
+print(comparison["fastest_index"], comparison["cheapest_index"], comparison["weighted_best_index"])
+```
+
+These values are for engineering tradeoff review only, not production quotes.
+
 Recent local test status:
 
 | Test | Status |
@@ -101,6 +122,7 @@ Recent local test status:
 | `python test_subcad_shopfloor_v1.py` | PASS. Acceptance test for completed SubCAD Shop-Floor v1 contract. |
 | `python test_subcad_phase2_toolpaths.py` | PASS. Acceptance test for completed Phase 2 toolpaths, preview-only G-code adapter, validation, and estimation. |
 | `python test_subcad_visualization.py` | PASS. Browser visualization package coverage, including current fixture/tool review metadata. |
+| `python test_subcad_manufacturing_economics.py` | PASS. Engineering time/cost estimate and program-comparison coverage. |
 
 ## Architecture
 
@@ -150,6 +172,7 @@ Phased solo build using AI-assisted development (Claude Code, Cursor):
 | **2.6**: Phase 2 Toolpaths | ✅ Complete | Non-empty neutral paths for Phase 2 ops, plan summaries, preview-only G-code adapter, malformed-path validation, and authored-path estimation. | TBD |
 | **2.7**: Fixture + Tool Inventory v1 | ✅ Complete | Structured fixture/tool catalogs, selected tool assemblies, fixture/clamp visualization, and browser review metadata. | TBD |
 | **3**: Manufacturing Trust v1 | Initial slice complete | Inventory-aware tool planning, realistic pass plans, sampled fixture/tool-holder clearance, stronger simulation comparison tests, and warning-focused visualization. | TBD |
+| **3.1**: Manufacturing Economics v1 | Initial slice complete | Tool-change/setup/load-unload time, material/machine/setup/tooling cost, setup-sheet/viewer economics metadata, and time/cost program comparison. | TBD |
 | **4**: LLM Fine-Tuning | Planned | Fine-tune/evaluate planning or code-generation model after reliable translated pairs and scoring. | 3,000-8,000 |
 | **5**: Product Integration + UI | Planned | Full upload → plan → validation workflow and production UI. | 5,000-10,000 |
 | **6**: Simulation + RL | Aspirational | RL loop after simulator is reliable and validated against real outcomes. | 15,000-40,000 |
@@ -208,13 +231,16 @@ python test_subcad_phase2_toolpaths.py
 
 # Visualization package coverage
 python test_subcad_visualization.py
+
+# Manufacturing economics coverage
+python test_subcad_manufacturing_economics.py
 ```
 
 ## Status
 
-**Completed** — Phase 1 synthetic dataset, SubCAD operation model, process-plan/export basics, fixture/setup metadata, SubCAD Shop-Floor v1, Phase 2 neutral toolpaths, fixture/tool inventory v1, browser fixture/tool review metadata, preview-only G-code adapter, authored-path validation/estimation, and non-live agentic translator tests.
+**Completed** — Phase 1 synthetic dataset, SubCAD operation model, process-plan/export basics, fixture/setup metadata, SubCAD Shop-Floor v1, Phase 2 neutral toolpaths, fixture/tool inventory v1, Manufacturing Economics v1 initial slice, browser fixture/tool/economics review metadata, preview-only G-code adapter, authored-path validation/estimation, and non-live agentic translator tests.
 
-**Current hardening priority** — Manufacturing Trust v1 follow-through: broaden inventory-aware planning to more operations, strengthen fixture-body/stock-envelope clearance, and validate simulation/comparison on larger real part examples.
+**Current hardening priority** — Manufacturing Trust v1 follow-through: broaden inventory-aware planning to more operations, strengthen fixture-body/stock-envelope clearance, validate simulation/comparison on larger real part examples, and calibrate economics against real shop rates/tool life.
 
 **In progress / prototype** — Agentic CadQuery -> SubCAD translation, localized/feature-aware comparison validation, and simulation feedback quality.
 

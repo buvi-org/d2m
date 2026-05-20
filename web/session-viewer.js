@@ -278,6 +278,7 @@ function extractToolpathMoves(payload) {
         tool_selection: op.tool_selection,
         pass_plan: op.pass_plan || op.toolpath?.pass_plan,
         passes: op.passes || op.toolpath?.passes,
+        economics: op.economics,
         validation: op.validation,
         warnings: op.warnings,
         moves: extractedMoves,
@@ -296,16 +297,32 @@ function transformToolpathPoint(position) {
 }
 
 function renderMetadata(scene, comparison) {
+  const economics = scene.economics || {};
+  const time = economics.time_breakdown || {};
+  const cost = economics.cost_breakdown || {};
+  const currency = economics.currency || '';
   const totalMinutes = totalOperationMinutes(scene.operations || []);
   const rows = [
     ['Schema', scene.schema_version || 'unknown'],
     ['Material', scene.material || 'unspecified'],
     ['Stock', JSON.stringify(scene.stock_dimensions || {})],
     ['Operations', String((scene.operations || []).length)],
-    ['Cycle time', formatMinutes(totalMinutes)],
+    ['Cutting time', formatMinutes(time.cutting_time_min ?? totalMinutes)],
     ['Fixtures', String((scene.fixtures || []).length)],
     ['Markers', String((window.__currentClearanceMarkers || []).length)],
   ];
+  if (scene.economics) {
+    rows.push(['Total time', formatMinutes(time.total_time_per_part_min)]);
+    rows.push(['Tool changes', `${time.tool_change_count ?? 0} (${formatMinutes(time.tool_change_time_min || 0)})`]);
+    rows.push(['Setup time', formatMinutes(time.setup_time_per_part_min || 0)]);
+    rows.push(['Load/unload', formatMinutes(time.load_unload_time_per_part_min || 0)]);
+    rows.push(['Machine', economics.machine_id || 'unknown']);
+    rows.push(['Total cost', formatMoney(cost.total_cost, currency)]);
+    rows.push(['Material cost', formatMoney(cost.material_cost, currency)]);
+    rows.push(['Machine cost', formatMoney(cost.machine_cost, currency)]);
+    rows.push(['Tooling cost', formatMoney(cost.tooling_cost, currency)]);
+    rows.push(['Estimate', economics.quote_status === 'not_a_quote' ? 'engineering only' : economics.quote_status || 'engineering only']);
+  }
   if (comparison) {
     rows.push(['Compare', comparison.status || 'unknown']);
     rows.push(['Score', String(comparison.score ?? 'n/a')]);
@@ -357,6 +374,10 @@ function updateSelectedOperationDetails() {
     const toolIds = uniqueValues(selectedOps.map(op => toolFromOperation(op).toolId).filter(Boolean));
     const holderIds = uniqueValues(selectedOps.map(op => toolFromOperation(op).holderId).filter(Boolean));
     const warnings = selectedOps.flatMap(op => collectOperationWarnings(op));
+    const economics = window.__currentScene?.economics || {};
+    const time = economics.time_breakdown || {};
+    const cost = economics.cost_breakdown || {};
+    const currency = economics.currency || '';
     els['selected-operation'].innerHTML = `
       <div class="operation-detail">
         <div class="detail-title">All operations</div>
@@ -365,7 +386,9 @@ function updateSelectedOperationDetails() {
           ${detailRow('Tools', toolIds.length ? toolIds.join(', ') : 'n/a')}
           ${detailRow('Holders', holderIds.length ? holderIds.join(', ') : 'n/a')}
           ${detailRow('Passes', passCountLabel(selectedOps))}
-          ${detailRow('Time', formatMinutes(totalOperationMinutes(selectedOps)))}
+          ${detailRow('Cutting time', formatMinutes(time.cutting_time_min ?? totalOperationMinutes(selectedOps)))}
+          ${window.__currentScene?.economics ? detailRow('Total time', formatMinutes(time.total_time_per_part_min)) : ''}
+          ${window.__currentScene?.economics ? detailRow('Total cost', formatMoney(cost.total_cost, currency)) : ''}
         </div>
         ${renderWarnings(warnings)}
       </div>
@@ -387,6 +410,7 @@ function updateSelectedOperationDetails() {
   const tool = toolFromOperation(operation);
   const warnings = collectOperationWarnings(operation);
   const selection = operation.tool_selection || operation.tool?.selection || {};
+  const economics = operation.economics || {};
   const rejectedCount = Array.isArray(selection.rejected_tools) ? selection.rejected_tools.length : 0;
 
   els['selected-operation'].innerHTML = `
@@ -398,6 +422,8 @@ function updateSelectedOperationDetails() {
         ${detailRow('Tool dia', `${formatNumber(tool.diameter)} mm`)}
         ${detailRow('Pass', currentPass ? `${currentPass} / ${passCount(operation)}` : passCountLabel(operation))}
         ${detailRow('Operation time', formatMinutes(operationMinutes(operation)))}
+        ${operation.economics ? detailRow('Tool cost', formatMoney(economics.tooling_cost, economics.currency || window.__currentScene?.economics?.currency || '')) : ''}
+        ${operation.economics ? detailRow('Cost rate', `${formatMoney(economics.tool_cost_per_cutting_min, economics.currency || window.__currentScene?.economics?.currency || '')}/cut min`) : ''}
         ${detailRow('Setup', `${operation.setup || 'unassigned'} ${operation.face_selector || ''}`)}
         ${detailRow('Selection reason', selection.reason || operation.selection_reason || 'n/a')}
         ${rejectedCount ? detailRow('Rejected tools', String(rejectedCount)) : ''}
@@ -422,6 +448,7 @@ function mergedOperationForSequence(sequence) {
     summary: toolpathOp.summary || sceneOp.summary,
     pass_plan: toolpathOp.pass_plan || sceneOp.pass_plan,
     passes: toolpathOp.passes || sceneOp.passes,
+    economics: toolpathOp.economics || sceneOp.economics,
     validation: mergeValidation(sceneOp.validation, toolpathOp.validation),
     warnings: [
       ...(Array.isArray(sceneOp.warnings) ? sceneOp.warnings : []),
@@ -865,6 +892,13 @@ function formatMinutes(minutes) {
     return `${(value * 60).toFixed(1)} s`;
   }
   return `${value.toFixed(2)} min`;
+}
+
+function formatMoney(value, currency = '') {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 'n/a';
+  const prefix = currency ? `${currency} ` : '';
+  return `${prefix}${numeric.toFixed(2)}`;
 }
 
 function formatTime(seconds) {

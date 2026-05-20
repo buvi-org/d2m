@@ -20,6 +20,7 @@ def export_visualization_package(
     tolerance_mm: float = 0.25,
     title: str = "SubCAD Visualization Session",
     include_diff_mesh: bool = True,
+    economics: Any = None,
 ) -> dict:
     """Export a static directory of browser-friendly meshes and JSON."""
     out = Path(output_dir)
@@ -29,8 +30,9 @@ def export_visualization_package(
     stock.to_stl(str(stock_path))
 
     plan = stock.process_plan()
+    economics_report = _resolve_economics(stock, economics)
     stock_states = _export_stock_states(stock, out, plan)
-    toolpath = _toolpath_payload(plan)
+    toolpath = _toolpath_payload(plan, economics_report=economics_report)
     toolpath_path = out / "toolpath.json"
     _write_json(toolpath_path, toolpath)
     validation_issues = _validation_issue_payloads(stock, plan)
@@ -128,6 +130,7 @@ def export_visualization_package(
                 "toolpath_summary": op.get("toolpath_summary"),
                 "tool_selection": op.get("tool_selection"),
                 "pass_plan": op.get("pass_plan"),
+                "economics": _operation_economics(op.get("sequence_number"), economics_report),
                 "validation": _operation_validation(op, validation_issues),
                 "warnings": _operation_warnings(op, validation_issues),
             }
@@ -135,6 +138,7 @@ def export_visualization_package(
         ],
         "clearance_markers": clearance_markers,
         "validation_issues": validation_issues,
+        "economics": economics_report,
         "fixtures": fixtures,
         "setups": plan.get("setups", {}),
         "assets": assets,
@@ -198,7 +202,7 @@ def _export_stock_states(stock: Any, out: Path, plan: dict) -> list[dict]:
     return states
 
 
-def _toolpath_payload(plan: dict) -> dict:
+def _toolpath_payload(plan: dict, economics_report: dict | None = None) -> dict:
     operations = []
     move_count = 0
     total_length = 0.0
@@ -236,6 +240,7 @@ def _toolpath_payload(plan: dict) -> dict:
             "tool_diameter_mm": op.get("tool_diameter_mm"),
             "tool_selection": op.get("tool_selection"),
             "pass_plan": op.get("pass_plan"),
+            "economics": _operation_economics(op.get("sequence_number"), economics_report),
             "validation": op.get("validation_buckets"),
             "warnings": op.get("validation_buckets", {}).get("warnings", []),
             "summary": summary,
@@ -286,6 +291,28 @@ def _fixture_payloads(stock: Any, plan: dict) -> list[dict]:
         payload = fixture.to_dict() if hasattr(fixture, "to_dict") else {}
     payload["setups"] = plan.get("setups", {})
     return [payload]
+
+
+def _resolve_economics(stock: Any, economics: Any) -> dict | None:
+    if economics is None or economics is False:
+        return None
+    if isinstance(economics, dict):
+        return economics
+    if economics is True:
+        try:
+            return stock.estimate_cost()
+        except Exception:
+            return None
+    return None
+
+
+def _operation_economics(sequence_number: Any, economics_report: dict | None) -> dict | None:
+    if not isinstance(economics_report, dict):
+        return None
+    for item in economics_report.get("operations", []):
+        if item.get("sequence_number") == sequence_number:
+            return item
+    return None
 
 
 def _validation_issue_payloads(stock: Any, plan: dict) -> list[dict]:

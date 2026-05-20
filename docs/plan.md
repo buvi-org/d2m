@@ -76,6 +76,24 @@ The current contract includes:
 
 This is still not production CAM. The catalogs and viewer provide reviewable intent and validation context; they do not certify that a real machine setup is safe.
 
+### Manufacturing Economics v1
+
+Status: initial implementation slice complete.
+
+SubCAD can now estimate engineering time/cost from process-plan intent without changing the older cutting-time field. The economics layer is a planning and tradeoff aid, not a production quote or ERP integration.
+
+The current contract includes:
+
+- Local machine cost catalog with hourly machine/setup rates, setup minutes, load/unload minutes, and default tool-change seconds.
+- Local material cost catalog with density, price/kg, and waste factor.
+- Tool catalog/tool spec cost fields for replacement cost, expected life, and optional cost per cutting minute.
+- `estimate_cost(...)` for `Stock`, `ProcessPlan`, or process-plan dicts.
+- `compare_programs(...)` for fastest, cheapest, weighted-best, and Pareto-optimal program ranking.
+- Setup-sheet and visualization metadata for total time, total cost, per-operation cutting/tooling cost, and economics warnings.
+- Backward compatibility: `estimated_time_minutes` remains cutting/path time; total time lives in `time_breakdown`.
+
+This should be calibrated against real shop rates and tool life before anyone treats the numbers as commercial quoting inputs.
+
 Current test status:
 
 | Test | Result | Notes |
@@ -85,6 +103,7 @@ Current test status:
 | `python test_subcad_shopfloor_v1.py` | PASS | Acceptance coverage for the completed Shop-Floor v1 contract. |
 | `python test_subcad_phase2_toolpaths.py` | PASS | Acceptance coverage for completed Phase 2 toolpaths, preview-only G-code, validation, and estimation work. |
 | `python test_subcad_visualization.py` | PASS | Visualization package coverage, including current fixture/tool review metadata. |
+| `python test_subcad_manufacturing_economics.py` | PASS | Engineering time/cost estimates, tool-change/setup amortization, and program ranking. |
 
 ### What SubCAD Can Do Now
 
@@ -96,8 +115,9 @@ SubCAD is now usable as the repository's subtractive machining representation an
 - Render preview-only G-code from neutral motion intent while clearly deferring production controller-specific postprocessing.
 - Validate schema and authored toolpath issues before simulation or downstream CAM handoff.
 - Export static browser visualization packages for Three.js review of stock, target, toolpaths, selected tools/holders, fixtures, clamp zones, comparison data, and diff markers.
+- Estimate engineering total time/cost and compare alternate valid programs by fastest, cheapest, weighted score, and Pareto status.
 
-SubCAD is still a prototype layer. It is best described as a programmable manufacturing-intent and validation layer, not a Fusion/SolidWorks CAM replacement. It does not yet provide production-certified G-code, industrial CAM strategy coverage, a complete upload-to-plan UI, or validated simulation/RL outcomes.
+SubCAD is still a prototype layer. It is best described as a programmable manufacturing-intent, validation, and engineering-estimate layer, not a Fusion/SolidWorks CAM replacement or formal quoting system. It does not yet provide production-certified G-code, industrial CAM strategy coverage, a complete upload-to-plan UI, ERP-backed quoting, or validated simulation/RL outcomes.
 
 ### Visualization Direction
 
@@ -110,6 +130,7 @@ This gives immediate interactive review without waiting for browser-side simulat
 - Operation metadata and setup context.
 - Selected tool/holder and fixture/clamp-zone review.
 - Comparison JSON and overcut/undercut marker display.
+- Total time/cost metadata when an economics report is exported.
 
 The longer-term visualization roadmap is pass-level warning/clearance markers, richer per-vertex heatmaps, live WebSocket streaming from Python simulation, then WebGPU material removal once the Python simulator is validated.
 
@@ -242,6 +263,27 @@ Current coverage:
 - Toggles cover stock, fixture, clamp zones, toolpath, tool/holder, clearance markers, and comparison diff.
 - Visualization packages export pass-plan and clearance-marker data.
 
+## Manufacturing Economics v1
+
+Status: initial implementation slice complete.
+
+Goal: let SubCAD compare valid manufacturing programs by engineering time and cost while preserving the neutral process-plan contract.
+
+Current coverage:
+
+- `src.subcad.economics.estimate_cost(...)` reports cutting time, tool-change time, setup time, load/unload time, total time, material cost, machine cost, setup cost, tooling cost, total cost, warnings, and assumptions.
+- `Stock.estimate_cost(...)` and `ProcessPlan.estimate_cost(...)` expose the same estimator through public APIs.
+- `src.subcad.economics.compare_programs(...)` ranks candidates by fastest, cheapest, weighted best, and Pareto status.
+- Setup sheets and visualization packages carry economics output when requested.
+- Browser metadata shows total time, total cost, cost components, machine id, and the engineering-estimate-only status.
+
+Next hardening:
+
+- Calibrate machine/material/tool catalogs from real shop data.
+- Add benchmark program pairs that produce the same target with different strategies, then compare quality, time, and cost together.
+- Add optional consumables, inspection time, scrap risk, and setup-family reuse.
+- Add richer browser comparison views for alternate programs.
+
 ## Following Plan After Manufacturing Trust v1
 
 ### Validate Mesh and Feature Comparison on Real Samples
@@ -284,10 +326,11 @@ Acceptance criteria met:
 | SubCAD Shop-Floor v1 | Complete | Maintain schema, neutral toolpaths, setup sheets, validation, and deferred production G-code contract. |
 | Phase 2 toolpaths | Complete | Maintain authored neutral paths, summaries, preview-only G-code adapter, malformed-path validation, and path-based estimates. |
 | Fixture/tool inventory v1 | Complete | Maintain structured catalogs, selected tool assemblies, fixture/clamp visualization, and browser review metadata. |
+| Manufacturing Economics v1 | Initial slice complete | Maintain engineering estimates, setup/tool-change time, material/machine/setup/tooling cost, and program comparison; calibrate against real shop data next. |
 | Agentic translator | Implemented; non-live tests pass | Run live trials after simulation/comparison validation. |
 | Mesh comparison | Implemented | Verify and tune; no need to reimplement first. |
 | Feature comparison | Implemented | Validate on known samples and feed into translator loop. |
-| Manufacturing Trust v1 | Active next priority | Add inventory-aware planning, realistic passes, fixture/tool-holder clearance, simulation comparison reliability, and warning-focused visualization. |
+| Manufacturing Trust v1 | Active next priority | Broaden inventory-aware planning, realistic passes, fixture/tool-holder clearance, simulation comparison reliability, warning-focused visualization, and economics calibration. |
 | Simulation bridge | Prototype passing tests | Harden as part of Manufacturing Trust v1 against representative target meshes, authored toolpaths, and gouge/deviation cases. |
 | GNN feature recognition | Planned | Defer until subtractive workflow proves what features are needed. |
 | LLM fine-tuning | Planned | Defer until high-quality execution-scored pairs exist. |
@@ -302,7 +345,7 @@ The long-term CAPP goal remains:
 
 Current repository reality is narrower:
 
-> Translate/generate subtractive SubCAD programs, execute them, compare the resulting geometry to references, and develop a simulation-backed feedback loop.
+> Translate/generate subtractive SubCAD programs, execute them, compare the resulting geometry to references, estimate engineering time/cost, and develop a simulation-backed feedback loop.
 
 The recommended plan is to finish the narrower loop first. Once SubCAD execution, comparison, and simulation are reliable, the broader upload-to-plan product roadmap becomes much less speculative.
 
@@ -320,12 +363,13 @@ Roadmap success:
 1. End-to-end CAD/metadata input produces a valid process plan.
 2. Generated operations execute through SubCAD.
 3. Simulation and comparison catch infeasible or geometrically wrong plans.
-4. UI exposes plans, warnings, and geometry feedback clearly.
-5. Any ML fine-tuning is evaluated against executable outcomes, not just text similarity.
+4. Economics reports allow alternate valid programs to be compared by time, cost, and tradeoff score.
+5. UI exposes plans, warnings, geometry feedback, and estimate assumptions clearly.
+6. Any ML fine-tuning is evaluated against executable outcomes, not just text similarity.
 
 ## Cost Notes
 
-The previous cost table was tied to the original GNN/fine-tuning-first plan. The immediate recommended work is debugging and validation, so the near-term cost is mainly developer time plus any LLM API usage for live translation trials.
+The previous cost table was tied to the original GNN/fine-tuning-first plan. SubCAD now has an engineering economics estimator for individual manufacturing programs, but project budget planning is still separate. The immediate recommended work is debugging, validation, and calibration, so the near-term project cost is mainly developer time plus any LLM API usage for live translation trials.
 
 GPU/fine-tuning spend should wait until:
 

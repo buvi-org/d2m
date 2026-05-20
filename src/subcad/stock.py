@@ -1091,17 +1091,28 @@ class Stock:
         """Save the process plan as a JSON file."""
         self._plan.save(path)
 
-    def setup_sheet(self) -> dict:
+    def setup_sheet(self, economics=None) -> dict:
         """Return a shop-floor setup sheet dictionary."""
-        return self._plan.setup_sheet_dict()
+        return self._plan.setup_sheet_dict(economics=economics)
 
-    def to_setup_sheet(self, path: Optional[str] = None):
+    def estimate_cost(
+        self,
+        machine: str = "generic_3axis_mill",
+        quantity: int = 1,
+        currency: Optional[str] = None,
+    ) -> dict:
+        """Return an engineering time/cost estimate for this stock/process plan."""
+        from .economics import estimate_cost
+
+        return estimate_cost(self, machine=machine, quantity=quantity, currency=currency)
+
+    def to_setup_sheet(self, path: Optional[str] = None, economics=None):
         """Return or save a shop-floor setup sheet.
 
         If *path* is provided, writes JSON to that path and returns the sheet
         dict. Without *path*, returns the sheet dict directly.
         """
-        sheet = self._plan.setup_sheet_dict()
+        sheet = self._plan.setup_sheet_dict(economics=economics)
         if path:
             import json
 
@@ -1117,9 +1128,9 @@ class Stock:
         """Compatibility alias for save_setup_sheet."""
         return self.save_setup_sheet(path)
 
-    def setup_sheet_markdown(self) -> str:
+    def setup_sheet_markdown(self, economics=None) -> str:
         """Return a Markdown setup sheet."""
-        return self._plan.setup_sheet_markdown()
+        return self._plan.setup_sheet_markdown(economics=economics)
 
     def gcode_preview(self) -> str:
         """Return preview-only G-code-like text from neutral toolpaths."""
@@ -1155,6 +1166,7 @@ class Stock:
         target=None,
         tolerance_mm: float = 0.25,
         include_diff_mesh: bool = True,
+        economics=None,
     ) -> dict:
         """Export browser-friendly visualization assets into a directory."""
         from .visualization import export_visualization_package
@@ -1165,6 +1177,7 @@ class Stock:
             target=target,
             tolerance_mm=tolerance_mm,
             include_diff_mesh=include_diff_mesh,
+            economics=economics,
         )
 
     def validate_shop_floor(self, structured: bool = False):

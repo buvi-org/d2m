@@ -229,6 +229,15 @@ def _merge_validation_buckets(buckets: dict, validation) -> None:
         _append_bucket(buckets, "warnings", validation)
 
 
+def _operation_economics(sequence_number: int, economics) -> Optional[dict]:
+    if not isinstance(economics, dict):
+        return None
+    for item in economics.get("operations", []):
+        if item.get("sequence_number") == sequence_number:
+            return item
+    return None
+
+
 def normalize_operation(op_dict: dict, sequence_number: int) -> dict:
     """Return an operation normalized to schema v1 with legacy fields intact."""
     op = _jsonable(dict(op_dict))
@@ -484,8 +493,27 @@ class ProcessPlan:
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(self.to_json())
 
-    def setup_sheet_dict(self) -> dict:
+    def estimate_cost(
+        self,
+        machine: str = "generic_3axis_mill",
+        quantity: int = 1,
+        currency: Optional[str] = None,
+    ) -> dict:
+        """Return an engineering time/cost estimate for this process plan."""
+        from .economics import estimate_cost
+
+        return estimate_cost(self, machine=machine, quantity=quantity, currency=currency)
+
+    def _resolve_economics(self, economics):
+        if economics is None or economics is False:
+            return None
+        if isinstance(economics, dict):
+            return economics
+        return self.estimate_cost()
+
+    def setup_sheet_dict(self, economics=None) -> dict:
         """Return a shop-floor setup sheet as a structured JSON-ready dict."""
+        economics_report = self._resolve_economics(economics)
         operations = [
             {
                 "sequence_number": op.get("sequence_number", idx),
@@ -497,6 +525,7 @@ class ProcessPlan:
                 "toolpath_summary": op.get("toolpath_summary"),
                 "pass_plan": op.get("pass_plan"),
                 "tool_selection": op.get("tool_selection"),
+                "economics": _operation_economics(op.get("sequence_number", idx), economics_report),
                 "notes": op.get("notes", ""),
                 "validation_buckets": op.get("validation_buckets", _empty_validation_buckets()),
             }
@@ -507,7 +536,7 @@ class ProcessPlan:
             setup_name = op.get("setup") or "unassigned"
             operations_by_setup.setdefault(setup_name, []).append(op)
 
-        return {
+        sheet = {
             "schema_version": self.schema_version,
             "units": {"linear": "mm", "time": "min", "angle": "deg"},
             "material": self.material or "unspecified",
@@ -523,14 +552,22 @@ class ProcessPlan:
             "validation_buckets": self.validation_buckets,
             "gcode_status": "G-code export deferred; this setup sheet is neutral shop-floor intent.",
         }
+        if economics_report is not None:
+            sheet["economics"] = economics_report
+            sheet["total_time_minutes"] = economics_report["time_breakdown"]["total_time_per_part_min"]
+            sheet["total_cost"] = economics_report["cost_breakdown"]["total_cost"]
+            sheet["currency"] = economics_report["currency"]
+            sheet["machine_id"] = economics_report["machine_id"]
+            sheet["economics_note"] = "Engineering estimate only; not a production quote."
+        return sheet
 
-    def setup_sheet_json(self, indent: int = 2) -> str:
+    def setup_sheet_json(self, indent: int = 2, economics=None) -> str:
         """Serialize the setup sheet to JSON."""
-        return json.dumps(self.setup_sheet_dict(), indent=indent)
+        return json.dumps(self.setup_sheet_dict(economics=economics), indent=indent)
 
-    def setup_sheet_markdown(self) -> str:
+    def setup_sheet_markdown(self, economics=None) -> str:
         """Return a Markdown setup sheet for shop-floor review."""
-        sheet = self.setup_sheet_dict()
+        sheet = self.setup_sheet_dict(economics=economics)
         lines = [
             "# SubCAD Setup Sheet",
             "",
@@ -540,9 +577,16 @@ class ProcessPlan:
             f"- Estimated time: {sheet['estimated_time_minutes']} min",
             f"- Tool changes: {sheet['tool_change_count']}",
             f"- G-code: deferred; neutral shop-floor intent only",
-            "",
-            "## Tools",
         ]
+        if sheet.get("economics"):
+            econ = sheet["economics"]
+            lines.extend([
+                f"- Machine: {econ['machine_id']}",
+                f"- Total time: {econ['time_breakdown']['total_time_per_part_min']} min/part",
+                f"- Total cost: {econ['currency']} {econ['cost_breakdown']['total_cost']}",
+                "- Economics: engineering estimate only; not a production quote",
+            ])
+        lines.extend(["", "## Tools"])
         if sheet["tools"]:
             for tool in sheet["tools"]:
                 lines.append(f"- {tool.get('label', tool.get('tool_type', '?'))}")
@@ -577,6 +621,8 @@ class ProcessPlan:
                 lines.append(detail)
         lines.extend(["", "## Warnings"])
         warnings = sheet.get("validation_buckets", {}).get("warnings", [])
+        if sheet.get("economics"):
+            warnings = warnings + sheet["economics"].get("economics_warnings", [])
         if warnings:
             for warning in warnings:
                 lines.append(f"- {warning}")
@@ -584,10 +630,10 @@ class ProcessPlan:
             lines.append("- No blocking warnings recorded.")
         return "\n".join(lines)
 
-    def setup_sheet_text(self) -> str:
+    def setup_sheet_text(self, economics=None) -> str:
         """Return a plain-text setup sheet."""
         lines = []
-        for line in self.setup_sheet_markdown().splitlines():
+        for line in self.setup_sheet_markdown(economics=economics).splitlines():
             if line.startswith("## "):
                 lines.append(line[3:])
             elif line.startswith("# "):
@@ -596,17 +642,17 @@ class ProcessPlan:
                 lines.append(line)
         return "\n".join(lines)
 
-    def to_setup_sheet_json(self, indent: int = 2) -> str:
+    def to_setup_sheet_json(self, indent: int = 2, economics=None) -> str:
         """Compatibility alias for setup_sheet_json."""
-        return self.setup_sheet_json(indent=indent)
+        return self.setup_sheet_json(indent=indent, economics=economics)
 
-    def to_setup_sheet_markdown(self) -> str:
+    def to_setup_sheet_markdown(self, economics=None) -> str:
         """Compatibility alias for setup_sheet_markdown."""
-        return self.setup_sheet_markdown()
+        return self.setup_sheet_markdown(economics=economics)
 
-    def to_setup_sheet_text(self) -> str:
+    def to_setup_sheet_text(self, economics=None) -> str:
         """Compatibility alias for setup_sheet_text."""
-        return self.setup_sheet_text()
+        return self.setup_sheet_text(economics=economics)
 
     def gcode_preview(self) -> str:
         """Return preview-only G-code-like text from neutral toolpaths."""

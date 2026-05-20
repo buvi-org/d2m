@@ -70,6 +70,9 @@ class ToolSpec:
     inventory_count: int = 1
     preferred_feeds_speeds: dict = field(default_factory=dict)
     safe_limits: dict = field(default_factory=dict)
+    replacement_cost: float = 0.0
+    expected_life_minutes: float = 0.0
+    cost_per_cutting_min: float = 0.0
 
     @property
     def radius(self) -> float:
@@ -99,6 +102,9 @@ class ToolSpec:
             "inventory_count": self.inventory_count,
             "preferred_feeds_speeds": dict(self.preferred_feeds_speeds or {}),
             "safe_limits": dict(self.safe_limits or {}),
+            "replacement_cost": self.replacement_cost,
+            "expected_life_minutes": self.expected_life_minutes,
+            "cost_per_cutting_min": self.cost_per_cutting_min,
             "assembly": self.default_assembly().to_dict(),
             "label": self.label,
         }
@@ -344,6 +350,9 @@ class ToolCatalog:
                 inventory_count=int(entry.get("inventory_count", 1)),
                 preferred_feeds_speeds=dict(entry.get("preferred_feeds_speeds") or {}),
                 safe_limits=dict(entry.get("safe_limits") or {}),
+                replacement_cost=float(entry.get("replacement_cost", 0.0)),
+                expected_life_minutes=float(entry.get("expected_life_minutes", 0.0)),
+                cost_per_cutting_min=float(entry.get("cost_per_cutting_min", 0.0)),
             )
             cls._tools[tool_id] = spec
             category = str(entry.get("category", "custom"))

@@ -11,6 +11,7 @@ Current baseline:
   - `python test_subcad_shopfloor_v1.py`
   - `python test_subcad_phase2_toolpaths.py`
   - `python test_subcad_visualization.py`
+  - `python test_subcad_manufacturing_economics.py`
 
 ## SubCAD Shop-Floor v1
 
@@ -75,6 +76,7 @@ Status: complete and passing for the current prototype contract. Keep the accept
 - Keep running `python test_subcad_phase2_toolpaths.py` for the completed Phase 2 toolpath contract.
 - The Phase 2 test passes and covers non-empty neutral toolpaths, process-plan summaries, preview-only G-code metadata, malformed-toolpath validation, and authored-path time estimation.
 - Keep running `python test_subcad_visualization.py` for browser package coverage, including tool/holder and fixture/clamp-zone review metadata.
+- Keep running `python test_subcad_manufacturing_economics.py` for time/cost estimate and program-comparison coverage.
 - Continue running the existing SubCAD, fixturing, translator, and simulation bridge tests as regression coverage.
 
 ## Fixture And Tool Inventory v1
@@ -132,7 +134,7 @@ Goal: move SubCAD from structured manufacturing intent toward credible engineeri
 
 ## Visualization
 
-Status: browser visualization now supports the current review workflow for stock, target, toolpaths, operation playback, selected tools/holders, fixtures, and clamp zones.
+Status: browser visualization now supports the current review workflow for stock, target, toolpaths, operation playback, selected tools/holders, fixtures, clamp zones, and engineering economics metadata.
 
 1. Export visualization packages from SubCAD.
    - Use `Stock.visualization_package("web/sessions/latest", target=...)`.
@@ -140,13 +142,47 @@ Status: browser visualization now supports the current review workflow for stock
 
 2. Review in the browser.
    - Serve `web/` and open `visualization.html?session=sessions/latest/scene.json`.
-   - Inspect stock mesh, transparent target overlay, neutral toolpaths, operation timeline/playback, selected tool/holder, fixture body, clamp zones, and comparison markers.
+   - Inspect stock mesh, transparent target overlay, neutral toolpaths, operation timeline/playback, selected tool/holder, fixture body, clamp zones, comparison markers, total time, and total cost when economics is exported.
 
 3. Next visualization improvements.
    - Add pass-level details, warning/clearance markers, and clearer selected-operation timing.
    - Add richer per-vertex heatmap rendering in Three.js once comparison reliability improves.
    - Add live WebSocket streaming after Python simulation reliability is stronger.
    - Keep WebGPU material removal as a later acceleration path.
+
+## Manufacturing Economics v1
+
+Status: initial implementation slice complete. Keep the economics acceptance test green while calibrating rates and expanding comparison examples.
+
+Goal: estimate engineering time/cost from the same neutral manufacturing intent so two valid programs can be compared by speed, cost, or a tradeoff score. This is not a formal shop quote or ERP integration.
+
+1. Maintain local costing catalogs.
+   - Machine rates live in `src/subcad/catalogs/machines.json`.
+   - Material prices/density/waste factors live in `src/subcad/catalogs/materials_cost.json`.
+   - Tool wear cost fields live in `src/subcad/catalogs/tools.json` and `ToolSpec`.
+   - Next: calibrate rates, tool life, and waste factors against real shop data.
+
+2. Preserve old cycle-time behavior.
+   - `estimated_time_minutes` remains cutting/path time for backward compatibility.
+   - `estimate_cost(...)` adds total time fields for tool changes, setup, load/unload, and batch amortization.
+   - Next: add optional machine-specific rapid/tool-change policies instead of one generic default.
+
+3. Estimate cost.
+   - Material cost uses stock volume, density, price/kg, and waste factor.
+   - Machine/setup cost uses local machine hourly rates.
+   - Tooling cost uses selected tool id, cutting minutes, and tool life/replacement cost.
+   - Missing prices warn instead of crashing.
+   - Next: account for consumables, inspection time, scrap risk, and setup family reuse.
+
+4. Compare alternate programs.
+   - `compare_programs(...)` reports fastest, cheapest, weighted-best, and Pareto-optimal candidates.
+   - Invalid plans or failed target comparisons are marked instead of ranked as valid.
+   - Next: create benchmark pairs that make the same part with different tools/strategies and compare measured simulated quality, time, and cost together.
+
+5. Surface economics in reports.
+   - Setup sheets include machine time, tool-change time, setup time, total time, material/machine/setup/tooling cost, total cost, and a non-quote note.
+   - Visualization packages and the browser metadata panel include economics when supplied.
+   - Next: add per-pass cost labels and summary comparison views in the browser.
 
 ## What SubCAD Can Do Now
 
@@ -157,8 +193,10 @@ Status: browser visualization now supports the current review workflow for stock
 - Render preview-only G-code with explicit non-production warnings.
 - Review fixture bodies, clamp zones, selected tools/holders, operation playback, and stock states in the browser viewer.
 - Validate malformed/empty authored toolpaths and estimate cycle time from authored path length/feed data where available.
+- Estimate engineering total time and cost, including tool changes, setup/load-unload time, machine cost, material cost, and tooling cost.
+- Compare candidate programs by fastest, cheapest, weighted tradeoff, and Pareto status.
 
-Still deferred: controller-certified production G-code, production UI, live translator success claims, and validated simulation/RL workflows.
+Still deferred: controller-certified production G-code, formal quoting/ERP integration, production UI, live translator success claims, and validated simulation/RL workflows.
 
 ## Deferred Roadmap
 

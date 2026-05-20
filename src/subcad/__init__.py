@@ -27,6 +27,7 @@ from .gcode_preview import gcode_preview, to_gcode_preview
 from .postprocessor import PostProcessor, Generic3AxisDebugPost, postprocess
 from .target_compare import compare_to_target
 from .visualization import export_visualization_package
+from .economics import estimate_cost, compare_programs
 from .operations import (
     MachiningOperation,
     FaceMillOp,
@@ -95,6 +96,8 @@ __all__ = [
     "postprocess",
     "compare_to_target",
     "export_visualization_package",
+    "estimate_cost",
+    "compare_programs",
     # Operation classes
     "MachiningOperation",
     "FaceMillOp",

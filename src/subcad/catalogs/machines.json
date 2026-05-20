@@ -1,0 +1,25 @@
+{
+  "schema_version": "subcad.machine_cost_catalog.v1",
+  "machines": [
+    {
+      "id": "generic_3axis_mill",
+      "label": "Generic 3-axis CNC mill",
+      "currency": "USD",
+      "machine_hourly_rate": 65.0,
+      "setup_hourly_rate": 55.0,
+      "default_tool_change_seconds": 18.0,
+      "setup_minutes_per_setup": 20.0,
+      "load_unload_minutes_per_part": 3.0
+    },
+    {
+      "id": "high_speed_3axis_mill",
+      "label": "High-speed 3-axis CNC mill",
+      "currency": "USD",
+      "machine_hourly_rate": 95.0,
+      "setup_hourly_rate": 65.0,
+      "default_tool_change_seconds": 8.0,
+      "setup_minutes_per_setup": 18.0,
+      "load_unload_minutes_per_part": 2.5
+    }
+  ]
+}
