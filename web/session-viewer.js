@@ -29,14 +29,25 @@ document.addEventListener('DOMContentLoaded', () => {
   els['load-session'].addEventListener('click', () => loadSession(els['session-path'].value));
   els['show-target'].addEventListener('change', () => viewer.setTargetVisible(els['show-target'].checked));
   els['show-toolpath'].addEventListener('change', () => {
-    if (window.__currentToolpath) {
-      viewer.setToolpath(els['show-toolpath'].checked ? window.__currentToolpath : null);
+    if (!els['show-toolpath'].checked) {
+      viewer.setToolpath(null);
+    } else if (window.__currentToolpathMoves) {
+      renderSelectedToolpath();
+    } else if (window.__currentToolpath) {
+      viewer.setToolpath(window.__currentToolpath);
     }
   });
   els['show-diff'].addEventListener('change', () => {
     if (window.__currentDiffRegions) {
       viewer[els['show-diff'].checked ? 'addDiffMarkers' : 'clearGougeMarkers'](window.__currentDiffRegions);
     }
+  });
+  els.operations.addEventListener('click', event => {
+    const item = event.target.closest('.op-item');
+    if (!item) return;
+    window.__selectedToolpathOperation = item.dataset.sequence || 'all';
+    renderSelectedToolpath();
+    updateOperationSelection();
   });
   els['fit-view'].addEventListener('click', () => viewer.fitView());
 
@@ -52,7 +63,9 @@ async function loadSession(scenePath) {
 
     viewer.clearScene();
     window.__currentToolpath = [];
+    window.__currentToolpathMoves = [];
     window.__currentDiffRegions = [];
+    window.__selectedToolpathOperation = 'all';
 
     if (scene.assets?.stock_mesh) {
       await viewer.loadStockSTL(await fetchArrayBuffer(assetUrl(scene.assets.stock_mesh, baseUrl)));
@@ -68,9 +81,11 @@ async function loadSession(scenePath) {
     const toolpathAsset = scene.assets?.toolpaths || scene.assets?.toolpath;
     if (toolpathAsset) {
       const toolpaths = await fetchJson(assetUrl(toolpathAsset, baseUrl));
-      window.__currentToolpath = extractToolpathPoints(toolpaths);
+      const extracted = extractToolpathMoves(toolpaths);
+      window.__currentToolpath = extracted.points;
+      window.__currentToolpathMoves = extracted.operations;
       if (els['show-toolpath'].checked) {
-        viewer.setToolpath(window.__currentToolpath);
+        renderSelectedToolpath();
       }
     }
 
@@ -106,18 +121,36 @@ function assetUrl(asset, baseUrl) {
 }
 
 function extractToolpathPoints(payload) {
+  return extractToolpathMoves(payload).points;
+}
+
+function extractToolpathMoves(payload) {
+  const extractedOperations = [];
   const points = [];
   const operations = Array.isArray(payload) ? payload : (payload.operations || []);
   for (const op of operations) {
     const moves = op.moves || op.toolpath?.moves || [];
+    const extractedMoves = [];
     for (const move of moves) {
       const pos = move.position || move;
       if (Array.isArray(pos) && pos.length >= 3) {
-        points.push([Number(pos[0]), Number(pos[1]), Number(pos[2])]);
+        const point = [Number(pos[0]), Number(pos[1]), Number(pos[2])];
+        points.push(point);
+        extractedMoves.push({
+          position: point,
+          move_type: move.move_type || move.type || move.kind || 'feed',
+        });
       }
     }
+    if (extractedMoves.length) {
+      extractedOperations.push({
+        operation: op.operation,
+        sequence_number: op.sequence_number,
+        moves: extractedMoves,
+      });
+    }
   }
-  return points;
+  return { operations: extractedOperations, points };
 }
 
 function renderMetadata(scene, comparison) {
@@ -144,12 +177,42 @@ function renderOperations(operations) {
     els.operations.innerHTML = '<div class="op-item pending">No operations in session.</div>';
     return;
   }
-  els.operations.innerHTML = operations.map(op => `
-    <div class="op-item complete">
+  els.operations.innerHTML = `
+    <button class="op-item complete selected" type="button" data-sequence="all">
+      <div>All operations</div>
+      <small>Combined toolpath</small>
+    </button>
+  ` + operations.map(op => `
+    <button class="op-item complete" type="button" data-sequence="${escapeHtml(String(op.sequence_number ?? ''))}">
       <div>OP ${escapeHtml(String(op.sequence_number ?? '?'))}: ${escapeHtml(op.operation || '?')}</div>
       <small>${escapeHtml(op.setup || 'unassigned')} ${escapeHtml(op.face_selector || '')}</small>
-    </div>
+    </button>
   `).join('');
+  updateOperationSelection();
+}
+
+function renderSelectedToolpath() {
+  if (!els['show-toolpath'].checked) {
+    viewer.setToolpath(null);
+    return;
+  }
+
+  const operations = window.__currentToolpathMoves || [];
+  const selected = window.__selectedToolpathOperation || 'all';
+  if (selected === 'all') {
+    viewer.setToolpathMoves(operations);
+    return;
+  }
+
+  const selectedOperation = operations.filter(op => String(op.sequence_number) === selected);
+  viewer.setToolpathMoves(selectedOperation);
+}
+
+function updateOperationSelection() {
+  const selected = window.__selectedToolpathOperation || 'all';
+  for (const item of els.operations.querySelectorAll('.op-item')) {
+    item.classList.toggle('selected', item.dataset.sequence === selected);
+  }
 }
 
 async function fetchJson(url) {

@@ -14,11 +14,19 @@ import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 
 const GRID_SIZE = 100;
 const GRID_DIVISIONS = 20;
-const DEFAULT_CAMERA_POS = [30, 20, 30];
+const DEFAULT_CAMERA_POS = [70, -90, 60];
 const TOOL_CYLINDER_COLOR = 0xffaa00;
 const TOOL_SPHERE_COLOR = 0xff8800;
 const GOUGE_SPHERE_COLOR = 0xff2222;
 const TOOLPATH_COLOR = 0x00ccff;
+const TOOLPATH_COLORS = {
+  rapid: 0x9aa4b2,
+  feed: 0x00ccff,
+  plunge: 0xff9f1c,
+  retract: 0x9b5cff,
+  dwell: 0xf7d774,
+  arc: 0x2dd4bf,
+};
 
 // Deviation color stops
 const DEVIATION_COLORS = [
@@ -45,7 +53,9 @@ export class Viewer {
     this.toolGroup = null;
     this.gougeSpheres = [];
     this.toolpathLine = null;
+    this.toolpathObjects = [];
     this.wireframe = null;
+    this.gridHelper = null;
 
     this._showTool = true;
     this._showTarget = false;
@@ -84,6 +94,7 @@ export class Viewer {
     this.camera = new THREE.PerspectiveCamera(
       45, width / height, 0.5, 1000
     );
+    this.camera.up.set(0, 0, 1);
     this.camera.position.set(...DEFAULT_CAMERA_POS);
     this.camera.lookAt(0, 0, 0);
 
@@ -148,9 +159,27 @@ export class Viewer {
   }
 
   _setupGrid() {
-    const grid = new THREE.GridHelper(GRID_SIZE, GRID_DIVISIONS, 0x444466, 0x222244);
-    grid.position.y = -15; // just below default stock box (20mm cube centered at origin)
-    this.scene.add(grid);
+    this.gridHelper = new THREE.GridHelper(GRID_SIZE, GRID_DIVISIONS, 0x444466, 0x222244);
+    this.gridHelper.rotation.x = Math.PI / 2; // XY plane for Z-up CAD/machining data.
+    this.gridHelper.position.z = -1;
+    this.scene.add(this.gridHelper);
+  }
+
+  _positionGridForBox(box) {
+    if (!this.gridHelper || !box) return;
+
+    const center = new THREE.Vector3();
+    const size = new THREE.Vector3();
+    box.getCenter(center);
+    box.getSize(size);
+
+    const gridScale = Math.max(size.x, size.y, GRID_SIZE) / GRID_SIZE;
+    this.gridHelper.scale.setScalar(gridScale);
+    this.gridHelper.position.set(
+      center.x,
+      center.y,
+      box.min.z - Math.max(size.z * 0.08, 2),
+    );
   }
 
   _animate() {
@@ -501,12 +530,7 @@ export class Viewer {
   // -----------------------------------------------------------------------
 
   setToolpath(points) {
-    if (this.toolpathLine) {
-      this.toolpathLine.geometry.dispose();
-      this.toolpathLine.material.dispose();
-      this.scene.remove(this.toolpathLine);
-      this.toolpathLine = null;
-    }
+    this._clearToolpath();
 
     if (!points || points.length < 2) return;
 
@@ -523,6 +547,80 @@ export class Viewer {
 
     this.toolpathLine = new THREE.Line(geom, mat);
     this.scene.add(this.toolpathLine);
+    this.toolpathObjects.push(this.toolpathLine);
+  }
+
+  setToolpathMoves(operations) {
+    this._clearToolpath();
+
+    const segmentsByType = new Map();
+    const movesByOperation = Array.isArray(operations) ? operations : [];
+
+    for (const operation of movesByOperation) {
+      const moves = operation.moves || [];
+      let previous = null;
+
+      for (const move of moves) {
+        const position = this._movePosition(move);
+        if (!position) continue;
+
+        if (previous) {
+          const moveType = this._moveType(move);
+          if (!segmentsByType.has(moveType)) {
+            segmentsByType.set(moveType, []);
+          }
+          segmentsByType.get(moveType).push(...previous, ...position);
+        }
+        previous = position;
+      }
+    }
+
+    for (const [moveType, positions] of segmentsByType) {
+      if (positions.length < 6) continue;
+
+      const geom = new THREE.BufferGeometry();
+      geom.setAttribute(
+        'position',
+        new THREE.BufferAttribute(new Float32Array(positions), 3),
+      );
+
+      const mat = new THREE.LineBasicMaterial({
+        color: TOOLPATH_COLORS[moveType] || TOOLPATH_COLOR,
+        linewidth: 1,
+        transparent: true,
+        opacity: moveType === 'rapid' ? 0.38 : 0.88,
+      });
+
+      const line = new THREE.LineSegments(geom, mat);
+      this.scene.add(line);
+      this.toolpathObjects.push(line);
+    }
+  }
+
+  _clearToolpath() {
+    for (const object of this.toolpathObjects) {
+      if (object.geometry) object.geometry.dispose();
+      if (object.material) object.material.dispose();
+      this.scene.remove(object);
+    }
+    this.toolpathObjects = [];
+    this.toolpathLine = null;
+  }
+
+  _movePosition(move) {
+    const pos = move?.position || move?.end || move;
+    if (!Array.isArray(pos) || pos.length < 3) return null;
+    return [Number(pos[0]), Number(pos[1]), Number(pos[2])];
+  }
+
+  _moveType(move) {
+    const rawType = String(move?.move_type || move?.type || move?.kind || 'feed').toLowerCase();
+    if (rawType.includes('rapid')) return 'rapid';
+    if (rawType.includes('plunge')) return 'plunge';
+    if (rawType.includes('retract')) return 'retract';
+    if (rawType.includes('dwell')) return 'dwell';
+    if (rawType.includes('arc')) return 'arc';
+    return 'feed';
   }
 
   // -----------------------------------------------------------------------
@@ -646,12 +744,14 @@ export class Viewer {
     box.getSize(size);
     const maxDim = Math.max(size.x, size.y, size.z);
     const dist = maxDim * 2.5;
+    this._positionGridForBox(box);
 
     this.camera.position.set(
       center.x + dist * 0.7,
-      center.y + dist * 0.6,
+      center.y - dist * 0.8,
       center.z + dist * 0.7,
     );
+    this.camera.up.set(0, 0, 1);
     this.controls.target.copy(center);
     this.controls.update();
   }
@@ -660,6 +760,7 @@ export class Viewer {
     if (this.stockMesh && this.stockMesh.geometry) {
       this._fitCameraToMesh(this.stockMesh);
     } else {
+      this.camera.up.set(0, 0, 1);
       this.camera.position.set(...DEFAULT_CAMERA_POS);
       this.controls.target.set(0, 0, 0);
       this.controls.update();
