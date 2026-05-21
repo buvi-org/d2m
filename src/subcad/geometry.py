@@ -413,6 +413,10 @@ def _draw_profile(wp: "cq.Workplane", profile) -> "cq.Workplane":
         ):
             width = float(profile.get("width", profile.get("length", 10.0)))
             length = float(profile.get("length", profile.get("width", 10.0)))
+            if "angle" in profile or "rotation_deg" in profile:
+                points = normalize_profile_points(profile)
+                if len(points) >= 3:
+                    return wp.polyline(points).close()
             return wp.center(cx, cy).rect(length, width).center(-cx, -cy)
     points = _profile_points(profile)
     if len(points) >= 3:
@@ -480,7 +484,7 @@ def profile_cutout_cut(
         return shape.intersect(prism)
 
     outer_profile = _stock_envelope_profile(shape, margin=0.0)
-    if _is_rectangular_profile(profile):
+    if _is_rectangular_profile(profile) and not _is_rotated_profile(profile):
         return _cut_rectangular_region_around_island(
             shape,
             outer_profile=outer_profile,
@@ -586,9 +590,19 @@ def machine_around_profile_cut(
     """Remove a frame around a retained profile island."""
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
-    if stock_envelope is not None or _is_rectangular_profile(profile):
+    if _is_rectangular_profile(profile) and not _is_rotated_profile(profile):
         outer_profile = _stock_envelope_profile(shape, stock_envelope, margin=margin)
         return _cut_rectangular_region_around_island(
+            shape,
+            outer_profile=outer_profile,
+            island_profile=profile,
+            depth=height,
+            face_selector=face_selector,
+            through=False,
+        )
+    if stock_envelope is not None or _is_circular_profile(profile) or _is_rotated_profile(profile):
+        outer_profile = _stock_envelope_profile(shape, stock_envelope, margin=margin)
+        return _cut_profile_region_around_island(
             shape,
             outer_profile=outer_profile,
             island_profile=profile,
@@ -606,6 +620,45 @@ def machine_around_profile_cut(
     return wp.cutBlind(-height)
 
 
+def machine_around_profiles_cut(
+    shape: "cq.Workplane",
+    profiles,
+    height: float,
+    *,
+    face_selector: str = ">Z",
+    margin: float = 5.0,
+    stock_envelope=None,
+) -> "cq.Workplane":
+    """Remove material around multiple retained profile islands in one cut.
+
+    Sequential single-island cuts can erase previously retained ribs/bosses.
+    Cutting all islands in one sketch preserves patterned retained material.
+    """
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+    islands = [profile for profile in list(profiles or []) if profile]
+    if not islands:
+        return shape
+    if len(islands) == 1:
+        return machine_around_profile_cut(
+            shape,
+            islands[0],
+            height,
+            face_selector=face_selector,
+            margin=margin,
+            stock_envelope=stock_envelope,
+        )
+    outer_profile = _stock_envelope_profile(shape, stock_envelope, margin=margin)
+    return _cut_profile_region_around_islands(
+        shape,
+        outer_profile=outer_profile,
+        island_profiles=islands,
+        depth=height,
+        face_selector=face_selector,
+        through=False,
+    )
+
+
 def _is_rectangular_profile(profile) -> bool:
     if not isinstance(profile, dict):
         return False
@@ -613,6 +666,23 @@ def _is_rectangular_profile(profile) -> bool:
     if profile_type:
         return profile_type in {"rectangle", "rect", "box", "rib", "pad"}
     return "width" in profile or "length" in profile
+
+
+def _is_rotated_profile(profile) -> bool:
+    if not isinstance(profile, dict):
+        return False
+    return abs(float(profile.get("angle", profile.get("rotation_deg", 0.0)))) > 1e-12
+
+
+def _is_circular_profile(profile) -> bool:
+    if not isinstance(profile, dict):
+        return False
+    profile_type = str(profile.get("type", profile.get("shape", ""))).lower()
+    return (
+        profile_type in {"circle", "circular", "cylinder", "boss"}
+        or "diameter" in profile
+        or "radius" in profile
+    )
 
 
 def _stock_envelope_profile(shape: "cq.Workplane", stock_envelope=None, *, margin: float = 0.0) -> dict:
@@ -682,6 +752,88 @@ def _cut_rectangular_region_around_island(
     for cx, cy, length, width in regions:
         wp = wp.center(cx, cy).rect(length, width).center(-cx, -cy)
     return wp.cutThruAll() if through else wp.cutBlind(-depth)
+
+
+def _cut_profile_region_around_island(
+    shape: "cq.Workplane",
+    *,
+    outer_profile,
+    island_profile,
+    depth: float,
+    face_selector: str = ">Z",
+    through: bool = False,
+) -> "cq.Workplane":
+    """Cut an outer profile while retaining an arbitrary inner island."""
+    return _cut_profile_region_around_islands(
+        shape,
+        outer_profile=outer_profile,
+        island_profiles=[island_profile],
+        depth=depth,
+        face_selector=face_selector,
+        through=through,
+    )
+
+
+def _cut_profile_region_around_islands(
+    shape: "cq.Workplane",
+    *,
+    outer_profile,
+    island_profiles,
+    depth: float,
+    face_selector: str = ">Z",
+    through: bool = False,
+) -> "cq.Workplane":
+    """Cut an outer profile while retaining multiple inner islands."""
+    if depth <= 0.0 and not through:
+        return shape
+    if face_selector in {">Z", "<Z"}:
+        return _cut_profile_region_around_islands_boolean(
+            shape,
+            outer_profile=outer_profile,
+            island_profiles=island_profiles,
+            depth=depth,
+            face_selector=face_selector,
+            through=through,
+        )
+    wp = _draw_profile(shape.faces(face_selector).workplane(), outer_profile)
+    for island_profile in island_profiles:
+        wp = _draw_profile(wp, island_profile)
+    return wp.cutThruAll() if through else wp.cutBlind(-depth)
+
+
+def _cut_profile_region_around_islands_boolean(
+    shape: "cq.Workplane",
+    *,
+    outer_profile,
+    island_profiles,
+    depth: float,
+    face_selector: str = ">Z",
+    through: bool = False,
+) -> "cq.Workplane":
+    """Boolean retained-island cut for top/bottom setups.
+
+    Building an explicit cutting solid avoids nested-sketch ambiguity for
+    rotated rectangular ribs and multiple retained islands.
+    """
+    bb = shape.val().BoundingBox()
+    cut_depth = (bb.zmax - bb.zmin + 2.0) if through else depth
+    if cut_depth <= 0.0:
+        return shape
+    if face_selector == "<Z":
+        z_min = bb.zmin - (1.0 if through else 0.0)
+    else:
+        z_min = bb.zmax - cut_depth + (1.0 if through else 0.0)
+
+    cutting = _profile_prism(outer_profile, cut_depth, z_min)
+    for island_profile in island_profiles:
+        island = _profile_prism(island_profile, cut_depth + 0.02, z_min - 0.01)
+        cutting = cutting.cut(island)
+    return shape.cut(cutting)
+
+
+def _profile_prism(profile, depth: float, z_min: float) -> "cq.Workplane":
+    prism = _draw_profile(cq.Workplane("XY"), profile).extrude(depth)
+    return prism.translate((0.0, 0.0, z_min))
 
 
 def machine_around_cylinder_cut(

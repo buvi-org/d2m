@@ -1,0 +1,94 @@
+"""Regression tests for retained rib/boss islands machined from taller stock."""
+
+import math
+
+import pytest
+
+from src.subcad import Stock
+
+try:
+    import cadquery as cq
+except ImportError:  # pragma: no cover - environment dependent
+    cq = None
+
+
+pytestmark = pytest.mark.skipif(cq is None, reason="CadQuery is required")
+
+
+def _slice_area(part: Stock, z: float, thickness: float = 0.05) -> float:
+    slab = (
+        cq.Workplane("XY")
+        .box(200.0, 200.0, thickness, centered=True)
+        .translate((0.0, 0.0, z))
+    )
+    return part._shape.intersect(slab).val().Volume() / thickness
+
+
+def test_top_rib_retains_island_without_erasing_plate_volume() -> None:
+    part = Stock.rectangular(80.0, 50.0, 12.0).rib(10.0, 40.0, 4.0)
+
+    expected_volume = 80.0 * 50.0 * 8.0 + 10.0 * 40.0 * 4.0
+    assert part.volume == pytest.approx(expected_volume, abs=1e-6)
+    assert _slice_area(part, 5.5) == pytest.approx(10.0 * 40.0, abs=1e-6)
+    assert _slice_area(part, 0.0) == pytest.approx(80.0 * 50.0, abs=1e-6)
+
+
+def test_bottom_rib_keeps_retained_island_on_bottom_face() -> None:
+    part = Stock.rectangular(80.0, 50.0, 12.0).rib(
+        10.0,
+        40.0,
+        4.0,
+        face_selector="<Z",
+    )
+
+    assert _slice_area(part, -5.5) == pytest.approx(10.0 * 40.0, abs=1e-6)
+    assert _slice_area(part, 5.5) == pytest.approx(80.0 * 50.0, abs=1e-6)
+
+
+def test_circular_machine_around_profile_models_plate_plus_top_boss() -> None:
+    part = Stock.rectangular(80.0, 50.0, 12.0).machine_around_profile(
+        {"type": "circle", "diameter": 12.0},
+        4.0,
+    )
+
+    boss_area = math.pi * 6.0**2
+    expected_volume = 80.0 * 50.0 * 8.0 + boss_area * 4.0
+    assert part.volume == pytest.approx(expected_volume, abs=1e-6)
+    assert _slice_area(part, 5.5) == pytest.approx(boss_area, abs=1e-6)
+    assert _slice_area(part, 0.0) == pytest.approx(80.0 * 50.0, abs=1e-6)
+    assert part.process_plan()["operations"][-1]["operation"] == "machine_around_profile"
+
+
+def test_multi_island_retained_ribs_preserve_all_top_features() -> None:
+    rib_profiles = [
+        {"type": "rib", "width": 4.0, "length": 20.0, "cx": -20.0, "cy": 0.0},
+        {"type": "rib", "width": 4.0, "length": 20.0, "cx": 0.0, "cy": 0.0},
+        {"type": "rib", "width": 4.0, "length": 20.0, "cx": 20.0, "cy": 0.0},
+    ]
+
+    part = Stock.rectangular(80.0, 50.0, 10.0).machine_around_profiles(
+        rib_profiles,
+        2.0,
+    )
+
+    expected_top_area = 3 * 4.0 * 20.0
+    expected_volume = 80.0 * 50.0 * 8.0 + expected_top_area * 2.0
+    assert part.volume == pytest.approx(expected_volume, abs=1e-6)
+    assert _slice_area(part, 4.5) == pytest.approx(expected_top_area, abs=1e-6)
+    assert _slice_area(part, 0.0) == pytest.approx(80.0 * 50.0, abs=1e-6)
+    assert part.process_plan()["operations"][-1]["operation"] == "machine_around_profiles"
+
+
+def test_rotated_retained_rib_uses_angle_in_profile_geometry() -> None:
+    part = Stock.rectangular(80.0, 50.0, 10.0).rib(
+        4.0,
+        20.0,
+        2.0,
+        angle=45.0,
+    )
+
+    expected_top_area = 4.0 * 20.0
+    assert _slice_area(part, 4.5) == pytest.approx(expected_top_area, abs=1e-6)
+    operation = part.process_plan()["operations"][-1]
+    assert operation["operation"] == "rib"
+    assert operation["angle_deg"] == pytest.approx(45.0)

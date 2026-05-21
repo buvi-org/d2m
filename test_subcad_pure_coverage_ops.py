@@ -117,6 +117,10 @@ part = (
     .profile_cutout(profile, depth=3.0)
     .profile_contour(profile, 4.0)
     .machine_around_profile(profile, 3.0)
+    .machine_around_profiles([
+        {"type": "rib", "width": 2, "length": 8, "cx": -8, "cy": 0},
+        {"type": "rib", "width": 2, "length": 8, "cx": 8, "cy": 0},
+    ], 2.0)
     .machine_around_cylinder(12.0, 4.0, cx=5.0, cy=0.0)
     .rib(4.0, 30.0, 5.0, cx=0.0, cy=0.0)
     .pad(profile, 2.0)
@@ -146,6 +150,7 @@ expected = {
     "profile_cutout",
     "profile_contour",
     "machine_around_profile",
+    "machine_around_profiles",
     "machine_around_cylinder",
     "rib",
     "pad",

@@ -106,6 +106,10 @@ Stock instance (immutable/fluent pattern).
 - `.profile_contour(profile, depth, *, side="outside", face_selector=">Z")` — Contour arbitrary profiles.
 - `.machine_around_profile(profile, height, *, stock_envelope=None, face_selector=">Z")` —
   Machine around retained bosses, pads, ribs, and joined profiles.
+- `.machine_around_profiles([profile, ...], height, *, stock_envelope=None, face_selector=">Z")` —
+  Machine around multiple retained islands in one operation. Use this for
+  patterned ribs/bosses from `rarray`, `polarArray`, loops, or repeated
+  constructive unions so earlier retained islands are not erased by later cuts.
 - `.machine_around_cylinder(diameter, height, *, cx=0.0, cy=0.0, face_selector=">Z")` —
   Machine around retained cylindrical bosses.
 - `.rib(width, length, height, *, cx=0.0, cy=0.0, angle=0.0, face_selector=">Z")` and
@@ -194,6 +198,12 @@ Stock instance (immutable/fluent pattern).
    operations: machine_around_profile, machine_around_cylinder, rib, or pad.
    Preserve boss/rib/pad location with `cx` and `cy`, either inside the profile
    dict or as `.machine_around_profile(profile, height, cx=..., cy=...)`.
+   For multiple retained ribs/bosses from a loop, `rarray`, or `polarArray`,
+   prefer `.machine_around_profiles([...], height=...)` with one profile per
+   island instead of repeated single-island `.rib(...)` calls. Retained top
+   features require stock height equal to base thickness plus feature height;
+   do not face_mill away the material that forms the rib/boss before machining
+   around it.
    Only machine around a unioned feature when it actually protrudes beyond the
    existing stock/base envelope or rises above the surrounding surface. If a
    unioned box lies fully inside existing solid stock at the same height, it may
@@ -271,6 +281,7 @@ Stock.cylindrical(D, H, material="aluminum_6061")
 .profile_cutout(profile, depth=None, through=False)
 .profile_contour(profile, depth, side="outside", face_selector=">Z")
 .machine_around_profile(profile, height, face_selector=">Z")
+.machine_around_profiles([profile1, profile2], height, face_selector=">Z")
 .machine_around_cylinder(dia, height, cx=cx, cy=cy, face_selector=">Z")
 .rib(width, length, height, cx=cx, cy=cy, angle=0, face_selector=">Z")
 .pad(profile, height)

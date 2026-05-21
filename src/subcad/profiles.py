@@ -20,6 +20,20 @@ def _point(value: Any) -> Point2D:
     return float(value[0]), float(value[1])
 
 
+def _rotate_points(points: list[Point2D], angle_deg: float, cx: float, cy: float) -> list[Point2D]:
+    if abs(angle_deg) <= 1e-12:
+        return points
+    theta = math.radians(angle_deg)
+    cos_t = math.cos(theta)
+    sin_t = math.sin(theta)
+    rotated: list[Point2D] = []
+    for x, y in points:
+        dx = x - cx
+        dy = y - cy
+        rotated.append((cx + dx * cos_t - dy * sin_t, cy + dx * sin_t + dy * cos_t))
+    return rotated
+
+
 def _circle_points(radius: float, cx: float = 0.0, cy: float = 0.0, segments: int = 48) -> list[Point2D]:
     count = max(int(segments), 12)
     return [
@@ -212,12 +226,14 @@ def normalize_profile_points(profile: Any, *, arc_segments: int = 16, circle_seg
             width = float(profile.get("width", profile.get("length", 10.0)))
             length = float(profile.get("length", profile.get("width", 10.0)))
             cx, cy = _center(profile)
-            return [
+            points = [
                 (cx - length / 2.0, cy - width / 2.0),
                 (cx + length / 2.0, cy - width / 2.0),
                 (cx + length / 2.0, cy + width / 2.0),
                 (cx - length / 2.0, cy + width / 2.0),
             ]
+            angle = float(profile.get("rotation_deg", profile.get("angle", 0.0)))
+            return _rotate_points(points, angle, cx, cy)
 
     if isinstance(profile, (list, tuple)):
         return [_point(point) for point in profile]

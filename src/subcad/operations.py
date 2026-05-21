@@ -38,6 +38,7 @@ from .geometry import (
     profile_cutout_cut,
     profile_contour_cut,
     machine_around_profile_cut,
+    machine_around_profiles_cut,
     machine_around_cylinder_cut,
     thin_wall_pocket_cut,
     create_tapered_cylinder,
@@ -2687,6 +2688,42 @@ class MachineAroundProfileOp(ProfileCutoutOp):
 
 
 @dataclass
+class MachineAroundProfilesOp(MachineAroundProfileOp):
+    """Machine around multiple retained profile/boss/pad islands."""
+
+    profiles: list[Any] = field(default_factory=list)
+
+    def __post_init__(self):
+        if not self.profiles and self.profile:
+            self.profiles = list(self.profile) if isinstance(self.profile, list) else [self.profile]
+        if self.profiles and not self.profile:
+            self.profile = self.profiles
+        saved_profile = self.profile
+        self.profile = {}
+        PocketOp.__post_init__(self)
+        self.profile = saved_profile
+
+    def apply(self, shape):
+        return machine_around_profiles_cut(
+            shape,
+            self.profiles or [],
+            self.height,
+            face_selector=self.face_selector,
+            stock_envelope=self.stock_envelope,
+        )
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "operation": "machine_around_profiles",
+            "profiles": _profile_payload(self.profiles),
+            "island_count": len(self.profiles or []),
+            "strategy": "machine_around_retained_islands",
+        })
+        return data
+
+
+@dataclass
 class MachineAroundCylinderOp(CircularPocketOp):
     """Machine around a retained cylindrical boss."""
 
@@ -3092,6 +3129,7 @@ _OP_REGISTRY: dict[str, type[MachiningOperation]] = {
     "profile_cutout":   ProfileCutoutOp,
     "profile_contour":  ProfileContourOp,
     "machine_around_profile": MachineAroundProfileOp,
+    "machine_around_profiles": MachineAroundProfilesOp,
     "machine_around_cylinder": MachineAroundCylinderOp,
     "rib":              RibOp,
     "pad":              PadOp,

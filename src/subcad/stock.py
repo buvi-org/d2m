@@ -41,6 +41,22 @@ def _profile_bounds_for_stock(profile) -> tuple[float, float]:
     return profile_span_yx(profile)
 
 
+def _profiles_bounds_for_stock(profiles) -> tuple[float, float]:
+    """Return (width_y, length_x) spanning multiple lightweight profiles."""
+    bounds = []
+    from .profiles import profile_bounds_xy
+
+    for profile in profiles or []:
+        bounds.append(profile_bounds_xy(profile))
+    if not bounds:
+        return 10.0, 10.0
+    xmin = min(item[0] for item in bounds)
+    ymin = min(item[1] for item in bounds)
+    xmax = max(item[2] for item in bounds)
+    ymax = max(item[3] for item in bounds)
+    return ymax - ymin, xmax - xmin
+
+
 @dataclass
 class Stock:
     """An in-process workpiece with an accumulating manufacturing plan.
@@ -944,6 +960,20 @@ class Stock:
             tool=tool, material=self._material,
         ))
 
+    def machine_around_profiles(self, profiles, height: float, *,
+                                stock_envelope=None,
+                                face_selector: str = ">Z",
+                                tool: Optional[ToolSpec] = None) -> "Stock":
+        """Machine around multiple retained bosses/ribs/pads in one cut."""
+        from .operations import MachineAroundProfilesOp
+        profiles = list(profiles or [])
+        width, length = _profiles_bounds_for_stock(profiles)
+        return self._apply_op(MachineAroundProfilesOp(
+            profiles=profiles, profile=profiles, width=width, length=length,
+            depth=height, height=height, stock_envelope=stock_envelope,
+            face_selector=face_selector, tool=tool, material=self._material,
+        ))
+
     def machine_around_cylinder(self, diameter: float, height: float, *,
                                 cx: float = 0.0, cy: float = 0.0,
                                 face_selector: str = ">Z",
@@ -960,7 +990,14 @@ class Stock:
             face_selector: str = ">Z",
             tool: Optional[ToolSpec] = None) -> "Stock":
         from .operations import RibOp
-        profile = {"type": "rib", "width": width, "length": length, "cx": cx, "cy": cy}
+        profile = {
+            "type": "rib",
+            "width": width,
+            "length": length,
+            "cx": cx,
+            "cy": cy,
+            "angle": angle,
+        }
         return self._apply_op(RibOp(
             profile=profile, width=width, length=length, depth=height,
             height=height, angle=angle, face_selector=face_selector,

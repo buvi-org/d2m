@@ -249,6 +249,8 @@ check('edge_chamfer("|Z"' in prompt,
       "user prompt preserves CadQuery directional edge chamfer selectors")
 check("machine_around_profile" in prompt and "cx=..." in prompt and "cy=..." in prompt,
       "user prompt allows retained feature placement through cx/cy kwargs")
+check("machine_around_profiles" in sys_prompt and "do not face_mill away" in sys_prompt,
+      "system prompt teaches multi-island retained features and stock height")
 check("fully inside" in prompt and "existing base stock" in prompt,
       "user prompt avoids machining around construction-only internal unions")
 check("translate((x, y, z))" in prompt and "literally" in prompt,
