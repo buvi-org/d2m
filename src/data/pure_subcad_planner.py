@@ -495,6 +495,7 @@ def _deterministic_profile_extrude_code(cadquery_code: str) -> str | None:
         points = _line_chain_points(cadquery_code, env)
     if len(points) < 3:
         return None
+    points = _apply_profile_mirrors(cadquery_code, points)
     extrude_args = _first_call_args(cadquery_code, "extrude")
     if not extrude_args:
         return None
@@ -513,10 +514,12 @@ def _deterministic_profile_extrude_code(cadquery_code: str) -> str | None:
     y_shift = (min_y + max_y) / 2.0
     shifted = [(x - x_shift, y - y_shift) for x, y in points]
     stock = f"Stock.rectangular({length:.6g}, {width:.6g}, {height:.6g})"
-    return _format_fluent_subcad_code(
-        stock,
-        [f".profile_cutout({{'type': 'polygon', 'points': {_format_points(shifted)}}}, through=True)"],
-    )
+    sequence = [f".profile_cutout({{'type': 'polygon', 'points': {_format_points(shifted)}}}, through=True)"]
+    chamfer = _first_call_number(cadquery_code, "chamfer", env)
+    if chamfer is not None:
+        selector = "|Z" if '"|Z"' in cadquery_code or "'|Z'" in cadquery_code else "all_edges"
+        sequence.append(f'.edge_chamfer("{selector}", width={chamfer:.6g})')
+    return _format_fluent_subcad_code(stock, sequence)
 
 
 def _deterministic_box_union_profile_code(cadquery_code: str) -> str | None:
@@ -1351,6 +1354,48 @@ def _deterministic_cylindrical_star_plate_code(cadquery_code: str) -> str | None
 
 def _format_points(points: list[tuple[float, float]]) -> str:
     return "[" + ", ".join(f"({x:.6g}, {y:.6g})" for x, y in points) + "]"
+
+
+def _apply_profile_mirrors(
+    code_text: str,
+    points: list[tuple[float, float]],
+) -> list[tuple[float, float]]:
+    base = _without_consecutive_duplicate_points(points)
+    if len(base) > 1 and abs(base[0][0] - base[-1][0]) < 1e-9 and abs(base[0][1] - base[-1][1]) < 1e-9:
+        base = base[:-1]
+    if len(base) < 3:
+        return points
+    mirrored = list(base)
+    if ".mirrorY(" in code_text:
+        mirrored = _mirror_polygon_half(mirrored, axis="Y")
+    if ".mirrorX(" in code_text:
+        mirrored = _mirror_polygon_half(mirrored, axis="X")
+    return mirrored if len(mirrored) >= 3 else points
+
+
+def _mirror_polygon_half(
+    points: list[tuple[float, float]],
+    *,
+    axis: str,
+) -> list[tuple[float, float]]:
+    mirrored: list[tuple[float, float]] = list(points)
+    for x, y in reversed(points):
+        point = (-x, y) if axis == "Y" else (x, -y)
+        if mirrored and abs(mirrored[-1][0] - point[0]) < 1e-9 and abs(mirrored[-1][1] - point[1]) < 1e-9:
+            continue
+        mirrored.append(point)
+    if len(mirrored) > 1 and abs(mirrored[0][0] - mirrored[-1][0]) < 1e-9 and abs(mirrored[0][1] - mirrored[-1][1]) < 1e-9:
+        mirrored.pop()
+    return _without_consecutive_duplicate_points(mirrored)
+
+
+def _without_consecutive_duplicate_points(points: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    clean: list[tuple[float, float]] = []
+    for point in points:
+        if clean and abs(clean[-1][0] - point[0]) < 1e-9 and abs(clean[-1][1] - point[1]) < 1e-9:
+            continue
+        clean.append(point)
+    return clean
 
 
 def _first_polyline_points(code_text: str, env: dict[str, float]) -> list[tuple[float, float]]:

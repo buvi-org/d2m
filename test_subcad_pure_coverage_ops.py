@@ -551,6 +551,21 @@ check(
 variable_points_profile_exec = run_subcad(variable_points_profile_subcad)
 check(variable_points_profile_exec["success"], "deterministic variable-points profile SubCAD code executes")
 
+mirrored_profile_code = """
+import cadquery as cq
+pts = [(0, 20), (4, 20), (4, 2), (2, 2), (2, -2), (4, -2), (4, -20), (0, -20)]
+result = cq.Workplane("front").polyline(pts).close().mirrorY().extrude(80)
+"""
+mirrored_profile_subcad = build_deterministic_subcad_code(mirrored_profile_code, [])
+check(mirrored_profile_subcad is not None, "planner builds deterministic mirrored profile code")
+check(
+    "Stock.rectangular(8, 40, 80)" in mirrored_profile_subcad
+    and "(-4, 20)" in mirrored_profile_subcad,
+    "deterministic mirrored profile code expands half-profile across Y axis",
+)
+mirrored_profile_exec = run_subcad(mirrored_profile_subcad)
+check(mirrored_profile_exec["success"], "deterministic mirrored profile SubCAD code executes")
+
 arc_profile_code = """
 import cadquery as cq
 arm_length = 80
