@@ -311,7 +311,7 @@ Immediate next implementation targets:
   selected retained-material operations, and related coverage ops; update the
   translator prompt to preserve CadQuery workplane face selectors such as
   `<Z` instead of silently converting underside operations to top-side work.
-- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, and row 49 accepted manifests in future
+- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, and row 50 accepted manifests in future
   accepted-index guarded runs.
 - Done: add Z-band retained-material support and planner evidence for retained
   rib/boss loops and polar arrays.
@@ -334,7 +334,9 @@ Immediate next implementation targets:
   cut variables, add internal-through `profile_pocket(..., through=True)`, and
   accept train global index 49 via deterministic star/radial-pocket plate
   SubCAD preflight with original-STEP trusted mesh score 100.0.
-- Next: run the next accepted-index guarded forward scan after row 49 and pick
+- Done: add deterministic `box(...).faces(">Z").edges().chamfer(...)` support
+  and accept train global index 50 with original-STEP trusted mesh score 100.0.
+- Next: run the next accepted-index guarded forward scan after row 50 and pick
   the next deterministic feature-family blocker before spending larger live
   batches.
 

@@ -308,6 +308,17 @@ check(
 deterministic_exec = run_subcad(deterministic_code)
 check(deterministic_exec["success"], "deterministic layered-retained SubCAD code executes")
 
+box_chamfer_code = "result = cq.Workplane('XY').box(20,20,2).faces('>Z').edges().chamfer(1,1)"
+box_chamfer_subcad = build_deterministic_subcad_code(box_chamfer_code, [])
+check(box_chamfer_subcad is not None, "planner builds deterministic box-chamfer SubCAD code")
+check(
+    "Stock.rectangular(20, 20, 2)" in box_chamfer_subcad
+    and '.edge_chamfer(">Z", width=1)' in box_chamfer_subcad,
+    "deterministic box-chamfer code preserves dimensions and top chamfer",
+)
+box_chamfer_exec = run_subcad(box_chamfer_subcad)
+check(box_chamfer_exec["success"], "deterministic box-chamfer SubCAD code executes")
+
 top_rib_code = """
 plate_length = 80.0
 plate_width = 60.0

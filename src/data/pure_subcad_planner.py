@@ -258,6 +258,9 @@ def build_deterministic_subcad_code(
     geometry regressions and wasted live calls.
     """
     plan = plan_pure_subcad_features(ops_trace or [], cadquery_code)
+    box_code = _deterministic_box_chamfer_code(cadquery_code)
+    if box_code:
+        return box_code
     for feature in plan.features:
         if feature.operation != "layered_retained_profile_plan":
             continue
@@ -298,6 +301,39 @@ def _format_fluent_subcad_code(stock_expr: str, sequence: list[str]) -> str:
         lines.append(f"    {text}")
     lines.append(")")
     return "\n".join(lines)
+
+
+def _deterministic_box_chamfer_code(cadquery_code: str) -> str | None:
+    box = _box_stock_from_code(cadquery_code)
+    if not box:
+        return None
+    stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
+    sequence: list[str] = []
+    env = _numeric_env(cadquery_code)
+    chamfer_args = _first_call_args(cadquery_code, "chamfer")
+    if not chamfer_args:
+        return None
+    if chamfer_args:
+        width = _eval_number(chamfer_args[0], env)
+        if width is not None and width > 0:
+            selector = ">Z" if ".faces('>z')" in cadquery_code.lower() or '.faces(">z")' in cadquery_code.lower() else "all_edges"
+            sequence.append(f'.edge_chamfer("{selector}", width={width:.6g})')
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _box_stock_from_code(code_text: str) -> dict[str, float] | None:
+    env = _numeric_env(code_text)
+    args = _first_call_args(code_text, "box")
+    if len(args) < 3:
+        return None
+    length = _eval_number(args[0], env)
+    width = _eval_number(args[1], env)
+    height = _eval_number(args[2], env)
+    if length is None or width is None or height is None:
+        return None
+    if length <= 0 or width <= 0 or height <= 0:
+        return None
+    return {"length": length, "width": width, "height": height}
 
 
 def _deterministic_top_retained_rib_code(cadquery_code: str, plan: PureSubCADPlan) -> str | None:
