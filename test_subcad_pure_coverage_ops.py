@@ -423,6 +423,34 @@ check(
 l_bracket_rarray_exec = run_subcad(l_bracket_rarray_subcad)
 check(l_bracket_rarray_exec["success"], "deterministic L-bracket rarray SubCAD code executes")
 
+simple_l_profile_code = """
+import cadquery as cq
+vertical_leg_height=80.0
+horizontal_leg_length=60.0
+leg_width=15.0
+wall_thickness=5.0
+result = (
+    cq.Workplane('XY')
+    .moveTo(0,0)
+    .lineTo(0, vertical_leg_height)
+    .lineTo(leg_width, vertical_leg_height)
+    .lineTo(leg_width, leg_width)
+    .lineTo(horizontal_leg_length, leg_width)
+    .lineTo(horizontal_leg_length, 0)
+    .close()
+    .extrude(wall_thickness)
+)
+"""
+simple_l_profile_subcad = build_deterministic_subcad_code(simple_l_profile_code, [])
+check(simple_l_profile_subcad is not None, "planner builds deterministic simple L-profile SubCAD code")
+check(
+    "Stock.rectangular(60, 80, 5)" in simple_l_profile_subcad
+    and ".profile_cutout({'type': 'polygon'" in simple_l_profile_subcad,
+    "deterministic simple L-profile code preserves bounding stock and profile cutout",
+)
+simple_l_profile_exec = run_subcad(simple_l_profile_subcad)
+check(simple_l_profile_exec["success"], "deterministic simple L-profile SubCAD code executes")
+
 top_rib_code = """
 plate_length = 80.0
 plate_width = 60.0

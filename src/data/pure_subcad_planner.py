@@ -264,6 +264,9 @@ def build_deterministic_subcad_code(
     l_bracket_code = _deterministic_l_bracket_code(cadquery_code)
     if l_bracket_code:
         return l_bracket_code
+    profile_extrude_code = _deterministic_profile_extrude_code(cadquery_code)
+    if profile_extrude_code:
+        return profile_extrude_code
     box_code = _deterministic_box_chamfer_code(cadquery_code)
     if box_code:
         return box_code
@@ -331,6 +334,41 @@ def _deterministic_box_chamfer_code(cadquery_code: str) -> str | None:
             selector = ">Z" if ".faces('>z')" in cadquery_code.lower() or '.faces(">z")' in cadquery_code.lower() else "all_edges"
             sequence.append(f'.edge_chamfer("{selector}", width={width:.6g})')
     return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_profile_extrude_code(cadquery_code: str) -> str | None:
+    if ".extrude(" not in cadquery_code:
+        return None
+    if any(token in cadquery_code for token in (".hole(", ".cut(", ".cutBlind(", ".shell(", ".union(")):
+        return None
+    env = _numeric_env(cadquery_code)
+    points = _first_polyline_points(cadquery_code, env)
+    if len(points) < 3:
+        points = _line_chain_points(cadquery_code, env)
+    if len(points) < 3:
+        return None
+    extrude_args = _first_call_args(cadquery_code, "extrude")
+    if not extrude_args:
+        return None
+    height = _eval_number(extrude_args[0], env)
+    if height is None or height <= 0:
+        return None
+    min_x = min(x for x, _ in points)
+    max_x = max(x for x, _ in points)
+    min_y = min(y for _, y in points)
+    max_y = max(y for _, y in points)
+    length = max_x - min_x
+    width = max_y - min_y
+    if length <= 0 or width <= 0:
+        return None
+    x_shift = (min_x + max_x) / 2.0
+    y_shift = (min_y + max_y) / 2.0
+    shifted = [(x - x_shift, y - y_shift) for x, y in points]
+    stock = f"Stock.rectangular({length:.6g}, {width:.6g}, {height:.6g})"
+    return _format_fluent_subcad_code(
+        stock,
+        [f".profile_cutout({{'type': 'polygon', 'points': {_format_points(shifted)}}}, through=True)"],
+    )
 
 
 def _deterministic_l_bracket_code(cadquery_code: str) -> str | None:
@@ -895,6 +933,31 @@ def _deterministic_cylindrical_star_plate_code(cadquery_code: str) -> str | None
 
 def _format_points(points: list[tuple[float, float]]) -> str:
     return "[" + ", ".join(f"({x:.6g}, {y:.6g})" for x, y in points) + "]"
+
+
+def _first_polyline_points(code_text: str, env: dict[str, float]) -> list[tuple[float, float]]:
+    args = _first_call_args(code_text, "polyline")
+    if not args:
+        return []
+    return _eval_points_literal(args[0], env)
+
+
+def _line_chain_points(code_text: str, env: dict[str, float]) -> list[tuple[float, float]]:
+    points: list[tuple[float, float]] = []
+    for match in re.finditer(r"\.(moveTo|lineTo)\s*\(", code_text):
+        call_name = match.group(1)
+        args, _ = _call_args_at(code_text, match.end() - 1)
+        if not args or len(args) < 2:
+            continue
+        x = _eval_number(args[0], env)
+        y = _eval_number(args[1], env)
+        if x is None or y is None:
+            continue
+        if call_name == "lineTo" and not points:
+            points.append((0.0, 0.0))
+        if not points or (abs(points[-1][0] - x) > 1e-9 or abs(points[-1][1] - y) > 1e-9):
+            points.append((x, y))
+    return points
 
 
 def _point_on_polygon_edge(
