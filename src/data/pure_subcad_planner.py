@@ -274,6 +274,9 @@ def build_deterministic_subcad_code(
     polar_rib_code = _deterministic_cylindrical_polar_rib_code(cadquery_code, plan)
     if polar_rib_code:
         return polar_rib_code
+    annular_rib_code = _deterministic_cylindrical_annular_rib_code(cadquery_code)
+    if annular_rib_code:
+        return annular_rib_code
     return None
 
 
@@ -471,6 +474,111 @@ def _polar_hole_drill_calls(code_text: str, *, skip_diameter: float | None = Non
                 f"cy={radius * math.sin(radians):.6g})"
             )
     return calls
+
+
+def _deterministic_cylindrical_annular_rib_code(cadquery_code: str) -> str | None:
+    cylinder = _cylindrical_stock_from_circle_extrude(cadquery_code)
+    ring = _annular_rib_from_code(cadquery_code)
+    if not cylinder or not ring:
+        return None
+    stock = f"Stock.cylindrical({cylinder['diameter']:.6g}, {cylinder['height'] + ring['height']:.6g})"
+    sequence = [
+        (
+            f".machine_around_cylinder({ring['outer_diameter']:.6g}, "
+            f"height={ring['height']:.6g}, cx=0.0, cy=0.0, "
+            f"base_height={cylinder['height']:.6g})"
+        ),
+        (
+            f".circular_pocket({ring['inner_diameter']:.6g}, "
+            f"depth={ring['height']:.6g}, cx=0.0, cy=0.0)"
+        ),
+    ]
+    blind = _central_blind_hole_from_code(cadquery_code)
+    if blind:
+        base_height = max(cylinder["height"] - blind["depth"], 0.0)
+        sequence.append(
+            f".circular_pocket({blind['diameter']:.6g}, depth={blind['depth']:.6g}, "
+            f"cx=0.0, cy=0.0, base_height={base_height:.6g})"
+        )
+    sequence.extend(_push_points_hole_drill_calls(cadquery_code))
+    chamfer = _first_call_number(cadquery_code, "chamfer", _numeric_env(cadquery_code))
+    if chamfer is not None:
+        sequence.append(f'.edge_chamfer(">Z", width={chamfer:.6g})')
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _annular_rib_from_code(code_text: str) -> dict[str, float] | None:
+    env = _numeric_env(code_text)
+    outer = env.get("outer_rib_radius")
+    inner = env.get("inner_rib_radius")
+    height = env.get("rib_height")
+    if outer is None or inner is None or height is None:
+        return None
+    if outer <= inner or inner <= 0 or height <= 0:
+        return None
+    if ".cut(inner_cut)" not in code_text.lower() and ".cut( inner_cut )" not in code_text.lower():
+        return None
+    return {
+        "outer_diameter": 2.0 * outer,
+        "inner_diameter": 2.0 * inner,
+        "height": height,
+    }
+
+
+def _central_blind_hole_from_code(code_text: str) -> dict[str, float] | None:
+    env = _numeric_env(code_text)
+    for match in re.finditer(r"\.hole\((?P<args>[^)]*)\)", code_text, re.IGNORECASE):
+        prefix = code_text[max(0, match.start() - 120):match.start()].lower()
+        if ".pushpoints(" in prefix or ".polararray(" in prefix:
+            continue
+        args = _split_args(match.group("args"))
+        if len(args) < 2:
+            continue
+        diameter = _eval_number(args[0], env)
+        depth = _eval_number(args[1], env)
+        if diameter is not None and depth is not None and diameter > 0 and depth > 0:
+            return {"diameter": diameter, "depth": depth}
+    return None
+
+
+def _push_points_hole_drill_calls(code_text: str) -> list[str]:
+    env = _numeric_env(code_text)
+    calls: list[str] = []
+    pattern = re.compile(
+        r"\.pushpoints\((?P<points>\[.*?\])\)\s*\.hole\((?P<hole>[^)]*)\)",
+        re.IGNORECASE | re.DOTALL,
+    )
+    for match in pattern.finditer(code_text):
+        points = _eval_points_literal(match.group("points"), env)
+        hole_args = _split_args(match.group("hole"))
+        if not points or not hole_args:
+            continue
+        diameter = _eval_number(hole_args[0], env)
+        if diameter is None or diameter <= 0:
+            continue
+        for x, y in points:
+            calls.append(f".drill({diameter:.6g}, through=True, cx={x:.6g}, cy={y:.6g})")
+    return calls
+
+
+def _eval_points_literal(points_text: str, env: dict[str, float]) -> list[tuple[float, float]]:
+    try:
+        node = ast.parse(points_text, mode="eval").body
+    except SyntaxError:
+        return []
+    value = _eval_ast_value(node, env, {})
+    points: list[tuple[float, float]] = []
+    if not isinstance(value, list):
+        return []
+    for item in value:
+        if (
+            isinstance(item, (list, tuple))
+            and len(item) >= 2
+            and isinstance(item[0], (int, float))
+            and isinstance(item[1], (int, float))
+        ):
+            points.append((float(item[0]), float(item[1])))
+    return points
 
 
 def _call_args_at(text: str, open_paren_index: int) -> tuple[list[str] | None, int]:

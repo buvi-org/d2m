@@ -786,6 +786,7 @@ class CircularPocketOp(MachiningOperation):
     cy: float = 0.0
     diameter: float = 20.0
     depth: float = 5.0
+    base_height: Optional[float] = None
 
     tool: Optional[ToolSpec] = None
     material: str = "aluminum_6061"
@@ -817,7 +818,8 @@ class CircularPocketOp(MachiningOperation):
 
     def apply(self, shape):
         return circular_pocket_cut(shape, self.cx, self.cy, self.diameter, self.depth,
-                                   face_selector=self.face_selector)
+                                   face_selector=self.face_selector,
+                                   base_height=self.base_height)
 
     def to_dict(self) -> dict:
         return {
@@ -826,6 +828,7 @@ class CircularPocketOp(MachiningOperation):
             "tool_diameter_mm": self.tool.diameter,
             "tool": _tool_dict(self.tool),
             "depth_mm": self.depth,
+            "base_height_mm": self.base_height,
             "pocket_diameter_mm": self.diameter,
             "position": list(self.position) if self.position else None,
             "face_selector": self.face_selector,

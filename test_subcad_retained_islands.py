@@ -152,3 +152,17 @@ def test_z_band_pocket_cuts_base_without_erasing_tall_retained_stock() -> None:
 
     assert _slice_area(part, -5.0) == pytest.approx(80.0 * 30.0 - 60.0 * 10.0, abs=1e-6)
     assert _slice_area(part, 5.0) == pytest.approx(80.0 * 30.0, abs=1e-6)
+
+
+def test_z_band_circular_pocket_cuts_requested_band_only() -> None:
+    part = Stock.rectangular(40.0, 30.0, 10.0).circular_pocket(
+        diameter=10.0,
+        depth=3.0,
+        base_height=2.0,
+    )
+
+    expected_area = math.pi * 5.0**2
+    assert _slice_area(part, -4.0) == pytest.approx(40.0 * 30.0, abs=1e-6)
+    assert _slice_area(part, -2.0) == pytest.approx(40.0 * 30.0 - expected_area, abs=1e-6)
+    assert _slice_area(part, 1.5) == pytest.approx(40.0 * 30.0, abs=1e-6)
+    assert part.process_plan()["operations"][-1]["base_height_mm"] == pytest.approx(2.0)

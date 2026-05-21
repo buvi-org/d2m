@@ -358,6 +358,7 @@ class Stock:
         *,
         cx: float = 0.0,
         cy: float = 0.0,
+        base_height: Optional[float] = None,
         face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
@@ -376,6 +377,7 @@ class Stock:
             cy=cy,
             diameter=diameter,
             depth=depth,
+            base_height=base_height,
             face_selector=face_selector,
             tool=tool,
             material=self._material,

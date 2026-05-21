@@ -418,6 +418,47 @@ check(".drill(5, through=True, cx=35, cy=0)" in polar_rib_subcad,
 polar_rib_exec = run_subcad(polar_rib_subcad)
 check(polar_rib_exec["success"], "deterministic cylindrical polar-rib SubCAD code executes")
 
+annular_rib_code = """
+plate_diameter = 80.0
+plate_thickness = 5.0
+blind_hole_diameter = 20.0
+blind_hole_depth = 3.5
+rib_offset = 5.0
+rib_width = 6.0
+rib_height = 3.0
+mount_hole_diameter = 5.0
+mount_hole_radius = 30.0
+chamfer_distance = 0.5
+base = cq.Workplane("XY").circle(plate_diameter/2).extrude(plate_thickness)
+base = base.faces(">Z").workplane().hole(blind_hole_diameter, blind_hole_depth)
+outer_rib_radius = plate_diameter/2 - rib_offset
+inner_rib_radius = outer_rib_radius - rib_width
+rib = cq.Workplane("XY").circle(outer_rib_radius).extrude(rib_height)
+inner_cut = cq.Workplane("XY").circle(inner_rib_radius).extrude(rib_height)
+rib = rib.cut(inner_cut)
+rib = rib.translate((0, 0, plate_thickness))
+result = base.union(rib)
+result = result.faces("<Z").workplane().pushPoints([
+    (mount_hole_radius, 0),
+    (0, mount_hole_radius),
+    (-mount_hole_radius, 0),
+    (0, -mount_hole_radius)
+]).hole(mount_hole_diameter)
+result = result.edges(">Z").chamfer(chamfer_distance)
+"""
+annular_rib_subcad = build_deterministic_subcad_code(annular_rib_code, [])
+check(annular_rib_subcad is not None, "planner builds deterministic annular-rib SubCAD code")
+check(
+    "Stock.cylindrical(80, 8)" in annular_rib_subcad
+    and ".machine_around_cylinder(70, height=3" in annular_rib_subcad
+    and ".circular_pocket(58, depth=3" in annular_rib_subcad,
+    "deterministic annular-rib code preserves ring dimensions",
+)
+check("base_height=1.5" in annular_rib_subcad,
+      "deterministic annular-rib code places blind center recess in the base band")
+annular_rib_exec = run_subcad(annular_rib_subcad)
+check(annular_rib_exec["success"], "deterministic annular-rib SubCAD code executes")
+
 
 print("\n2. Fluent pure operation API serializes process-plan records ...")
 profile = {"type": "polygon", "points": [(-10, -5), (10, -5), (12, 0), (10, 5), (-10, 5)]}

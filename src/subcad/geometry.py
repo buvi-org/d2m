@@ -219,10 +219,26 @@ def circular_pocket_cut(
     depth: float,
     *,
     face_selector: str = ">Z",
+    base_height: float | None = None,
 ) -> "cq.Workplane":
     """Cut a circular pocket at (cx, cy) on the top face."""
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
+
+    if base_height is not None:
+        bb = shape.val().BoundingBox()
+        z_min = bb.zmin + float(base_height)
+        cut_depth = min(float(depth), bb.zmax - z_min)
+        if cut_depth <= 0.0:
+            return shape
+        cutter = (
+            cq.Workplane("XY")
+            .center(cx, cy)
+            .circle(diameter / 2.0)
+            .extrude(cut_depth)
+            .translate((0.0, 0.0, z_min))
+        )
+        return shape.cut(cutter)
 
     cx_rel, cy_rel = _to_face_coords(shape, face_selector, cx, cy)
 
