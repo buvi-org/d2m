@@ -1838,11 +1838,17 @@ class CounterboreOp(MachiningOperation):
     # ------------------------------------------------------------------
 
     def apply(self, shape):
-        # The screw shank hole is always drilled through.
-        # The 'through' parameter controls the counterbore recess only.
-        result = drill_hole(shape, self.cx, self.cy, self.hole_diameter,
-                            depth=0, through=True,
-                            face_selector=self.face_selector)
+        result = shape
+        if self.through:
+            result = drill_hole(
+                result,
+                self.cx,
+                self.cy,
+                self.hole_diameter,
+                depth=0,
+                through=True,
+                face_selector=self.face_selector,
+            )
         result = circular_pocket_cut(result, self.cx, self.cy,
                                      self.counterbore_diameter,
                                      self.counterbore_depth,

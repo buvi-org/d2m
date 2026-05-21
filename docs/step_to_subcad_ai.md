@@ -23,6 +23,29 @@ The output should not be a static process-plan guess. It should be a SubCAD
 program that can execute, export a process plan, compare against the original
 STEP target, surface validation issues, and estimate engineering time/cost.
 
+## Current Objective And Dataset Gate
+
+The concrete project objective is to train and evaluate a STEP -> pure SubCAD
+model/workflow from at least 100,000 original-STEP-verified Zero-to-CAD pairs.
+The current local corpus scan has 86,923 plannable rows out of 100,516
+Zero-to-CAD rows, but planner coverage is only the attempt queue. Guarded live
+pilots currently record 8 accepted original-STEP-verified pairs.
+
+A pair is accepted only when:
+
+- The original Zero-to-CAD `model.step` is saved as the immutable target.
+- Generated code uses pure SubCAD operations and no hybrid geometry escape
+  hatches such as imported opaque B-Rep/mesh reuse, direct CadQuery
+  reconstruction, or skipped unsupported features.
+- Generated SubCAD executes, exports a generated STEP, and emits the
+  process-plan, setup, validation, comparison, economics, and provenance
+  artifacts.
+- Generated STEP passes original-STEP comparison under the recorded trusted
+  match policy and tolerance.
+- The manifest records source split/row/UUID, feature families, runner command,
+  prompt/model id, comparison method, SubCAD/process-plan schema version, and
+  git commit.
+
 ## Core Decision
 
 Use STEP/B-Rep derived data as the source of truth. Use vision as supporting
@@ -103,8 +126,8 @@ mapping back to the STEP-derived geometry.
 
 ## Recommended Architecture
 
-Use a staged hybrid system first. Defer fine-tuning until execution-scored data
-exists.
+Use a staged modular system first. Defer fine-tuning until execution-scored
+data exists.
 
 ```text
 STEP Parser
@@ -159,10 +182,12 @@ sessions/step_evidence/<sample_id>/
     manifest.json
   turntable.webm
   generated_subcad.py
+  generated_model.step
   process_plan.json
   comparison.json
   validation.json
   economics.json
+  manifest.json
 ```
 
 This gives us both a product artifact and future training/evaluation data.
@@ -264,6 +289,11 @@ Active next implementation slice:
   `--execute --executor translator` for live translator/original-STEP
   comparison attempts.
 - Scale only the families that show measured execution and match rates.
+- Maintain accepted-index manifests so previously verified rows count toward
+  the 100k target without re-running paid/live translator calls.
+- Release training-ready datasets only as versioned manifests that separate
+  accepted original-STEP-verified pairs from failed attempts, manual-review
+  rows, and synthetic/self-generated auxiliary pairs.
 
 ### Self-generated SubCAD-pair flow
 
@@ -304,6 +334,13 @@ Start with an agentic multimodal LLM workflow:
 Only fine-tune after we have many successful, execution-scored examples.
 Training on unverified text pairs would create a model that sounds right but
 may not produce manufacturable SubCAD.
+
+Training readiness requires a frozen accepted-pair index with original STEP
+hashes, generated SubCAD/STEP hashes, comparison policy, prompt/model version,
+runner command, SubCAD schema version, and git commit. Failed attempts and
+repair traces should remain available for feedback-loop learning, but they are
+not part of the primary verified training/evaluation split unless explicitly
+labeled as negative or repair data.
 
 ## Evaluation
 

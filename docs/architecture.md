@@ -2,7 +2,20 @@
 
 ## Overview
 
-d2m is a **hybrid AI system** combining neural networks, symbolic reasoning, and multimodal LLMs for automated manufacturing process planning. A monolithic model cannot work — manufacturing involves hard physical rules, sparse expert data, and geometric reasoning. The architecture is modular: each component does one thing well, and the pipeline composes them.
+d2m is currently centered on a STEP -> pure SubCAD research workflow: generate
+executable subtractive SubCAD, execute it, export a generated STEP, and compare
+that generated STEP against the original source STEP before accepting a pair for
+training or evaluation. The immediate dataset target is 100,000
+original-STEP-verified Zero-to-CAD pairs. Current measured status is 8 accepted
+pairs and 86,923 plannable rows out of 100,516 local rows; plannable rows are an
+attempt queue, not verified success.
+
+The architecture remains modular because manufacturing involves hard physical
+rules, sparse expert data, and geometric reasoning. However, verified training
+pairs must be pure SubCAD: no hybrid/imported opaque geometry, no direct CadQuery
+reconstruction, and no skipped unsupported features. GNNs, multimodal inputs,
+knowledge graphs, and RL remain staged or aspirational unless explicitly called
+out as implemented elsewhere in this document.
 
 ## High-Level Pipeline
 

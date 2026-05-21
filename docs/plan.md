@@ -152,7 +152,7 @@ Current test status:
 
 | Test | Result | Notes |
 |------|--------|-------|
-| `python test_agentic_translator.py` | PASS, 55/55 | Covers non-LLM translator components, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
+| `python test_agentic_translator.py` | PASS, 76/76 | Covers non-LLM translator components, corrected Zero-to-CAD runner policy tests, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
 
 Important caveat: the passing translator test is not a live LLM success metric. No live DeepSeek/Anthropic/OpenAI translation batch is documented as passing here.
 
@@ -322,12 +322,15 @@ Current implementation:
 
 Active next slice:
 
-- Improve profile fidelity for slot/obround, arc-chain, and spline/polyline
-  approximations.
-- Add feature-family benchmark reporting so progress is measured by operation
-  family, not only by aggregate planner coverage.
-- Harden translator prompts and repair feedback so accepted programs remain
-  pure SubCAD and are judged against the original STEP target.
+- Run guarded feature-family batches with explicit attempt, execution, match,
+  failure, unsupported, and remaining-to-goal counts.
+- Preserve accepted-index manifests so the 8 verified rows count toward future
+  runs without re-spending live translator calls.
+- Harden retained rib/boss, bottom-face, and side-face setup fidelity while
+  keeping side-face additive gussets manual-review/unsupported until oriented
+  side-profile machining is implemented.
+- Keep accepted programs pure SubCAD: no hybrid/imported opaque geometry, no
+  direct CadQuery reconstruction, and no skipped unsupported features.
 
 ### Build Dataset From Successful Translations
 
@@ -340,6 +343,13 @@ Dataset policy:
 - Self-generated SubCAD pairs are auxiliary pretraining data only and must be
   labeled as synthetic/self-generated.
 - Do not report self-generated exact matches as Zero-to-CAD translation success.
+- A training-ready release needs a versioned manifest with source split, row
+  index, UUID, original STEP hash/path, generated SubCAD and generated STEP
+  hash/path, feature-family tags, comparison method/tolerance, validation
+  status, economics artifact path, prompt/model id, runner command,
+  SubCAD/process-plan schema version, and git commit.
+- Failed attempts, manual-review rows, and synthetic/self-generated pairs stay
+  in separate manifests from the primary original-STEP-verified split.
 
 ### Revisit ML Roadmap
 
@@ -374,7 +384,7 @@ Acceptance criteria met:
 | Mesh comparison | Implemented | Verify and tune; no need to reimplement first. |
 | Feature comparison | Implemented | Validate on known samples and feed into translator loop. |
 | Manufacturing Trust v1 | Initial slice complete | Maintain inventory-aware planning, realistic passes, fixture/tool-holder clearance, simulation comparison reliability, warning-focused visualization, and economics calibration while STEP coverage work continues. |
-| Pure STEP-to-SubCAD coverage | Active next priority | Improve profile fidelity, add feature-family verification reporting, and require original-STEP matches before counting dataset pairs. |
+| Pure STEP-to-SubCAD coverage | Active next priority | Harden retained rib/boss, bottom-face, and side-face setup fidelity; keep feature-family verification reporting; require original-STEP matches before counting dataset pairs. |
 | Simulation bridge | Prototype passing tests | Harden as part of Manufacturing Trust v1 against representative target meshes, authored toolpaths, and gouge/deviation cases. |
 | STEP-to-SubCAD AI model | Planned | Use STEP/B-Rep feature JSON as source of truth, with rendered views/video as supporting evidence; see `docs/step_to_subcad_ai.md`. |
 | GNN feature recognition | Planned | Defer until subtractive workflow proves what features are needed. |
@@ -412,6 +422,7 @@ Roadmap success:
 5. UI exposes plans, warnings, geometry feedback, and estimate assumptions clearly.
 6. Any ML fine-tuning is evaluated against executable outcomes, not just text similarity.
 7. STEP-to-SubCAD generation uses exact STEP/B-Rep evidence as the primary input, with vision/video benchmarked as supporting context rather than treated as geometry truth.
+8. The STEP-to-SubCAD training set reaches 100,000 accepted original-STEP-verified Zero-to-CAD pairs, with current progress reported separately from planner coverage: 8 accepted pairs and 86,923 plannable rows out of 100,516 local rows as of 2026-05-21.
 
 ## Cost Notes
 

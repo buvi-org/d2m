@@ -592,7 +592,7 @@ def machine_around_profile_cut(
         raise RuntimeError("cadquery is not available")
     if _is_rectangular_profile(profile) and not _is_rotated_profile(profile):
         outer_profile = _stock_envelope_profile(shape, stock_envelope, margin=margin)
-        return _cut_rectangular_region_around_island(
+        return _cut_profile_region_around_island(
             shape,
             outer_profile=outer_profile,
             island_profile=profile,

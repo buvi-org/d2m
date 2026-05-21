@@ -46,15 +46,27 @@ The hierarchy is:
    - Measure each family separately using feature-family benchmark summaries.
    - Scale live translation only for families with acceptable pass rates.
 
-5. Model training readiness.
+5. Run orchestration and acceptance gates.
+   - Run small guarded batches by feature family before broad corpus sweeps.
+   - Stop or downrank a family when repeated failures share the same missing
+     operation class.
+   - Count progress by `selected`, `attempted`, `executed`, `matched`,
+     `failed`, `unsupported`, and `remaining_to_goal`.
+   - Promote a run only when original-STEP verification, process-plan
+     validation, and provenance/version metadata are present.
+
+6. Model training readiness.
    - Keep accepted original-STEP-verified pairs separate from synthetic
      self-generated pairs.
    - Use accepted pairs for evaluation and supervised training/fine-tuning.
    - Use failed attempts and repair traces for feedback-loop training and
      prompt/model improvement.
    - Do not train on unverified SubCAD that merely looks plausible.
+   - Version every accepted row by source dataset identity, SubCAD API/schema
+     version, comparison policy, prompt/model id, runner command, and git
+     commit so later training sets can be reproduced or invalidated.
 
-6. Future model options.
+7. Future model options.
    - Start with the existing agentic LLM translator loop.
    - Add STEP/B-Rep evidence JSON and optional projected visual frames.
    - Fine-tune only after enough verified pairs exist.
@@ -165,6 +177,18 @@ Acceptance gates for each kept pair:
    - Validator errors should reject a kept training pair unless the manifest
      explicitly labels the row as geometry-only research data.
 
+6. Training readiness and versioning.
+   - Write immutable accepted-pair indexes that include source split, row index,
+     UUID, original STEP hash/path, generated SubCAD hash/path, generated STEP
+     hash/path, prompt/model id, runner command, comparison method/tolerance,
+     SubCAD/process-plan schema version, and git commit.
+   - Freeze dataset releases as versioned manifests, for example
+     `zero_to_cad_subcad_verified_vYYYYMMDD.jsonl`, and never mix failed,
+     manual-review, or synthetic/self-generated rows into the primary verified
+     training/evaluation split.
+   - Record rejected attempts separately for repair-loop analysis and negative
+     examples; do not silently overwrite them with later successes.
+
 Sub-workstreams required to reach 100k:
 
 1. Feature-family measurement.
@@ -199,6 +223,8 @@ Sub-workstreams required to reach 100k:
      missing operation class.
    - Pause or downrank families that repeatedly fail for the same missing capability.
    - Periodically regenerate aggregate summaries and update this TODO with measured counts.
+   - Use accepted-index guarded runs so already verified rows count toward the
+     target without re-spending live translator calls.
 
 Immediate next implementation targets:
 

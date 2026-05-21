@@ -92,3 +92,28 @@ def test_rotated_retained_rib_uses_angle_in_profile_geometry() -> None:
     operation = part.process_plan()["operations"][-1]
     assert operation["operation"] == "rib"
     assert operation["angle_deg"] == pytest.approx(45.0)
+
+
+def test_offset_rib_after_prior_slot_remains_continuous() -> None:
+    part = (
+        Stock.rectangular(80.0, 60.0, 11.0)
+        .pocket(width=50.0, length=5.0, depth=5.0, cx=0.0, cy=0.0)
+        .rib(width=40.0, length=20.0, height=6.0, cx=20.0, cy=0.0)
+    )
+
+    for z in [0.0, 1.0, 2.5, 4.5]:
+        assert _slice_area(part, z) == pytest.approx(800.0, abs=1e-6)
+
+
+def test_blind_counterbore_does_not_drill_through_retained_rib() -> None:
+    base = (
+        Stock.rectangular(80.0, 60.0, 11.0)
+        .pocket(width=50.0, length=5.0, depth=5.0, cx=0.0, cy=0.0)
+        .rib(width=40.0, length=20.0, height=6.0, cx=20.0, cy=0.0)
+    )
+
+    blind = base.counterbore(8.0, 12.0, 1.0, cx=20.0, cy=0.0, through=False)
+    through = base.counterbore(8.0, 12.0, 1.0, cx=20.0, cy=0.0, through=True)
+
+    assert _slice_area(blind, 0.0) == pytest.approx(800.0, abs=1e-6)
+    assert _slice_area(through, 0.0) < 800.0
