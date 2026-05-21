@@ -1,8 +1,70 @@
 # TODO
 
+## Project Hierarchy Toward A STEP-To-SubCAD Model
+
+Ultimate goal:
+
+Train and evaluate an AI model/workflow that can take a STEP file and produce
+an executable pure SubCAD program. The generated program must reproduce the
+original geometry, express manufacturable intent, validate shop-floor
+plausibility, and provide time/cost estimates.
+
+The hierarchy is:
+
+1. Model objective.
+   - Input: STEP geometry, material, quantity, tolerance/PMI when available,
+     and optional rendered visual evidence.
+   - Output: pure SubCAD Python program plus process plan, setup sheet,
+     validation, simulation/comparison report, visualization package, and
+     economics.
+   - Proof: execute SubCAD, export generated STEP, compare against the original
+     STEP target, and reject failures.
+
+2. Required training/evaluation dataset.
+   - Build at least 100,000 original-STEP-verified pairs.
+   - Each pair must contain the original STEP, generated pure SubCAD, generated
+     STEP, comparison metrics, feature-family tags, validation, process plan,
+     setup/economics artifacts, and provenance metadata.
+   - A pair counts only when generated SubCAD executes and generated STEP
+     matches the original Zero-to-CAD STEP under the trusted comparison policy.
+
+3. Dataset generation pipeline.
+   - Parse Zero-to-CAD row: CadQuery source, ops trace, UUID, split, and
+     original STEP bytes.
+   - Build pure SubCAD feature plan.
+   - Generate SubCAD with the translator/model.
+   - Execute generated SubCAD.
+   - Export generated STEP and manufacturing artifacts.
+   - Compare generated STEP to original STEP.
+   - Repair with bounded retries.
+   - Save accepted and failed attempts with full manifests.
+
+4. Coverage work required before scaling to 100k.
+   - Mature operation families until they execute and match: profile, edge
+     treatment, retained material, holes, patterns, axisymmetric/turning,
+     thin-wall/shell, surface/sweep/loft, and wire/profile cutting.
+   - Measure each family separately using feature-family benchmark summaries.
+   - Scale live translation only for families with acceptable pass rates.
+
+5. Model training readiness.
+   - Keep accepted original-STEP-verified pairs separate from synthetic
+     self-generated pairs.
+   - Use accepted pairs for evaluation and supervised training/fine-tuning.
+   - Use failed attempts and repair traces for feedback-loop training and
+     prompt/model improvement.
+   - Do not train on unverified SubCAD that merely looks plausible.
+
+6. Future model options.
+   - Start with the existing agentic LLM translator loop.
+   - Add STEP/B-Rep evidence JSON and optional projected visual frames.
+   - Fine-tune only after enough verified pairs exist.
+   - From-scratch or self-play training remains research-grade and depends on a
+     reliable simulator/comparison environment plus far more compute/data than
+     the current RTX 4090 path can provide alone.
+
 Current baseline:
 
-- Latest pushed viewer commit before the current trust slice: `25de657 Upgrade SubCAD viewer operation review`
+- Latest pushed implementation commit: `ca8c9ef Harden pure SubCAD translation coverage`
 - Core local tests expected to remain green:
   - `python test_agentic_translator.py`
   - `python test_sim_bridge.py`
@@ -12,6 +74,107 @@ Current baseline:
   - `python test_subcad_phase2_toolpaths.py`
   - `python test_subcad_visualization.py`
   - `python test_subcad_manufacturing_economics.py`
+
+## Workstream A: 100k Original-STEP-Verified Pure SubCAD Dataset
+
+Status: active program goal. The TODO was missing this as a single end-to-end
+acceptance plan, so this section is the project truth for "all 100k SubCAD
+programs and STEP pairs."
+
+Latest measured dry scan:
+
+- Command: `python -m src.data.run_zero_to_cad_feature_benchmarks --split all --no-summary-file`
+- Date: 2026-05-21
+- Rows scanned: 100,516.
+- Plannable by pure-operation planner: 100,235.
+- Unsupported by current planner: 281.
+- Matched original-STEP-verified pairs: 0 recorded by this benchmark runner so far.
+- Family membership counts overlap because one part can require multiple operation families:
+  - edge_treatment: 74,445
+  - hole: 56,104
+  - retained_material: 53,266
+  - cut: 48,562
+  - profile: 45,589
+  - primitive: 38,648
+  - pattern: 23,818
+  - boss: 21,712
+  - thin_wall: 16,316
+  - axisymmetric: 13,706
+  - surface: 7,685
+
+Definition of done:
+
+- At least 100,000 accepted pairs exist across the local Zero-to-CAD train/val/test corpus.
+- Every accepted pair contains the original source STEP, generated pure SubCAD program, generated STEP, process plan, setup sheet, validation, comparison metrics, simulation metadata when available, economics output, feature-family tags, source row identity, and git/model/prompt version metadata.
+- The generated SubCAD executes without hybrid/imported opaque geometry.
+- The generated STEP matches the original source STEP under the configured benchmark tolerance, default `0.10 mm` unless a run explicitly records a different tolerance.
+- Accepted pairs are counted only after original-STEP comparison passes the trusted match policy.
+- Self-generated SubCAD -> STEP pairs are allowed only as auxiliary synthetic/pretraining data and never count as Zero-to-CAD translation success.
+
+Acceptance gates for each kept pair:
+
+1. Source integrity.
+   - Save the original Zero-to-CAD `model.step` as the immutable comparison target.
+   - Save CadQuery source, ops trace, split, parquet row, global index, and UUID.
+
+2. Pure SubCAD generation.
+   - Generated code must use SubCAD operations only.
+   - Reject `hybrid_feature`, `import_step`, direct CadQuery reconstruction, opaque B-Rep/mesh reuse, or skipped unsupported features.
+   - Store the pure planner candidates and the final operation families used.
+
+3. Execution and manufacturing package.
+   - Execute generated SubCAD.
+   - Export generated STEP/STL where available.
+   - Export `subcad.shop_floor.v1` process plan, validation report, setup sheet, selected tools/fixtures, toolpaths, timing, and economics.
+
+4. Geometry verification.
+   - Compare generated STEP against the original source STEP.
+   - Record volume, bounding-box, slice/mesh/feature comparison metrics, pass/fail status, tolerance, alignment policy, and localized deviation feedback.
+   - Treat comparison failure as failed data, not a partially accepted pair.
+
+5. Dataset quality control.
+   - Write one manifest record per attempt with status: `planned`, `attempted`, `executed`, `matched`, `failed`, `unsupported`, or `manual_review`.
+   - Track feature-family pass rates, common repair causes, average iterations, cost/time estimates, and validator warnings.
+   - Keep train/val/test split identity intact.
+
+Sub-workstreams required to reach 100k:
+
+1. Feature-family measurement.
+   - Use `python -m src.data.run_zero_to_cad_feature_benchmarks --split all` for aggregate planner scans.
+   - Use family filters to choose controlled live batches, for example `--family profile --family edge_treatment`.
+   - Report plannable, selected, attempted, executed, matched, failed, unsupported, and remaining-to-goal counts.
+
+2. Translator execution loop.
+   - Connect the feature-family benchmark runner to the live translator/original-STEP comparison executor.
+   - Add retry budgets, stop conditions, and per-family batch limits so AI requests are not wasted.
+   - Save repair history and prompt/model metadata for every attempt.
+
+3. Operation-family maturation.
+   - Profile family: richer slot/obround, arc-chain, spline/polyline, island, and contour fidelity.
+   - Edge treatment family: selected-edge chamfers/fillets with local selectors and tolerance checks.
+   - Retained material family: bosses, pads, ribs, raised cylinders, and machining-around islands.
+   - Axisymmetric family: round stock, turning, cones/frustums, rings, sleeves, shafts, grooves, and revolved profiles.
+   - Thin-wall family: shells, hollow bores, tubes, open cavities, accessibility checks, and wall-thickness validation.
+   - Surface family: domes, sweeps, lofts, splines, freeform tolerance machining, and 4/5-axis intent.
+   - Pattern family: rectangular/polar/mirror extraction and repeated operation emission.
+
+4. Comparison reliability.
+   - Validate the trusted comparison policy with known good/bad STEP examples per family.
+   - Improve localized feature feedback before scaling expensive live attempts.
+   - Keep volume-only success from being counted as trusted success.
+
+5. Collection orchestration.
+   - Run small per-family pilot batches first.
+   - Scale only families that achieve acceptable match rates.
+   - Pause or downrank families that repeatedly fail for the same missing capability.
+   - Periodically regenerate aggregate summaries and update this TODO with measured counts.
+
+Immediate next implementation targets:
+
+- Done: extend the feature-family benchmark runner with all-split scans, family filters, selected/filtered counts, and aggregate summaries.
+- Done: connect the benchmark runner to the existing live translator executor in a guarded mode with explicit `--execute --executor translator`.
+- Next: run larger aggregate dry scans across train/val/test and use the results to pick the first live verification family.
+- Next: run tiny live pilots with strict per-family limits and stop if pass rate/API-error guardrails indicate wasted AI requests.
 
 ## SubCAD Shop-Floor v1
 
