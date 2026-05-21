@@ -494,6 +494,45 @@ check(
 inner_rib_cage_exec = run_subcad(inner_rib_cage_subcad)
 check(inner_rib_cage_exec["success"], "deterministic cylindrical inner-rib cage SubCAD code executes")
 
+split_shroud_code = """
+outer_radius = 45.0
+inner_radius = 20.0
+shroud_height = 30.0
+wall_thickness = 3.0
+split_gap = 0.5
+chamfer_size = 1.0
+bolt_hole_dia = 4.0
+num_bolts = 6
+bolt_pattern_radius = 35.0
+rib_dia = 10.0
+rib_height = 10.0
+outer = cq.Workplane('XY').circle(outer_radius).extrude(shroud_height)
+inner = cq.Workplane('XY').circle(inner_radius).extrude(shroud_height)
+base = outer.cut(inner)
+split_slab = cq.Workplane('XY').box(split_gap, outer_radius * 4, shroud_height)
+base = base.cut(split_slab)
+base = base.edges("<X").chamfer(chamfer_size)
+bolt_points = [
+    (bolt_pattern_radius * math.cos(math.radians(i * 360 / num_bolts)),
+     bolt_pattern_radius * math.sin(math.radians(i * 360 / num_bolts)))
+    for i in range(num_bolts)
+]
+base = base.faces(">Z").workplane().pushPoints(bolt_points).hole(bolt_hole_dia)
+boss = cq.Workplane('XY').center(inner_radius - wall_thickness / 2, 0).circle(rib_dia / 2).extrude(rib_height).translate((0, 0, shroud_height / 2 - rib_height / 2))
+base = base.union(boss)
+result = base
+"""
+split_shroud_subcad = build_deterministic_subcad_code(split_shroud_code, [])
+check(split_shroud_subcad is not None, "planner builds deterministic split-shroud SubCAD code")
+check(
+    "Stock.cylindrical(90, 30)" in split_shroud_subcad
+    and ".circular_pocket(40, depth=30" in split_shroud_subcad
+    and split_shroud_subcad.count(".drill(4, through=True") == 6,
+    "deterministic split-shroud code preserves bore, split, and bolt pattern",
+)
+split_shroud_exec = run_subcad(split_shroud_subcad)
+check(split_shroud_exec["success"], "deterministic split-shroud SubCAD code executes")
+
 annular_rib_code = """
 plate_diameter = 80.0
 plate_thickness = 5.0

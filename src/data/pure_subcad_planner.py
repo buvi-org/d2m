@@ -258,6 +258,9 @@ def build_deterministic_subcad_code(
     geometry regressions and wasted live calls.
     """
     plan = plan_pure_subcad_features(ops_trace or [], cadquery_code)
+    split_shroud_code = _deterministic_split_shroud_code(cadquery_code)
+    if split_shroud_code:
+        return split_shroud_code
     box_code = _deterministic_box_chamfer_code(cadquery_code)
     if box_code:
         return box_code
@@ -507,6 +510,55 @@ def _deterministic_cylindrical_inner_rib_cage_code(cadquery_code: str) -> str | 
             f'.edge_fillet("<Z", radius={fillet:.6g})',
         ])
     sequence.append(f".circular_pocket({inner_diameter:.6g}, depth={length:.6g}, cx=0.0, cy=0.0)")
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_split_shroud_code(cadquery_code: str) -> str | None:
+    env = _numeric_env(cadquery_code)
+    required = {
+        "outer_radius",
+        "inner_radius",
+        "shroud_height",
+        "split_gap",
+        "bolt_hole_dia",
+        "num_bolts",
+        "bolt_pattern_radius",
+    }
+    if not required.issubset(env):
+        return None
+    if "split_slab" not in cadquery_code or "bolt_points" not in cadquery_code:
+        return None
+
+    outer_radius = env["outer_radius"]
+    inner_radius = env["inner_radius"]
+    height = env["shroud_height"]
+    split_gap = env["split_gap"]
+    hole_dia = env["bolt_hole_dia"]
+    hole_count = int(env["num_bolts"])
+    hole_radius = env["bolt_pattern_radius"]
+    if min(outer_radius, inner_radius, height, split_gap, hole_dia, hole_radius) <= 0:
+        return None
+    if hole_count <= 0 or hole_count > 100:
+        return None
+
+    stock = f"Stock.cylindrical({2.0 * outer_radius:.6g}, {height:.6g})"
+    sequence: list[str] = [
+        f".circular_pocket({2.0 * inner_radius:.6g}, depth={height:.6g}, cx=0.0, cy=0.0)",
+        (
+            f".profile_pocket({{'type': 'rectangle', 'length': {split_gap:.6g}, "
+            f"'width': {4.0 * outer_radius:.6g}}}, depth={height:.6g}, through=True)"
+        ),
+    ]
+    chamfer = env.get("chamfer_size")
+    if chamfer is not None and chamfer > 0:
+        sequence.append(f'.edge_chamfer("<X", width={chamfer:.6g})')
+    for index in range(hole_count):
+        angle = math.radians(index * 360.0 / hole_count)
+        sequence.append(
+            f".drill({hole_dia:.6g}, through=True, "
+            f"cx={hole_radius * math.cos(angle):.6g}, "
+            f"cy={hole_radius * math.sin(angle):.6g})"
+        )
     return _format_fluent_subcad_code(stock, sequence)
 
 
