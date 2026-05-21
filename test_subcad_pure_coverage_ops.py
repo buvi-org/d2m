@@ -155,6 +155,12 @@ hex_depth_cutout = Stock.rectangular(100, 90, 12).profile_cutout(
 )
 check(hex_depth_cutout.volume > 20000,
       "profile_cutout treats full-depth outline cuts as through cutouts")
+hex_diameter_cutout = Stock.rectangular(100, 90, 12).profile_cutout(
+    {"type": "polygon", "n_sides": 6, "circumdiameter": 60.0},
+    through=True,
+)
+check(abs(hex_diameter_cutout.volume - hex_cutout.volume) < 1e-6,
+      "regular polygon profiles support circumdiameter")
 contour_part = base.profile_contour(profile, 3.0)
 check(contour_part.volume < base_volume, "profile_contour changes B-Rep volume")
 around_profile = base.machine_around_profile(profile, 3.0)

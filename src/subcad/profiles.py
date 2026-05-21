@@ -155,12 +155,12 @@ def _polygon_points(profile: dict[str, Any]) -> list[Point2D]:
     n_sides = int(profile.get("n_sides", profile.get("sides", profile.get("count", 0))))
     if n_sides < 3:
         return []
-    radius = float(
-        profile.get(
-            "circumradius",
-            profile.get("radius", float(profile.get("diameter", 10.0)) / 2.0),
-        )
-    )
+    if "circumradius" in profile:
+        radius = float(profile["circumradius"])
+    elif "circumdiameter" in profile:
+        radius = float(profile["circumdiameter"]) / 2.0
+    else:
+        radius = float(profile.get("radius", float(profile.get("diameter", 10.0)) / 2.0))
     if radius <= 0.0:
         return []
     cx, cy = _center(profile)

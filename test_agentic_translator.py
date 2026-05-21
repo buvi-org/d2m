@@ -259,8 +259,8 @@ check("extrude(..., taper=...)" in prompt and "tapered_cylinder" in prompt,
       "user prompt maps tapered extrudes to turn_profile")
 check("second `.circle(...)`" in prompt and "center bore" in prompt,
       "user prompt avoids hallucinating bores from nested sketch circles")
-check(".polygon(n, diameter)" in prompt and "circumradius" in prompt and "diameter / 2" in prompt,
-      "user prompt maps CadQuery polygon diameter to SubCAD circumradius")
+check(".polygon(n, diameter)" in prompt and "circumdiameter" in prompt and "hex_radius" in prompt,
+      "user prompt maps CadQuery polygon diameter to SubCAD circumdiameter")
 
 
 # =========================================================================

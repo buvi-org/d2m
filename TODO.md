@@ -272,9 +272,14 @@ Immediate next implementation targets:
   fallback 10x10 profile. It now fails because bottom-side boss/rib retained
   material is not sequenced/accessed correctly; next fix should add explicit
   bottom setup / face-selector handling for retained boss and rib operations.
-- Next: retry row 23 after the profile-cutout and polygon fixes; if it still
-  fails, classify the remaining issue by profile extraction vs retained feature
-  sequencing rather than generic empty-selection failures.
+- Done: add `circumdiameter` profile support so CadQuery `.polygon(n, value)`
+  can be translated without confusing its diameter argument with a radius.
+- Blocked row: train global index 23 now executes with polygon profile support
+  but still diverges. The remaining issue is translator/feature evidence for
+  profile dimensions and recess semantics: attempts either oversize the outer
+  hex or scale dimensions from volume feedback. Next fix should extract exact
+  polygon diameter and pocket/recess depth from the CadQuery ops trace instead
+  of leaving those dimensions to LLM inference.
 
 ## SubCAD Shop-Floor v1
 

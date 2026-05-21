@@ -199,8 +199,9 @@ Stock instance (immutable/fluent pattern).
 8. Use profile_pocket/profile_cutout/profile_contour for polygon, polyline,
    arc-chain, slot-like, and non-rectangular profiles.
    CadQuery `.polygon(n, diameter)` maps to a profile dict like
-   `{"type": "polygon", "n_sides": n, "circumradius": diameter / 2}`; the
-   second CadQuery argument is the polygon diameter, not the radius.
+   `{"type": "polygon", "n_sides": n, "circumdiameter": diameter}`; the
+   second CadQuery argument is the polygon diameter, not the radius. This is
+   still true when the CadQuery variable is named `hex_radius` or similar.
 9. Coordinate system: (cx=0, cy=0) is the FACE CENTER (CadQuery convention).
    Positive cx = right (+X), positive cy = up (+Y).  Negative values go
    left/down from center.  For a 70 x 40 mm face, the bottom-left corner
@@ -486,8 +487,9 @@ subtractive program. Remember:
   SubCAD `width` always means Y span, and SubCAD `length` always means X span.
   The same convention applies to rectangular profile dicts, ribs, and pads.
 - For CadQuery `.polygon(n, diameter)`, use
-  `{{"type": "polygon", "n_sides": n, "circumradius": diameter / 2}}`.
-  The CadQuery polygon value is a diameter, not a radius.
+  `{{"type": "polygon", "n_sides": n, "circumdiameter": diameter}}`.
+  The CadQuery polygon value is a diameter, not a radius, even when the source
+  variable is named `hex_radius` or similar.
   For an outer outline cut through the full stock thickness, call
   `.profile_cutout(profile, through=True)` or pass a depth equal to the current
   stock height.
