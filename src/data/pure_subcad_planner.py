@@ -322,6 +322,11 @@ def _format_fluent_subcad_code(stock_expr: str, sequence: list[str]) -> str:
 
 
 def _deterministic_box_chamfer_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if lower.count(".box(") != 1:
+        return None
+    if any(token in lower for token in (".cut", ".hole(", ".union(", ".shell(", ".loft(", ".sweep(")):
+        return None
     box = _box_stock_from_code(cadquery_code)
     if not box:
         return None
