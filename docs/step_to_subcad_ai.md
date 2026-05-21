@@ -230,6 +230,16 @@ rows can be assigned pure operation families." The next proof step is maturing
 each operation family's geometry/toolpaths until original-STEP verification
 passes at scale.
 
+Geometry-backed pure operation slice:
+
+- Selected-edge chamfer/fillet now route through CadQuery edge selectors.
+- Profile pocket/cutout/contour now cut lightweight polygon/circle/rectangle
+  profiles in the B-Rep backend.
+- Retained-material operations for profile/cylindrical bosses now remove
+  surrounding stock around retained islands.
+- These are still v1 geometry implementations; original-STEP verification is
+  still required before counting translated samples as successful.
+
 ### Self-generated SubCAD-pair flow
 
 This is only for supervised pretraining and regression data:

@@ -327,18 +327,152 @@ def contour_cut_outer(
     return result
 
 
-def chamfer_edges(shape: "cq.Workplane", width: float, *, face_selector: str = ">Z") -> "cq.Workplane":
+def _profile_points(profile) -> list[tuple[float, float]]:
+    if isinstance(profile, dict):
+        points = profile.get("points") or profile.get("vertices")
+    else:
+        points = profile
+    if not points:
+        return []
+    return [(float(p[0]), float(p[1])) for p in points]
+
+
+def _profile_bounds(profile) -> tuple[float, float, float, float]:
+    points = _profile_points(profile)
+    if points:
+        xs = [p[0] for p in points]
+        ys = [p[1] for p in points]
+        return min(xs), min(ys), max(xs), max(ys)
+    if isinstance(profile, dict):
+        width = float(profile.get("width", profile.get("diameter", 10.0)))
+        length = float(profile.get("length", profile.get("diameter", width)))
+    else:
+        width = length = 10.0
+    return -length / 2.0, -width / 2.0, length / 2.0, width / 2.0
+
+
+def _draw_profile(wp: "cq.Workplane", profile) -> "cq.Workplane":
+    if isinstance(profile, dict):
+        if "diameter" in profile:
+            return wp.circle(float(profile["diameter"]) / 2.0)
+        if profile.get("type") == "circle" and "radius" in profile:
+            return wp.circle(float(profile["radius"]))
+        if "width" in profile or "length" in profile:
+            width = float(profile.get("width", profile.get("length", 10.0)))
+            length = float(profile.get("length", profile.get("width", 10.0)))
+            return wp.rect(length, width)
+    points = _profile_points(profile)
+    if len(points) >= 3:
+        return wp.polyline(points).close()
+    return wp.rect(10.0, 10.0)
+
+
+def profile_pocket_cut(
+    shape: "cq.Workplane",
+    profile,
+    depth: float,
+    *,
+    face_selector: str = ">Z",
+    through: bool = False,
+) -> "cq.Workplane":
+    """Cut a closed arbitrary profile on the selected face."""
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+    wp = _draw_profile(shape.faces(face_selector).workplane(), profile)
+    return wp.cutThruAll() if through else wp.cutBlind(-depth)
+
+
+def profile_contour_cut(
+    shape: "cq.Workplane",
+    profile,
+    depth: float,
+    *,
+    side: str = "outside",
+    face_selector: str = ">Z",
+) -> "cq.Workplane":
+    """Contour an arbitrary profile; current B-Rep cut uses profile pocket CSG."""
+    return profile_pocket_cut(shape, profile, depth, face_selector=face_selector, through=False)
+
+
+def machine_around_profile_cut(
+    shape: "cq.Workplane",
+    profile,
+    height: float,
+    *,
+    face_selector: str = ">Z",
+    margin: float = 5.0,
+) -> "cq.Workplane":
+    """Remove a frame around a retained profile island."""
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+    xmin, ymin, xmax, ymax = _profile_bounds(profile)
+    outer_l = max(xmax - xmin + 2 * margin, 1.0)
+    outer_w = max(ymax - ymin + 2 * margin, 1.0)
+    cx = (xmin + xmax) / 2.0
+    cy = (ymin + ymax) / 2.0
+    wp = shape.faces(face_selector).workplane().center(cx, cy).rect(outer_l, outer_w)
+    wp = _draw_profile(wp, profile)
+    return wp.cutBlind(-height)
+
+
+def machine_around_cylinder_cut(
+    shape: "cq.Workplane",
+    diameter: float,
+    height: float,
+    *,
+    cx: float = 0.0,
+    cy: float = 0.0,
+    face_selector: str = ">Z",
+    margin: float = 5.0,
+) -> "cq.Workplane":
+    """Remove a frame around a retained cylindrical boss."""
+    profile = {"diameter": diameter}
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+    outer = diameter + 2.0 * margin
+    wp = shape.faces(face_selector).workplane().center(cx, cy).rect(outer, outer)
+    wp = _draw_profile(wp, profile)
+    return wp.cutBlind(-height)
+
+
+def _edge_selection(shape: "cq.Workplane", selector, *, face_selector: str = ">Z") -> "cq.Workplane":
+    """Resolve lightweight edge selectors to a CadQuery edge selection."""
+    if selector in (None, "all"):
+        return shape.faces(face_selector).edges()
+    if isinstance(selector, str):
+        return shape.faces(face_selector).edges(selector)
+    if isinstance(selector, dict):
+        face = selector.get("face") or selector.get("face_selector") or face_selector
+        edges = shape.faces(face).edges()
+        direction = selector.get("edge_direction") or selector.get("direction")
+        if direction:
+            token = str(direction)
+            if token.upper() in {"X", "Y", "Z"}:
+                token = f"|{token.upper()}"
+            edges = shape.faces(face).edges(token)
+        bbox = selector.get("bbox") or selector.get("box")
+        if bbox:
+            try:
+                from cadquery import selectors as cq_selectors
+                return edges.filter(cq_selectors.BoxSelector(tuple(bbox[0]), tuple(bbox[1])))
+            except Exception:
+                return edges
+        return edges
+    return shape.faces(face_selector).edges()
+
+
+def chamfer_edges(shape: "cq.Workplane", width: float, *, face_selector: str = ">Z", selector=None) -> "cq.Workplane":
     """Apply chamfer to top edges."""
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
-    return shape.faces(face_selector).edges().chamfer(width)
+    return _edge_selection(shape, selector, face_selector=face_selector).chamfer(width)
 
 
-def fillet_edges(shape: "cq.Workplane", radius: float) -> "cq.Workplane":
+def fillet_edges(shape: "cq.Workplane", radius: float, *, face_selector: str = ">Z", selector=None) -> "cq.Workplane":
     """Apply fillet to selected edges."""
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
-    return shape.edges().fillet(radius)
+    return _edge_selection(shape, selector, face_selector=face_selector).fillet(radius)
 
 
 # =============================================================================

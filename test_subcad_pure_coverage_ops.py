@@ -110,4 +110,22 @@ factory_op = create_operation("surface_mill", surface_ref={"id": "patch_1"})
 check(factory_op.to_dict()["operation"] == "surface_mill",
       "create_operation can build surface_mill")
 
+print("\n4. Geometry-backed pure ops remove material ...")
+base = Stock.rectangular(80, 50, 20)
+base_volume = base.volume
+profile_part = base.profile_pocket(profile, 3.0)
+check(profile_part.volume < base_volume, "profile_pocket changes B-Rep volume")
+cutout_part = base.profile_cutout(profile, depth=4.0)
+check(cutout_part.volume < base_volume, "profile_cutout changes B-Rep volume")
+contour_part = base.profile_contour(profile, 3.0)
+check(contour_part.volume < base_volume, "profile_contour changes B-Rep volume")
+around_profile = base.machine_around_profile(profile, 3.0)
+check(around_profile.volume < base_volume, "machine_around_profile removes surrounding material")
+around_cylinder = base.machine_around_cylinder(10.0, 3.0)
+check(around_cylinder.volume < base_volume, "machine_around_cylinder removes surrounding material")
+selected_chamfer = base.edge_chamfer({"face": ">Z", "edge_direction": "X"}, 0.5)
+check(selected_chamfer.volume < base_volume, "edge_chamfer changes selected-edge geometry")
+selected_fillet = base.edge_fillet({"face": ">Z", "edge_direction": "X"}, 0.5)
+check(selected_fillet.volume <= base_volume, "edge_fillet executes without adding material")
+
 print("\nALL PASSED")

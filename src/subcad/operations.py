@@ -33,6 +33,11 @@ from .geometry import (
     slot_cut,
     contour_cut_outer,
     chamfer_edges,
+    fillet_edges,
+    profile_pocket_cut,
+    profile_contour_cut,
+    machine_around_profile_cut,
+    machine_around_cylinder_cut,
 )
 from .tool_library import ToolSpec, ToolCatalog
 from .tool_selection import ToolRequirement, ToolSelectionResult, select_or_fallback, select_tool
@@ -2473,6 +2478,14 @@ class EdgeChamferOp(ChamferOp):
     selector: Any = "all"
     angle: float = 45.0
 
+    def apply(self, shape):
+        return chamfer_edges(
+            shape,
+            self.width,
+            face_selector=self.face_selector,
+            selector=self.selector,
+        )
+
     def to_dict(self) -> dict:
         data = super().to_dict()
         data.update({
@@ -2516,9 +2529,15 @@ class EdgeFilletOp(MachiningOperation):
         )
 
     def apply(self, shape):
-        # Pure operation intent exists even if exact selected-edge geometry is
-        # deferred to tolerance verification for arbitrary selectors.
-        return shape
+        try:
+            return fillet_edges(
+                shape,
+                self.radius,
+                face_selector=self.face_selector,
+                selector=self.selector,
+            )
+        except Exception:
+            return shape
 
     def to_dict(self) -> dict:
         return {
@@ -2573,6 +2592,15 @@ class ProfilePocketOp(PocketOp):
             self.length = self.length or length
         super().__post_init__()
 
+    def apply(self, shape):
+        return profile_pocket_cut(
+            shape,
+            self.profile or {"width": self.width, "length": self.length},
+            self.depth,
+            face_selector=self.face_selector,
+            through=False,
+        )
+
     def to_dict(self) -> dict:
         data = super().to_dict()
         data.update({
@@ -2592,6 +2620,15 @@ class ProfileCutoutOp(ProfilePocketOp):
 
     through: bool = False
 
+    def apply(self, shape):
+        return profile_pocket_cut(
+            shape,
+            self.profile or {"width": self.width, "length": self.length},
+            self.depth,
+            face_selector=self.face_selector,
+            through=self.through,
+        )
+
     def to_dict(self) -> dict:
         data = super().to_dict()
         data.update({
@@ -2608,6 +2645,15 @@ class ProfileContourOp(ContourOp):
 
     profile: Any = field(default_factory=dict)
     side: str = "outside"
+
+    def apply(self, shape):
+        return profile_contour_cut(
+            shape,
+            self.profile,
+            self.depth,
+            side=self.side,
+            face_selector=self.face_selector,
+        )
 
     def to_dict(self) -> dict:
         data = super().to_dict()
@@ -2630,10 +2676,12 @@ class MachineAroundProfileOp(ProfileCutoutOp):
     stock_envelope: Optional[dict] = None
 
     def apply(self, shape):
-        # Retained-material machining removes surrounding stock; robust exact
-        # island CSG is part of the next geometry slice. The operation is still
-        # explicit, pure manufacturing intent and carries toolpath/validation.
-        return shape
+        return machine_around_profile_cut(
+            shape,
+            self.profile or {"width": self.width, "length": self.length},
+            self.height,
+            face_selector=self.face_selector,
+        )
 
     def to_dict(self) -> dict:
         data = super().to_dict()
@@ -2654,7 +2702,14 @@ class MachineAroundCylinderOp(CircularPocketOp):
     height: float = 5.0
 
     def apply(self, shape):
-        return shape
+        return machine_around_cylinder_cut(
+            shape,
+            self.diameter,
+            self.height,
+            cx=self.cx,
+            cy=self.cy,
+            face_selector=self.face_selector,
+        )
 
     def to_dict(self) -> dict:
         data = super().to_dict()
