@@ -311,7 +311,7 @@ Immediate next implementation targets:
   selected retained-material operations, and related coverage ops; update the
   translator prompt to preserve CadQuery workplane face selectors such as
   `<Z` instead of silently converting underside operations to top-side work.
-- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, and row 62 accepted manifests in future
+- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, and row 80 accepted manifests in future
   accepted-index guarded runs.
 - Done: add Z-band retained-material support and planner evidence for retained
   rib/boss loops and polar arrays.
@@ -346,7 +346,10 @@ Immediate next implementation targets:
   global index 61 with original-STEP trusted mesh score 100.0.
 - Done: add deterministic split-shroud support and accept train global index 62
   with original-STEP trusted mesh score 100.0.
-- Next: run the next accepted-index guarded forward scan after row 62 and pick
+- Done: add deterministic Measures/class L-bracket support and accept train
+  global index 80 with original-STEP trusted mesh score 100.0.
+- Next: implement the related row 83 L-bracket/rarray variant, then run the
+  next accepted-index guarded forward scan.
   the next deterministic feature-family blocker before spending larger live
   batches.
 

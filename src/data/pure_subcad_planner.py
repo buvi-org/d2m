@@ -261,6 +261,9 @@ def build_deterministic_subcad_code(
     split_shroud_code = _deterministic_split_shroud_code(cadquery_code)
     if split_shroud_code:
         return split_shroud_code
+    l_bracket_code = _deterministic_l_bracket_code(cadquery_code)
+    if l_bracket_code:
+        return l_bracket_code
     box_code = _deterministic_box_chamfer_code(cadquery_code)
     if box_code:
         return box_code
@@ -328,6 +331,75 @@ def _deterministic_box_chamfer_code(cadquery_code: str) -> str | None:
             selector = ">Z" if ".faces('>z')" in cadquery_code.lower() or '.faces(">z")' in cadquery_code.lower() else "all_edges"
             sequence.append(f'.edge_chamfer("{selector}", width={width:.6g})')
     return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_l_bracket_code(cadquery_code: str) -> str | None:
+    env = _measure_env(cadquery_code)
+    required = {
+        "horizontal_leg_length",
+        "vertical_leg_length",
+        "leg_width",
+        "thickness",
+        "hole_diameter",
+        "countersink_diameter",
+        "countersink_depth",
+        "hole_spacing",
+    }
+    if not required.issubset(env):
+        return None
+    if "class LBracket" not in cadquery_code or ".cboreHole(" not in cadquery_code:
+        return None
+
+    h = env["horizontal_leg_length"]
+    v = env["vertical_leg_length"]
+    leg = env["leg_width"]
+    thickness = env["thickness"]
+    if min(h, v, leg, thickness) <= 0:
+        return None
+    x_shift = h / 2.0
+    y_shift = v / 2.0
+    points = [
+        (0.0 - x_shift, 0.0 - y_shift),
+        (h - x_shift, 0.0 - y_shift),
+        (h - x_shift, leg - y_shift),
+        (leg - x_shift, leg - y_shift),
+        (leg - x_shift, v - y_shift),
+        (0.0 - x_shift, v - y_shift),
+    ]
+    stock = f"Stock.rectangular({h:.6g}, {v:.6g}, {thickness:.6g})"
+    sequence: list[str] = [
+        f".profile_cutout({{'type': 'polygon', 'points': {_format_points(points)}}}, through=True)",
+    ]
+    chamfer = env.get("edge_chamfer")
+    if chamfer is not None and chamfer > 0:
+        sequence.append(f'.edge_chamfer("|Z", width={chamfer:.6g})')
+    hole_y = leg - y_shift
+    for hole_x in (
+        h / 2.0 - env["hole_spacing"] / 2.0,
+        h / 2.0 + env["hole_spacing"] / 2.0,
+    ):
+        sequence.append(
+            f".counterbore({env['hole_diameter']:.6g}, "
+            f"{env['countersink_diameter']:.6g}, "
+            f"{env['countersink_depth']:.6g}, through=True, "
+            f"cx={hole_x - x_shift:.6g}, cy={hole_y:.6g})"
+        )
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _measure_env(code_text: str) -> dict[str, float]:
+    env = _numeric_env(code_text)
+    match = re.search(r"measures\s*=\s*Measures\((?P<body>.*?)\)\s*\n", code_text, re.IGNORECASE | re.DOTALL)
+    if not match:
+        return env
+    for arg in _split_args(match.group("body")):
+        if "=" not in arg:
+            continue
+        key, value = arg.split("=", 1)
+        number = _eval_number(value.strip(), env)
+        if number is not None:
+            env[key.strip()] = number
+    return env
 
 
 def _box_stock_from_code(code_text: str) -> dict[str, float] | None:

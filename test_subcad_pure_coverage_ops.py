@@ -319,6 +319,57 @@ check(
 box_chamfer_exec = run_subcad(box_chamfer_subcad)
 check(box_chamfer_exec["success"], "deterministic box-chamfer SubCAD code executes")
 
+l_bracket_code = """
+class LBracket:
+    def __init__(self, workplane, measures):
+        self.model = workplane
+        self.m = measures
+        self.build()
+    def build(self):
+        m = self.m
+        bracket = (
+            cq.Workplane("XY")
+            .moveTo(0, 0)
+            .lineTo(m.horizontal_leg_length, 0)
+            .lineTo(m.horizontal_leg_length, m.leg_width)
+            .lineTo(m.leg_width, m.leg_width)
+            .lineTo(m.leg_width, m.vertical_leg_length)
+            .lineTo(0, m.vertical_leg_length)
+            .close()
+            .extrude(m.thickness)
+        )
+        bracket = bracket.edges("|Z").chamfer(m.edge_chamfer)
+        bracket = bracket.faces(">Z").workplane().pushPoints([
+            (m.horizontal_leg_length / 2 - m.hole_spacing / 2, m.leg_width),
+            (m.horizontal_leg_length / 2 + m.hole_spacing / 2, m.leg_width),
+        ]).cboreHole(m.hole_diameter, m.countersink_diameter, m.countersink_depth)
+        gusset = cq.Workplane("XY").moveTo(0, 0).lineTo(m.gusset_base, 0).lineTo(0, m.gusset_height).close().extrude(m.thickness)
+        self.model = bracket.union(gusset)
+measures = Measures(
+    horizontal_leg_length=60.0,
+    vertical_leg_length=80.0,
+    leg_width=20.0,
+    thickness=8.0,
+    edge_chamfer=1.0,
+    hole_diameter=5.0,
+    countersink_diameter=8.0,
+    countersink_depth=2.0,
+    hole_spacing=30.0,
+    gusset_base=12.0,
+    gusset_height=12.0,
+)
+result = LBracket(cq.Workplane("XY"), measures).model
+"""
+l_bracket_subcad = build_deterministic_subcad_code(l_bracket_code, [])
+check(l_bracket_subcad is not None, "planner builds deterministic L-bracket SubCAD code")
+check(
+    "Stock.rectangular(60, 80, 8)" in l_bracket_subcad
+    and l_bracket_subcad.count(".counterbore(5, 8, 2") == 2,
+    "deterministic L-bracket code preserves profile and counterbores",
+)
+l_bracket_exec = run_subcad(l_bracket_subcad)
+check(l_bracket_exec["success"], "deterministic L-bracket SubCAD code executes")
+
 top_rib_code = """
 plate_length = 80.0
 plate_width = 60.0
