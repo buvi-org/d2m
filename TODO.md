@@ -117,9 +117,9 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 162 recorded by guarded live pilots.
+- Matched original-STEP-verified pairs: 169 recorded by guarded live pilots.
   - Accepted train global indexes:
-    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 342, 381, 415, 438, 503, 697, 698, 702, 870, 1126, 1170, 1173, 1278, 1293, 1458, 1479, 1536, 1595, 1647, 1823, 1906, 2162, 2209, 2257, 2288, 2450, 2896, 3047, 3175, 3231, 3414, 3487, 3777, 3787, 3966, 4065, 4081, 4227, 4559, 4562, 4811, 5248, 5435, 5442, 5606, 5713, 5983, 6026, 6034, 6207, 6326, 6458, 6477, 6481, 6510, 6623, 7391, 7409, 7434, 7479, 7685, 8273, 9733, 9749, 9752, 9786, 9787, 9794, 9795, 9802, 9803, 9807, 9814, 9856, 9870, 9930, 9980, 10672, 10814, 11218, 11960, 12736, 13744, 14131, 14381, 14664, 14959, 15058, 15062, 15554, 16239, 16491, 16557, 16589, 16624, 16813, 16824, 17567, 17758, 17804, 17826, 18325, 19094, 19463, 20659, 21106, 22599, 22770, 22871, 23979, 24356, 24534, 25542, 25668, 26825, 28928, 30665, 31041, 31061, 31070`.
+    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 342, 381, 415, 438, 503, 697, 698, 702, 870, 1126, 1170, 1173, 1278, 1293, 1458, 1479, 1536, 1595, 1647, 1823, 1906, 2162, 2209, 2257, 2288, 2450, 2896, 3047, 3175, 3231, 3414, 3487, 3777, 3787, 3966, 4065, 4081, 4227, 4559, 4562, 4811, 5248, 5435, 5442, 5606, 5713, 5983, 6026, 6034, 6207, 6326, 6458, 6477, 6481, 6510, 6623, 7391, 7409, 7434, 7479, 7685, 8273, 9733, 9749, 9752, 9786, 9787, 9794, 9795, 9802, 9803, 9807, 9814, 9856, 9870, 9930, 9980, 10672, 10814, 11218, 11960, 12736, 13744, 14131, 14381, 14664, 14959, 15058, 15062, 15554, 16239, 16491, 16557, 16589, 16624, 16813, 16824, 17567, 17758, 17804, 17826, 18325, 19094, 19463, 20659, 21106, 22599, 22770, 22871, 23979, 24356, 24534, 25542, 25668, 26825, 28928, 30665, 31041, 31061, 31070, 31657, 31733, 31759, 31811, 31815, 32032, 32253`.
   - Latest accepted rows include train global indexes 342, 1536, 1595, 1647,
     1823, 1906, 2162, 2209, 2257, 2288, 2450, 3047, 3175, 3231, 3487,
     3777, 4081, 4227, 5606, 1479, 2896, 3414, 3787, 3966, 4065,
@@ -132,7 +132,7 @@ Latest measured dry scan:
     16557, 16589, 16624, 16813, 16824, 17567, 17758, 17804, 17826,
     18325, 19094, 19463, 20659, 21106, 22599, 22770, 22871, 23979,
     24356, 24534, 25542, 25668, 26825, 28928, 30665, 31041, 31061,
-    and 31070,
+    31070, 31657, 31733, 31759, 31811, 31815, 32032, and 32253,
     manifests `runs/zero_to_cad_live_pilots/deterministic_flange_collar_row342_probe/attempts.jsonl`,
     `runs/zero_to_cad_live_pilots/deterministic_row1536_probe/attempts.jsonl`,
     `runs/zero_to_cad_live_pilots/deterministic_profile_row1595_probe/attempts.jsonl`,
@@ -313,7 +313,7 @@ Immediate next implementation targets:
 - Done: prevent outside-stock retained islands from cutting away the whole
   stock, and reinforce literal CadQuery `translate((x, y, z))` coordinate use
   in the translator prompt.
-- Next: continue accepted-index guarded forward scans from the 162 accepted
+- Next: continue accepted-index guarded forward scans from the 169 accepted
   pairs, preserving strict stop conditions and fixing deterministic blockers
   before spending larger live batches.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
@@ -495,6 +495,9 @@ Immediate next implementation targets:
 - Done: add deterministic box plus top-rect cutBlind handling with
   SimpleNamespace/Measures numeric resolution; accept train global index 31070
   after preserving the CadQuery positive-cutBlind no-op behavior.
+- Done: accept train global indexes 31657, 31733, 31759, 31811, 31815,
+  32032, and 32253 with existing deterministic chamfer, counterbore, and
+  profile builders.
 - Blocked rows: train global indexes 6471 and 9028 are plannable and
   executable, but strict original-STEP comparison rejects them; treat 6471 as
   a patterned retained/profile mismatch and 9028 as a scoped side-face chamfer
