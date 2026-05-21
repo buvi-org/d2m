@@ -1417,30 +1417,133 @@ def _assigned_points_literal(code_text: str, name: str, env: dict[str, float]) -
         return []
     value_env: dict[str, Any] = {}
     for node in tree.body:
-        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
-            continue
+        _execute_point_builder_statement(node, env, value_env)
+    assigned = value_env.get(name)
+    if not isinstance(assigned, list):
+        return []
+    points: list[tuple[float, float]] = []
+    for item in assigned:
+        if (
+            isinstance(item, (list, tuple))
+            and len(item) >= 2
+            and isinstance(item[0], (int, float))
+            and isinstance(item[1], (int, float))
+        ):
+            points.append((float(item[0]), float(item[1])))
+    return points
+
+
+def _execute_point_builder_statement(
+    node: ast.AST,
+    env: dict[str, float],
+    value_env: dict[str, Any],
+) -> None:
+    if isinstance(node, ast.Assign) and len(node.targets) == 1:
         target = node.targets[0]
         if not isinstance(target, ast.Name):
-            continue
+            return
         value = _eval_ast_value(node.value, env, value_env)
         if value is not None:
             value_env[target.id] = value
-        if target.id != name:
-            continue
-        assigned = value_env.get(name)
-        if not isinstance(assigned, list):
-            return []
-        points: list[tuple[float, float]] = []
-        for item in assigned:
-            if (
-                isinstance(item, (list, tuple))
-                and len(item) >= 2
-                and isinstance(item[0], (int, float))
-                and isinstance(item[1], (int, float))
-            ):
-                points.append((float(item[0]), float(item[1])))
-        return points
-    return []
+        return
+
+    if isinstance(node, ast.AugAssign) and isinstance(node.target, ast.Name):
+        current = _eval_ast_number_scoped(node.target, env, value_env)
+        delta = _eval_ast_number_scoped(node.value, env, value_env)
+        if current is None or delta is None:
+            return
+        if isinstance(node.op, ast.Add):
+            value_env[node.target.id] = current + delta
+        elif isinstance(node.op, ast.Sub):
+            value_env[node.target.id] = current - delta
+        elif isinstance(node.op, ast.Mult):
+            value_env[node.target.id] = current * delta
+        elif isinstance(node.op, ast.Div) and delta:
+            value_env[node.target.id] = current / delta
+        return
+
+    if isinstance(node, ast.Expr):
+        call = node.value
+        if (
+            isinstance(call, ast.Call)
+            and isinstance(call.func, ast.Attribute)
+            and call.func.attr == "append"
+            and isinstance(call.func.value, ast.Name)
+            and len(call.args) == 1
+        ):
+            target = value_env.get(call.func.value.id)
+            if not isinstance(target, list):
+                return
+            value = _eval_ast_value(call.args[0], env, value_env)
+            if value is not None:
+                target.append(value)
+        return
+
+    if isinstance(node, ast.For) and isinstance(node.target, ast.Name):
+        values = _eval_range_values(node.iter, env, value_env)
+        if values is None:
+            return
+        for value in values:
+            value_env[node.target.id] = float(value)
+            for child in node.body:
+                _execute_point_builder_statement(child, env, value_env)
+        return
+
+    if isinstance(node, ast.If):
+        branch = node.body if _eval_ast_condition(node.test, env, value_env) else node.orelse
+        for child in branch:
+            _execute_point_builder_statement(child, env, value_env)
+
+
+def _eval_range_values(
+    node: ast.AST,
+    env: dict[str, float],
+    value_env: dict[str, Any],
+) -> list[int] | None:
+    if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name) or node.func.id != "range":
+        return None
+    values = [_eval_ast_number_scoped(arg, env, value_env) for arg in node.args]
+    if not values or any(value is None for value in values):
+        return None
+    numbers = [int(value) for value in values if value is not None]
+    if len(numbers) == 1:
+        start, stop, step = 0, numbers[0], 1
+    elif len(numbers) == 2:
+        start, stop, step = numbers[0], numbers[1], 1
+    elif len(numbers) == 3:
+        start, stop, step = numbers
+    else:
+        return None
+    if step == 0:
+        return None
+    range_values = list(range(start, stop, step))
+    return range_values if len(range_values) <= 200 else None
+
+
+def _eval_ast_condition(
+    node: ast.AST,
+    env: dict[str, float],
+    value_env: dict[str, Any],
+) -> bool:
+    if isinstance(node, ast.Compare) and len(node.ops) == 1 and len(node.comparators) == 1:
+        left = _eval_ast_number_scoped(node.left, env, value_env)
+        right = _eval_ast_number_scoped(node.comparators[0], env, value_env)
+        if left is None or right is None:
+            return False
+        op = node.ops[0]
+        if isinstance(op, ast.Lt):
+            return left < right
+        if isinstance(op, ast.LtE):
+            return left <= right
+        if isinstance(op, ast.Gt):
+            return left > right
+        if isinstance(op, ast.GtE):
+            return left >= right
+        if isinstance(op, ast.Eq):
+            return abs(left - right) < 1e-9
+        if isinstance(op, ast.NotEq):
+            return abs(left - right) >= 1e-9
+    return False
 
 
 def _line_chain_points(code_text: str, env: dict[str, float]) -> list[tuple[float, float]]:
@@ -1930,7 +2033,7 @@ def _eval_ast_value(
     env: dict[str, float],
     value_env: dict[str, Any],
 ) -> Any:
-    number = _eval_ast_number(node, env)
+    number = _eval_ast_number_scoped(node, env, value_env)
     if number is not None:
         return number
     if isinstance(node, ast.Name):
@@ -1941,6 +2044,49 @@ def _eval_ast_value(
     if isinstance(node, ast.List):
         values = [_eval_ast_value(item, env, value_env) for item in node.elts]
         return values if all(value is not None for value in values) else None
+    return None
+
+
+def _eval_ast_number_scoped(
+    node: ast.AST,
+    env: dict[str, float],
+    value_env: dict[str, Any],
+) -> float | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return float(node.value)
+    if isinstance(node, ast.Name):
+        value = value_env.get(node.id)
+        if isinstance(value, (int, float)):
+            return float(value)
+        return env.get(node.id)
+    if isinstance(node, ast.UnaryOp):
+        value = _eval_ast_number_scoped(node.operand, env, value_env)
+        if value is None:
+            return None
+        if isinstance(node.op, ast.USub):
+            return -value
+        if isinstance(node.op, ast.UAdd):
+            return value
+    if isinstance(node, ast.BinOp):
+        left = _eval_ast_number_scoped(node.left, env, value_env)
+        right = _eval_ast_number_scoped(node.right, env, value_env)
+        if left is None or right is None:
+            return None
+        if isinstance(node.op, ast.Add):
+            return left + right
+        if isinstance(node.op, ast.Sub):
+            return left - right
+        if isinstance(node.op, ast.Mult):
+            return left * right
+        if isinstance(node.op, ast.Div):
+            return left / right if right else None
+        if isinstance(node.op, ast.FloorDiv):
+            return math.floor(left / right) if right else None
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {"int", "float"} and node.args:
+        value = _eval_ast_number_scoped(node.args[0], env, value_env)
+        if value is None:
+            return None
+        return float(int(value)) if node.func.id == "int" else float(value)
     return None
 
 

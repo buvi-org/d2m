@@ -566,6 +566,40 @@ check(
 mirrored_profile_exec = run_subcad(mirrored_profile_subcad)
 check(mirrored_profile_exec["success"], "deterministic mirrored profile SubCAD code executes")
 
+loop_points_profile_code = """
+import cadquery as cq
+base_width = 60.0
+base_depth = 30.0
+base_height = 10.0
+fin_height = 4.0
+fin_thickness = 3.0
+num_fins = 5
+gap = (base_width - num_fins * fin_thickness) / (num_fins + 1)
+points = [(0, 0), (0, base_height)]
+x = 0.0
+for i in range(num_fins):
+    x += gap
+    points.append((x, base_height))
+    points.append((x, base_height + fin_height))
+    x += fin_thickness
+    points.append((x, base_height + fin_height))
+    points.append((x, base_height))
+x += gap
+points.append((base_width, base_height))
+points.append((base_width, 0))
+result = cq.Workplane("XZ").polyline(points).close().extrude(base_depth)
+"""
+loop_points_profile_subcad = build_deterministic_subcad_code(loop_points_profile_code, [])
+check(loop_points_profile_subcad is not None, "planner builds deterministic loop-points profile code")
+check(
+    "Stock.rectangular(60, 14, 30)" in loop_points_profile_subcad
+    and "(-22.5, 3)" in loop_points_profile_subcad
+    and "(-19.5, 7)" in loop_points_profile_subcad,
+    "deterministic loop-points profile code resolves append-built point lists",
+)
+loop_points_profile_exec = run_subcad(loop_points_profile_subcad)
+check(loop_points_profile_exec["success"], "deterministic loop-points profile SubCAD code executes")
+
 arc_profile_code = """
 import cadquery as cq
 arm_length = 80
