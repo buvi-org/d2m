@@ -277,6 +277,9 @@ def build_deterministic_subcad_code(
     annular_rib_code = _deterministic_cylindrical_annular_rib_code(cadquery_code)
     if annular_rib_code:
         return annular_rib_code
+    grid_boss_code = _deterministic_cylindrical_grid_boss_code(cadquery_code)
+    if grid_boss_code:
+        return grid_boss_code
     return None
 
 
@@ -505,6 +508,86 @@ def _deterministic_cylindrical_annular_rib_code(cadquery_code: str) -> str | Non
     if chamfer is not None:
         sequence.append(f'.edge_chamfer(">Z", width={chamfer:.6g})')
     return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_cylindrical_grid_boss_code(cadquery_code: str) -> str | None:
+    cylinder = _cylindrical_stock_from_circle_extrude(cadquery_code)
+    grid = _rarray_circle_bosses_from_code(cadquery_code)
+    if not cylinder or not grid:
+        return None
+    stock = f"Stock.cylindrical({cylinder['diameter']:.6g}, {cylinder['height'] + grid['height']:.6g})"
+    sequence: list[str] = []
+    blind = _cut_cylinder_assignment_from_code(cadquery_code)
+    if blind:
+        sequence.append(
+            f".circular_pocket({blind['diameter']:.6g}, depth={blind['depth']:.6g}, "
+            "cx=0.0, cy=0.0, base_height=0.0)"
+        )
+    sequence.extend(_polar_hole_drill_calls(cadquery_code, skip_diameter=blind.get("diameter") if blind else None))
+    chamfer = _first_call_number(cadquery_code, "chamfer", _numeric_env(cadquery_code))
+    if chamfer is not None and chamfer > 0:
+        relief_height = 0.8 * chamfer
+        relief_diameter = max(cylinder["diameter"] - 2.0 * chamfer, 0.0)
+        relief_base = max(cylinder["height"] - relief_height, 0.0)
+        sequence.append(
+            f".machine_around_cylinder({relief_diameter:.6g}, height={relief_height:.6g}, "
+            f"cx=0.0, cy=0.0, base_height={relief_base:.6g})"
+        )
+    sequence.append(_suggest_machine_around_profiles(grid["profiles"], grid["height"], cylinder["height"]))
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _rarray_circle_bosses_from_code(code_text: str) -> dict[str, Any] | None:
+    env = _numeric_env(code_text)
+    match = re.search(
+        r"\.rarray\((?P<rarray>[^)]*)\)\s*\.circle\((?P<circle>[^)]*)\)\s*\.extrude\((?P<height>[^)]*)\)",
+        code_text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if not match:
+        return None
+    args = _split_args(match.group("rarray"))
+    if len(args) < 4:
+        return None
+    x_spacing = _eval_number(args[0], env)
+    y_spacing = _eval_number(args[1], env)
+    cols = _eval_number(args[2], env)
+    rows = _eval_number(args[3], env)
+    radius = _eval_number(match.group("circle"), env)
+    height = _eval_number(match.group("height"), env)
+    if None in {x_spacing, y_spacing, cols, rows, radius, height}:
+        return None
+    if cols <= 0 or rows <= 0 or cols > 100 or rows > 100 or radius <= 0 or height <= 0:
+        return None
+    profiles: list[dict[str, float | str]] = []
+    for ix in range(int(cols)):
+        x = (ix - (cols - 1.0) / 2.0) * x_spacing
+        for iy in range(int(rows)):
+            y = (iy - (rows - 1.0) / 2.0) * y_spacing
+            profiles.append({"type": "circle", "diameter": 2.0 * radius, "cx": x, "cy": y})
+    return {"profiles": profiles, "height": height}
+
+
+def _cut_cylinder_assignment_from_code(code_text: str) -> dict[str, float] | None:
+    env = _numeric_env(code_text)
+    match = re.search(
+        r"(?P<name>\w+)\s*=\s*\(\s*cq\.workplane\([^)]*\)\s*\.circle\((?P<radius>[^)]*)\)\s*\.extrude\((?P<depth>[^)]*)\)\s*\)",
+        code_text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    while match:
+        name = match.group("name")
+        if f".cut({name})" in code_text:
+            radius = _eval_number(match.group("radius"), env)
+            depth = _eval_number(match.group("depth"), env)
+            if radius is not None and depth is not None and radius > 0 and depth > 0:
+                return {"diameter": 2.0 * radius, "depth": depth}
+        match = re.search(
+            r"(?P<name>\w+)\s*=\s*\(\s*cq\.workplane\([^)]*\)\s*\.circle\((?P<radius>[^)]*)\)\s*\.extrude\((?P<depth>[^)]*)\)\s*\)",
+            code_text[match.end():],
+            re.IGNORECASE | re.DOTALL,
+        )
+    return None
 
 
 def _annular_rib_from_code(code_text: str) -> dict[str, float] | None:

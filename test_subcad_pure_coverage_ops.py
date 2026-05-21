@@ -459,6 +459,48 @@ check("base_height=1.5" in annular_rib_subcad,
 annular_rib_exec = run_subcad(annular_rib_subcad)
 check(annular_rib_exec["success"], "deterministic annular-rib SubCAD code executes")
 
+grid_boss_code = """
+outer_diameter = 80.0
+plate_thickness = 8.0
+central_hole_diameter = 30.0
+blind_hole_depth = 5.0
+vent_hole_diameter = 8.0
+vent_hole_radius = 30.0
+emboss_diameter = 5.0
+emboss_height = 2.0
+emboss_grid_rows = 5
+emboss_grid_cols = 5
+emboss_spacing = 10.0
+edge_chamfer = 1.0
+base = cq.Workplane("XY").circle(outer_diameter / 2).extrude(plate_thickness)
+blind = cq.Workplane("XY").circle(central_hole_diameter / 2).extrude(blind_hole_depth)
+base = base.cut(blind)
+base = (
+    base.faces(">Z").workplane()
+    .polarArray(count=4, startAngle=0, angle=360, radius=vent_hole_radius)
+    .hole(vent_hole_diameter)
+)
+base = base.edges(">Z").chamfer(edge_chamfer)
+emboss = (
+    base.faces(">Z").workplane()
+    .rarray(emboss_spacing, emboss_spacing, emboss_grid_cols, emboss_grid_rows, center=True)
+    .circle(emboss_diameter / 2)
+    .extrude(emboss_height)
+)
+result = base.union(emboss)
+"""
+grid_boss_subcad = build_deterministic_subcad_code(grid_boss_code, [])
+check(grid_boss_subcad is not None, "planner builds deterministic cylindrical grid-boss SubCAD code")
+check(
+    "Stock.cylindrical(80, 10)" in grid_boss_subcad
+    and grid_boss_subcad.count("'type': 'circle'") == 25,
+    "deterministic grid-boss code preserves stock and 5x5 boss array",
+)
+check("machine_around_cylinder(78, height=0.8" in grid_boss_subcad,
+      "deterministic grid-boss code adds cylindrical chamfer relief")
+grid_boss_exec = run_subcad(grid_boss_subcad)
+check(grid_boss_exec["success"], "deterministic cylindrical grid-boss SubCAD code executes")
+
 
 print("\n2. Fluent pure operation API serializes process-plan records ...")
 profile = {"type": "polygon", "points": [(-10, -5), (10, -5), (12, 0), (10, 5), (-10, 5)]}
