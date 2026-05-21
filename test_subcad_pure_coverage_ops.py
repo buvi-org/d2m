@@ -501,6 +501,39 @@ check("machine_around_cylinder(78, height=0.8" in grid_boss_subcad,
 grid_boss_exec = run_subcad(grid_boss_subcad)
 check(grid_boss_exec["success"], "deterministic cylindrical grid-boss SubCAD code executes")
 
+washer_code = """
+outer_diameter = 80.0
+inner_diameter = 30.0
+thickness = 6.0
+mounting_hole_diameter = 5.0
+mount_radius = outer_diameter/2 - 8.0
+chamfer_dist = 0.7
+base = (
+    cq.Workplane("XY")
+    .circle(outer_diameter/2)
+    .circle(inner_diameter/2)
+    .extrude(thickness)
+)
+base = (
+    base.faces(">Z").workplane()
+    .polarArray(radius=mount_radius, count=4, startAngle=0, angle=360)
+    .hole(mounting_hole_diameter)
+)
+base = base.edges().chamfer(chamfer_dist)
+result = base
+"""
+washer_subcad = build_deterministic_subcad_code(washer_code, [])
+check(washer_subcad is not None, "planner builds deterministic cylindrical washer SubCAD code")
+check(
+    "Stock.cylindrical(80, 6)" in washer_subcad
+    and ".drill(30, through=True, cx=0.0, cy=0.0)" in washer_subcad,
+    "deterministic washer code preserves outer and inner diameters",
+)
+check(".edge_chamfer(\"all_edges\", width=0.7)" in washer_subcad,
+      "deterministic washer code preserves global chamfer")
+washer_exec = run_subcad(washer_subcad)
+check(washer_exec["success"], "deterministic cylindrical washer SubCAD code executes")
+
 
 print("\n2. Fluent pure operation API serializes process-plan records ...")
 profile = {"type": "polygon", "points": [(-10, -5), (10, -5), (12, 0), (10, 5), (-10, 5)]}

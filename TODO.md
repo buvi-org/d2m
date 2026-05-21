@@ -311,7 +311,7 @@ Immediate next implementation targets:
   selected retained-material operations, and related coverage ops; update the
   translator prompt to preserve CadQuery workplane face selectors such as
   `<Z` instead of silently converting underside operations to top-side work.
-- Done: include row 23, row 29, row 31, row 34, row 42, row 44, and row 45 accepted manifests in future
+- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, and row 46 accepted manifests in future
   accepted-index guarded runs.
 - Done: add Z-band retained-material support and planner evidence for retained
   rib/boss loops and polar arrays.
@@ -326,7 +326,9 @@ Immediate next implementation targets:
   original-STEP trusted slice score 100.0.
 - Done: accept train global index 45 via deterministic cylindrical grid-boss
   SubCAD preflight with original-STEP trusted slice score 97.5.
-- Next: run the next accepted-index guarded forward scan after row 45 and pick
+- Done: accept train global index 46 via deterministic cylindrical washer /
+  polar-hole SubCAD preflight with original-STEP trusted slice score 98.3.
+- Next: run the next accepted-index guarded forward scan after row 46 and pick
   the next deterministic feature-family blocker before spending larger live
   batches.
 

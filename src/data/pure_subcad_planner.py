@@ -280,6 +280,9 @@ def build_deterministic_subcad_code(
     grid_boss_code = _deterministic_cylindrical_grid_boss_code(cadquery_code)
     if grid_boss_code:
         return grid_boss_code
+    washer_code = _deterministic_cylindrical_washer_code(cadquery_code)
+    if washer_code:
+        return washer_code
     return None
 
 
@@ -535,6 +538,44 @@ def _deterministic_cylindrical_grid_boss_code(cadquery_code: str) -> str | None:
         )
     sequence.append(_suggest_machine_around_profiles(grid["profiles"], grid["height"], cylinder["height"]))
     return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_cylindrical_washer_code(cadquery_code: str) -> str | None:
+    washer = _washer_stock_from_code(cadquery_code)
+    if not washer:
+        return None
+    stock = f"Stock.cylindrical({washer['outer_diameter']:.6g}, {washer['height']:.6g})"
+    sequence = [
+        f".drill({washer['inner_diameter']:.6g}, through=True, cx=0.0, cy=0.0)",
+    ]
+    sequence.extend(_polar_hole_drill_calls(cadquery_code, skip_diameter=washer["inner_diameter"]))
+    chamfer = _first_call_number(cadquery_code, "chamfer", _numeric_env(cadquery_code))
+    if chamfer is not None:
+        sequence.append(f'.edge_chamfer("all_edges", width={chamfer:.6g})')
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _washer_stock_from_code(code_text: str) -> dict[str, float] | None:
+    env = _numeric_env(code_text)
+    match = re.search(
+        r"\.circle\((?P<outer>[^)]*)\)\s*\.circle\((?P<inner>[^)]*)\)\s*\.extrude\((?P<height>[^)]*)\)",
+        code_text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if not match:
+        return None
+    outer = _eval_number(match.group("outer"), env)
+    inner = _eval_number(match.group("inner"), env)
+    height = _eval_number(match.group("height"), env)
+    if outer is None or inner is None or height is None:
+        return None
+    if outer <= inner or inner <= 0 or height <= 0:
+        return None
+    return {
+        "outer_diameter": 2.0 * outer,
+        "inner_diameter": 2.0 * inner,
+        "height": height,
+    }
 
 
 def _rarray_circle_bosses_from_code(code_text: str) -> dict[str, Any] | None:
