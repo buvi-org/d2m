@@ -74,10 +74,26 @@ The hierarchy is:
      reliable simulator/comparison environment plus far more compute/data than
      the current RTX 4090 path can provide alone.
 
+Current next actions:
+
+- Run the next accepted-index guarded forward scan from the latest accepted row
+  and record selected, attempted, executed, matched, failed, unsupported, and
+  remaining-to-goal counts.
+- Classify the next deterministic blocker before spending larger live batches.
+- Maintain an accepted-manifest summary as the source of truth for row counts,
+  latest accepted rows, comparison policy, and rejected/manual-review counts;
+  propagate that summary to README and docs after each accepted slice.
+- Start a separate STEP-only evidence-builder workstream so the eventual model
+  can consume STEP/B-Rep evidence directly instead of depending on CadQuery
+  source text.
+- Close the corpus-capacity gap: 86,923 plannable local rows cannot yield
+  100,000 verified pairs alone, so unsupported families must become plannable
+  or additional original-STEP source rows must be added.
+
 Current baseline:
 
-- Latest pushed implementation commit for the coverage/live-pilot slice:
-  `6f644a2 Expose face selectors for coverage ops`
+- Latest pushed coverage status commit:
+  `e05dbf6 Record deterministic profile rows 1278 1293 1458`
 - Core local tests expected to remain green:
   - `python test_agentic_translator.py`
   - `python test_sim_bridge.py`

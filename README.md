@@ -19,7 +19,7 @@ Initial implemented scope is concentrated on **CNC/subtractive manufacturing**. 
 Current STEP-to-SubCAD objective: build a training/evaluation set of at least
 100,000 original-STEP-verified Zero-to-CAD pairs for a model/workflow that
 generates executable pure SubCAD from STEP evidence. The accepted-pair count is
-22; the pure planner can currently queue 86,923 plannable rows out of 100,516
+46; the pure planner can currently queue 86,923 plannable rows out of 100,516
 local rows. Planner coverage is not success. A row counts only after generated
 pure SubCAD executes, emits the manufacturing artifacts, and its generated STEP
 matches the original Zero-to-CAD `model.step` under the trusted comparison

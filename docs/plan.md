@@ -324,7 +324,7 @@ Active next slice:
 
 - Run guarded feature-family batches with explicit attempt, execution, match,
   failure, unsupported, and remaining-to-goal counts.
-- Preserve accepted-index manifests so the 22 verified rows count toward future
+- Preserve accepted-index manifests so the 46 verified rows count toward future
   runs without re-spending live translator calls.
 - Harden retained rib/boss, bottom-face, and side-face setup fidelity while
   keeping side-face additive gussets manual-review/unsupported until oriented
@@ -334,10 +334,10 @@ Active next slice:
   grid-boss row 45, washer/polar-hole row 46, circular vent plate row 47,
   no-op-aware star/radial-pocket plate row 49, top-chamfer box row 50,
   top-chamfer box row 57, hollow shell-cover row 58, filleted cage row 61,
-  split shroud row 62, and L-bracket/counterbore row 80 against their original
-  STEP
-  targets; the next deterministic target should be chosen from the next guarded
-  forward scan after row 80.
+  split shroud row 62, L-bracket/counterbore row 80, and later deterministic
+  profile rows through row 1458 against their original STEP targets; the next
+  deterministic target should be chosen from the next accepted-index guarded
+  forward scan after the latest verified row.
 - Keep accepted programs pure SubCAD: no hybrid/imported opaque geometry, no
   direct CadQuery reconstruction, and no skipped unsupported features.
 
