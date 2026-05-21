@@ -204,12 +204,15 @@ Immediate next implementation targets:
 - Done: rerun the edge-treatment retry batch; accepted row 14 and isolated row
   13 as a retained-material placement/union geometry gap rather than an edge
   treatment crash.
+- Done: add retained-material placement support (`cx`, `cy`, explicit
+  stock_envelope) and translator prompt rules for construction-only internal
+  unions.
 - Next: scale the hole/retained-material pilot from 1 accepted pair to a small
   guarded batch of 10-25 accepted/attempted rows, preserving strict stop
   conditions.
-- Next: add retained-material placement support (`cx`, `cy`, explicit
-  stock_envelope) so side bosses/catches can be represented without collapsing
-  the whole stock.
+- Next: retry row 13 and the next filtered hole-family rows; if row 13 still
+  fails, classify the remaining issue as union/construction-feature detection
+  rather than API placement.
 
 ## SubCAD Shop-Floor v1
 

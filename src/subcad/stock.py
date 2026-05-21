@@ -906,8 +906,16 @@ class Stock:
 
     def machine_around_profile(self, profile, height: float, *,
                                stock_envelope=None,
+                               cx: Optional[float] = None,
+                               cy: Optional[float] = None,
                                tool: Optional[ToolSpec] = None) -> "Stock":
         from .operations import MachineAroundProfileOp
+        if isinstance(profile, dict) and (cx is not None or cy is not None):
+            profile = dict(profile)
+            if cx is not None:
+                profile["cx"] = cx
+            if cy is not None:
+                profile["cy"] = cy
         width, length = _profile_bounds_for_stock(profile)
         return self._apply_op(MachineAroundProfileOp(
             profile=profile, width=width, length=length, depth=height,

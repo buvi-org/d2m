@@ -94,6 +94,16 @@ expected_rib_volume = 70.0 * 20.0 * 6.0 + 40.0 * 20.0 * 12.0
 check(abs(rib.volume - expected_rib_volume) < 1.0,
       "machine_around_profile cuts full stock envelope around rectangular rib")
 
+offset_rib = rib_stock.machine_around_profile(
+    {"type": "rib", "length": 20.0, "width": 10.0},
+    4.0,
+    cx=15.0,
+    cy=-2.0,
+    stock_envelope={"length": 70.0, "width": 20.0},
+)
+check(offset_rib.volume < rib_stock.volume,
+      "machine_around_profile accepts explicit cx/cy placement")
+
 island_rib = rib_stock.profile_pocket(
     {"type": "rect", "length": 70.0, "width": 20.0},
     12.0,

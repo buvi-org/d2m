@@ -244,6 +244,10 @@ check("do not narrow it" in prompt,
       "user prompt prevents all-edge chamfer from becoming top-only")
 check('edge_chamfer("|Z"' in prompt,
       "user prompt preserves CadQuery directional edge chamfer selectors")
+check("machine_around_profile" in prompt and "cx=..." in prompt and "cy=..." in prompt,
+      "user prompt allows retained feature placement through cx/cy kwargs")
+check("fully inside" in prompt and "existing base stock" in prompt,
+      "user prompt avoids machining around construction-only internal unions")
 
 
 # =========================================================================

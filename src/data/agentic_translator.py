@@ -175,6 +175,12 @@ Stock instance (immutable/fluent pattern).
    `.edges("|Z").chamfer(...)`, preserve that as `.edge_chamfer("|Z", ...)`.
 7. CadQuery "union" / constructive bosses must become retained-material
    operations: machine_around_profile, machine_around_cylinder, rib, or pad.
+   Preserve boss/rib/pad location with `cx` and `cy`, either inside the profile
+   dict or as `.machine_around_profile(profile, height, cx=..., cy=...)`.
+   Only machine around a unioned feature when it actually protrudes beyond the
+   existing stock/base envelope or rises above the surrounding surface. If a
+   unioned box lies fully inside existing solid stock at the same height, it may
+   be construction-only evidence and should not remove surrounding material.
 8. Use profile_pocket/profile_cutout/profile_contour for polygon, polyline,
    arc-chain, slot-like, and non-rectangular profiles.
 9. Coordinate system: (cx=0, cy=0) is the FACE CENTER (CadQuery convention).
@@ -433,6 +439,10 @@ subtractive program. Remember:
   y_size)` maps to SubCAD `.pocket(width=y_size, length=x_size, ...)`.
   SubCAD `width` always means Y span, and SubCAD `length` always means X span.
   The same convention applies to rectangular profile dicts, ribs, and pads.
+- Preserve retained-feature locations. For a CadQuery union/boss/pad translated
+  to a nonzero X/Y location, pass `cx=...` and `cy=...` or include them in the
+  profile dict. Do not machine around a translated box that is fully inside the
+  existing base stock and does not add material.
 - Preserve CadQuery edge scope. Unqualified `.edges().chamfer(...)` means all
   model edges, so use `.edge_chamfer("all_edges", width=...)`; do not narrow it
   to only the top face unless the CadQuery source explicitly used `.faces(">Z")`.
