@@ -273,6 +273,9 @@ def build_deterministic_subcad_code(
     box_union_profile_code = _deterministic_box_union_profile_code(cadquery_code)
     if box_union_profile_code:
         return box_union_profile_code
+    base_extension_code = _deterministic_base_extension_code(cadquery_code)
+    if base_extension_code:
+        return base_extension_code
     box_code = _deterministic_box_chamfer_code(cadquery_code)
     if box_code:
         return box_code
@@ -413,6 +416,53 @@ def _deterministic_box_union_profile_code(cadquery_code: str) -> str | None:
     return _format_fluent_subcad_code(
         f"Stock.rectangular({width:.6g}, {stock_width:.6g}, {plate:.6g})",
         [f".profile_cutout({{'type': 'polygon', 'points': {_format_points(points)}}}, through=True)"],
+    )
+
+
+def _deterministic_base_extension_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if ".union(" not in lower or lower.count(".extrude(") != 2:
+        return None
+    env = _numeric_env(cadquery_code)
+    if not {"base_width", "base_depth", "base_thickness"}.issubset(env):
+        return None
+    if "straight_ext" not in lower:
+        return None
+    base_width = env["base_width"]
+    base_depth = env["base_depth"]
+    base_thickness = env["base_thickness"]
+    ext_rect = _assigned_rect_dimensions(cadquery_code, "straight_ext", env)
+    ext_height = _assigned_extrude_depth(cadquery_code, "straight_ext")
+    ext_center = _assigned_center(cadquery_code, "straight_ext", env)
+    if not ext_rect or ext_height is None or not ext_center:
+        return None
+    if min(base_width, base_depth, base_thickness, ext_rect[0], ext_rect[1], ext_height) <= 0:
+        return None
+    min_y = min(-base_depth / 2.0, ext_center[1] - ext_rect[1] / 2.0)
+    max_y = max(base_depth / 2.0, ext_center[1] + ext_rect[1] / 2.0)
+    stock_width = max_y - min_y
+    y_shift = (min_y + max_y) / 2.0
+    stock_height = max(base_thickness, ext_height)
+    base_profile = (
+        f"{{'type': 'rectangle', 'length': {base_width:.6g}, "
+        f"'width': {base_depth:.6g}, 'cx': 0, 'cy': {-y_shift:.6g}}}"
+    )
+    extension_profile = (
+        f"{{'type': 'rectangle', 'length': {ext_rect[0]:.6g}, "
+        f"'width': {ext_rect[1]:.6g}, 'cx': {ext_center[0]:.6g}, 'cy': {ext_center[1] - y_shift:.6g}}}"
+    )
+    sequence = [
+        f".machine_around_profiles([{base_profile}, {extension_profile}], "
+        f"height={base_thickness:.6g}, base_height=0.0)",
+    ]
+    if ext_height > base_thickness:
+        sequence.append(
+            f".machine_around_profile({extension_profile}, "
+            f"height={ext_height - base_thickness:.6g}, base_height={base_thickness:.6g})"
+        )
+    return _format_fluent_subcad_code(
+        f"Stock.rectangular({base_width:.6g}, {stock_width:.6g}, {stock_height:.6g})",
+        sequence,
     )
 
 
@@ -1193,6 +1243,58 @@ def _assigned_extrude_depth(code_text: str, name: str) -> float | None:
     if not match:
         return None
     return _eval_number(match.group("depth"), env)
+
+
+def _assigned_rect_dimensions(
+    code_text: str,
+    name: str,
+    env: dict[str, float],
+) -> tuple[float, float] | None:
+    body = _assigned_expression_body(code_text, name)
+    if not body:
+        return None
+    args = _first_call_args(body, "rect")
+    if len(args) < 2:
+        return None
+    length = _eval_number(args[0], env)
+    width = _eval_number(args[1], env)
+    if length is None or width is None:
+        return None
+    return (length, width)
+
+
+def _assigned_center(
+    code_text: str,
+    name: str,
+    env: dict[str, float],
+) -> tuple[float, float] | None:
+    body = _assigned_expression_body(code_text, name)
+    if not body:
+        return None
+    args = _first_call_args(body, "center")
+    if len(args) < 2:
+        return (0.0, 0.0)
+    x = _eval_number(args[0], env)
+    y = _eval_number(args[1], env)
+    if x is None or y is None:
+        return None
+    return (x, y)
+
+
+def _assigned_expression_body(code_text: str, name: str) -> str | None:
+    match = re.search(
+        rf"{re.escape(name)}\s*=\s*\((?P<body>.*?)\)\s*(?:\n\w+\s*=|\nresult\s*=|\Z)",
+        code_text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if match:
+        return match.group("body")
+    match = re.search(
+        rf"{re.escape(name)}\s*=\s*(?P<body>.*?)(?:\n\w+\s*=|\nresult\s*=|\Z)",
+        code_text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    return match.group("body") if match else None
 
 
 def _washer_stock_from_code(code_text: str) -> dict[str, float] | None:
