@@ -335,55 +335,96 @@ def _deterministic_box_chamfer_code(cadquery_code: str) -> str | None:
 
 def _deterministic_l_bracket_code(cadquery_code: str) -> str | None:
     env = _measure_env(cadquery_code)
-    required = {
-        "horizontal_leg_length",
-        "vertical_leg_length",
-        "leg_width",
-        "thickness",
-        "hole_diameter",
-        "countersink_diameter",
-        "countersink_depth",
-        "hole_spacing",
-    }
-    if not required.issubset(env):
-        return None
     if "class LBracket" not in cadquery_code or ".cboreHole(" not in cadquery_code:
+        if "class LBracket" not in cadquery_code or ".rarray(" not in cadquery_code or ".hole(" not in cadquery_code:
+            return None
+
+    if {"horizontal_leg_length", "vertical_leg_length", "leg_width"}.issubset(env):
+        h = env["horizontal_leg_length"]
+        v = env["vertical_leg_length"]
+        leg = env["leg_width"]
+        points_source = [
+            (0.0, 0.0),
+            (h, 0.0),
+            (h, leg),
+            (leg, leg),
+            (leg, v),
+            (0.0, v),
+        ]
+        hole_points = [
+            (h / 2.0 - env.get("hole_spacing", 0.0) / 2.0, leg),
+            (h / 2.0 + env.get("hole_spacing", 0.0) / 2.0, leg),
+        ]
+        hole_diameter = env.get("hole_diameter")
+        cbore_diameter = env.get("countersink_diameter")
+        cbore_depth = env.get("countersink_depth")
+    elif {"leg_length", "leg_height", "thickness"}.issubset(env):
+        h = env["leg_length"]
+        leg = env["thickness"]
+        v = env["leg_height"] + env["thickness"]
+        points_source = [
+            (0.0, 0.0),
+            (leg, 0.0),
+            (leg, env["leg_height"]),
+            (h, env["leg_height"]),
+            (h, v),
+            (0.0, v),
+        ]
+        spacing = env.get("hole_spacing", 0.0)
+        rarray_args = _first_call_args(cadquery_code, "rarray")
+        x_count = _eval_number(rarray_args[2], env) if len(rarray_args) >= 3 else 4.0
+        x_count = x_count or 4.0
+        x_count_int = max(1, int(round(x_count)))
+        # This Zero-to-CAD idiom uses rarray after moveTo on an irregular top face;
+        # CadQuery centers those points around the local workplane origin.
+        hole_points = [
+            (spacing * (index - (x_count_int - 1) / 2.0), 0.0)
+            for index in range(x_count_int)
+        ]
+        hole_diameter = env.get("hole_clearance_diameter")
+        cbore_diameter = None
+        cbore_depth = None
+    else:
         return None
 
-    h = env["horizontal_leg_length"]
-    v = env["vertical_leg_length"]
-    leg = env["leg_width"]
     thickness = env["thickness"]
-    if min(h, v, leg, thickness) <= 0:
+    if min(h, v, leg, thickness) <= 0 or not hole_diameter:
         return None
     x_shift = h / 2.0
     y_shift = v / 2.0
-    points = [
-        (0.0 - x_shift, 0.0 - y_shift),
-        (h - x_shift, 0.0 - y_shift),
-        (h - x_shift, leg - y_shift),
-        (leg - x_shift, leg - y_shift),
-        (leg - x_shift, v - y_shift),
-        (0.0 - x_shift, v - y_shift),
-    ]
+    points = [(x - x_shift, y - y_shift) for x, y in points_source]
     stock = f"Stock.rectangular({h:.6g}, {v:.6g}, {thickness:.6g})"
     sequence: list[str] = [
         f".profile_cutout({{'type': 'polygon', 'points': {_format_points(points)}}}, through=True)",
     ]
+    if {"rib_width", "rib_height"}.issubset(env) and "leg_height" in env:
+        rib_points = [
+            (leg - x_shift, env["leg_height"] - y_shift),
+            (leg + env["rib_width"] - x_shift, env["leg_height"] - y_shift),
+            (leg - x_shift, env["leg_height"] + env["rib_height"] - y_shift),
+        ]
+        if not all(_point_in_polygon(point, points) or _point_on_polygon_edge(point, points) for point in rib_points):
+            sequence.append(
+                f".machine_around_profile({{'type': 'polygon', 'points': {_format_points(rib_points)}}}, "
+                f"{thickness:.6g})"
+            )
     chamfer = env.get("edge_chamfer")
+    if chamfer is None:
+        chamfer = env.get("chamfer")
     if chamfer is not None and chamfer > 0:
         sequence.append(f'.edge_chamfer("|Z", width={chamfer:.6g})')
-    hole_y = leg - y_shift
-    for hole_x in (
-        h / 2.0 - env["hole_spacing"] / 2.0,
-        h / 2.0 + env["hole_spacing"] / 2.0,
-    ):
-        sequence.append(
-            f".counterbore({env['hole_diameter']:.6g}, "
-            f"{env['countersink_diameter']:.6g}, "
-            f"{env['countersink_depth']:.6g}, through=True, "
-            f"cx={hole_x - x_shift:.6g}, cy={hole_y:.6g})"
-        )
+    for hole_x, hole_y in hole_points:
+        cx = hole_x - x_shift
+        cy = hole_y - y_shift
+        if cbore_diameter and cbore_depth:
+            sequence.append(
+                f".counterbore({hole_diameter:.6g}, "
+                f"{cbore_diameter:.6g}, "
+                f"{cbore_depth:.6g}, through=True, "
+                f"cx={cx:.6g}, cy={cy:.6g})"
+            )
+        else:
+            sequence.append(f".drill({hole_diameter:.6g}, through=True, cx={cx:.6g}, cy={cy:.6g})")
     return _format_fluent_subcad_code(stock, sequence)
 
 
@@ -854,6 +895,39 @@ def _deterministic_cylindrical_star_plate_code(cadquery_code: str) -> str | None
 
 def _format_points(points: list[tuple[float, float]]) -> str:
     return "[" + ", ".join(f"({x:.6g}, {y:.6g})" for x, y in points) + "]"
+
+
+def _point_on_polygon_edge(
+    point: tuple[float, float],
+    polygon: list[tuple[float, float]],
+    *,
+    tolerance: float = 1e-6,
+) -> bool:
+    px, py = point
+    for (x1, y1), (x2, y2) in zip(polygon, polygon[1:] + polygon[:1]):
+        dx = x2 - x1
+        dy = y2 - y1
+        cross = (px - x1) * dy - (py - y1) * dx
+        if abs(cross) > tolerance:
+            continue
+        dot = (px - x1) * dx + (py - y1) * dy
+        if -tolerance <= dot <= dx * dx + dy * dy + tolerance:
+            return True
+    return False
+
+
+def _point_in_polygon(point: tuple[float, float], polygon: list[tuple[float, float]]) -> bool:
+    px, py = point
+    inside = False
+    j = len(polygon) - 1
+    for i, (xi, yi) in enumerate(polygon):
+        xj, yj = polygon[j]
+        if ((yi > py) != (yj > py)) and (
+            px < (xj - xi) * (py - yi) / ((yj - yi) or 1e-12) + xi
+        ):
+            inside = not inside
+        j = i
+    return inside
 
 
 def _assigned_extrude_depth(code_text: str, name: str) -> float | None:

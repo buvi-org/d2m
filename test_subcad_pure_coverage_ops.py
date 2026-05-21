@@ -370,6 +370,59 @@ check(
 l_bracket_exec = run_subcad(l_bracket_subcad)
 check(l_bracket_exec["success"], "deterministic L-bracket SubCAD code executes")
 
+l_bracket_rarray_code = """
+class LBracket:
+    def __init__(self, workplane, measures):
+        self.model = workplane
+        self.measures = measures
+        self.build()
+    def build(self):
+        m = self.measures
+        base = (
+            cq.Workplane("XY")
+            .moveTo(0, 0)
+            .lineTo(m.thickness, 0)
+            .lineTo(m.thickness, m.leg_height)
+            .lineTo(m.leg_length, m.leg_height)
+            .lineTo(m.leg_length, m.leg_height + m.thickness)
+            .lineTo(0, m.leg_height + m.thickness)
+            .close()
+            .extrude(m.thickness)
+        )
+        rib = cq.Workplane("XY").moveTo(m.thickness, m.leg_height).lineTo(m.thickness + m.rib_width, m.leg_height).lineTo(m.thickness, m.leg_height + m.rib_height).close().extrude(m.thickness)
+        bracket = base.union(rib)
+        bracket = bracket.faces(">Z").workplane().moveTo(m.thickness + m.hole_margin, m.leg_height + m.thickness / 2).rarray(m.hole_spacing, 0, 4, 1).hole(m.hole_clearance_diameter)
+        bracket = bracket.edges("|Z").chamfer(m.chamfer)
+        self.model = bracket
+measures = Measures(
+    leg_length=80.0,
+    leg_height=60.0,
+    thickness=8.0,
+    rib_width=30.0,
+    rib_height=6.0,
+    hole_clearance_diameter=7.0,
+    hole_margin=10.0,
+    hole_spacing=17.0,
+    chamfer=1.0,
+)
+result = LBracket(cq.Workplane("XY"), measures).model
+"""
+l_bracket_rarray_subcad = build_deterministic_subcad_code(l_bracket_rarray_code, [])
+check(l_bracket_rarray_subcad is not None, "planner builds deterministic L-bracket rarray SubCAD code")
+check(
+    "Stock.rectangular(80, 68, 8)" in l_bracket_rarray_subcad
+    and ".machine_around_profile({'type': 'polygon'" not in l_bracket_rarray_subcad
+    and l_bracket_rarray_subcad.count(".drill(7, through=True") == 4,
+    "deterministic L-bracket rarray code preserves profile, omits absorbed rib, and preserves hole row",
+)
+check(
+    "cx=-31.5, cy=-34" in l_bracket_rarray_subcad
+    and "cx=-14.5, cy=-34" in l_bracket_rarray_subcad,
+    "deterministic L-bracket rarray code matches CadQuery local workplane hole positions",
+)
+l_bracket_rarray_exec = run_subcad(l_bracket_rarray_subcad)
+check(l_bracket_rarray_exec["success"], "deterministic L-bracket rarray SubCAD code executes")
+
 top_rib_code = """
 plate_length = 80.0
 plate_width = 60.0

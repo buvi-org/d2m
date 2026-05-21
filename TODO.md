@@ -101,23 +101,12 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 8 recorded by guarded live pilots:
-  - `hole_pilot_006`, train global index 1, UUID
-    `420cc2e2-e6c4-23e5-092a-6980c7853952`.
-  - `hole_batch_002_filtered`, train global index 8, UUID
-    `c691d510-62b1-786d-6815-d0bbe5ece63c`.
-  - `hole_batch_003_edge_retry`, train global index 14, UUID
-    `715a4e72-092b-d79a-277e-42ff521cef71`.
-  - `hole_batch_004_forward_filtered`, train global index 17, UUID
-    `648b1adc-9964-9e71-82a5-7a4ceeaf0db9`.
-  - `hole_batch_004_forward_filtered`, train global index 18, UUID
-    `9771f32b-c614-f1ed-9533-5ff2617f3471`.
-  - `hole_batch_007_forward_filtered`, train global index 25, UUID
-    `ca8ac443-0284-9d83-4ef9-db3c9b930a47`.
-  - `hole_row29_retry_taper_prompt2`, train global index 29, UUID
-    `e7b057a8-03c2-5b83-99b5-2cce0bb055c5`.
-  - `hole_row23_retry_strict_noop_evidence`, train global index 23, UUID
-    `8562152c-3c84-b0c7-e887-1975fe1a0c4e`.
+- Matched original-STEP-verified pairs: 23 recorded by guarded live pilots.
+  - Accepted train global indexes:
+    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83`.
+  - Latest accepted row: train global index 83, UUID
+    `acf50afa-40ae-7442-ea89-6d05da4a9eb3`, manifest
+    `runs/zero_to_cad_live_pilots/deterministic_l_bracket_row83_probe/attempts.jsonl`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -311,7 +300,7 @@ Immediate next implementation targets:
   selected retained-material operations, and related coverage ops; update the
   translator prompt to preserve CadQuery workplane face selectors such as
   `<Z` instead of silently converting underside operations to top-side work.
-- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, and row 80 accepted manifests in future
+- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, and row 83 accepted manifests in future
   accepted-index guarded runs.
 - Done: add Z-band retained-material support and planner evidence for retained
   rib/boss loops and polar arrays.
@@ -348,10 +337,11 @@ Immediate next implementation targets:
   with original-STEP trusted mesh score 100.0.
 - Done: add deterministic Measures/class L-bracket support and accept train
   global index 80 with original-STEP trusted mesh score 100.0.
-- Next: implement the related row 83 L-bracket/rarray variant, then run the
-  next accepted-index guarded forward scan.
-  the next deterministic feature-family blocker before spending larger live
-  batches.
+- Done: fix CadQuery-centered `rarray` evidence for the related L-bracket
+  variant, omit absorbed/no-op rib unions, and accept train global index 83
+  with original-STEP trusted mesh score 100.0.
+- Next: run the next accepted-index guarded forward scan and fix the next
+  deterministic feature-family blocker before spending larger live batches.
 
 ## SubCAD Shop-Floor v1
 
