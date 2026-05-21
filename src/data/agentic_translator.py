@@ -1441,6 +1441,7 @@ class AgenticTranslator:
         strict_mesh_convergence: bool = False,
         min_mesh_score: float = 95.0,
         mesh_tolerance_mm: float = 0.25,
+        deterministic_only: bool = False,
     ):
         """Initialize the translator.
 
@@ -1462,6 +1463,8 @@ class AgenticTranslator:
                 when rich mesh comparison reports a shape mismatch.
             min_mesh_score: Minimum rich comparison score for strict convergence.
             mesh_tolerance_mm: Maximum SDF deviation for strict convergence.
+            deterministic_only: If True, return deterministic planner output
+                immediately and never spend an LLM repair call.
         """
         self.llm = LLMClient(
             provider=provider,
@@ -1479,6 +1482,7 @@ class AgenticTranslator:
         self.strict_mesh_convergence = strict_mesh_convergence
         self.min_mesh_score = min_mesh_score
         self.mesh_tolerance_mm = mesh_tolerance_mm
+        self.deterministic_only = deterministic_only
         self._system_prompt = build_system_prompt()
 
     def translate(
@@ -1564,6 +1568,23 @@ class AgenticTranslator:
                 )
             if deterministic_match and deterministic_trusted:
                 return deterministic_result
+            if self.deterministic_only:
+                deterministic_result["stop_reason"] = "deterministic_only"
+                return deterministic_result
+
+        if self.deterministic_only:
+            return {
+                "success": False,
+                "subcad_code": None,
+                "attempts": 0,
+                "exec_result": None,
+                "comparison": None,
+                "mesh_comparison": None,
+                "feature_comparison": None,
+                "history": [],
+                "stop_reason": "deterministic_only_no_code",
+                "error": "No deterministic SubCAD code was emitted for this row.",
+            }
 
         # --- Build initial user prompt ---
         user_prompt = build_user_prompt(cq_code, ops_trace, step_path, stock_dims)

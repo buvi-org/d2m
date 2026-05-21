@@ -424,6 +424,7 @@ def make_translation_executor(
     trusted_tolerance_mm: float = 0.25,
     min_mesh_score: float = 95.0,
     volume_only_success: bool = False,
+    deterministic_only: bool = False,
 ) -> RowExecutor:
     """Create a guarded executor backed by the live translator runner.
 
@@ -455,6 +456,7 @@ def make_translation_executor(
         strict_mesh_convergence=not volume_only_success,
         min_mesh_score=min_mesh_score,
         mesh_tolerance_mm=trusted_tolerance_mm,
+        deterministic_only=deterministic_only,
     )
 
     def _execute(row: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
@@ -856,6 +858,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Debug mode only: count volume-ratio matches as successes.",
     )
     parser.add_argument(
+        "--deterministic-only",
+        action="store_true",
+        help="Execute deterministic planner output only; do not spend LLM repair calls after a deterministic miss.",
+    )
+    parser.add_argument(
         "--execute",
         action="store_true",
         help="Attempt selected rows. Requires --executor translator for live AI runs.",
@@ -895,6 +902,7 @@ def main(argv: list[str] | None = None) -> int:
             trusted_tolerance_mm=args.trusted_tolerance_mm,
             min_mesh_score=args.min_mesh_score,
             volume_only_success=args.volume_only_success,
+            deterministic_only=args.deterministic_only,
         )
 
     if args.split == "all":
