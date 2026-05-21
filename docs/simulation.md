@@ -2,7 +2,13 @@
 
 ## Overview
 
-The simulation layer validates that AI-generated process plans are physically feasible and provides reward signals for RL fine-tuning. It must answer: *"Will this plan actually work on a real machine?"*
+The simulation layer validates that AI-generated process plans are physically feasible and provides reward signals for future RL fine-tuning. It must answer: *"Will this plan actually work on a real machine?"*
+
+For the current 100k STEP-to-SubCAD dataset objective, simulation is supporting
+evidence rather than the acceptance authority. A pair counts only after pure
+SubCAD execution and trusted comparison of the generated STEP against the
+original Zero-to-CAD STEP target. Simulation warnings, collision checks, and
+timing/cost estimates travel with accepted rows as quality metadata.
 
 No single existing tool meets all needs. The simulation layer is a **custom integration of multiple libraries** with substantial new code for validation and RL reward computation.
 
@@ -403,6 +409,11 @@ src/simulation/
 ```
 
 ## Development Roadmap
+
+Status note: this roadmap is a design target for the broader simulator/RL
+program. The current repository has passing simulation bridge tests and browser
+review assets, while RL and high-fidelity physics remain deferred until the
+verified STEP-to-SubCAD corpus and comparison loop are reliable.
 
 ### Phase 0 (MVP — 2-3 months solo)
 - [x] Architecture design (this document)

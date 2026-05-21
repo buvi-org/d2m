@@ -6,7 +6,7 @@ d2m is currently centered on a STEP -> pure SubCAD research workflow: generate
 executable subtractive SubCAD, execute it, export a generated STEP, and compare
 that generated STEP against the original source STEP before accepting a pair for
 training or evaluation. The immediate dataset target is 100,000
-original-STEP-verified Zero-to-CAD pairs. Current measured status is 79 accepted
+original-STEP-verified Zero-to-CAD pairs. Current measured status is 97 accepted
 pairs and 86,923 plannable rows out of 100,516 local rows; plannable rows are an
 attempt queue, not verified success.
 
@@ -18,6 +18,30 @@ knowledge graphs, and RL remain staged or aspirational unless explicitly called
 out as implemented elsewhere in this document.
 
 ## High-Level Pipeline
+
+### Active Corpus-Generation Pipeline
+
+This is the current path that gates training data:
+
+```
+Zero-to-CAD row
+  ├─ original model.step          (immutable target)
+  ├─ CadQuery source / ops trace  (feature evidence)
+  ▼
+Pure SubCAD planner + deterministic/agentic generator
+  ▼
+Executable pure SubCAD program
+  ├─ process plan / setup sheet / validation / economics
+  └─ generated STEP
+  ▼
+Trusted comparison against original model.step
+  ▼
+accepted manifest record or failed/unsupported/manual-review record
+```
+
+The older product architecture below remains useful as the long-term
+upload-to-plan direction, but it is not the acceptance authority for the 100k
+training corpus.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -570,6 +594,20 @@ The LLM provides engineering judgment; the symbolic layer ensures physical and s
 
 ## Data Flow for Training
 
+Current verified-pair flow:
+
+```
+Zero-to-CAD original STEP
+  -> STEP/B-Rep and CadQuery feature evidence
+  -> pure SubCAD generator
+  -> SubCAD execution and generated STEP export
+  -> trusted comparison against original STEP
+  -> accepted train/eval manifest or rejected-attempt manifest
+```
+
+The synthetic/GNN/VLM flow below is retained as future/product training context,
+not the active acceptance gate for the 100k verified SubCAD corpus.
+
 ```
                     ┌──────────────────────────┐
                     │  Synthetic Data Generator │
@@ -670,6 +708,9 @@ d2m/
 ```
 
 ## Inference Flow (Production)
+
+Future product path, gated by the verified 100k corpus and reliable comparison
+loop:
 
 ```
 1. User uploads STEP + material + volume → stored in temp/
