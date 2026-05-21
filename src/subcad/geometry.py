@@ -59,6 +59,58 @@ def create_cylindrical_stock(diameter: float, height: float) -> "cq.Workplane":
     return cq.Workplane("XY").cylinder(height, diameter / 2.0)
 
 
+def create_tapered_cylinder(
+    bottom_diameter: float,
+    top_diameter: float,
+    height: float,
+    *,
+    inner_bottom_diameter: float = 0.0,
+    inner_top_diameter: float = 0.0,
+    z_center: float = 0.0,
+) -> "cq.Workplane":
+    """Create a conical/frustum disk or ring centered on the Z axis.
+
+    Diameters are measured at the lower and upper Z faces.  Optional inner
+    diameters create an axisymmetric bore/frustum, which keeps tapered extrudes
+    representable as pure SubCAD turning intent instead of imported geometry.
+    """
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+    if height <= 0:
+        raise ValueError("height must be positive")
+    if bottom_diameter <= 0 or top_diameter <= 0:
+        raise ValueError("outer diameters must be positive")
+
+    z_min = z_center - height / 2.0
+    outer = cq.Workplane("XY").add(
+        cq.Solid.makeCone(
+            bottom_diameter / 2.0,
+            top_diameter / 2.0,
+            height,
+            cq.Vector(0, 0, z_min),
+            cq.Vector(0, 0, 1),
+        )
+    )
+
+    if inner_bottom_diameter > 0 or inner_top_diameter > 0:
+        ib = max(inner_bottom_diameter, 0.0)
+        it = max(inner_top_diameter, 0.0)
+        if ib >= bottom_diameter or it >= top_diameter:
+            raise ValueError("inner diameters must be smaller than outer diameters")
+        inner = cq.Workplane("XY").add(
+            cq.Solid.makeCone(
+                ib / 2.0,
+                it / 2.0,
+                height + 0.02,
+                cq.Vector(0, 0, z_min - 0.01),
+                cq.Vector(0, 0, 1),
+            )
+        )
+        outer = outer.cut(inner)
+
+    return outer
+
+
 # =============================================================================
 #  Helpers
 # =============================================================================
@@ -393,6 +445,48 @@ def profile_pocket_cut(
         return result
     wp = _draw_profile(shape.faces(face_selector).workplane(), profile)
     return wp.cutThruAll() if through else wp.cutBlind(-depth)
+
+
+def profile_cutout_cut(
+    shape: "cq.Workplane",
+    profile,
+    depth: float,
+    *,
+    face_selector: str = ">Z",
+    through: bool = False,
+) -> "cq.Workplane":
+    """Cut outside a profile, retaining the requested part outline.
+
+    ``profile_pocket_cut`` removes the inside of the profile.  A cutout for
+    dataset translation usually means the opposite: start with stock and keep
+    the closed 2D profile as the resulting blank.  Through cutouts are modeled
+    as an intersection with a profile prism, which is much more robust than a
+    nested-wire frame cut for arbitrary polygon profiles.
+    """
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+    if through:
+        bbox = shape.val().BoundingBox()
+        pad = 1.0
+        prism = _draw_profile(
+            cq.Workplane("XY").workplane(offset=bbox.zmin - pad),
+            profile,
+        ).extrude((bbox.zmax - bbox.zmin) + 2.0 * pad)
+        return shape.intersect(prism)
+
+    outer_profile = _stock_envelope_profile(shape, margin=0.0)
+    if _is_rectangular_profile(profile):
+        return _cut_rectangular_region_around_island(
+            shape,
+            outer_profile=outer_profile,
+            island_profile=profile,
+            depth=depth,
+            face_selector=face_selector,
+            through=False,
+        )
+    wp = _draw_profile(shape.faces(face_selector).workplane(), outer_profile)
+    wp = _draw_profile(wp, profile)
+    return wp.cutBlind(-depth)
 
 
 def profile_contour_cut(

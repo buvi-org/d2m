@@ -305,12 +305,13 @@ Current implementation:
   translator, exports generated SubCAD/process-plan artifacts, and records
   trusted match policy results.
 - `--scan-compatible` now uses the typed pure-operation planner. The local
-  train/val/test dataset currently reports 100,235 plannable rows out of
-  100,516 rows, but this is planner coverage rather than verified translation
-  success.
+  train/val/test dataset currently reports 86,923 plannable rows out of
+  100,516 rows after rejecting inaccessible closed shells, but this is planner
+  coverage rather than verified translation success.
 - Original-STEP verification remains the success gate. Each new operation
   family must mature from "planned" to "executes and matches" before it counts
   toward the 100k dataset.
+- Guarded live pilots currently record 7 accepted original-STEP-verified pairs.
 - Use `--comparison-methods slice` for the current 2.5D collection pass; SDF is
   retained as feedback but is too noisy on sparse STEP tessellations to be the
   hard success gate today.

@@ -130,6 +130,10 @@ Stock instance (immutable/fluent pattern).
   `.turn_face(z)`, `.turn_od(diameter, length)`, `.turn_id(diameter, depth)`,
   `.turn_groove(width, depth, z)`, `.turn_thread(diameter, pitch, length,
   internal=False)`, `.mill_turn_setup(axis="Z", work_offset="G54")`.
+  For tapered round extrudes, use `.turn_profile({"type":
+  "tapered_cylinder", "bottom_diameter": ..., "top_diameter": ...,
+  "height": ...}, stock_diameter=...)`. Use `"type": "tapered_ring"` only
+  when the source actually creates a through bore.
 
 - Thin wall / shell: `.thin_wall_pocket(profile, wall_thickness, depth,
   open_faces=None)`, `.hollow_bore(inner_profile, outer_profile, depth)`,
@@ -223,6 +227,17 @@ Stock instance (immutable/fluent pattern).
     CadQuery trace and STEP evidence are ambiguous, choose among the planned
     operation candidates only; do not invent a hybrid/imported/direct-rebuild
     fallback.
+18. If CadQuery uses `.extrude(height, taper=angle)` or
+    `.extrude(height, taper=-angle)` on a circular/profile sketch, do not use a
+    straight `Stock.cylindrical(...)` approximation by itself. Add a
+    `turn_profile` tapered-frustum operation. For CadQuery positive-Z
+    extrusion, `taper=-angle` means the top outer diameter is LARGER by
+    `2 * height * tan(abs(angle))`; `taper=+angle` means the top outer diameter
+    is SMALLER by `2 * height * tan(angle)`. Do not add a center
+    `circular_pocket` merely because a CadQuery Sketch contains a second
+    `.circle(...)` or an `inner_radius` variable; add a bore only when the
+    source/STEP evidence shows an actual through hole/cut or the planner lists
+    a circular_pocket/bore candidate.
 """)
 
 # Shorter reference for iteration prompts (the LLM already saw the full one)
@@ -247,7 +262,7 @@ Stock.cylindrical(D, H, material="aluminum_6061")
 .machine_around_cylinder(dia, height, cx, cy)
 .rib(width, length, height, cx, cy, angle=0)
 .pad(profile, height)
-.turn_profile(profile, axis="Z", stock_diameter=None)
+.turn_profile(profile, axis="Z", stock_diameter=None)  # supports {"type":"tapered_cylinder", ...}
 .thin_wall_pocket(profile, wall_thickness, depth)
 .surface_mill(surface_ref, tolerance_mm=0.10)
 .sweep_mill(profile, path, tolerance_mm=0.10)
@@ -439,6 +454,12 @@ subtractive program. Remember:
 - If the CadQuery source uses `.cylinder(...)`, round-bar stock, or a circular
   outer envelope, start from `Stock.cylindrical(diameter, height)` instead of
   rectangular stock.
+- If the CadQuery source uses `.extrude(..., taper=...)`, represent the taper
+  with `turn_profile({{"type": "tapered_cylinder", ...}})` or a real tapered
+  profile operation. Do not approximate it as a straight cylinder, and do not
+  add a center bore solely because a Sketch has a second `.circle(...)`.
+  CadQuery `taper=-angle` on a positive-Z extrusion makes the TOP diameter
+  larger; `taper=+angle` makes the TOP diameter smaller.
 - Cut AWAY material to reveal the final shape.
 - The target is the original STEP reference geometry. Match that original STEP;
   do not import, read, reuse, or wrap the STEP/B-Rep/mesh inside generated code.
@@ -451,6 +472,9 @@ subtractive program. Remember:
   fences or explanation text in the tool argument.
 - Prefer the pure SubCAD operation families in the planner candidates above.
   If evidence is ambiguous, choose among those planned operation candidates only.
+- Do not add major feature operations absent from the planner candidates. For
+  example, do not add a center `circular_pocket`/bore unless the planner/source
+  shows a circular cut, hole, bore, or other real opening.
 - Use simple SubCAD operations first: face_mill, pocket, circular_pocket,
   drill, slot, and chamfer. Use counterbore/countersink only when visible in
   the CadQuery source.

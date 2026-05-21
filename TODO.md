@@ -88,7 +88,7 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 6 recorded by guarded live pilots:
+- Matched original-STEP-verified pairs: 7 recorded by guarded live pilots:
   - `hole_pilot_006`, train global index 1, UUID
     `420cc2e2-e6c4-23e5-092a-6980c7853952`.
   - `hole_batch_002_filtered`, train global index 8, UUID
@@ -101,6 +101,8 @@ Latest measured dry scan:
     `9771f32b-c614-f1ed-9533-5ff2617f3471`.
   - `hole_batch_007_forward_filtered`, train global index 25, UUID
     `ca8ac443-0284-9d83-4ef9-db3c9b930a47`.
+  - `hole_row29_retry_taper_prompt2`, train global index 29, UUID
+    `e7b057a8-03c2-5b83-99b5-2cce0bb055c5`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -112,10 +114,10 @@ Latest measured dry scan:
   - retained_material: 46,416
   - cut: 43,039
   - profile: 40,537
-  - primitive: 33,076
+  - primitive: 32,796
   - pattern: 20,436
   - boss: 18,803
-  - axisymmetric: 12,150
+  - axisymmetric: 12,290
   - surface: 6,690
   - thin_wall: 3,004
 
@@ -148,11 +150,17 @@ Acceptance gates for each kept pair:
    - Compare generated STEP against the original source STEP.
    - Record volume, bounding-box, slice/mesh/feature comparison metrics, pass/fail status, tolerance, alignment policy, and localized deviation feedback.
    - Treat comparison failure as failed data, not a partially accepted pair.
+   - Current trusted-match gate for guarded pilots requires volume match plus
+     rich comparison pass when requested; slice/mesh pilots use minimum score
+     95.0 at the recorded tolerance, with volume-only success explicitly
+     rejected.
 
 5. Dataset quality control.
    - Write one manifest record per attempt with status: `planned`, `attempted`, `executed`, `matched`, `failed`, `unsupported`, or `manual_review`.
    - Track feature-family pass rates, common repair causes, average iterations, cost/time estimates, and validator warnings.
    - Keep train/val/test split identity intact.
+   - Validator errors should reject a kept training pair unless the manifest
+     explicitly labels the row as geometry-only research data.
 
 Sub-workstreams required to reach 100k:
 
@@ -182,7 +190,10 @@ Sub-workstreams required to reach 100k:
 
 5. Collection orchestration.
    - Run small per-family pilot batches first.
-   - Scale only families that achieve acceptable match rates.
+   - Scale only families that achieve acceptable match rates; initial promotion
+     target is at least 70% trusted-match rate over a 25-attempt guarded pilot,
+     with stop/escalation when three consecutive failures share the same
+     missing operation class.
    - Pause or downrank families that repeatedly fail for the same missing capability.
    - Periodically regenerate aggregate summaries and update this TODO with measured counts.
 
@@ -216,9 +227,9 @@ Immediate next implementation targets:
 - Done: prevent outside-stock retained islands from cutting away the whole
   stock, and reinforce literal CadQuery `translate((x, y, z))` coordinate use
   in the translator prompt.
-- Next: scale the hole/retained-material pilot from 1 accepted pair to a small
-  guarded batch of 10-25 accepted/attempted rows, preserving strict stop
-  conditions.
+- Next: scale the hole/profile/retained-material/axisymmetric pilot from 7
+  accepted pairs to a small guarded batch of 10-25 accepted/attempted rows,
+  preserving strict stop conditions.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.
@@ -246,6 +257,18 @@ Immediate next implementation targets:
   stock/circle-extrusion rows are not forced into rectangular stock.
 - Done: preserve the best executable translator attempt when a later repair
   attempt fails execution, so useful geometry/comparison results are not lost.
+- Done: add geometry-backed tapered-cylinder/frustum support through
+  `turn_profile`, classify CadQuery tapered circle extrudes as axisymmetric
+  turn-profile work, and tighten the translator prompt so `taper=-angle`
+  expands the top diameter instead of shrinking it.
+- Done: accept train global index 29 via `hole_row29_retry_taper_prompt2`
+  with trusted slice score 100.0.
+- Done: split `profile_cutout` from `profile_pocket` geometry semantics:
+  through cutouts now retain the requested profile outline and leave a usable
+  top face for later pockets/drills.
+- Next: retry row 23 and row 28 after the profile-cutout geometry fix; if they
+  still fail, classify the remaining issue by profile extraction vs retained
+  feature sequencing rather than generic empty-selection failures.
 
 ## SubCAD Shop-Floor v1
 

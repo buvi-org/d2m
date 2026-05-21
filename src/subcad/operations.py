@@ -35,10 +35,12 @@ from .geometry import (
     chamfer_edges,
     fillet_edges,
     profile_pocket_cut,
+    profile_cutout_cut,
     profile_contour_cut,
     machine_around_profile_cut,
     machine_around_cylinder_cut,
     thin_wall_pocket_cut,
+    create_tapered_cylinder,
 )
 from .profiles import profile_span_yx
 from .tool_library import ToolSpec, ToolCatalog
@@ -2609,7 +2611,7 @@ class ProfileCutoutOp(ProfilePocketOp):
     through: bool = False
 
     def apply(self, shape):
-        return profile_pocket_cut(
+        return profile_cutout_cut(
             shape,
             self.profile or {"width": self.width, "length": self.length},
             self.depth,
@@ -2812,6 +2814,45 @@ class TurnProfileOp(PureToleranceOp):
     process: str = "turn"
     axis: str = "Z"
     stock_diameter: Optional[float] = None
+
+    def apply(self, shape):
+        if self.axis.upper() != "Z" or not isinstance(self.profile, dict):
+            return shape
+        profile_type = str(self.profile.get("type") or "").lower()
+        if profile_type not in {"tapered_cylinder", "tapered_ring", "frustum"}:
+            return shape
+
+        bbox = shape.val().BoundingBox()
+        current_height = bbox.zmax - bbox.zmin
+        height = float(self.profile.get("height", self.profile.get("height_mm", current_height)))
+        if height <= 0:
+            return shape
+        z_center = float(self.profile.get("z_center", (bbox.zmin + bbox.zmax) / 2.0))
+
+        bottom = self.profile.get(
+            "bottom_diameter",
+            self.profile.get("bottom_diameter_mm", self.stock_diameter),
+        )
+        top = self.profile.get("top_diameter", self.profile.get("top_diameter_mm", bottom))
+        if bottom is None or top is None:
+            return shape
+
+        inner_bottom = self.profile.get(
+            "inner_bottom_diameter",
+            self.profile.get("inner_bottom_diameter_mm", 0.0),
+        )
+        inner_top = self.profile.get(
+            "inner_top_diameter",
+            self.profile.get("inner_top_diameter_mm", inner_bottom),
+        )
+        return create_tapered_cylinder(
+            float(bottom),
+            float(top),
+            height,
+            inner_bottom_diameter=float(inner_bottom or 0.0),
+            inner_top_diameter=float(inner_top or 0.0),
+            z_center=z_center,
+        )
 
     def to_dict(self) -> dict:
         data = super().to_dict()

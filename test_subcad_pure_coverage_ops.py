@@ -1,5 +1,7 @@
 """Tests for pure SubCAD operation families used by STEP coverage."""
 
+import math
+
 from src.subcad import Stock, create_operation
 from src.data.pure_subcad_planner import plan_pure_subcad_features
 
@@ -36,6 +38,16 @@ check("turn_profile" in ops, "planner maps revolve to turn_profile")
 check("thin_wall_pocket" in ops, "planner maps shell to thin_wall_pocket")
 check("sweep_mill" in ops, "planner maps sweep to sweep_mill")
 check("loft_mill" in ops, "planner maps loft to loft_mill")
+
+tapered_plan = plan_pure_subcad_features(
+    [{"op_name": "circle"}, {"op_name": "extrude", "keywords": [{"arg": "taper", "value": "-5"}]}],
+    ".circle(40).extrude(10, taper=-5)",
+)
+check(
+    any(feature.operation == "turn_profile" and feature.family == "axisymmetric"
+        for feature in tapered_plan.features),
+    "planner maps tapered circle extrude to turn_profile",
+)
 
 closed_shell = plan_pure_subcad_features(
     [{"op_name": "box"}, {"op_name": "shell", "function": "base.shell"}],
@@ -127,6 +139,11 @@ profile_part = base.profile_pocket(profile, 3.0)
 check(profile_part.volume < base_volume, "profile_pocket changes B-Rep volume")
 cutout_part = base.profile_cutout(profile, depth=4.0)
 check(cutout_part.volume < base_volume, "profile_cutout changes B-Rep volume")
+through_cutout = base.profile_cutout(profile, through=True)
+check(through_cutout.volume < base_volume, "through profile_cutout retains profile outline")
+after_cutout_pocket = through_cutout.pocket(width=2.0, length=4.0, depth=1.0, cx=0.0, cy=0.0)
+check(after_cutout_pocket.volume < through_cutout.volume,
+      "profile_cutout keeps a usable top face for later operations")
 contour_part = base.profile_contour(profile, 3.0)
 check(contour_part.volume < base_volume, "profile_contour changes B-Rep volume")
 around_profile = base.machine_around_profile(profile, 3.0)
@@ -137,5 +154,21 @@ selected_chamfer = base.edge_chamfer({"face": ">Z", "edge_direction": "X"}, 0.5)
 check(selected_chamfer.volume < base_volume, "edge_chamfer changes selected-edge geometry")
 selected_fillet = base.edge_fillet({"face": ">Z", "edge_direction": "X"}, 0.5)
 check(selected_fillet.volume <= base_volume, "edge_fillet executes without adding material")
+
+taper_delta = 10.0 * math.tan(math.radians(5.0))
+tapered = (
+    Stock.cylindrical(2 * (40.0 + taper_delta), 10.0)
+    .turn_profile(
+        {
+            "type": "tapered_cylinder",
+            "bottom_diameter": 80.0,
+            "top_diameter": 2 * (40.0 + taper_delta),
+            "height": 10.0,
+        },
+        stock_diameter=2 * (40.0 + taper_delta),
+    )
+)
+check(tapered.volume < Stock.cylindrical(2 * (40.0 + taper_delta), 10.0).volume,
+      "turn_profile tapered_cylinder changes B-Rep volume")
 
 print("\nALL PASSED")

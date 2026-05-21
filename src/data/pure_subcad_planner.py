@@ -105,6 +105,12 @@ def plan_pure_subcad_features(
 
     op_names = {str(op.get("op_name") or "").lower() for op in ops_trace if isinstance(op, dict)}
     functions = {str(op.get("function") or "").lower() for op in ops_trace if isinstance(op, dict)}
+    has_tapered_extrude = (
+        '"arg": "taper"' in trace_text
+        or '"arg":"taper"' in trace_text
+        or "taper=" in code_text
+        or ".extrude(" in code_text and "taper" in code_text
+    )
 
     if "box" in op_names or ".box(" in code_text:
         add("cadquery.box", "primitive", PLANNED_EXACT, "rectangular_stock",
@@ -127,6 +133,9 @@ def plan_pure_subcad_features(
             if "union" in op_names or ".union(" in code_text or "combine" in op_names:
                 add("cadquery.circle.extrude.union", "boss", PLANNED_EXACT, "machine_around_cylinder",
                     "circular extrusion joined to a body maps to machining around a retained cylinder")
+            elif has_tapered_extrude:
+                add("cadquery.circle.extrude.taper", "axisymmetric", PLANNED_MULTI_PROCESS, "turn_profile",
+                    "tapered circle extrusion maps to a turning/frustum profile")
             else:
                 add("cadquery.circle.extrude", "primitive", PLANNED_MULTI_PROCESS, "cylindrical_stock",
                     "circle extrusion maps to round stock or turning setup")

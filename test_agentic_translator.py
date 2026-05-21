@@ -255,6 +255,10 @@ check("Never use bare measure names" in prompt and "m.flange_thickness" in promp
       "user prompt prevents undefined bare measure variables")
 check("Stock.cylindrical" in prompt and ".cylinder" in prompt,
       "user prompt maps CadQuery cylindrical blanks to cylindrical stock")
+check("extrude(..., taper=...)" in prompt and "tapered_cylinder" in prompt,
+      "user prompt maps tapered extrudes to turn_profile")
+check("second `.circle(...)`" in prompt and "center bore" in prompt,
+      "user prompt avoids hallucinating bores from nested sketch circles")
 
 
 # =========================================================================

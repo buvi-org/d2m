@@ -220,10 +220,15 @@ Current policy:
 
 Current scan of `data/zero_to_cad_100k` with the pure planner:
 
-- train: 80,781 plannable rows out of 81,015.
-- val: 9,714 plannable rows out of 9,734.
-- test: 9,740 plannable rows out of 9,767.
-- total: 100,235 plannable rows out of 100,516 local rows.
+- train: 70,095 plannable rows out of 81,015.
+- val: 8,397 plannable rows out of 9,734.
+- test: 8,431 plannable rows out of 9,767.
+- total: 86,923 plannable rows out of 100,516 local rows.
+
+Guarded live pilots currently record 7 accepted original-STEP-verified pairs.
+The reduction from earlier planner counts is intentional: closed/inaccessible
+shell operations are now rejected as unsupported CNC work instead of counted as
+plannable rows.
 
 This means the project moved from "few rows can even be attempted" to "most
 rows can be assigned pure operation families." The next proof step is maturing
