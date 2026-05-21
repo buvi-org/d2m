@@ -101,11 +101,11 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 31 recorded by guarded live pilots.
+- Matched original-STEP-verified pairs: 32 recorded by guarded live pilots.
   - Accepted train global indexes:
-    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132`.
-  - Latest accepted row: train global index 132, manifest
-    `runs/zero_to_cad_live_pilots/deterministic_base_extension_row132_probe/attempts.jsonl`.
+    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238`.
+  - Latest accepted row: train global index 238, manifest
+    `runs/zero_to_cad_live_pilots/deterministic_profile_row238_probe/attempts.jsonl`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -244,7 +244,7 @@ Immediate next implementation targets:
 - Done: prevent outside-stock retained islands from cutting away the whole
   stock, and reinforce literal CadQuery `translate((x, y, z))` coordinate use
   in the translator prompt.
-- Next: continue accepted-index guarded forward scans from the 31 accepted
+- Next: continue accepted-index guarded forward scans from the 32 accepted
   pairs, preserving strict stop conditions and fixing deterministic blockers
   before spending larger live batches.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
@@ -299,7 +299,7 @@ Immediate next implementation targets:
   selected retained-material operations, and related coverage ops; update the
   translator prompt to preserve CadQuery workplane face selectors such as
   `<Z` instead of silently converting underside operations to top-side work.
-- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, row 83, row 87, row 88, row 90, row 107, row 111, row 115, row 118, and row 132 accepted manifests in future
+- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, row 83, row 87, row 88, row 90, row 107, row 111, row 115, row 118, row 132, and row 238 accepted manifests in future
   accepted-index guarded runs.
 - Done: add Z-band retained-material support and planner evidence for retained
   rib/boss loops and polar arrays.
@@ -353,6 +353,8 @@ Immediate next implementation targets:
   global index 115 with original-STEP trusted mesh score 100.0.
 - Done: add deterministic z-band base-plus-extension support and accept train
   global index 132 with original-STEP trusted mesh score 100.0.
+- Done: accept train global index 238 with the existing deterministic
+  profile-extrusion builder and original-STEP trusted mesh score 100.0.
 - Next: run the next accepted-index guarded forward scan and fix the next
   deterministic feature-family blocker before spending larger live batches.
 
