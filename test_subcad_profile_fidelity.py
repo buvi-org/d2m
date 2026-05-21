@@ -105,8 +105,14 @@ check(abs(island_rib.volume - expected_rib_volume) < 1.0,
 chamfer_base = Stock.rectangular(30, 20, 10)
 top_chamfer = chamfer_base.edge_chamfer(">Z", 0.5)
 all_edge_chamfer = chamfer_base.edge_chamfer("all_edges", 0.5)
+vertical_chamfer = chamfer_base.edge_chamfer("|Z", 0.5)
+invalid_chamfer = chamfer_base.edge_chamfer(">Z", 99.0)
 check(all_edge_chamfer.volume < top_chamfer.volume,
       "all_edges chamfer removes more than top-face-only chamfer")
+check(vertical_chamfer.volume < chamfer_base.volume,
+      "directional vertical edge chamfer selector removes material")
+check(invalid_chamfer.volume == chamfer_base.volume,
+      "invalid edge chamfer degrades without crashing")
 
 print("\n5. Thin-wall pockets remove inner cavities while keeping walls ...")
 shell_base = Stock.rectangular(70, 40, 8)

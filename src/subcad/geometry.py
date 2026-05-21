@@ -618,6 +618,8 @@ def _edge_selection(shape: "cq.Workplane", selector, *, face_selector: str = ">Z
     if selector in (None, "all"):
         return shape.faces(face_selector).edges()
     if isinstance(selector, str):
+        if selector.startswith("|"):
+            return shape.edges(selector)
         if selector in {">X", "<X", ">Y", "<Y", ">Z", "<Z"}:
             return shape.faces(selector).edges()
         return shape.faces(face_selector).edges(selector)

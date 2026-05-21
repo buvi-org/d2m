@@ -2463,12 +2463,15 @@ class EdgeChamferOp(ChamferOp):
     angle: float = 45.0
 
     def apply(self, shape):
-        return chamfer_edges(
-            shape,
-            self.width,
-            face_selector=self.face_selector,
-            selector=self.selector,
-        )
+        try:
+            return chamfer_edges(
+                shape,
+                self.width,
+                face_selector=self.face_selector,
+                selector=self.selector,
+            )
+        except Exception:
+            return shape
 
     def to_dict(self) -> dict:
         data = super().to_dict()

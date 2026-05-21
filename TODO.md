@@ -197,11 +197,14 @@ Immediate next implementation targets:
 - Done: run a filtered hole-family live batch excluding axisymmetric/surface/
   thin-wall rows; accepted row 8 and identified selector/edge-treatment B-Rep
   robustness as the next blocker.
+- Done: harden directional edge-chamfer selectors and make edge chamfer degrade
+  safely when OpenCascade cannot build the requested chamfer.
 - Next: scale the hole/retained-material pilot from 1 accepted pair to a small
   guarded batch of 10-25 accepted/attempted rows, preserving strict stop
   conditions.
-- Next: harden edge_chamfer/edge_fillet selector handling and prompt rules so
-  failed rows with `ChFi3d_Builder: only 2 faces` do not waste retries.
+- Next: rerun a tiny filtered retry batch to see whether the previous row 13/14
+  failures now advance to geometry comparison, then patch the next concrete
+  geometry mismatch.
 
 ## SubCAD Shop-Floor v1
 

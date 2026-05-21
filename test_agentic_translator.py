@@ -242,6 +242,8 @@ check('edge_chamfer("all_edges"' in prompt,
       "user prompt maps unqualified CadQuery edge chamfer to all_edges")
 check("do not narrow it" in prompt,
       "user prompt prevents all-edge chamfer from becoming top-only")
+check('edge_chamfer("|Z"' in prompt,
+      "user prompt preserves CadQuery directional edge chamfer selectors")
 
 
 # =========================================================================

@@ -85,6 +85,7 @@ Stock instance (immutable/fluent pattern).
 - `.edge_chamfer(selector, width, *, angle=45.0)` — Chamfer selected edges.
   Use selector `"all_edges"` for unqualified CadQuery `.edges().chamfer(...)`.
   Use selector `">Z"` only when CadQuery explicitly selects top-face edges.
+  Preserve directional CadQuery selectors such as `"|Z"` for vertical edges.
 - `.edge_fillet(selector, radius)` — Machine selected edge radii with ball/bull-nose finishing.
 
 - `.slot(length, width, depth=5.0, *, angle=0.0, cx=0.0, cy=0.0, through=False)`
@@ -170,7 +171,8 @@ Stock instance (immutable/fluent pattern).
    `model.edges().chamfer(...)` without a face selector, use
    `.edge_chamfer("all_edges", width=...)` because it chamfers top, bottom,
    vertical, and feature edges. Use `.edge_chamfer(">Z", ...)` only for
-   source code like `.faces(">Z").edges().chamfer(...)`.
+   source code like `.faces(">Z").edges().chamfer(...)`. If CadQuery uses
+   `.edges("|Z").chamfer(...)`, preserve that as `.edge_chamfer("|Z", ...)`.
 7. CadQuery "union" / constructive bosses must become retained-material
    operations: machine_around_profile, machine_around_cylinder, rib, or pad.
 8. Use profile_pocket/profile_cutout/profile_contour for polygon, polyline,
@@ -434,6 +436,8 @@ subtractive program. Remember:
 - Preserve CadQuery edge scope. Unqualified `.edges().chamfer(...)` means all
   model edges, so use `.edge_chamfer("all_edges", width=...)`; do not narrow it
   to only the top face unless the CadQuery source explicitly used `.faces(">Z")`.
+  Directional CadQuery selectors should also be preserved, for example
+  `.edges("|Z").chamfer(...)` becomes `.edge_chamfer("|Z", width=...)`.
 - Forbidden fallbacks: hybrid_feature placeholders, direct CadQuery reconstruction
   with cq.Workplane or CadQuery imports, import_step, opaque B-Rep/mesh reuse,
   or any hybrid/imported geometry that hides the manufacturing operations.
