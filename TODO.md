@@ -88,9 +88,11 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 1 recorded by the guarded live pilot
-  (`hole_pilot_006`, train global index 1, UUID
-  `420cc2e2-e6c4-23e5-092a-6980c7853952`).
+- Matched original-STEP-verified pairs: 2 recorded by guarded live pilots:
+  - `hole_pilot_006`, train global index 1, UUID
+    `420cc2e2-e6c4-23e5-092a-6980c7853952`.
+  - `hole_batch_002_filtered`, train global index 8, UUID
+    `c691d510-62b1-786d-6815-d0bbe5ece63c`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -192,11 +194,14 @@ Immediate next implementation targets:
 - Done: add feature-family exclusion filters so guarded live batches can avoid
   known high-risk families such as axisymmetric/revolve until their geometry is
   implemented.
+- Done: run a filtered hole-family live batch excluding axisymmetric/surface/
+  thin-wall rows; accepted row 8 and identified selector/edge-treatment B-Rep
+  robustness as the next blocker.
 - Next: scale the hole/retained-material pilot from 1 accepted pair to a small
   guarded batch of 10-25 accepted/attempted rows, preserving strict stop
   conditions.
-- Next: use failures from that batch to identify the next missing operation or
-  prompt rule before moving to profile/edge-treatment families.
+- Next: harden edge_chamfer/edge_fillet selector handling and prompt rules so
+  failed rows with `ChFi3d_Builder: only 2 faces` do not waste retries.
 
 ## SubCAD Shop-Floor v1
 
