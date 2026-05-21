@@ -276,6 +276,9 @@ def build_deterministic_subcad_code(
     base_extension_code = _deterministic_base_extension_code(cadquery_code)
     if base_extension_code:
         return base_extension_code
+    box_counterbore_code = _deterministic_box_counterbore_code(cadquery_code)
+    if box_counterbore_code:
+        return box_counterbore_code
     box_hole_code = _deterministic_box_hole_code(cadquery_code)
     if box_hole_code:
         return box_hole_code
@@ -385,6 +388,42 @@ def _deterministic_box_hole_code(cadquery_code: str) -> str | None:
     chamfer = _first_call_number(cadquery_code, "chamfer", env)
     if chamfer is not None and chamfer > 0:
         sequence.append(f'.edge_chamfer("all_edges", width={chamfer:.6g})')
+    stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_box_counterbore_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if lower.count(".box(") != 1 or ".cborehole(" not in lower:
+        return None
+    blocked = (".union(", ".cut(", ".cutblind(", ".polyline(", ".pushpoints(", ".rarray(", ".polararray(")
+    if any(token in lower for token in blocked):
+        return None
+    box = _box_stock_from_code(cadquery_code)
+    if not box:
+        return None
+    env = _numeric_env(cadquery_code)
+    args = _first_call_args(cadquery_code, "cboreHole")
+    if len(args) < 3:
+        return None
+    hole_diameter = _eval_number(args[0], env)
+    counterbore_diameter = _eval_number(args[1], env)
+    counterbore_depth = _eval_number(args[2], env)
+    if (
+        hole_diameter is None
+        or counterbore_diameter is None
+        or counterbore_depth is None
+        or hole_diameter <= 0
+        or counterbore_diameter <= hole_diameter
+        or counterbore_depth <= 0
+    ):
+        return None
+    sequence = [
+        (
+            f".counterbore({hole_diameter:.6g}, {counterbore_diameter:.6g}, "
+            f"{counterbore_depth:.6g}, through=False, cx=0.0, cy=0.0)"
+        )
+    ]
     stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
     return _format_fluent_subcad_code(stock, sequence)
 

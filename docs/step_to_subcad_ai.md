@@ -29,7 +29,7 @@ The concrete project objective is to train and evaluate a STEP -> pure SubCAD
 model/workflow from at least 100,000 original-STEP-verified Zero-to-CAD pairs.
 The current local corpus scan has 86,923 plannable rows out of 100,516
 Zero-to-CAD rows, but planner coverage is only the attempt queue. Guarded live
-pilots currently record 55 accepted original-STEP-verified pairs.
+pilots currently record 56 accepted original-STEP-verified pairs.
 
 A pair is accepted only when:
 
@@ -250,7 +250,7 @@ Current scan of `data/zero_to_cad_100k` with the pure planner:
 - test: 8,431 plannable rows out of 9,767.
 - total: 86,923 plannable rows out of 100,516 local rows.
 
-Guarded live pilots currently record 55 accepted original-STEP-verified pairs.
+Guarded live pilots currently record 56 accepted original-STEP-verified pairs.
 The reduction from earlier planner counts is intentional: closed/inaccessible
 shell operations are now rejected as unsupported CNC work instead of counted as
 plannable rows.

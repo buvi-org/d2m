@@ -330,6 +330,17 @@ check(
 box_hole_exec = run_subcad(box_hole_subcad)
 check(box_hole_exec["success"], "deterministic box-hole SubCAD code executes")
 
+box_counterbore_code = "result = cq.Workplane('XY').box(10,10,2).faces('>Z').workplane().cboreHole(4,6,2,1)"
+box_counterbore_subcad = build_deterministic_subcad_code(box_counterbore_code, [])
+check(box_counterbore_subcad is not None, "planner builds deterministic box-counterbore SubCAD code")
+check(
+    "Stock.rectangular(10, 10, 2)" in box_counterbore_subcad
+    and ".counterbore(4, 6, 2, through=False, cx=0.0, cy=0.0)" in box_counterbore_subcad,
+    "deterministic box-counterbore code preserves stock and counterbore",
+)
+box_counterbore_exec = run_subcad(box_counterbore_subcad)
+check(box_counterbore_exec["success"], "deterministic box-counterbore SubCAD code executes")
+
 l_bracket_code = """
 class LBracket:
     def __init__(self, workplane, measures):
