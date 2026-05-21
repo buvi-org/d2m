@@ -294,6 +294,7 @@ class Stock:
         corner_radius: float = 0.0,
         cx: float = 0.0,
         cy: float = 0.0,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Cut a rectangular pocket.
@@ -317,6 +318,7 @@ class Stock:
             length=length,
             depth=depth,
             corner_radius=corner_radius,
+            face_selector=face_selector,
             tool=tool,
             material=self._material,
         )
@@ -338,6 +340,7 @@ class Stock:
         *,
         cx: float = 0.0,
         cy: float = 0.0,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Cut a circular pocket.
@@ -355,6 +358,7 @@ class Stock:
             cy=cy,
             diameter=diameter,
             depth=depth,
+            face_selector=face_selector,
             tool=tool,
             material=self._material,
         )
@@ -371,6 +375,7 @@ class Stock:
         through: bool = False,
         spot_drill: bool = True,
         peck: bool = False,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Drill a hole.
@@ -393,6 +398,7 @@ class Stock:
             spot = SpotDrillOp(
                 cx=cx, cy=cy,
                 hole_diameter=diameter,
+                face_selector=face_selector,
                 material=self._material,
             )
             spot.sequence_number = result._next_op_number
@@ -407,6 +413,7 @@ class Stock:
             through=through,
             spot_drill=False,
             peck=peck,
+            face_selector=face_selector,
             tool=tool,
             material=self._material,
         )
@@ -649,6 +656,7 @@ class Stock:
         countersink_angle: float = 82.0,
         cx: float = 0.0,
         cy: float = 0.0,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Cut a countersunk hole."""
@@ -661,6 +669,7 @@ class Stock:
             countersink_diameter=countersink_diameter,
             depth=depth,
             countersink_angle=countersink_angle,
+            face_selector=face_selector,
             tool=tool,
             material=self._material,
         )
@@ -727,6 +736,7 @@ class Stock:
         angle: float = 0.0,
         cx: float = 0.0,
         cy: float = 0.0,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Cut a T-slot, approximated as a rectangular slot."""
@@ -739,6 +749,7 @@ class Stock:
             width=width,
             depth=depth,
             angle=angle,
+            face_selector=face_selector,
             tool=tool,
             material=self._material,
         )
@@ -753,6 +764,7 @@ class Stock:
         angle: float = 45.0,
         cx: float = 0.0,
         cy: float = 0.0,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Cut a dovetail slot."""
@@ -765,6 +777,7 @@ class Stock:
             width=width,
             depth=depth,
             angle=angle,
+            face_selector=face_selector,
             tool=tool,
             material=self._material,
         )
@@ -779,6 +792,7 @@ class Stock:
         angle: float = 0.0,
         cx: float = 0.0,
         cy: float = 0.0,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Cut a rectangular groove."""
@@ -801,6 +815,7 @@ class Stock:
         *,
         stepover: float = 1.0,
         depth: float = 0.5,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Record a 3D surfacing pass."""
@@ -809,6 +824,7 @@ class Stock:
         op = Surface3DOp(
             stepover=stepover,
             depth=depth,
+            face_selector=face_selector,
             tool=tool,
             material=self._material,
         )
@@ -839,6 +855,7 @@ class Stock:
         *,
         cx: float = 0.0,
         cy: float = 0.0,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Cut a shallow flat spot-face."""
@@ -849,6 +866,7 @@ class Stock:
             cy=cy,
             diameter=diameter,
             depth=depth,
+            face_selector=face_selector,
             tool=tool,
             material=self._material,
         )
@@ -897,10 +915,11 @@ class Stock:
         ))
 
     def profile_contour(self, profile, depth: float, *, side: str = "outside",
+                        face_selector: str = ">Z",
                         tool: Optional[ToolSpec] = None) -> "Stock":
         from .operations import ProfileContourOp
         return self._apply_op(ProfileContourOp(
-            profile=profile, depth=depth, side=side,
+            profile=profile, depth=depth, side=side, face_selector=face_selector,
             tool=tool, material=self._material,
         ))
 
@@ -908,6 +927,7 @@ class Stock:
                                stock_envelope=None,
                                cx: Optional[float] = None,
                                cy: Optional[float] = None,
+                               face_selector: str = ">Z",
                                tool: Optional[ToolSpec] = None) -> "Stock":
         from .operations import MachineAroundProfileOp
         if isinstance(profile, dict) and (cx is not None or cy is not None):
@@ -920,26 +940,31 @@ class Stock:
         return self._apply_op(MachineAroundProfileOp(
             profile=profile, width=width, length=length, depth=height,
             height=height, stock_envelope=stock_envelope,
+            face_selector=face_selector,
             tool=tool, material=self._material,
         ))
 
     def machine_around_cylinder(self, diameter: float, height: float, *,
                                 cx: float = 0.0, cy: float = 0.0,
+                                face_selector: str = ">Z",
                                 tool: Optional[ToolSpec] = None) -> "Stock":
         from .operations import MachineAroundCylinderOp
         return self._apply_op(MachineAroundCylinderOp(
             cx=cx, cy=cy, diameter=diameter, depth=height, height=height,
+            face_selector=face_selector,
             tool=tool, material=self._material,
         ))
 
     def rib(self, width: float, length: float, height: float, *, cx: float = 0.0,
             cy: float = 0.0, angle: float = 0.0,
+            face_selector: str = ">Z",
             tool: Optional[ToolSpec] = None) -> "Stock":
         from .operations import RibOp
         profile = {"type": "rib", "width": width, "length": length, "cx": cx, "cy": cy}
         return self._apply_op(RibOp(
             profile=profile, width=width, length=length, depth=height,
-            height=height, angle=angle, tool=tool, material=self._material,
+            height=height, angle=angle, face_selector=face_selector,
+            tool=tool, material=self._material,
         ))
 
     def pad(self, profile, height: float, *, tool: Optional[ToolSpec] = None) -> "Stock":

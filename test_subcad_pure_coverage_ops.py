@@ -126,6 +126,17 @@ for op in plan_dict["operations"]:
               f"{op['operation']} marks pure operation completeness")
         check("toolpath" in op, f"{op['operation']} emits neutral toolpath")
 
+bottom_face_part = (
+    Stock.rectangular(40, 30, 10)
+    .pocket(8, 12, 2, face_selector="<Z")
+    .circular_pocket(6, 1, face_selector="<Z")
+    .drill(3, through=True, face_selector="<Z")
+    .machine_around_cylinder(5, 2, face_selector="<Z")
+)
+bottom_ops = bottom_face_part.process_plan()["operations"]
+check(all(op.get("face_selector") == "<Z" for op in bottom_ops),
+      "fluent core operations preserve bottom face_selector in process plan")
+
 
 print("\n3. Operation factory exposes new families ...")
 factory_op = create_operation("surface_mill", surface_ref={"id": "patch_1"})
