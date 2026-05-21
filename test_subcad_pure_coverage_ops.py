@@ -559,6 +559,25 @@ check(
 box_union_l_exec = run_subcad(box_union_l_subcad)
 check(box_union_l_exec["success"], "deterministic box-union L SubCAD code executes")
 
+box_union_profile_code = """
+import cadquery as cq
+bracket_width=80.0
+bracket_height=60.0
+plate_thickness=8.0
+horizontal=cq.Workplane('XY').box(bracket_width, plate_thickness, plate_thickness)
+vertical=cq.Workplane('XY').box(plate_thickness, bracket_height, plate_thickness).translate((0, bracket_height/2+plate_thickness/2,0))
+result=horizontal.union(vertical)
+"""
+box_union_profile_subcad = build_deterministic_subcad_code(box_union_profile_code, [])
+check(box_union_profile_subcad is not None, "planner builds deterministic box-union profile SubCAD code")
+check(
+    "Stock.rectangular(80, 68, 8)" in box_union_profile_subcad
+    and ".profile_cutout({'type': 'polygon'" in box_union_profile_subcad,
+    "deterministic box-union profile code preserves union outline",
+)
+box_union_profile_exec = run_subcad(box_union_profile_subcad)
+check(box_union_profile_exec["success"], "deterministic box-union profile SubCAD code executes")
+
 top_rib_code = """
 plate_length = 80.0
 plate_width = 60.0

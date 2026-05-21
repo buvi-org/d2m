@@ -270,6 +270,9 @@ def build_deterministic_subcad_code(
     profile_extrude_code = _deterministic_profile_extrude_code(cadquery_code)
     if profile_extrude_code:
         return profile_extrude_code
+    box_union_profile_code = _deterministic_box_union_profile_code(cadquery_code)
+    if box_union_profile_code:
+        return box_union_profile_code
     box_code = _deterministic_box_chamfer_code(cadquery_code)
     if box_code:
         return box_code
@@ -376,6 +379,40 @@ def _deterministic_profile_extrude_code(cadquery_code: str) -> str | None:
     return _format_fluent_subcad_code(
         stock,
         [f".profile_cutout({{'type': 'polygon', 'points': {_format_points(shifted)}}}, through=True)"],
+    )
+
+
+def _deterministic_box_union_profile_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if lower.count(".box(") != 2 or ".union(" not in lower:
+        return None
+    if any(token in lower for token in (".cut", ".hole(", ".shell(", ".loft(", ".sweep(", ".chamfer(", ".fillet(")):
+        return None
+    env = _numeric_env(cadquery_code)
+    if not {"bracket_width", "bracket_height", "plate_thickness"}.issubset(env):
+        return None
+    width = env["bracket_width"]
+    height = env["bracket_height"]
+    plate = env["plate_thickness"]
+    if min(width, height, plate) <= 0:
+        return None
+    stock_width = height + plate
+    y_min = -plate / 2.0
+    y_max = height + plate / 2.0
+    y_shift = (y_min + y_max) / 2.0
+    points = [
+        (-width / 2.0, y_min - y_shift),
+        (width / 2.0, y_min - y_shift),
+        (width / 2.0, plate / 2.0 - y_shift),
+        (plate / 2.0, plate / 2.0 - y_shift),
+        (plate / 2.0, y_max - y_shift),
+        (-plate / 2.0, y_max - y_shift),
+        (-plate / 2.0, plate / 2.0 - y_shift),
+        (-width / 2.0, plate / 2.0 - y_shift),
+    ]
+    return _format_fluent_subcad_code(
+        f"Stock.rectangular({width:.6g}, {stock_width:.6g}, {plate:.6g})",
+        [f".profile_cutout({{'type': 'polygon', 'points': {_format_points(points)}}}, through=True)"],
     )
 
 
