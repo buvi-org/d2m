@@ -76,7 +76,7 @@ Stock instance (immutable/fluent pattern).
 
 - `.face_mill(depth=1.0)` — Face mill the top surface, removing *depth* mm.
 
-- `.pocket(width, length, depth, *, corner_radius=0.0, cx=0.0, cy=0.0, face_selector=">Z")`
+- `.pocket(width, length, depth, *, corner_radius=0.0, cx=0.0, cy=0.0, base_height=None, face_selector=">Z")`
   Cut a rectangular pocket. IMPORTANT: width is the Y dimension and length
   is the X dimension. (cx, cy) is center on the selected setup face.
 
@@ -214,6 +214,10 @@ Stock instance (immutable/fluent pattern).
    8 mm base can be represented as an upper boss-only retained band and a lower
    boss+ribs retained band. Prefer `suggested_subcad` from the planner when it
    is present.
+   If a CadQuery base cut affects only the lower/base thickness while taller
+   retained boss/rib stock remains above it, use `.pocket(...,
+   base_height=0.0)` or the appropriate Z-band instead of cutting from the
+   current top face.
    Only machine around a unioned feature when it actually protrudes beyond the
    existing stock/base envelope or rises above the surrounding surface. If a
    unioned box lies fully inside existing solid stock at the same height, it may

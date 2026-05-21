@@ -628,6 +628,7 @@ class PocketOp(MachiningOperation):
     length: float = 30.0
     depth: float = 5.0
     corner_radius: float = 0.0
+    base_height: Optional[float] = None
 
     tool: Optional[ToolSpec] = None
     material: str = "aluminum_6061"
@@ -676,6 +677,7 @@ class PocketOp(MachiningOperation):
                     length=self.length,
                     depth=self.depth,
                     corner_radius=self.corner_radius,
+                    base_height=self.base_height,
                     tool=finish_tool,
                     material=self.material,
                     sequence_number=self.sequence_number + 1,
@@ -691,6 +693,7 @@ class PocketOp(MachiningOperation):
             self.depth,
             self.corner_radius,
             face_selector=self.face_selector,
+            base_height=self.base_height,
         )
         # Apply finish pass if one was created
         if self.finish_op is not None:
@@ -711,6 +714,7 @@ class PocketOp(MachiningOperation):
                 "depth": self.depth,
             },
             "corner_radius_mm": self.corner_radius,
+            "base_height_mm": self.base_height,
             "position": list(self.position) if self.position else None,
             "face_selector": self.face_selector,
             "feeds_speeds": self.feeds_speeds

@@ -138,3 +138,17 @@ def test_z_band_retained_profiles_support_mixed_feature_heights() -> None:
     assert _slice_area(part, -5.0) == pytest.approx(80.0 * 40.0, abs=1e-6)
     assert _slice_area(part, 0.0) == pytest.approx(boss_area + rib_area, abs=1e-6)
     assert _slice_area(part, 7.0) == pytest.approx(boss_area, abs=1e-6)
+
+
+def test_z_band_pocket_cuts_base_without_erasing_tall_retained_stock() -> None:
+    part = Stock.rectangular(80.0, 30.0, 20.0).pocket(
+        width=10.0,
+        length=60.0,
+        depth=8.0,
+        cx=10.0,
+        cy=10.0,
+        base_height=0.0,
+    )
+
+    assert _slice_area(part, -5.0) == pytest.approx(80.0 * 30.0 - 60.0 * 10.0, abs=1e-6)
+    assert _slice_area(part, 5.0) == pytest.approx(80.0 * 30.0, abs=1e-6)

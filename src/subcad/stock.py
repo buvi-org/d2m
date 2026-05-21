@@ -310,6 +310,7 @@ class Stock:
         corner_radius: float = 0.0,
         cx: float = 0.0,
         cy: float = 0.0,
+        base_height: Optional[float] = None,
         face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
@@ -334,6 +335,7 @@ class Stock:
             length=length,
             depth=depth,
             corner_radius=corner_radius,
+            base_height=base_height,
             face_selector=face_selector,
             tool=tool,
             material=self._material,

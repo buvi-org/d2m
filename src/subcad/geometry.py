@@ -168,10 +168,20 @@ def rectangular_pocket_cut(
     corner_radius: float = 0.0,
     *,
     face_selector: str = ">Z",
+    base_height: float | None = None,
 ) -> "cq.Workplane":
     """Cut a rectangular pocket at (cx, cy) on the top face."""
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
+
+    if base_height is not None:
+        bb = shape.val().BoundingBox()
+        z_min = bb.zmin + float(base_height)
+        cut_depth = min(float(depth), bb.zmax - z_min)
+        if cut_depth <= 0.0:
+            return shape
+        profile = {"type": "rect", "length": length, "width": width, "cx": cx, "cy": cy}
+        return shape.cut(_profile_prism(profile, cut_depth, z_min))
 
     cx_rel, cy_rel = _to_face_coords(shape, face_selector, cx, cy)
 
