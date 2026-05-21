@@ -78,7 +78,7 @@ SubCAD can currently be used as a CadQuery-backed subtractive machining represen
 
 SubCAD is not yet a production CAM/postprocessor or quoting system. Controller-certified G-code, industrial CAM strategy coverage, formal ERP/shop quoting, a full upload-to-plan product UI, large-scale live translation success claims, and validated simulation/RL workflows remain future work.
 
-Current translator benchmark reality: the corrected runner compares against the original Zero-to-CAD STEP, not a self-generated STEP. The compatibility gate is now a typed pure-operation planner rather than a blocked-term filter, so 86,923 of 100,516 local train/val/test rows are plannable into operation families after inaccessible closed shells are rejected. That is planner coverage, not verified 100k success: each saved pair still must execute and pass original-STEP geometry comparison. Guarded live pilots currently have 43 accepted original-STEP-verified pairs.
+Current translator benchmark reality: the corrected runner compares against the original Zero-to-CAD STEP, not a self-generated STEP. The compatibility gate is now a typed pure-operation planner rather than a blocked-term filter, so 86,923 of 100,516 local train/val/test rows are plannable into operation families after inaccessible closed shells are rejected. That is planner coverage, not verified 100k success: each saved pair still must execute and pass original-STEP geometry comparison. Guarded live pilots currently have 46 accepted original-STEP-verified pairs.
 
 Training readiness requires versioned accepted-pair manifests that preserve
 source split/row/UUID, original STEP hash/path, generated SubCAD and generated
