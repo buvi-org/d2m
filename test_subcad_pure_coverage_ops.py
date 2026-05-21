@@ -130,6 +130,60 @@ check(
     "top-face additive extrude maps to retained-material operation",
 )
 
+retained_pattern_plan = plan_pure_subcad_features(
+    [],
+    """
+    rib_count = 3
+    rib_spacing = 12.0
+    rib_width = 6.0
+    rib_height = 4.0
+    for i in range(rib_count):
+        rib_x = -4.0 + i * rib_spacing
+        rib = (
+            cq.Workplane("XY")
+            .center(rib_x, 2.0)
+            .rect(rib_spacing * 0.8, rib_width)
+            .extrude(rib_height)
+        )
+        result = result.union(rib)
+    """,
+)
+pattern_evidence = [
+    feature.evidence for feature in retained_pattern_plan.features
+    if feature.operation == "machine_around_profiles"
+    and feature.evidence.get("suggested_subcad")
+]
+check(bool(pattern_evidence), "planner extracts multi-rib retained-pattern evidence")
+check(
+    [round(profile["cx"], 6) for profile in pattern_evidence[0]["profiles"]] == [-4.0, 8.0, 20.0],
+    "retained-pattern evidence preserves loop-derived rib centers",
+)
+
+polar_plan = plan_pure_subcad_features(
+    [],
+    """
+    rib_radius = 36.0
+    rib_count = 6
+    rib_width = 4.0
+    rib_thickness = 1.5
+    result = (
+        result.faces(">Z")
+        .workplane()
+        .polarArray(radius=rib_radius, count=rib_count, startAngle=0, angle=360)
+        .rect(rib_width, rib_thickness)
+        .extrude(2.0)
+    )
+    """,
+)
+polar_evidence = [
+    feature.evidence for feature in polar_plan.features
+    if feature.evidence.get("suggested_subcad")
+]
+check(
+    polar_evidence and len(polar_evidence[0].get("profiles", [])) == 6,
+    "planner extracts polarArray retained-rib evidence",
+)
+
 
 print("\n2. Fluent pure operation API serializes process-plan records ...")
 profile = {"type": "polygon", "points": [(-10, -5), (10, -5), (12, 0), (10, 5), (-10, 5)]}

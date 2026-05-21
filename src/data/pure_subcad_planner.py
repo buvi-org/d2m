@@ -11,8 +11,11 @@ into pure SubCAD operation families so benchmark runs can distinguish:
 
 from __future__ import annotations
 
+import ast
 import json
+import math
 import re
+import textwrap
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -174,6 +177,17 @@ def plan_pure_subcad_features(
         add("cadquery.union", "retained_material", PLANNED_EXACT, "machine_around_profile",
             "constructive boss/pad/rib maps to machining around retained material")
 
+    for evidence in _retained_material_parameter_evidence(code_text):
+        operation = "machine_around_profiles" if len(evidence.get("profiles") or []) > 1 else "machine_around_profile"
+        if evidence.get("profile_type") == "circle":
+            operation = "machine_around_cylinder"
+        feature_source = evidence.get("source", "cadquery.retained_material.evidence")
+        feature_evidence = {key: value for key, value in evidence.items() if key != "source"}
+        add(feature_source,
+            "retained_material", PLANNED_EXACT, operation,
+            "source-derived retained-material dimensions and positions are available",
+            **feature_evidence)
+
     if "revolve" in op_names or ".revolve(" in code_text:
         add("cadquery.revolve", "axisymmetric", PLANNED_MULTI_PROCESS, "turn_profile",
             "revolved profile maps to turning or mill-turn")
@@ -266,9 +280,11 @@ def _top_workplane_retained_material(
         chain = code_text[match.end():_next_chain_boundary(code_text, match.end())]
         if ".extrude(" not in chain or _chain_is_subtractive(chain):
             continue
+        detail = _retained_chain_evidence(chain, code_text)
         evidence.append({
             "face_selector": selector,
             "chain": _trim_evidence_chain(chain),
+            **detail,
         })
 
     if evidence:
@@ -320,12 +336,343 @@ def _next_chain_boundary(code_text: str, start: int) -> int:
 
 
 def _chain_is_subtractive(chain: str) -> bool:
-    return any(token in chain for token in (".cut", ".cutblind(", ".cutthruall("))
+    return any(token in chain for token in (".cut", ".cutblind(", ".cutthruall(", ".hole("))
 
 
 def _trim_evidence_chain(chain: str) -> str:
     compact = " ".join(chain.strip().split())
     return compact[:160]
+
+
+def _retained_material_parameter_evidence(code_text: str) -> list[dict[str, Any]]:
+    evidence: list[dict[str, Any]] = []
+    evidence.extend(_for_loop_retained_rectangles(code_text))
+    evidence.extend(_standalone_union_retained_features(code_text))
+    return evidence
+
+
+def _for_loop_retained_rectangles(code_text: str) -> list[dict[str, Any]]:
+    env = _numeric_env(code_text)
+    evidence: list[dict[str, Any]] = []
+    loop_re = re.compile(
+        r"for\s+(?P<var>\w+)\s+in\s+range\((?P<count>[^)]*)\):(?P<body>.*?)(?=\n\S|\Z)",
+        re.IGNORECASE | re.DOTALL,
+    )
+    for match in loop_re.finditer(code_text):
+        body = match.group("body")
+        if ".rect(" not in body or ".extrude(" not in body:
+            continue
+        count = _eval_number(match.group("count"), env)
+        if count is None or count <= 0 or count > 100:
+            continue
+        profiles: list[dict[str, Any]] = []
+        for index in range(int(count)):
+            scoped = dict(env)
+            scoped[match.group("var")] = float(index)
+            scoped.update(_numeric_env(body, scoped))
+            profile = _rect_profile_from_chain(body, scoped)
+            if profile:
+                profiles.append(profile)
+        height = _first_call_number(body, "extrude", env)
+        if len(profiles) > 1 and height is not None:
+            evidence.append({
+                "source": "cadquery.for_loop.retained_rectangles",
+                "profiles": profiles,
+                "height": height,
+                "suggested_subcad": _suggest_machine_around_profiles(profiles, height),
+            })
+    return evidence
+
+
+def _standalone_union_retained_features(code_text: str) -> list[dict[str, Any]]:
+    env = _numeric_env(code_text)
+    evidence: list[dict[str, Any]] = []
+    assignment_re = re.compile(
+        r"^(?P<name>\w+)\s*=\s*\(\s*cq\.workplane\([^)]*\)(?P<body>.*?\.extrude\([^)]*\).*?)\n\s*\)",
+        re.IGNORECASE | re.DOTALL | re.MULTILINE,
+    )
+    for match in assignment_re.finditer(code_text):
+        name = match.group("name")
+        body = match.group("body")
+        if f".union({name})" not in code_text:
+            continue
+        height = _first_call_number(body, "extrude", env)
+        if height is None:
+            continue
+        if ".circle(" in body:
+            center = _center_from_chain(body, env)
+            diameter = _first_call_number(body, "circle", env)
+            if diameter is not None:
+                diameter *= 2.0
+                evidence.append({
+                    "source": f"cadquery.union.{name}",
+                    "profile_type": "circle",
+                    "diameter": diameter,
+                    "cx": center[0],
+                    "cy": center[1],
+                    "height": height,
+                    "suggested_subcad": (
+                        f".machine_around_cylinder({diameter:.6g}, {height:.6g}, "
+                        f"cx={center[0]:.6g}, cy={center[1]:.6g})"
+                    ),
+                })
+            continue
+        profile = _rect_profile_from_chain(body, env)
+        if profile:
+            evidence.append({
+                "source": f"cadquery.union.{name}",
+                "profiles": [profile],
+                "height": height,
+                "suggested_subcad": _suggest_machine_around_profiles([profile], height),
+            })
+    return evidence
+
+
+def _retained_chain_evidence(chain: str, code_text: str) -> dict[str, Any]:
+    env = _numeric_env(code_text)
+    if ".polararray(" in chain and ".rect(" in chain:
+        profiles = _polar_rect_profiles(chain, env)
+        height = _first_call_number(chain, "extrude", env)
+        if profiles and height is not None:
+            return {
+                "profiles": profiles,
+                "height": height,
+                "suggested_subcad": _suggest_machine_around_profiles(profiles, height),
+            }
+    profile = _rect_profile_from_chain(chain, env)
+    if not profile:
+        sketches = _sketch_rects(code_text, env)
+        sketch_match = re.search(r"\.placesketch\(\s*(?P<name>\w+)\s*\)", chain, re.IGNORECASE)
+        if sketch_match and sketch_match.group("name") in sketches:
+            profile = dict(sketches[sketch_match.group("name")])
+            cx, cy = _center_from_chain(chain, env)
+            profile["cx"] = cx
+            profile["cy"] = cy
+    height = _first_call_number(chain, "extrude", env)
+    if profile and height is not None:
+        return {
+            "profiles": [profile],
+            "height": height,
+            "suggested_subcad": _suggest_machine_around_profiles([profile], height),
+        }
+    return {}
+
+
+def _numeric_env(code_text: str, initial: dict[str, float] | None = None) -> dict[str, float]:
+    env: dict[str, float] = dict(initial or {})
+    try:
+        tree = ast.parse(textwrap.dedent(code_text))
+    except SyntaxError:
+        return env
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
+        value = _eval_ast_number(node.value, env)
+        if value is not None:
+            env[target.id] = value
+    return env
+
+
+def _eval_number(expr: str, env: dict[str, float]) -> float | None:
+    try:
+        return _eval_ast_number(ast.parse(expr, mode="eval").body, env)
+    except SyntaxError:
+        return None
+
+
+def _eval_ast_number(node: ast.AST, env: dict[str, float]) -> float | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return float(node.value)
+    if isinstance(node, ast.Name):
+        return env.get(node.id)
+    if isinstance(node, ast.UnaryOp):
+        value = _eval_ast_number(node.operand, env)
+        if value is None:
+            return None
+        if isinstance(node.op, ast.USub):
+            return -value
+        if isinstance(node.op, ast.UAdd):
+            return value
+    if isinstance(node, ast.BinOp):
+        left = _eval_ast_number(node.left, env)
+        right = _eval_ast_number(node.right, env)
+        if left is None or right is None:
+            return None
+        if isinstance(node.op, ast.Add):
+            return left + right
+        if isinstance(node.op, ast.Sub):
+            return left - right
+        if isinstance(node.op, ast.Mult):
+            return left * right
+        if isinstance(node.op, ast.Div):
+            return left / right if right else None
+        if isinstance(node.op, ast.FloorDiv):
+            return math.floor(left / right) if right else None
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {"int", "float"} and node.args:
+        value = _eval_ast_number(node.args[0], env)
+        if value is None:
+            return None
+        return float(int(value)) if node.func.id == "int" else float(value)
+    return None
+
+
+def _first_call_number(chain: str, call_name: str, env: dict[str, float]) -> float | None:
+    args = _first_call_args(chain, call_name)
+    if not args:
+        return None
+    return _eval_number(args[0], env)
+
+
+def _rect_profile_from_chain(chain: str, env: dict[str, float]) -> dict[str, Any] | None:
+    rect_args = _first_call_args(chain, "rect")
+    if len(rect_args) < 2:
+        return None
+    length = _eval_number(rect_args[0], env)
+    width = _eval_number(rect_args[1], env)
+    if length is None or width is None:
+        return None
+    cx, cy = _center_from_chain(chain, env)
+    profile: dict[str, Any] = {
+        "type": "rib",
+        "length": length,
+        "width": width,
+        "cx": cx,
+        "cy": cy,
+    }
+    return profile
+
+
+def _center_from_chain(chain: str, env: dict[str, float]) -> tuple[float, float]:
+    center_args = _first_call_args(chain, "center")
+    if len(center_args) >= 2:
+        return (
+            _eval_number(center_args[0], env) or 0.0,
+            _eval_number(center_args[1], env) or 0.0,
+        )
+    return (0.0, 0.0)
+
+
+def _polar_rect_profiles(chain: str, env: dict[str, float]) -> list[dict[str, Any]]:
+    polar_args = _first_call_args(chain, "polararray")
+    rect_args = _first_call_args(chain, "rect")
+    if len(rect_args) < 2:
+        return []
+    length = _eval_number(rect_args[0], env)
+    width = _eval_number(rect_args[1], env)
+    if length is None or width is None:
+        return []
+    polar = _parse_keyword_args(polar_args, env)
+    radius = polar.get("radius")
+    count = polar.get("count")
+    start = polar.get("startangle", 0.0)
+    sweep = polar.get("angle", 360.0)
+    if radius is None and polar_args:
+        radius = _eval_number(polar_args[0], env)
+    if count is None and len(polar_args) > 1:
+        count = _eval_number(polar_args[1], env)
+    if radius is None or count is None or count <= 0 or count > 100:
+        return []
+    profiles = []
+    step = sweep / count
+    for index in range(int(count)):
+        angle = start + step * index
+        radians = math.radians(angle)
+        profiles.append({
+            "type": "rib",
+            "length": length,
+            "width": width,
+            "cx": radius * math.cos(radians),
+            "cy": radius * math.sin(radians),
+            "angle": angle,
+        })
+    return profiles
+
+
+def _parse_keyword_args(args: list[str], env: dict[str, float]) -> dict[str, float]:
+    values: dict[str, float] = {}
+    for arg in args:
+        if "=" not in arg:
+            continue
+        key, value = arg.split("=", 1)
+        number = _eval_number(value.strip(), env)
+        if number is not None:
+            values[key.strip().lower()] = number
+    return values
+
+
+def _first_call_args(chain: str, call_name: str) -> list[str]:
+    match = re.search(rf"\.{re.escape(call_name)}\s*\(", chain, re.IGNORECASE)
+    if not match:
+        return []
+    start = match.end()
+    depth = 1
+    index = start
+    while index < len(chain) and depth:
+        char = chain[index]
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+        index += 1
+    if depth:
+        return []
+    return _split_args(chain[start:index - 1])
+
+
+def _split_args(arg_text: str) -> list[str]:
+    args: list[str] = []
+    start = 0
+    depth = 0
+    for index, char in enumerate(arg_text):
+        if char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth -= 1
+        elif char == "," and depth == 0:
+            args.append(arg_text[start:index].strip())
+            start = index + 1
+    tail = arg_text[start:].strip()
+    if tail:
+        args.append(tail)
+    return args
+
+
+def _sketch_rects(code_text: str, env: dict[str, float]) -> dict[str, dict[str, Any]]:
+    sketches: dict[str, dict[str, Any]] = {}
+    sketch_re = re.compile(
+        r"(?P<name>\w+)\s*=\s*cq\.sketch\(\)\.rect\((?P<args>[^)]*)\)",
+        re.IGNORECASE,
+    )
+    for match in sketch_re.finditer(code_text):
+        args = _split_args(match.group("args"))
+        if len(args) < 2:
+            continue
+        length = _eval_number(args[0], env)
+        width = _eval_number(args[1], env)
+        if length is not None and width is not None:
+            sketches[match.group("name")] = {
+                "type": "rib",
+                "length": length,
+                "width": width,
+                "cx": 0.0,
+                "cy": 0.0,
+            }
+    return sketches
+
+
+def _suggest_machine_around_profiles(profiles: list[dict[str, Any]], height: float) -> str:
+    clean_profiles = []
+    for profile in profiles:
+        clean_profiles.append({
+            key: round(value, 6) if isinstance(value, float) else value
+            for key, value in profile.items()
+        })
+    if len(clean_profiles) == 1:
+        return f".machine_around_profile({clean_profiles[0]!r}, height={height:.6g})"
+    return f".machine_around_profiles({clean_profiles!r}, height={height:.6g})"
 
 
 def _non_top_workplane_retained_material_from_trace(ops_trace: list[dict]) -> list[dict[str, Any]]:

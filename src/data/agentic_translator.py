@@ -621,6 +621,15 @@ def _format_planner_candidates(plan: dict) -> str:
         lines.append(
             f"  - {operation} ({status}, {family}) from {source}: {reason}"
         )
+        evidence = feature.get("evidence") or {}
+        suggested = evidence.get("suggested_subcad")
+        if suggested:
+            lines.append(f"    suggested_subcad: {suggested}")
+        profiles = evidence.get("profiles") or []
+        if profiles:
+            lines.append(f"    retained_profiles: {json.dumps(profiles, sort_keys=True)[:900]}")
+        if evidence.get("height") is not None:
+            lines.append(f"    retained_height: {evidence.get('height')}")
     return "\n".join(lines)
 
 
