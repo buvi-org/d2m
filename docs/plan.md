@@ -304,10 +304,13 @@ Current implementation:
   writes each original STEP as `original_model.step`, runs the agentic
   translator, exports generated SubCAD/process-plan artifacts, and records
   trusted match policy results.
-- `--scan-compatible` reports how many rows current SubCAD can reasonably try.
-  The present conservative scan finds 1,752 compatible rows across train/val/test,
-  so 100k externally verified pairs needs more SubCAD feature coverage rather
-  than a blind long-running API job.
+- `--scan-compatible` now uses the typed pure-operation planner. The local
+  train/val/test dataset currently reports 100,235 plannable rows out of
+  100,516 rows, but this is planner coverage rather than verified translation
+  success.
+- Original-STEP verification remains the success gate. Each new operation
+  family must mature from "planned" to "executes and matches" before it counts
+  toward the 100k dataset.
 - Use `--comparison-methods slice` for the current 2.5D collection pass; SDF is
   retained as feedback but is too noisy on sparse STEP tessellations to be the
   hard success gate today.

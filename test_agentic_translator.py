@@ -49,6 +49,7 @@ from src.data.run_zero_to_cad_translations import (
     _parse_methods,
     compatibility_report,
 )
+from src.data.pure_subcad_planner import plan_pure_subcad_features
 import src.data.agentic_translator as agentic_mod
 
 from src.data.subcad_repl import run_subcad, compare_to_reference, format_feedback
@@ -62,10 +63,19 @@ check(True, "all imports successful")
 # =========================================================================
 
 print("\n1b. Zero-to-CAD benchmark runner policy ...")
-blocked = compatibility_report([{"op": "fillet"}], "part = workplane.union(other)")
-check(not blocked["compatible"], "compatibility gate blocks unsupported constructive/fillet samples")
+planned = compatibility_report([{"op_name": "fillet"}, {"op_name": "union"}], "part = workplane.union(other)")
+check(planned["compatible"], "compatibility gate plans fillet/union as pure operations")
+check(planned["planner"]["coverage_mode"] == "pure_subcad_operations",
+      "compatibility gate returns typed pure planner output")
 chamfered = compatibility_report([{"op_name": "chamfer"}], "")
-check(not chamfered["compatible"], "compatibility gate blocks local chamfer samples for exact matching")
+check(chamfered["compatible"], "compatibility gate plans local chamfer samples")
+planner = plan_pure_subcad_features(
+    [{"op_name": "revolve"}, {"op_name": "shell"}, {"op_name": "loft"}],
+    ".revolve().shell(1).loft()",
+)
+ops = {feature.operation for feature in planner.features}
+check({"turn_profile", "thin_wall_pocket", "loft_mill"}.issubset(ops),
+      "pure planner maps revolve/shell/loft to CNC operation families")
 check(_parse_methods("none") == [], "comparison-methods=none disables rich mesh comparison")
 
 volume_only_false_positive = {
@@ -117,6 +127,10 @@ check(".face_mill" in sys_prompt, "system prompt mentions face_mill")
 check(".pocket" in sys_prompt, "system prompt mentions pocket")
 check(".drill" in sys_prompt, "system prompt mentions drill")
 check(".chamfer" in sys_prompt, "system prompt mentions chamfer")
+check(".edge_chamfer" in sys_prompt, "system prompt mentions selected edge chamfer")
+check(".machine_around_profile" in sys_prompt, "system prompt mentions retained-material operations")
+check("hybrid_feature" in sys_prompt and "Never" in sys_prompt,
+      "system prompt forbids hybrid/opaque placeholders")
 check("counterbore(hole_diameter, counterbore_diameter, counterbore_depth" in sys_prompt,
       "system prompt documents exact counterbore signature")
 check("pilot_diameter" in sys_prompt and "Never use keyword names" in sys_prompt,

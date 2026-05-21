@@ -80,11 +80,25 @@ Stock instance (immutable/fluent pattern).
   Drill a hole at (cx, cy). Set through=True to drill through entire part.
 
 - `.chamfer(width=0.5)` — Chamfer top edges by *width* mm.
+- `.edge_chamfer(selector, width, *, angle=45.0)` — Chamfer selected edges.
+- `.edge_fillet(selector, radius)` — Machine selected edge radii with ball/bull-nose finishing.
 
 - `.slot(length, width, depth=5.0, *, angle=0.0, cx=0.0, cy=0.0, through=False)`
   Cut a straight slot (obround).
 
 - `.contour(depth, *, stepdown=None)` — Profile/contour milling around outer boundary.
+- `.profile_pocket(profile, depth, *, face_selector=">Z", islands=None)` —
+  Machine arbitrary closed profile pockets. Profiles may be dicts with
+  points/width/length/diameter.
+- `.profile_cutout(profile, *, depth=None, through=False, face_selector=">Z")`
+  Cut through or blind arbitrary profiles.
+- `.profile_contour(profile, depth, *, side="outside")` — Contour arbitrary profiles.
+- `.machine_around_profile(profile, height, *, stock_envelope=None)` —
+  Machine around retained bosses, pads, ribs, and joined profiles.
+- `.machine_around_cylinder(diameter, height, *, cx=0.0, cy=0.0)` —
+  Machine around retained cylindrical bosses.
+- `.rib(width, length, height, *, cx=0.0, cy=0.0, angle=0.0)` and
+  `.pad(profile, height)` — Retained material features.
 
 - `.spot_drill(diameter, *, cx=0.0, cy=0.0)` — Spot a hole before drilling.
 
@@ -101,6 +115,24 @@ Stock instance (immutable/fluent pattern).
 - `.threaded_hole(diameter, depth=0.0, *, cx=0.0, cy=0.0, through=False)`
   Convenience: spot-drill + drill + tap in one call.
 
+- Turning / mill-turn: `.turn_profile(profile, axis="Z", stock_diameter=None)`,
+  `.turn_face(z)`, `.turn_od(diameter, length)`, `.turn_id(diameter, depth)`,
+  `.turn_groove(width, depth, z)`, `.turn_thread(diameter, pitch, length,
+  internal=False)`, `.mill_turn_setup(axis="Z", work_offset="G54")`.
+
+- Thin wall / shell: `.thin_wall_pocket(profile, wall_thickness, depth,
+  open_faces=None)`, `.hollow_bore(inner_profile, outer_profile, depth)`,
+  `.tube_profile(outer_profile, inner_profile, length, process="turn|mill_turn")`.
+
+- Tolerance-machined 3D CNC: `.surface_mill(surface_ref, tolerance_mm=0.10,
+  strategy="parallel")`, `.sweep_mill(profile, path, tolerance_mm=0.10)`,
+  `.loft_mill(profiles, tolerance_mm=0.10)`, `.dome_mill(radius, height,
+  cx=0.0, cy=0.0, tolerance_mm=0.10)`.
+
+- Wire/profile cutting: `.wire_cut_profile(profile, thickness, taper=0,
+  tolerance_mm=0.05)`, `.wire_cut_internal(profile, thickness, start_hole=None,
+  tolerance_mm=0.05)`.
+
 ### Export / Inspection
 
 - `part.to_step(path)` — Export STEP file.
@@ -114,13 +146,15 @@ Stock instance (immutable/fluent pattern).
    margin — the stock should match the outer XY envelope of the final part.
    Only add margin to Z (height): use the measures height + 2-3 mm.
 3. face_mill first to achieve the final Z-height from the stock.
-4. Pockets replace CadQuery cut/cutBlind operations.
+4. Pockets/profile operations replace CadQuery cut/cutBlind operations.
 5. Holes (cboreHole, cskHole) become drill operations with cx, cy from the
    CadQuery source.  Drill through=True for through-holes.
-6. Chamfers map to .chamfer(width).  Fillet has no subCAD equivalent — skip it.
-7. CadQuery "union" (adding a boss) is achieved by NOT cutting that volume away
-   from the stock.
-8. DO NOT use .contour() — it is unreliable.
+6. Selected chamfers map to .edge_chamfer(...). Selected fillets map to
+   .edge_fillet(...). Do not skip edge treatments.
+7. CadQuery "union" / constructive bosses must become retained-material
+   operations: machine_around_profile, machine_around_cylinder, rib, or pad.
+8. Use profile_pocket/profile_cutout/profile_contour for polygon, polyline,
+   arc-chain, slot-like, and non-rectangular profiles.
 9. Coordinate system: (cx=0, cy=0) is the FACE CENTER (CadQuery convention).
    Positive cx = right (+X), positive cy = up (+Y).  Negative values go
    left/down from center.  For a 70 x 40 mm face, the bottom-left corner
@@ -135,13 +169,16 @@ Stock instance (immutable/fluent pattern).
     explanation text, print statements, file writes, or plotting.
 13. Do NOT call .face_mill(depth=0) — if the stock is already at the right
     height, just skip face_mill entirely.
-14. Prefer simple manufacturable features first. If a CadQuery fillet has no
-    direct SubCAD equivalent, omit it and let comparison feedback decide whether
-    a chamfer or pocket adjustment is needed.
+14. Use pure SubCAD operations only. Never import CadQuery, never reconstruct
+    the original model directly, never use opaque STEP/B-Rep geometry, and never
+    emit a hybrid_feature placeholder.
 15. For `cboreHole`, drill the pilot hole and then call
     `counterbore(hole_diameter, counterbore_diameter, counterbore_depth, cx=..., cy=...)`.
     Never use keyword names `diameter`, `depth`, or `pilot_diameter` with
     `counterbore`.
+16. If CadQuery uses shell/revolve/sweep/loft/freeform surfaces, use the pure
+    CNC operation family: thin_wall_pocket/hollow_bore/tube_profile,
+    turn_profile, sweep_mill, loft_mill, surface_mill, or dome_mill.
 """)
 
 # Shorter reference for iteration prompts (the LLM already saw the full one)
@@ -154,8 +191,24 @@ Stock.rectangular(L, W, H, material="aluminum_6061")
 .circular_pocket(dia, depth, cx, cy)
 .drill(dia, depth, cx, cy, through=False)
 .chamfer(width)
+.edge_chamfer(selector, width, angle=45)
+.edge_fillet(selector, radius)
 .slot(L, W, depth, angle, cx, cy, through=False)
 .contour(depth)
+.profile_pocket(profile, depth)
+.profile_cutout(profile, depth=None, through=False)
+.profile_contour(profile, depth, side="outside")
+.machine_around_profile(profile, height)
+.machine_around_cylinder(dia, height, cx, cy)
+.rib(width, length, height, cx, cy, angle=0)
+.pad(profile, height)
+.turn_profile(profile, axis="Z", stock_diameter=None)
+.thin_wall_pocket(profile, wall_thickness, depth)
+.surface_mill(surface_ref, tolerance_mm=0.10)
+.sweep_mill(profile, path, tolerance_mm=0.10)
+.loft_mill(profiles, tolerance_mm=0.10)
+.dome_mill(radius, height, cx, cy, tolerance_mm=0.10)
+.wire_cut_profile(profile, thickness)
 .tap(dia, pitch, depth, cx, cy)
 .threaded_hole(dia, depth, cx, cy, through)
 

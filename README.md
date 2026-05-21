@@ -57,7 +57,7 @@ Recently fixed blocker:
 
 SubCAD can currently be used as a CadQuery-backed subtractive machining representation for prototype workflows:
 
-- Author machining programs with the fluent `Stock` API, including core operations, Phase 2 operations, fixtures, setups, work offsets, and tool/material metadata.
+- Author machining programs with the fluent `Stock` API, including core operations, Phase 2 operations, pure STEP-coverage operation families, fixtures, setups, work offsets, and tool/material metadata.
 - Export STEP/STL geometry plus JSON process plans using the `subcad.shop_floor.v1` schema.
 - Preserve neutral toolpaths for shop-floor review, estimation, validation, preview-only G-code rendering, browser playback, and simulation handoff.
 - Export Markdown/JSON setup sheets with stock, material, selected tools, tool assemblies, fixtures, operations, setup/work-offset data, validation messages, and deferred-production-G-code notes.
@@ -68,7 +68,7 @@ SubCAD can currently be used as a CadQuery-backed subtractive machining represen
 
 SubCAD is not yet a production CAM/postprocessor or quoting system. Controller-certified G-code, industrial CAM strategy coverage, formal ERP/shop quoting, a full upload-to-plan product UI, large-scale live translation success claims, and validated simulation/RL workflows remain future work.
 
-Current translator benchmark reality: the corrected runner compares against the original Zero-to-CAD STEP, not a self-generated STEP. A conservative scan of `data/zero_to_cad_100k` currently finds 1,752 rows compatible with the SubCAD features that can be exact-matched today, so reaching 100k externally verified pairs requires expanding SubCAD support for common skipped CAD families such as local chamfers/fillets, retained-stock bosses/unions, shells, revolves, sweeps, lofts, and arbitrary profiles.
+Current translator benchmark reality: the corrected runner compares against the original Zero-to-CAD STEP, not a self-generated STEP. The compatibility gate is now a typed pure-operation planner rather than a blocked-term filter, so 100,235 of 100,516 local train/val/test rows are plannable into operation families. That is planner coverage, not verified 100k success: each saved pair still must execute and pass original-STEP geometry comparison.
 
 ### Visualization workflow
 

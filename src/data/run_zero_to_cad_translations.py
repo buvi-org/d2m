@@ -30,6 +30,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from .agentic_translator import AgenticTranslator, _load_local_env_if_present
+from .pure_subcad_planner import compatibility_report as pure_subcad_compatibility_report
 
 
 DEFAULT_SOURCE_DIR = "data/zero_to_cad_100k"
@@ -321,31 +322,8 @@ def scan_compatibility(
 
 
 def compatibility_report(ops_trace: list[dict], cadquery_code: str = "") -> dict[str, Any]:
-    """Conservative compatibility gate for current SubCAD translation."""
-    text = (json.dumps(ops_trace, default=str) + "\n" + cadquery_code).lower()
-    blocked_terms = {
-        "shell": "hollow shell/internal cavity is not representable in current top-down SubCAD",
-        "fillet": "fillet geometry is not currently represented in SubCAD",
-        "loft": "loft is outside current SubCAD operation set",
-        "sweep": "sweep is outside current SubCAD operation set",
-        "revolve": "revolve is outside current SubCAD operation set",
-        "union": "constructive union/boss geometry needs retained-stock reasoning",
-        "chamfer": "local edge chamfers need feature-specific SubCAD support for exact matching",
-        "polygon": "polygon/non-rectangular profiles need stronger contour support",
-        "sphere": "spherical primitive outside current SubCAD operation set",
-        "cone": "conical primitive outside current SubCAD operation set",
-    }
-    reasons = [
-        reason
-        for term, reason in blocked_terms.items()
-        if term in text
-    ]
-    if ("circle.extrude" in text) or (".circle(" in text and ".extrude" in text):
-        reasons.append("circle extrusion usually indicates constructive boss or round stock")
-    return {
-        "compatible": not reasons,
-        "reasons": sorted(set(reasons)),
-    }
+    """Pure-operation compatibility gate for current SubCAD translation."""
+    return pure_subcad_compatibility_report(ops_trace, cadquery_code)
 
 
 def main(argv: list[str] | None = None) -> int:

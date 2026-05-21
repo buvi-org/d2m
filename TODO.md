@@ -210,7 +210,8 @@ Still deferred: controller-certified production G-code, formal quoting/ERP integ
   - Save generated SubCAD, comparison metrics, validation, economics, and repair history.
   - Do not count self-generated SubCAD -> STEP pairs as translator success; they are auxiliary supervised/pretraining data only.
   - Use `python -m src.data.run_zero_to_cad_translations` for the corrected flow.
-  - Current strict compatibility scan finds 1,752 eligible external Zero-to-CAD rows across train/val/test; 100k externally verified pairs requires broader SubCAD feature support before the full target is reachable.
-  - Next SubCAD capability blockers for 100k: local chamfers/fillets, retained-stock bosses/unions, round stock/circle extrusions, shells, revolves, sweeps, lofts, and arbitrary profile contours.
+  - The compatibility gate now uses a typed pure-operation planner. Current local train/val/test scan finds 100,235 plannable rows out of 100,516.
+  - Treat planner coverage as an attempt queue, not success. Each family still needs geometry/toolpath maturation and original-STEP verification before it counts toward 100k.
+  - Next SubCAD capability maturation targets for 100k: selected-edge chamfers/fillets, retained-stock bosses/unions, round stock/circle extrusions, shells/thin walls, turning/revolves, sweeps, lofts, and arbitrary profile contours.
 - GNN feature recognition and LLM fine-tuning should wait for execution-scored data.
 - RL remains later-stage research after simulator fidelity is validated.

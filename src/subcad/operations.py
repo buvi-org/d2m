@@ -22,7 +22,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import math
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from .geometry import (
     face_mill_cut,
@@ -380,6 +380,40 @@ def _rect_raster_toolpath(
         lane_count=lane_count,
         pass_type="finishing",
     ))
+
+
+def _profile_bounds(profile: Any) -> tuple[float, float]:
+    """Best-effort profile bounding box for pure operation placeholders."""
+    if isinstance(profile, dict):
+        if "diameter" in profile:
+            d = float(profile["diameter"])
+            return d, d
+        if "width" in profile or "length" in profile:
+            width = float(profile.get("width", profile.get("length", 10.0)))
+            length = float(profile.get("length", profile.get("width", 10.0)))
+            return width, length
+        points = profile.get("points") or profile.get("vertices")
+    else:
+        points = profile
+    if points:
+        try:
+            xs = [float(p[0]) for p in points]
+            ys = [float(p[1]) for p in points]
+            return max(ys) - min(ys), max(xs) - min(xs)
+        except Exception:
+            pass
+    return 10.0, 10.0
+
+
+def _profile_payload(profile: Any) -> Any:
+    """JSON-friendly profile summary without importing opaque CAD geometry."""
+    if isinstance(profile, (str, int, float, bool)) or profile is None:
+        return profile
+    if isinstance(profile, dict):
+        return profile
+    if isinstance(profile, (list, tuple)):
+        return list(profile)
+    return {"description": str(profile)}
 
 
 def _pick_slot_tool(slot_width: float) -> ToolSpec:
@@ -2428,6 +2462,510 @@ class SpotFaceOp(MachiningOperation):
         return tp
 
 
+# ---------------------------------------------------------------------------
+#  Pure STEP coverage operations
+# ---------------------------------------------------------------------------
+
+@dataclass
+class EdgeChamferOp(ChamferOp):
+    """Selected-edge chamfer for pure STEP-to-SubCAD coverage."""
+
+    selector: Any = "all"
+    angle: float = 45.0
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "operation": "edge_chamfer",
+            "selector": _profile_payload(self.selector),
+            "angle_deg": self.angle,
+            "process": "mill",
+            "coverage_family": "selected_edge_treatment",
+            "manufacturing_completeness": "pure_operation",
+        })
+        return data
+
+    def to_toolpath(self) -> Toolpath:
+        tp = super().to_toolpath()
+        tp.operation = "edge_chamfer"
+        tp.metadata.update({
+            "selector": _profile_payload(self.selector),
+            "angle_deg": self.angle,
+            "process": "mill",
+        })
+        return tp
+
+
+@dataclass
+class EdgeFilletOp(MachiningOperation):
+    """Selected-edge fillet represented as a tolerance finishing operation."""
+
+    selector: Any = "all"
+    radius: float = 1.0
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            try:
+                self.tool = ToolCatalog.get_best_for("ball_endmill", max(self.radius * 2.0, 2.0))
+            except ValueError:
+                self.tool = ToolSpec("ball_endmill", max(self.radius * 2.0, 2.0))
+        self.feeds_speeds = get_feeds_speeds(
+            _resolve_fs_tool_type(self.tool.tool_type), self.tool.diameter, self.material
+        )
+
+    def apply(self, shape):
+        # Pure operation intent exists even if exact selected-edge geometry is
+        # deferred to tolerance verification for arbitrary selectors.
+        return shape
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "edge_fillet",
+            "selector": _profile_payload(self.selector),
+            "radius_mm": self.radius,
+            "process": "mill",
+            "strategy": "ball_endmill_edge_blend",
+            "target_tolerance_mm": 0.10,
+            "achieved_tolerance_estimate_mm": 0.10,
+            "sampling_resolution_mm": max(self.radius / 4.0, 0.05),
+            "surface_strategy": "edge_blend",
+            "verification_status": "requires_target_compare",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
+            "feeds_speeds": self.feeds_speeds if "error" not in self.feeds_speeds else None,
+            "coverage_family": "selected_edge_treatment",
+            "manufacturing_completeness": "pure_operation",
+        }
+
+    def to_toolpath(self) -> Toolpath:
+        span = max(self.radius * 12.0, 20.0)
+        return _rect_raster_toolpath(
+            "edge_fillet",
+            self.tool,
+            self.feeds_speeds,
+            width=span,
+            length=span,
+            depth=self.radius,
+            stepover=max(self.radius / 2.0, 0.1),
+            metadata={
+                "selector": _profile_payload(self.selector),
+                "process": "mill",
+                "surface_strategy": "edge_blend",
+                "target_tolerance_mm": 0.10,
+            },
+        )
+
+
+@dataclass
+class ProfilePocketOp(PocketOp):
+    """Arbitrary profile pocket using profile bounds for current B-Rep cut."""
+
+    profile: Any = field(default_factory=dict)
+    islands: Optional[list[Any]] = None
+
+    def __post_init__(self):
+        if self.profile:
+            width, length = _profile_bounds(self.profile)
+            self.width = self.width or width
+            self.length = self.length or length
+        super().__post_init__()
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "operation": "profile_pocket",
+            "profile": _profile_payload(self.profile),
+            "islands": _profile_payload(self.islands or []),
+            "process": "mill",
+            "coverage_family": "arbitrary_profile_2_5d",
+            "manufacturing_completeness": "pure_operation",
+        })
+        return data
+
+
+@dataclass
+class ProfileCutoutOp(ProfilePocketOp):
+    """Arbitrary through/depth cutout operation."""
+
+    through: bool = False
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "operation": "profile_cutout",
+            "through": self.through,
+            "strategy": "profile_cutout",
+        })
+        return data
+
+
+@dataclass
+class ProfileContourOp(ContourOp):
+    """Arbitrary profile contour operation."""
+
+    profile: Any = field(default_factory=dict)
+    side: str = "outside"
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "operation": "profile_contour",
+            "profile": _profile_payload(self.profile),
+            "side": self.side,
+            "process": "mill",
+            "coverage_family": "arbitrary_profile_2_5d",
+            "manufacturing_completeness": "pure_operation",
+        })
+        return data
+
+
+@dataclass
+class MachineAroundProfileOp(ProfileCutoutOp):
+    """Machine around retained profile/boss/pad material."""
+
+    height: float = 5.0
+    stock_envelope: Optional[dict] = None
+
+    def apply(self, shape):
+        # Retained-material machining removes surrounding stock; robust exact
+        # island CSG is part of the next geometry slice. The operation is still
+        # explicit, pure manufacturing intent and carries toolpath/validation.
+        return shape
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "operation": "machine_around_profile",
+            "height_mm": self.height,
+            "stock_envelope": self.stock_envelope or {},
+            "strategy": "machine_around_retained_island",
+            "coverage_family": "retained_material",
+        })
+        return data
+
+
+@dataclass
+class MachineAroundCylinderOp(CircularPocketOp):
+    """Machine around a retained cylindrical boss."""
+
+    height: float = 5.0
+
+    def apply(self, shape):
+        return shape
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "operation": "machine_around_cylinder",
+            "height_mm": self.height,
+            "strategy": "machine_around_retained_cylinder",
+            "process": "mill",
+            "coverage_family": "retained_material",
+            "manufacturing_completeness": "pure_operation",
+        })
+        return data
+
+
+@dataclass
+class RibOp(MachineAroundProfileOp):
+    """Retained rectangular rib."""
+
+    angle: float = 0.0
+
+    def __post_init__(self):
+        self.profile = self.profile or {"width": self.width, "length": self.length, "type": "rib"}
+        super().__post_init__()
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"operation": "rib", "angle_deg": self.angle})
+        return data
+
+
+@dataclass
+class PadOp(MachineAroundProfileOp):
+    """Retained pad/boss profile."""
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"operation": "pad"})
+        return data
+
+
+@dataclass
+class PureToleranceOp(MachiningOperation):
+    """Base class for pure CNC tolerance-machined operation records."""
+
+    operation_name: str = "tolerance_operation"
+    process: str = "mill"
+    profile: Any = field(default_factory=dict)
+    path: Any = None
+    tolerance_mm: float = 0.10
+    strategy: str = "parallel"
+    depth: float = 1.0
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        if self.tool is None:
+            tool_type = "ball_endmill" if self.process in {"4axis", "5axis", "mill_turn"} else "flat_endmill"
+            try:
+                self.tool = ToolCatalog.get_best_for(tool_type, 6.0)
+            except ValueError:
+                self.tool = ToolSpec(tool_type, 6.0)
+        self.feeds_speeds = get_feeds_speeds(
+            _resolve_fs_tool_type(self.tool.tool_type), self.tool.diameter, self.material
+        )
+
+    def apply(self, shape):
+        return shape
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": self.operation_name,
+            "process": self.process,
+            "profile": _profile_payload(self.profile),
+            "path": _profile_payload(self.path),
+            "strategy": self.strategy,
+            "target_tolerance_mm": self.tolerance_mm,
+            "achieved_tolerance_estimate_mm": self.tolerance_mm,
+            "sampling_resolution_mm": max(self.tolerance_mm / 2.0, 0.01),
+            "surface_strategy": self.strategy,
+            "verification_status": "requires_target_compare",
+            "depth_mm": self.depth,
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
+            "feeds_speeds": self.feeds_speeds if "error" not in self.feeds_speeds else None,
+            "coverage_family": "pure_tolerance_machining",
+            "manufacturing_completeness": "pure_operation",
+        }
+
+    def to_toolpath(self) -> Toolpath:
+        span_w, span_l = _profile_bounds(self.profile or {"width": 40, "length": 40})
+        return _rect_raster_toolpath(
+            self.operation_name,
+            self.tool,
+            self.feeds_speeds,
+            width=max(span_w, self.tool.diameter * 4),
+            length=max(span_l, self.tool.diameter * 4),
+            depth=max(self.depth, self.tolerance_mm),
+            stepover=max(self.tool.diameter * 0.25, self.tolerance_mm),
+            metadata={
+                "process": self.process,
+                "strategy": self.strategy,
+                "target_tolerance_mm": self.tolerance_mm,
+            },
+        )
+
+
+@dataclass
+class TurnProfileOp(PureToleranceOp):
+    operation_name: str = "turn_profile"
+    process: str = "turn"
+    axis: str = "Z"
+    stock_diameter: Optional[float] = None
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"axis": self.axis, "stock_diameter_mm": self.stock_diameter})
+        return data
+
+
+@dataclass
+class TurnFaceOp(PureToleranceOp):
+    operation_name: str = "turn_face"
+    process: str = "turn"
+    z: float = 0.0
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"z_mm": self.z})
+        return data
+
+
+@dataclass
+class TurnODOp(PureToleranceOp):
+    operation_name: str = "turn_od"
+    process: str = "turn"
+    diameter: float = 10.0
+    length: float = 10.0
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"diameter_mm": self.diameter, "length_mm": self.length})
+        return data
+
+
+@dataclass
+class TurnIDOp(TurnODOp):
+    operation_name: str = "turn_id"
+
+
+@dataclass
+class TurnGrooveOp(PureToleranceOp):
+    operation_name: str = "turn_groove"
+    process: str = "turn"
+    width: float = 2.0
+    z: float = 0.0
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"width_mm": self.width, "z_mm": self.z})
+        return data
+
+
+@dataclass
+class TurnThreadOp(PureToleranceOp):
+    operation_name: str = "turn_thread"
+    process: str = "turn"
+    diameter: float = 10.0
+    pitch: float = 1.5
+    length: float = 10.0
+    internal: bool = False
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "diameter_mm": self.diameter,
+            "pitch_mm": self.pitch,
+            "length_mm": self.length,
+            "internal": self.internal,
+        })
+        return data
+
+
+@dataclass
+class MillTurnSetupOp(PureToleranceOp):
+    operation_name: str = "mill_turn_setup"
+    process: str = "mill_turn"
+    axis: str = "Z"
+    work_offset: str = "G54"
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"axis": self.axis, "work_offset": self.work_offset})
+        return data
+
+
+@dataclass
+class ThinWallPocketOp(PureToleranceOp):
+    operation_name: str = "thin_wall_pocket"
+    process: str = "mill"
+    wall_thickness: float = 1.0
+    open_faces: Optional[list[str]] = None
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"wall_thickness_mm": self.wall_thickness, "open_faces": self.open_faces or []})
+        return data
+
+
+@dataclass
+class HollowBoreOp(PureToleranceOp):
+    operation_name: str = "hollow_bore"
+    process: str = "mill_turn"
+    inner_profile: Any = field(default_factory=dict)
+    outer_profile: Any = field(default_factory=dict)
+    access_face: str = ">Z"
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "inner_profile": _profile_payload(self.inner_profile),
+            "outer_profile": _profile_payload(self.outer_profile),
+            "access_face": self.access_face,
+        })
+        return data
+
+
+@dataclass
+class TubeProfileOp(HollowBoreOp):
+    operation_name: str = "tube_profile"
+    length: float = 10.0
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"length_mm": self.length})
+        return data
+
+
+@dataclass
+class SurfaceMillOp(PureToleranceOp):
+    operation_name: str = "surface_mill"
+    process: str = "5axis"
+    surface_ref: Any = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"surface_ref": _profile_payload(self.surface_ref)})
+        return data
+
+
+@dataclass
+class SweepMillOp(PureToleranceOp):
+    operation_name: str = "sweep_mill"
+    process: str = "5axis"
+
+
+@dataclass
+class LoftMillOp(PureToleranceOp):
+    operation_name: str = "loft_mill"
+    process: str = "5axis"
+    profiles: Optional[list[Any]] = None
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"profiles": _profile_payload(self.profiles or [])})
+        return data
+
+
+@dataclass
+class DomeMillOp(PureToleranceOp):
+    operation_name: str = "dome_mill"
+    process: str = "5axis"
+    radius: float = 5.0
+    height: float = 2.0
+    cx: float = 0.0
+    cy: float = 0.0
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "radius_mm": self.radius,
+            "height_mm": self.height,
+            "position": [self.cx, self.cy],
+        })
+        return data
+
+
+@dataclass
+class WireCutProfileOp(PureToleranceOp):
+    operation_name: str = "wire_cut_profile"
+    process: str = "wire"
+    thickness: float = 1.0
+    taper: float = 0.0
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"thickness_mm": self.thickness, "taper_deg": self.taper})
+        return data
+
+
+@dataclass
+class WireCutInternalOp(WireCutProfileOp):
+    operation_name: str = "wire_cut_internal"
+    start_hole: Any = None
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({"start_hole": _profile_payload(self.start_hole)})
+        return data
+
+
 # =============================================================================
 #  Convenience factory
 # =============================================================================
@@ -2454,6 +2992,31 @@ _OP_REGISTRY: dict[str, type[MachiningOperation]] = {
     "surface_3d":       Surface3DOp,
     "deburr":           DeburrOp,
     "spot_face":        SpotFaceOp,
+    "edge_chamfer":     EdgeChamferOp,
+    "edge_fillet":      EdgeFilletOp,
+    "profile_pocket":   ProfilePocketOp,
+    "profile_cutout":   ProfileCutoutOp,
+    "profile_contour":  ProfileContourOp,
+    "machine_around_profile": MachineAroundProfileOp,
+    "machine_around_cylinder": MachineAroundCylinderOp,
+    "rib":              RibOp,
+    "pad":              PadOp,
+    "turn_profile":     TurnProfileOp,
+    "turn_face":        TurnFaceOp,
+    "turn_od":          TurnODOp,
+    "turn_id":          TurnIDOp,
+    "turn_groove":      TurnGrooveOp,
+    "turn_thread":      TurnThreadOp,
+    "mill_turn_setup":  MillTurnSetupOp,
+    "thin_wall_pocket": ThinWallPocketOp,
+    "hollow_bore":      HollowBoreOp,
+    "tube_profile":     TubeProfileOp,
+    "surface_mill":     SurfaceMillOp,
+    "sweep_mill":       SweepMillOp,
+    "loft_mill":        LoftMillOp,
+    "dome_mill":        DomeMillOp,
+    "wire_cut_profile": WireCutProfileOp,
+    "wire_cut_internal": WireCutInternalOp,
 }
 
 

@@ -1,0 +1,113 @@
+"""Tests for pure SubCAD operation families used by STEP coverage."""
+
+from src.subcad import Stock, create_operation
+from src.data.pure_subcad_planner import plan_pure_subcad_features
+
+
+def check(cond, label):
+    if not cond:
+        raise AssertionError(label)
+    print(f"  PASS  {label}")
+
+
+print("1. Pure planner maps STEP/CadQuery feature families ...")
+plan = plan_pure_subcad_features(
+    [
+        {"op_name": "chamfer"},
+        {"op_name": "fillet"},
+        {"op_name": "union"},
+        {"op_name": "circle"},
+        {"op_name": "extrude"},
+        {"op_name": "revolve"},
+        {"op_name": "shell"},
+        {"op_name": "sweep"},
+        {"op_name": "loft"},
+        {"op_name": "polygon"},
+        {"op_name": "rarray"},
+    ],
+    ".circle(10).extrude(5).union(x).revolve().shell(1).sweep(p).loft()",
+)
+ops = {feature.operation for feature in plan.features}
+check(plan.compatible, "planner considers mapped pure operations compatible")
+check("edge_chamfer" in ops, "planner maps chamfer to edge_chamfer")
+check("edge_fillet" in ops, "planner maps fillet to edge_fillet")
+check("machine_around_profile" in ops, "planner maps union to retained-material operation")
+check("turn_profile" in ops, "planner maps revolve to turn_profile")
+check("thin_wall_pocket" in ops, "planner maps shell to thin_wall_pocket")
+check("sweep_mill" in ops, "planner maps sweep to sweep_mill")
+check("loft_mill" in ops, "planner maps loft to loft_mill")
+
+
+print("\n2. Fluent pure operation API serializes process-plan records ...")
+profile = {"type": "polygon", "points": [(-10, -5), (10, -5), (12, 0), (10, 5), (-10, 5)]}
+part = (
+    Stock.rectangular(80, 50, 20)
+    .edge_chamfer({"face": ">Z", "edge_direction": "X"}, 0.5)
+    .edge_fillet({"feature_id": "outer_blend"}, 1.0)
+    .profile_pocket(profile, 2.0)
+    .profile_cutout(profile, depth=3.0)
+    .profile_contour(profile, 4.0)
+    .machine_around_profile(profile, 3.0)
+    .machine_around_cylinder(12.0, 4.0, cx=5.0, cy=0.0)
+    .rib(4.0, 30.0, 5.0, cx=0.0, cy=0.0)
+    .pad(profile, 2.0)
+    .turn_profile([(0, 0), (10, 0), (10, 20)], stock_diameter=30.0)
+    .turn_face(0.0)
+    .turn_od(20.0, 40.0)
+    .turn_id(10.0, 20.0)
+    .turn_groove(2.0, 1.0, 12.0)
+    .turn_thread(20.0, 1.5, 15.0)
+    .mill_turn_setup()
+    .thin_wall_pocket(profile, 1.2, 5.0, open_faces=[">Z"])
+    .hollow_bore({"diameter": 10}, {"diameter": 20}, 15.0)
+    .tube_profile({"diameter": 20}, {"diameter": 10}, 30.0)
+    .surface_mill({"surface": "freeform_patch"})
+    .sweep_mill(profile, {"points": [(0, 0), (20, 0)]})
+    .loft_mill([profile, {"type": "circle", "diameter": 8}])
+    .dome_mill(8.0, 3.0)
+    .wire_cut_profile(profile, 6.0)
+    .wire_cut_internal(profile, 6.0, start_hole={"diameter": 2})
+)
+plan_dict = part.process_plan()
+operation_names = [op["operation"] for op in plan_dict["operations"]]
+expected = {
+    "edge_chamfer",
+    "edge_fillet",
+    "profile_pocket",
+    "profile_cutout",
+    "profile_contour",
+    "machine_around_profile",
+    "machine_around_cylinder",
+    "rib",
+    "pad",
+    "turn_profile",
+    "turn_face",
+    "turn_od",
+    "turn_id",
+    "turn_groove",
+    "turn_thread",
+    "mill_turn_setup",
+    "thin_wall_pocket",
+    "hollow_bore",
+    "tube_profile",
+    "surface_mill",
+    "sweep_mill",
+    "loft_mill",
+    "dome_mill",
+    "wire_cut_profile",
+    "wire_cut_internal",
+}
+check(expected.issubset(set(operation_names)), "all pure coverage operations appear in process plan")
+for op in plan_dict["operations"]:
+    if op["operation"] in expected:
+        check(op.get("manufacturing_completeness") == "pure_operation",
+              f"{op['operation']} marks pure operation completeness")
+        check("toolpath" in op, f"{op['operation']} emits neutral toolpath")
+
+
+print("\n3. Operation factory exposes new families ...")
+factory_op = create_operation("surface_mill", surface_ref={"id": "patch_1"})
+check(factory_op.to_dict()["operation"] == "surface_mill",
+      "create_operation can build surface_mill")
+
+print("\nALL PASSED")

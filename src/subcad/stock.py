@@ -35,6 +35,30 @@ from .process_plan import ProcessPlan
 from .tool_library import ToolSpec
 
 
+def _profile_bounds_for_stock(profile) -> tuple[float, float]:
+    """Return (width_y, length_x) from a lightweight profile description."""
+    if isinstance(profile, dict):
+        if "diameter" in profile:
+            d = float(profile["diameter"])
+            return d, d
+        if "width" in profile or "length" in profile:
+            return (
+                float(profile.get("width", profile.get("length", 10.0))),
+                float(profile.get("length", profile.get("width", 10.0))),
+            )
+        points = profile.get("points") or profile.get("vertices")
+    else:
+        points = profile
+    if points:
+        try:
+            xs = [float(point[0]) for point in points]
+            ys = [float(point[1]) for point in points]
+            return max(ys) - min(ys), max(xs) - min(xs)
+        except Exception:
+            pass
+    return 10.0, 10.0
+
+
 @dataclass
 class Stock:
     """An in-process workpiece with an accumulating manufacturing plan.
@@ -847,6 +871,222 @@ class Stock:
             material=self._material,
         )
         return self._apply_op(op)
+
+    def edge_chamfer(self, selector, width: float, *, angle: float = 45.0,
+                     tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import EdgeChamferOp
+        return self._apply_op(EdgeChamferOp(
+            selector=selector, width=width, angle=angle,
+            tool=tool, material=self._material,
+        ))
+
+    def edge_fillet(self, selector, radius: float, *,
+                    tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import EdgeFilletOp
+        return self._apply_op(EdgeFilletOp(
+            selector=selector, radius=radius, tool=tool,
+            material=self._material,
+        ))
+
+    def deburr_edges(self, selector="all", width: float = 0.2, *,
+                     tool: Optional[ToolSpec] = None) -> "Stock":
+        return self.edge_chamfer(selector, width, angle=45.0, tool=tool)
+
+    def profile_pocket(self, profile, depth: float, *, face_selector: str = ">Z",
+                       islands=None, tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import ProfilePocketOp
+        width, length = _profile_bounds_for_stock(profile)
+        return self._apply_op(ProfilePocketOp(
+            profile=profile, islands=islands, width=width, length=length,
+            depth=depth, face_selector=face_selector,
+            tool=tool, material=self._material,
+        ))
+
+    def profile_cutout(self, profile, *, depth: Optional[float] = None,
+                       through: bool = False, face_selector: str = ">Z",
+                       tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import ProfileCutoutOp
+        width, length = _profile_bounds_for_stock(profile)
+        cut_depth = depth if depth is not None else self._stock_dims.get("height", 1.0)
+        return self._apply_op(ProfileCutoutOp(
+            profile=profile, width=width, length=length, depth=cut_depth,
+            through=through, face_selector=face_selector,
+            tool=tool, material=self._material,
+        ))
+
+    def profile_contour(self, profile, depth: float, *, side: str = "outside",
+                        tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import ProfileContourOp
+        return self._apply_op(ProfileContourOp(
+            profile=profile, depth=depth, side=side,
+            tool=tool, material=self._material,
+        ))
+
+    def machine_around_profile(self, profile, height: float, *,
+                               stock_envelope=None,
+                               tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import MachineAroundProfileOp
+        width, length = _profile_bounds_for_stock(profile)
+        return self._apply_op(MachineAroundProfileOp(
+            profile=profile, width=width, length=length, depth=height,
+            height=height, stock_envelope=stock_envelope,
+            tool=tool, material=self._material,
+        ))
+
+    def machine_around_cylinder(self, diameter: float, height: float, *,
+                                cx: float = 0.0, cy: float = 0.0,
+                                tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import MachineAroundCylinderOp
+        return self._apply_op(MachineAroundCylinderOp(
+            cx=cx, cy=cy, diameter=diameter, depth=height, height=height,
+            tool=tool, material=self._material,
+        ))
+
+    def rib(self, width: float, length: float, height: float, *, cx: float = 0.0,
+            cy: float = 0.0, angle: float = 0.0,
+            tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import RibOp
+        profile = {"type": "rib", "width": width, "length": length, "cx": cx, "cy": cy}
+        return self._apply_op(RibOp(
+            profile=profile, width=width, length=length, depth=height,
+            height=height, angle=angle, tool=tool, material=self._material,
+        ))
+
+    def pad(self, profile, height: float, *, tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import PadOp
+        width, length = _profile_bounds_for_stock(profile)
+        return self._apply_op(PadOp(
+            profile=profile, width=width, length=length, depth=height,
+            height=height, tool=tool, material=self._material,
+        ))
+
+    def turn_profile(self, profile, *, axis: str = "Z",
+                     stock_diameter: Optional[float] = None,
+                     tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import TurnProfileOp
+        return self._apply_op(TurnProfileOp(
+            profile=profile, axis=axis, stock_diameter=stock_diameter,
+            tool=tool, material=self._material,
+        ))
+
+    def turn_face(self, z: float, *, tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import TurnFaceOp
+        return self._apply_op(TurnFaceOp(z=z, tool=tool, material=self._material))
+
+    def turn_od(self, diameter: float, length: float, *,
+                tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import TurnODOp
+        return self._apply_op(TurnODOp(
+            diameter=diameter, length=length, tool=tool, material=self._material,
+        ))
+
+    def turn_id(self, diameter: float, depth: float, *,
+                tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import TurnIDOp
+        return self._apply_op(TurnIDOp(
+            diameter=diameter, length=depth, depth=depth,
+            tool=tool, material=self._material,
+        ))
+
+    def turn_groove(self, width: float, depth: float, z: float, *,
+                    tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import TurnGrooveOp
+        return self._apply_op(TurnGrooveOp(
+            width=width, depth=depth, z=z, tool=tool, material=self._material,
+        ))
+
+    def turn_thread(self, diameter: float, pitch: float, length: float, *,
+                    internal: bool = False,
+                    tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import TurnThreadOp
+        return self._apply_op(TurnThreadOp(
+            diameter=diameter, pitch=pitch, length=length, internal=internal,
+            tool=tool, material=self._material,
+        ))
+
+    def mill_turn_setup(self, axis: str = "Z", work_offset: str = "G54") -> "Stock":
+        from .operations import MillTurnSetupOp
+        return self._apply_op(MillTurnSetupOp(
+            axis=axis, work_offset=work_offset, material=self._material,
+        ))
+
+    def thin_wall_pocket(self, profile, wall_thickness: float, depth: float, *,
+                         open_faces=None,
+                         tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import ThinWallPocketOp
+        return self._apply_op(ThinWallPocketOp(
+            profile=profile, wall_thickness=wall_thickness, depth=depth,
+            open_faces=open_faces, tool=tool, material=self._material,
+        ))
+
+    def hollow_bore(self, inner_profile, outer_profile, depth: float, *,
+                    access_face: str = ">Z",
+                    tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import HollowBoreOp
+        return self._apply_op(HollowBoreOp(
+            inner_profile=inner_profile, outer_profile=outer_profile,
+            depth=depth, access_face=access_face, tool=tool,
+            material=self._material,
+        ))
+
+    def tube_profile(self, outer_profile, inner_profile, length: float, *,
+                     process: str = "turn|mill_turn",
+                     tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import TubeProfileOp
+        return self._apply_op(TubeProfileOp(
+            outer_profile=outer_profile, inner_profile=inner_profile,
+            length=length, process=process, tool=tool, material=self._material,
+        ))
+
+    def surface_mill(self, surface_ref, *, tolerance_mm: float = 0.10,
+                     tool: Optional[ToolSpec] = None,
+                     strategy: str = "parallel") -> "Stock":
+        from .operations import SurfaceMillOp
+        return self._apply_op(SurfaceMillOp(
+            surface_ref=surface_ref, tolerance_mm=tolerance_mm,
+            strategy=strategy, tool=tool, material=self._material,
+        ))
+
+    def sweep_mill(self, profile, path, *, tolerance_mm: float = 0.10,
+                   tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import SweepMillOp
+        return self._apply_op(SweepMillOp(
+            profile=profile, path=path, tolerance_mm=tolerance_mm,
+            tool=tool, material=self._material,
+        ))
+
+    def loft_mill(self, profiles, *, tolerance_mm: float = 0.10,
+                  tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import LoftMillOp
+        return self._apply_op(LoftMillOp(
+            profiles=profiles, tolerance_mm=tolerance_mm,
+            tool=tool, material=self._material,
+        ))
+
+    def dome_mill(self, radius: float, height: float, *, cx: float = 0.0,
+                  cy: float = 0.0, tolerance_mm: float = 0.10,
+                  tool: Optional[ToolSpec] = None) -> "Stock":
+        from .operations import DomeMillOp
+        return self._apply_op(DomeMillOp(
+            radius=radius, height=height, cx=cx, cy=cy,
+            tolerance_mm=tolerance_mm, tool=tool, material=self._material,
+        ))
+
+    def wire_cut_profile(self, profile, thickness: float, *, taper: float = 0.0,
+                         tolerance_mm: float = 0.05) -> "Stock":
+        from .operations import WireCutProfileOp
+        return self._apply_op(WireCutProfileOp(
+            profile=profile, thickness=thickness, taper=taper,
+            tolerance_mm=tolerance_mm, material=self._material,
+        ))
+
+    def wire_cut_internal(self, profile, thickness: float, *, start_hole=None,
+                          tolerance_mm: float = 0.05) -> "Stock":
+        from .operations import WireCutInternalOp
+        return self._apply_op(WireCutInternalOp(
+            profile=profile, thickness=thickness, start_hole=start_hole,
+            tolerance_mm=tolerance_mm, material=self._material,
+        ))
 
     # -------------------------------------------------------------------
     #  Fixturing API

@@ -211,22 +211,24 @@ Current policy:
 - For the current 2.5D collection pass, `--comparison-methods slice` is the
   practical trusted mode. The existing vertex-based SDF is useful feedback but
   too noisy on sparse STEP tessellations to be the hard gate.
-- A conservative compatibility gate skips unsupported Zero-to-CAD rows such as
-  local edge chamfers, fillets, shells, constructive unions/bosses, revolve,
-  sweep, loft, cones, spheres, and polygon profiles.
+- The compatibility gate is now a typed pure-operation planner. It maps local
+  chamfers/fillets, retained bosses/unions, circle extrusions, shells, revolves,
+  sweeps, lofts, cones, spheres, and arbitrary profiles to explicit SubCAD
+  operation families instead of skipping them up front.
+- Planner compatibility is not success. A sample only becomes a kept pair after
+  the generated SubCAD executes and passes original-STEP geometry comparison.
 
-Current scan of `data/zero_to_cad_100k` with the conservative gate:
+Current scan of `data/zero_to_cad_100k` with the pure planner:
 
-- train: 1,414 compatible rows out of 81,015.
-- val: 161 compatible rows out of 9,734.
-- test: 177 compatible rows out of 9,767.
-- total: 1,752 compatible rows.
+- train: 80,781 plannable rows out of 81,015.
+- val: 9,714 plannable rows out of 9,734.
+- test: 9,740 plannable rows out of 9,767.
+- total: 100,235 plannable rows out of 100,516 local rows.
 
-Therefore, 100k externally verified Zero-to-CAD -> SubCAD pairs is not
-reachable with current SubCAD capability coverage alone. Hitting 100k requires
-expanding SubCAD support for the common skipped feature families, especially
-local chamfers/fillets, retained-stock constructive bosses/unions, round stock
-and circle extrusions, shells, revolves, sweeps, lofts, and arbitrary profiles.
+This means the project moved from "few rows can even be attempted" to "most
+rows can be assigned pure operation families." The next proof step is maturing
+each operation family's geometry/toolpaths until original-STEP verification
+passes at scale.
 
 ### Self-generated SubCAD-pair flow
 
