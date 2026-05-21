@@ -5,7 +5,7 @@ import json
 import pytest
 
 from src.data import run_zero_to_cad_feature_benchmarks as bench
-from src.data.zero_to_cad_dataset_manifest import load_manifest_jsonl
+from src.data.zero_to_cad_dataset_manifest import load_manifest_jsonl, make_attempt_record, write_manifest_jsonl
 
 
 def _rows(*items):
@@ -118,6 +118,58 @@ def test_executor_metrics_and_per_family_limits_are_distinct(tmp_path, monkeypat
     assert summary["families"]["primitive"]["plannable"] == 2
     assert summary["families"]["primitive"]["attempted"] == 1
     assert summary["families"]["primitive"]["failed"] == 1
+
+
+def test_accepted_index_skips_translator_and_counts_match(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        bench,
+        "iter_zero_to_cad_rows",
+        lambda *args, **kwargs: _rows(
+            ("already-accepted", ["box", "hole"], ".box(1, 2, 3).hole(0.5)"),
+            ("new-row", ["hole"], ".hole(2)"),
+        ),
+    )
+    accepted_manifest = tmp_path / "accepted.jsonl"
+    write_manifest_jsonl(
+        accepted_manifest,
+        [
+            make_attempt_record(
+                split="train",
+                uuid="already-accepted",
+                global_index=0,
+                families=["hole", "primitive"],
+                planner_tags=["drill", "rectangular_stock"],
+                status="matched",
+                accepted=True,
+            )
+        ],
+        append=False,
+    )
+    calls = []
+
+    def fake_executor(row, context):
+        calls.append(row["uuid"])
+        return {"executed": True, "matched": True}
+
+    summary = bench.run_feature_family_benchmark(
+        source_dir="fake",
+        split="train",
+        output_dir=str(tmp_path),
+        dry_run=False,
+        family_filter=["hole"],
+        accepted_index_jsonl=[str(accepted_manifest)],
+        executor=fake_executor,
+        write_summary=False,
+    )
+
+    assert calls == ["new-row"]
+    assert summary["scanned"] == 2
+    assert summary["attempted"] == 1
+    assert summary["executed"] == 1
+    assert summary["matched"] == 2
+    assert summary["skipped_accepted"] == 1
+    assert summary["families"]["hole"]["matched"] == 2
+    assert summary["families"]["hole"]["examples"][0]["skipped_accepted"] is True
 
 
 def test_executor_stops_at_max_attempts(tmp_path, monkeypatch):

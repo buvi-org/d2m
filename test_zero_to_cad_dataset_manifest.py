@@ -10,8 +10,11 @@ from src.data.zero_to_cad_dataset_manifest import (
     MANIFEST_SCHEMA,
     DatasetAttemptRecord,
     SourceIdentity,
+    accepted_pair_id,
+    build_accepted_index,
     load_manifest_jsonl,
     make_attempt_record,
+    source_key,
     summarize_manifest,
     write_manifest_jsonl,
 )
@@ -55,6 +58,7 @@ def test_make_attempt_record_normalizes_json_safe_fields():
     )
 
     assert record["schema"] == MANIFEST_SCHEMA
+    assert record["accepted_pair_id"] == "zero_to_cad:train:part-001"
     assert record["source"] == {
         "split": "train",
         "uuid": "part-001",
@@ -71,6 +75,40 @@ def test_make_attempt_record_normalizes_json_safe_fields():
     assert record["tolerance_policy"]["extra"]["captured_at"] == "2026-05-21T12:30:00"
     assert record["metadata"]["extra"]["seed_path"] == "prompts/seed.txt"
     json.dumps(record)
+
+
+def test_build_accepted_index_keeps_only_matched_accepted_rows():
+    matched = make_attempt_record(
+        split="train",
+        uuid="accepted-row",
+        global_index=1,
+        families=["hole"],
+        status="matched",
+        accepted=True,
+    )
+    failed = make_attempt_record(
+        split="train",
+        uuid="failed-row",
+        global_index=2,
+        families=["hole"],
+        status="failed",
+        accepted=False,
+    )
+    executed_not_accepted = make_attempt_record(
+        split="train",
+        uuid="executed-row",
+        global_index=3,
+        families=["hole"],
+        status="executed",
+        accepted=True,
+    )
+
+    index = build_accepted_index([failed, executed_not_accepted, matched])
+
+    assert accepted_pair_id("train", "accepted-row") == "zero_to_cad:train:accepted-row"
+    assert source_key(matched) == ("train", "accepted-row")
+    assert sorted(index) == [("train", "accepted-row")]
+    assert index[("train", "accepted-row")]["accepted"] is True
 
 
 def test_write_manifest_jsonl_appends_and_loads_records(tmp_path):

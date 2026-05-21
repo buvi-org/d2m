@@ -103,6 +103,7 @@ class DatasetAttemptRecord:
         data["schema"] = MANIFEST_SCHEMA
         data["status"] = status
         data["accepted"] = bool(self.accepted)
+        data["accepted_pair_id"] = accepted_pair_id(self.source.split, self.source.uuid)
         data["families"] = sorted({str(family) for family in self.families if str(family)})
         data["planner_tags"] = sorted({str(tag) for tag in self.planner_tags if str(tag)})
         return _json_safe(data)
@@ -147,6 +148,36 @@ def make_attempt_record(
         notes=str(notes),
     )
     return record.to_dict()
+
+
+def accepted_pair_id(split: str, uuid: str) -> str:
+    """Return the deterministic accepted-pair identifier for a source row."""
+    return f"zero_to_cad:{str(split)}:{str(uuid)}"
+
+
+def source_key(record_or_source: Mapping[str, Any]) -> tuple[str, str]:
+    """Return the stable ``(split, uuid)`` key for a manifest record/source."""
+    source = record_or_source.get("source", record_or_source)
+    return str(source.get("split", "")), str(source.get("uuid", ""))
+
+
+def build_accepted_index(records: Iterable[Mapping[str, Any] | DatasetAttemptRecord]) -> dict[tuple[str, str], dict[str, Any]]:
+    """Build an accepted-row index keyed by ``(split, uuid)``.
+
+    Only accepted records with lifecycle status ``matched`` are included, so
+    failed and partial rows remain retryable by default.
+    """
+    accepted: dict[tuple[str, str], dict[str, Any]] = {}
+    for record in records:
+        payload = record.to_dict() if isinstance(record, DatasetAttemptRecord) else dict(record)
+        if not bool(payload.get("accepted")):
+            continue
+        if _normalize_status(str(payload.get("status") or "planned")) != "matched":
+            continue
+        key = source_key(payload)
+        if key[0] and key[1]:
+            accepted[key] = _json_safe(payload)
+    return accepted
 
 
 def write_manifest_jsonl(

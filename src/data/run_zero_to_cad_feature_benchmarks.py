@@ -23,7 +23,12 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from .pure_subcad_planner import plan_pure_subcad_features
-from .zero_to_cad_dataset_manifest import make_attempt_record, write_manifest_jsonl
+from .zero_to_cad_dataset_manifest import (
+    build_accepted_index,
+    load_manifest_jsonl,
+    make_attempt_record,
+    write_manifest_jsonl,
+)
 
 
 DEFAULT_SOURCE_DIR = "data/zero_to_cad_100k"
@@ -82,6 +87,7 @@ class BenchmarkStats:
     executed: int = 0
     matched: int = 0
     failed: int = 0
+    skipped_accepted: int = 0
     consecutive_failures: int = 0
     unsupported: int = 0
     elapsed_seconds: float = 0.0
@@ -114,6 +120,7 @@ def run_feature_family_benchmark(
     executor: RowExecutor | None = None,
     write_summary: bool = True,
     manifest_jsonl: str | None = None,
+    accepted_index_jsonl: list[str] | None = None,
     _initial_attempted: int = 0,
     _initial_executed: int = 0,
     _initial_matched: int = 0,
@@ -130,6 +137,7 @@ def run_feature_family_benchmark(
     if write_summary:
         root.mkdir(parents=True, exist_ok=True)
     manifest_path = Path(manifest_jsonl) if manifest_jsonl else None
+    accepted_index = _load_accepted_index(accepted_index_jsonl)
 
     stats = BenchmarkStats(
         source_dir=source_dir,
@@ -170,6 +178,37 @@ def run_feature_family_benchmark(
         if stats.stopped_reason:
             break
         stats.scanned += 1
+        accepted_record = accepted_index.get((split, str(row.get("uuid", ""))))
+        if accepted_record is not None:
+            accepted_families = [
+                str(family) for family in accepted_record.get("families") or []
+                if str(family)
+            ]
+            if requested_families:
+                accepted_families = [
+                    family for family in accepted_families if family in requested_families
+                ]
+            if not requested_families or accepted_families:
+                _record_skipped_accepted(
+                    stats,
+                    family_stats,
+                    row,
+                    accepted_record,
+                    accepted_families,
+                )
+                stats.stopped_reason = _stop_reason(
+                    stats,
+                    max_attempts=max_attempts,
+                    max_failures=max_failures,
+                    max_consecutive_failures=max_consecutive_failures,
+                    target_matches=target_matches,
+                    min_match_rate_after_attempts=match_rate_guardrails,
+                    initial_attempted=_initial_attempted,
+                    initial_executed=_initial_executed,
+                    initial_matched=_initial_matched,
+                    initial_failed=_initial_failed,
+                )
+                continue
         plan = plan_pure_subcad_features(row.get("ops_trace") or [], row.get("cadquery_code") or "")
         row_summary = summarize_row(row, plan.to_dict())
 
@@ -298,6 +337,7 @@ def run_feature_family_benchmark_splits(
     executor: RowExecutor | None = None,
     write_summary: bool = True,
     manifest_jsonl: str | None = None,
+    accepted_index_jsonl: list[str] | None = None,
 ) -> dict[str, Any]:
     """Run split-level scans and return one aggregate summary."""
     root = Path(output_dir)
@@ -328,6 +368,7 @@ def run_feature_family_benchmark_splits(
             executor=executor,
             write_summary=write_summary,
             manifest_jsonl=manifest_jsonl,
+            accepted_index_jsonl=accepted_index_jsonl,
             _initial_attempted=attempted_so_far,
             _initial_executed=executed_so_far,
             _initial_matched=matched_so_far,
@@ -516,6 +557,43 @@ def _append_example(bucket: FamilyStats, row_summary: dict[str, Any], limit: int
         bucket.examples.append(row_summary)
 
 
+def _load_accepted_index(paths: list[str] | None) -> dict[tuple[str, str], dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for path_text in paths or []:
+        path = Path(path_text)
+        if path.exists():
+            records.extend(load_manifest_jsonl(path))
+    return build_accepted_index(records)
+
+
+def _record_skipped_accepted(
+    stats: BenchmarkStats,
+    family_stats: dict[str, FamilyStats],
+    row: dict[str, Any],
+    accepted_record: dict[str, Any],
+    accepted_families: list[str],
+) -> None:
+    stats.selected += 1
+    stats.matched += 1
+    stats.skipped_accepted += 1
+    row_summary = {
+        "global_index": row.get("global_index"),
+        "uuid": row.get("uuid"),
+        "cadquery_chars": len(row.get("cadquery_code") or ""),
+        "ops_trace_count": len(row.get("ops_trace") or []),
+        "families": accepted_families,
+        "operations": sorted({
+            str(tag) for tag in accepted_record.get("planner_tags") or []
+            if str(tag)
+        }),
+        "skipped_accepted": True,
+    }
+    for family in accepted_families or ["__accepted__"]:
+        bucket = family_stats.setdefault(family, FamilyStats(family=family))
+        bucket.matched += 1
+        _append_example(bucket, row_summary)
+
+
 def _normalize_family_filter(family_filter: list[str] | None) -> set[str]:
     return {
         str(family).strip().lower()
@@ -549,6 +627,7 @@ def _aggregate_split_summaries(
         "executed",
         "matched",
         "failed",
+        "skipped_accepted",
         "unsupported",
         "elapsed_seconds",
     ]
@@ -766,8 +845,15 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Optional JSONL path for per-attempt dataset manifest records.",
     )
+    parser.add_argument(
+        "--accepted-index",
+        action="append",
+        default=[],
+        help="Manifest JSONL path(s) to read for already accepted matched rows. May be repeated or comma-separated.",
+    )
     args = parser.parse_args(argv)
     comparison_methods = _parse_methods(args.comparison_methods)
+    accepted_index_paths = _parse_path_list(args.accepted_index)
     try:
         match_rate_guardrails = _parse_match_rate_guardrails(args.min_match_rate_after_attempts)
     except ValueError as exc:
@@ -808,6 +894,7 @@ def main(argv: list[str] | None = None) -> int:
             executor=executor,
             write_summary=not args.no_summary_file,
             manifest_jsonl=args.manifest_jsonl,
+            accepted_index_jsonl=accepted_index_paths,
         )
     else:
         summary = run_feature_family_benchmark(
@@ -828,6 +915,7 @@ def main(argv: list[str] | None = None) -> int:
             executor=executor,
             write_summary=not args.no_summary_file,
             manifest_jsonl=args.manifest_jsonl,
+            accepted_index_jsonl=accepted_index_paths,
         )
     print(json.dumps(summary, indent=2, default=str))
     return 0
@@ -837,6 +925,13 @@ def _parse_methods(value: str | None) -> list[str]:
     if not value or value.lower() in {"none", "off", "false"}:
         return []
     return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _parse_path_list(values: list[str] | None) -> list[str]:
+    paths: list[str] = []
+    for value in values or []:
+        paths.extend(item.strip() for item in value.split(",") if item.strip())
+    return paths
 
 
 def _parse_match_rate_guardrails(values: list[str] | None) -> list[MatchRateGuardrail]:

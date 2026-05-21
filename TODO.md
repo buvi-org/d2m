@@ -186,6 +186,9 @@ Immediate next implementation targets:
 - Done: run the first guarded live original-STEP verification pilot for the
   hole/retained-material family; first accepted pair is recorded in
   `runs/zero_to_cad_live_pilots/hole_pilot_006`.
+- Done: add manifest-backed accepted-row skipping so future benchmark runs can
+  count already verified pairs toward the target without re-spending translator
+  calls.
 - Next: scale the hole/retained-material pilot from 1 accepted pair to a small
   guarded batch of 10-25 accepted/attempted rows, preserving strict stop
   conditions.
