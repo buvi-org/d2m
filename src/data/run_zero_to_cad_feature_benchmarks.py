@@ -72,6 +72,7 @@ class BenchmarkStats:
     scan_limit: int | None
     per_family_limit: int | None
     family_filter: list[str] = field(default_factory=list)
+    family_exclude: list[str] = field(default_factory=list)
     target_successes: int = 100000
     max_attempts: int | None = None
     max_failures: int | None = None
@@ -110,6 +111,7 @@ def run_feature_family_benchmark(
     start_offset: int = 0,
     per_family_limit: int | None = None,
     family_filter: list[str] | None = None,
+    family_exclude: list[str] | None = None,
     target_successes: int = 100000,
     max_attempts: int | None = None,
     max_failures: int | None = None,
@@ -147,6 +149,7 @@ def run_feature_family_benchmark(
         scan_limit=scan_limit,
         per_family_limit=per_family_limit,
         family_filter=sorted(_normalize_family_filter(family_filter)),
+        family_exclude=sorted(_normalize_family_filter(family_exclude)),
         target_successes=target_successes,
         max_attempts=max_attempts,
         max_failures=max_failures,
@@ -160,6 +163,7 @@ def run_feature_family_benchmark(
     attempts_by_family: Counter[str] = Counter()
     started = time.perf_counter()
     requested_families = set(stats.family_filter)
+    excluded_families = set(stats.family_exclude)
     match_rate_guardrails = _normalize_match_rate_guardrails(min_match_rate_after_attempts)
     stats.stopped_reason = _stop_reason(
         stats,
@@ -184,6 +188,9 @@ def run_feature_family_benchmark(
                 str(family) for family in accepted_record.get("families") or []
                 if str(family)
             ]
+            if excluded_families and any(family in excluded_families for family in accepted_families):
+                stats.filtered_out += 1
+                continue
             if requested_families:
                 accepted_families = [
                     family for family in accepted_families if family in requested_families
@@ -225,6 +232,9 @@ def run_feature_family_benchmark(
         families = sorted({feature.family for feature in plan.features})
         statuses = Counter(feature.planner_status for feature in plan.features)
         stats.plannable += 1
+        if excluded_families and any(family in excluded_families for family in families):
+            stats.filtered_out += 1
+            continue
         selected_families = families
         if requested_families:
             selected_families = [family for family in families if family in requested_families]
@@ -327,6 +337,7 @@ def run_feature_family_benchmark_splits(
     start_offset: int = 0,
     per_family_limit: int | None = None,
     family_filter: list[str] | None = None,
+    family_exclude: list[str] | None = None,
     target_successes: int = 100000,
     max_attempts: int | None = None,
     max_failures: int | None = None,
@@ -358,6 +369,7 @@ def run_feature_family_benchmark_splits(
             start_offset=start_offset,
             per_family_limit=per_family_limit,
             family_filter=family_filter,
+            family_exclude=family_exclude,
             target_successes=target_successes,
             max_attempts=max_attempts,
             max_failures=max_failures,
@@ -383,6 +395,7 @@ def run_feature_family_benchmark_splits(
         source_dir=source_dir,
         output_dir=str(root),
         family_filter=family_filter,
+        family_exclude=family_exclude,
         target_successes=target_successes,
         max_attempts=max_attempts,
         max_failures=max_failures,
@@ -608,6 +621,7 @@ def _aggregate_split_summaries(
     source_dir: str,
     output_dir: str,
     family_filter: list[str] | None,
+    family_exclude: list[str] | None,
     target_successes: int,
     max_attempts: int | None,
     max_failures: int | None,
@@ -676,6 +690,7 @@ def _aggregate_split_summaries(
         "scan_limit": scan_limit,
         "per_family_limit": per_family_limit,
         "family_filter": sorted(_normalize_family_filter(family_filter)),
+        "family_exclude": sorted(_normalize_family_filter(family_exclude)),
         "target_successes": target_successes,
         "max_attempts": max_attempts,
         "max_failures": max_failures,
@@ -781,6 +796,12 @@ def main(argv: list[str] | None = None) -> int:
         default=[],
         help="Restrict selected rows to a planner family. May be repeated.",
     )
+    parser.add_argument(
+        "--exclude-family",
+        action="append",
+        default=[],
+        help="Skip rows containing this planner family. May be repeated.",
+    )
     parser.add_argument("--target-successes", type=int, default=100000)
     parser.add_argument(
         "--max-attempts",
@@ -884,6 +905,7 @@ def main(argv: list[str] | None = None) -> int:
             start_offset=args.start_offset,
             per_family_limit=args.per_family_limit,
             family_filter=args.family,
+            family_exclude=args.exclude_family,
             target_successes=args.target_successes,
             max_attempts=args.max_attempts,
             max_failures=args.max_failures,
@@ -905,6 +927,7 @@ def main(argv: list[str] | None = None) -> int:
             start_offset=args.start_offset,
             per_family_limit=args.per_family_limit,
             family_filter=args.family,
+            family_exclude=args.exclude_family,
             target_successes=args.target_successes,
             max_attempts=args.max_attempts,
             max_failures=args.max_failures,

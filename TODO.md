@@ -189,6 +189,9 @@ Immediate next implementation targets:
 - Done: add manifest-backed accepted-row skipping so future benchmark runs can
   count already verified pairs toward the target without re-spending translator
   calls.
+- Done: add feature-family exclusion filters so guarded live batches can avoid
+  known high-risk families such as axisymmetric/revolve until their geometry is
+  implemented.
 - Next: scale the hole/retained-material pilot from 1 accepted pair to a small
   guarded batch of 10-25 accepted/attempted rows, preserving strict stop
   conditions.

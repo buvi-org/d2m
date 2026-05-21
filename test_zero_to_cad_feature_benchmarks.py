@@ -383,6 +383,33 @@ def test_family_filter_selects_matching_rows_only(tmp_path, monkeypatch):
     assert summary["families"]["hole"]["examples"][0]["uuid"] == "hole-1"
 
 
+def test_family_exclude_skips_risky_mixed_family_rows(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        bench,
+        "iter_zero_to_cad_rows",
+        lambda *args, **kwargs: _rows(
+            ("hole-axisymmetric", ["box", "hole", "revolve"], ".box(1, 2, 3).revolve().hole(1)"),
+            ("hole-simple", ["box", "hole"], ".box(1, 2, 3).hole(1)"),
+        ),
+    )
+
+    summary = bench.run_feature_family_benchmark(
+        source_dir="fake",
+        output_dir=str(tmp_path),
+        dry_run=True,
+        family_filter=["hole"],
+        family_exclude=["axisymmetric"],
+        write_summary=False,
+    )
+
+    assert summary["scanned"] == 2
+    assert summary["plannable"] == 2
+    assert summary["selected"] == 1
+    assert summary["filtered_out"] == 1
+    assert summary["family_exclude"] == ["axisymmetric"]
+    assert summary["families"]["hole"]["examples"][0]["uuid"] == "hole-simple"
+
+
 def test_all_split_aggregate_merges_family_metrics(tmp_path, monkeypatch):
     def fake_rows(source_dir, split, **kwargs):
         if split == "train":
