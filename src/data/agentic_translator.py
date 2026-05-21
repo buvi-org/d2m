@@ -1404,6 +1404,13 @@ class AgenticTranslator:
         final_comparison = None
         final_mesh_comparison = None
         final_feature_comparison = None
+        best_code = None
+        best_exec = None
+        best_comparison = None
+        best_mesh_comparison = None
+        best_feature_comparison = None
+        best_attempt = None
+        best_attempt_score = None
         reference_mesh = None
         reference_mesh_error = None
         stop_reason = "not_started"
@@ -1573,6 +1580,24 @@ class AgenticTranslator:
             final_comparison = comparison
             final_mesh_comparison = _compact_for_history(mesh_comparison)
             final_feature_comparison = _compact_for_history(feature_comparison)
+            if exec_result.get("success"):
+                mesh_score = 0.0
+                if isinstance(mesh_comparison, dict):
+                    mesh_score = float(mesh_comparison.get("score") or 0.0)
+                volume_error = abs(1.0 - float(comparison.get("volume_ratio") or 0.0))
+                attempt_score = (
+                    1 if comparison.get("match") else 0,
+                    mesh_score,
+                    -volume_error,
+                )
+                if best_attempt_score is None or attempt_score > best_attempt_score:
+                    best_code = code
+                    best_exec = exec_result
+                    best_comparison = comparison
+                    best_mesh_comparison = _compact_for_history(mesh_comparison)
+                    best_feature_comparison = _compact_for_history(feature_comparison)
+                    best_attempt = attempt
+                    best_attempt_score = attempt_score
 
             # --- Add tool result to messages ---
             feedback_prompt = build_iteration_prompt(
@@ -1645,6 +1670,15 @@ class AgenticTranslator:
                 "content": feedback_prompt,
             })
 
+        returned_best_attempt = False
+        if (not (final_exec or {}).get("success")) and best_exec is not None:
+            final_code = best_code
+            final_exec = best_exec
+            final_comparison = best_comparison
+            final_mesh_comparison = best_mesh_comparison
+            final_feature_comparison = best_feature_comparison
+            returned_best_attempt = True
+
         return {
             "success": final_comparison.get("match", False) if final_comparison else False,
             "subcad_code": final_code,
@@ -1655,6 +1689,8 @@ class AgenticTranslator:
             "feature_comparison": final_feature_comparison,
             "history": history,
             "stop_reason": stop_reason,
+            "returned_best_attempt": returned_best_attempt,
+            "best_attempt": best_attempt,
             "error": None,
         }
 

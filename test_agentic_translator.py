@@ -606,6 +606,101 @@ finally:
 
 
 # =========================================================================
+#  Test 12: Best executable attempt survives failed final repair
+# =========================================================================
+
+print("\n12. Best executable attempt retention ...")
+
+_orig_llm_client = agentic_mod.LLMClient
+_orig_run_subcad = agentic_mod.run_subcad
+_orig_compare_to_reference = agentic_mod.compare_to_reference
+_orig_step_to_stock_dims = agentic_mod.step_to_stock_dims
+_orig_has_mesh_compare = agentic_mod._HAS_MESH_COMPARE
+
+
+class _FailingFinalLLMClient:
+    def __init__(self, *args, **kwargs):
+        self.calls = 0
+
+    def tool_chat(self, messages, tools, temperature=0.2, max_tokens=4096):
+        self.calls += 1
+        return {
+            "id": f"best-call-{self.calls}",
+            "name": "execute_subcad",
+            "arguments": {"code": f"# attempt {self.calls}\npart = Stock.rectangular(10, 10, 10)"},
+        }
+
+
+try:
+    run_calls = []
+    comparisons = [
+        {"match": True, "volume_ratio": 0.91, "target_volume": 1000.0, "candidate_volume": 910.0},
+        {"match": True, "volume_ratio": 0.92, "target_volume": 1000.0, "candidate_volume": 920.0},
+    ]
+
+    def _fake_run_subcad_best(code):
+        run_calls.append(code)
+        if len(run_calls) == 3:
+            return {"success": False, "error": "No 'part' variable found"}
+        return {
+            "success": True,
+            "volume": 900.0 + len(run_calls) * 10.0,
+            "faces": 6,
+            "part": _FakePart(),
+            "step_path": f"candidate-{len(run_calls)}.step",
+            "stl_path": None,
+            "process_plan": {"operations": []},
+        }
+
+    def _fake_compare_best(candidate, reference):
+        return comparisons.pop(0)
+
+    agentic_mod.LLMClient = _FailingFinalLLMClient
+    agentic_mod.run_subcad = _fake_run_subcad_best
+    agentic_mod.compare_to_reference = _fake_compare_best
+    agentic_mod.step_to_stock_dims = lambda step_bytes: {
+        "length": 10.0, "width": 10.0, "height": 10.0
+    }
+    agentic_mod._HAS_MESH_COMPARE = False
+
+    with tempfile.NamedTemporaryFile(suffix=".step", delete=False) as tf:
+        tf.write(b"mock-step")
+        mock_step_path = tf.name
+
+    try:
+        translator = AgenticTranslator(
+            provider="mock",
+            verbose=False,
+            tolerance=0.01,
+            safety_cap=3,
+            strict_mesh_convergence=True,
+            comparison_methods=["slice"],
+        )
+        best_result = translator.translate(
+            {
+                "cadquery_file": "part = cq.Workplane('XY').box(10, 10, 10)",
+                "cadquery_ops_json": "[]",
+            },
+            step_path=mock_step_path,
+        )
+    finally:
+        if os.path.exists(mock_step_path):
+            os.unlink(mock_step_path)
+
+    check(best_result["returned_best_attempt"], "returns best executable attempt after failed final repair")
+    check(best_result["best_attempt"] == 2, "best executable attempt index is recorded")
+    check(best_result["exec_result"]["success"], "returned best attempt keeps successful execution result")
+    check(best_result["comparison"]["volume_ratio"] == 0.92,
+          "returned best attempt keeps best comparison metrics")
+finally:
+    agentic_mod.LLMClient = _orig_llm_client
+    agentic_mod.run_subcad = _orig_run_subcad
+    agentic_mod.compare_to_reference = _orig_compare_to_reference
+    agentic_mod.step_to_stock_dims = _orig_step_to_stock_dims
+    agentic_mod._HAS_MESH_COMPARE = _orig_has_mesh_compare
+
+
+# =========================================================================
 #  Summary
 # =========================================================================
 

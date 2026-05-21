@@ -244,6 +244,8 @@ Immediate next implementation targets:
   and index 28 still hits empty-selection failures after retained/boss planning.
 - Done: add translator prompt coverage for `Stock.cylindrical(...)` so round
   stock/circle-extrusion rows are not forced into rectangular stock.
+- Done: preserve the best executable translator attempt when a later repair
+  attempt fails execution, so useful geometry/comparison results are not lost.
 
 ## SubCAD Shop-Floor v1
 
