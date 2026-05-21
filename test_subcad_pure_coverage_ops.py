@@ -206,6 +206,57 @@ check(bool(base_cut_evidence), "planner extracts base-band rectangular cut evide
 check("base_height=0.0" in base_cut_evidence[0]["suggested_subcad"],
       "base-band rectangular cut suggests z-band pocket")
 
+layered_part_plan = plan_pure_subcad_features(
+    [],
+    """
+    flange_leg_length = 80.0
+    flange_leg_width = 30.0
+    flange_thickness = 8.0
+    inner_cut_width = 20.0
+    boss_diameter = 20.0
+    boss_height = 12.0
+    rib_height = 4.0
+    rib_width = 6.0
+    rib_spacing = 12.0
+    fusion_overlap = 0.5
+    base = cq.Workplane('XY').rect(flange_leg_length, flange_leg_width).extrude(flange_thickness)
+    cut = (
+        cq.Workplane('XY')
+        .rect(flange_leg_length - inner_cut_width, flange_leg_width - inner_cut_width)
+        .translate((inner_cut_width / 2.0, inner_cut_width / 2.0))
+        .extrude(flange_thickness)
+    )
+    l_shape = base.cut(cut)
+    boss = (
+        cq.Workplane('XY')
+        .center(inner_cut_width / 2.0, inner_cut_width / 2.0)
+        .circle(boss_diameter / 2.0)
+        .extrude(boss_height)
+        .translate((0, 0, flange_thickness - fusion_overlap))
+    )
+    result = l_shape.union(boss)
+    for i in range(3):
+        rib_x = -4.0 + i * rib_spacing
+        rib = (
+            cq.Workplane('XY')
+            .center(rib_x, 2.0)
+            .rect(rib_spacing * 0.8, rib_width)
+            .extrude(rib_height)
+            .translate((0, 0, flange_thickness - fusion_overlap))
+        )
+        result = result.union(rib)
+    """,
+)
+layered_evidence = [
+    feature.evidence for feature in layered_part_plan.features
+    if feature.operation == "layered_retained_profile_plan"
+]
+check(bool(layered_evidence), "planner emits full layered retained-profile plan")
+check(
+    "Stock.rectangular(80, 40, 19.5)" in layered_evidence[0]["suggested_subcad"],
+    "layered retained-profile plan expands stock to full boss envelope",
+)
+
 polar_plan = plan_pure_subcad_features(
     [],
     """

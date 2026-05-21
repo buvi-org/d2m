@@ -132,7 +132,8 @@ def plan_pure_subcad_features(
     if "rect" in op_names and ("cutblind" in op_names or ".cutblind(" in code_text):
         add("cadquery.rect.cutBlind", "cut", PLANNED_EXACT, "profile_pocket",
             "rectangular cut maps to profile pocket")
-    for evidence in _base_cut_pocket_evidence(code_text):
+    base_cut_evidence = _base_cut_pocket_evidence(code_text)
+    for evidence in base_cut_evidence:
         add(evidence.get("source", "cadquery.base_cut"),
             "cut", PLANNED_EXACT, "pocket",
             "source-derived lower/base-band rectangular cut is available",
@@ -182,7 +183,8 @@ def plan_pure_subcad_features(
         add("cadquery.union", "retained_material", PLANNED_EXACT, "machine_around_profile",
             "constructive boss/pad/rib maps to machining around retained material")
 
-    for evidence in _retained_material_parameter_evidence(code_text):
+    retained_evidence = _retained_material_parameter_evidence(code_text)
+    for evidence in retained_evidence:
         operation = "machine_around_profiles" if len(evidence.get("profiles") or []) > 1 else "machine_around_profile"
         if evidence.get("profile_type") == "circle":
             operation = "machine_around_cylinder"
@@ -192,6 +194,11 @@ def plan_pure_subcad_features(
             "retained_material", PLANNED_EXACT, operation,
             "source-derived retained-material dimensions and positions are available",
             **feature_evidence)
+    for evidence in _layered_profile_plan_evidence(base_cut_evidence, retained_evidence):
+        add(evidence.get("source", "cadquery.layered_retained_profile_plan"),
+            "retained_material", PLANNED_EXACT, "layered_retained_profile_plan",
+            "source-derived layered retained profile sequence is available",
+            **{key: value for key, value in evidence.items() if key != "source"})
 
     if "revolve" in op_names or ".revolve(" in code_text:
         add("cadquery.revolve", "axisymmetric", PLANNED_MULTI_PROCESS, "turn_profile",
@@ -361,6 +368,7 @@ def _retained_material_parameter_evidence(code_text: str) -> list[dict[str, Any]
 
 def _base_cut_pocket_evidence(code_text: str) -> list[dict[str, Any]]:
     env = _numeric_env(code_text)
+    outer = _outer_rect_extrude(code_text, env)
     evidence: list[dict[str, Any]] = []
     assignment_re = re.compile(
         r"^\s*(?P<name>\w+)\s*=\s*\(\s*cq\.workplane\([^)]*\)(?P<body>.*?\.rect\([^)]*\).*?\.translate\([^)]*\).*?\.extrude\([^)]*\).*?)\n\s*\)",
@@ -383,6 +391,8 @@ def _base_cut_pocket_evidence(code_text: str) -> list[dict[str, Any]]:
         evidence.append({
             "source": f"cadquery.base_cut.{name}",
             "profile": profile,
+            "retained_profile": _retained_l_profile(outer, profile) if outer else None,
+            "outer_profile": outer,
             "depth": depth,
             "base_height": 0.0,
             "suggested_subcad": (
@@ -392,6 +402,53 @@ def _base_cut_pocket_evidence(code_text: str) -> list[dict[str, Any]]:
             ),
         })
     return evidence
+
+
+def _outer_rect_extrude(code_text: str, env: dict[str, float]) -> dict[str, Any] | None:
+    match = re.search(
+        r"^\s*\w+\s*=\s*cq\.workplane\([^)]*\)\s*\.rect\((?P<args>[^)]*)\)\s*\.extrude\((?P<depth>[^)]*)\)",
+        code_text,
+        re.IGNORECASE | re.MULTILINE,
+    )
+    if not match:
+        return None
+    args = _split_args(match.group("args"))
+    if len(args) < 2:
+        return None
+    length = _eval_number(args[0], env)
+    width = _eval_number(args[1], env)
+    depth = _eval_number(match.group("depth"), env)
+    if length is None or width is None:
+        return None
+    return {"type": "rect", "length": length, "width": width, "cx": 0.0, "cy": 0.0, "depth": depth}
+
+
+def _retained_l_profile(outer: dict[str, Any] | None, cut_profile: dict[str, Any]) -> dict[str, Any] | None:
+    if not outer:
+        return None
+    ox0, oy0, ox1, oy1 = _rect_bounds(outer)
+    cx0, cy0, cx1, cy1 = _rect_bounds(cut_profile)
+    if abs(cx1 - ox1) < 1e-6 and abs(cy1 - oy1) < 1e-6:
+        return {
+            "type": "polygon",
+            "points": [
+                (ox0, oy0),
+                (ox1, oy0),
+                (ox1, cy0),
+                (cx0, cy0),
+                (cx0, oy1),
+                (ox0, oy1),
+            ],
+        }
+    return None
+
+
+def _rect_bounds(profile: dict[str, Any]) -> tuple[float, float, float, float]:
+    length = float(profile.get("length", profile.get("width", 0.0)))
+    width = float(profile.get("width", profile.get("length", 0.0)))
+    cx = float(profile.get("cx", profile.get("x", 0.0)))
+    cy = float(profile.get("cy", profile.get("y", 0.0)))
+    return (cx - length / 2.0, cy - width / 2.0, cx + length / 2.0, cy + width / 2.0)
 
 
 def _for_loop_retained_rectangles(code_text: str) -> list[dict[str, Any]]:
@@ -522,6 +579,94 @@ def _mixed_height_retained_level_evidence(
                 "suggested_subcad": " then ".join(sequence),
             })
     return suggestions
+
+
+def _layered_profile_plan_evidence(
+    base_cut_evidence: list[dict[str, Any]],
+    retained_evidence: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    plans: list[dict[str, Any]] = []
+    bases = [item for item in base_cut_evidence if item.get("retained_profile") and item.get("outer_profile")]
+    rib_groups = [item for item in retained_evidence if len(item.get("profiles") or []) > 1 and item.get("base_height") is not None]
+    bosses = [item for item in retained_evidence if item.get("profile_type") == "circle" and item.get("profile")]
+    for base in bases:
+        base_profile = base["retained_profile"]
+        outer = base["outer_profile"]
+        base_top = float(base.get("depth") or 0.0)
+        for ribs in rib_groups:
+            rib_base = float(ribs.get("base_height"))
+            rib_height = float(ribs.get("height") or 0.0)
+            if rib_height <= 0.0:
+                continue
+            for boss in bosses:
+                boss_base = boss.get("base_height")
+                boss_height = boss.get("height")
+                boss_profile = boss.get("profile")
+                if boss_base is None or boss_height is None or boss_profile is None:
+                    continue
+                boss_base = float(boss_base)
+                boss_height = float(boss_height)
+                if abs(boss_base - rib_base) > 1e-6 or boss_height <= rib_height:
+                    continue
+                stock_envelope = _symmetric_stock_envelope(outer, [boss_profile, *(ribs.get("profiles") or [])])
+                sequence: list[str] = []
+                stock = (
+                    f"Stock.rectangular({stock_envelope['length']:.6g}, "
+                    f"{stock_envelope['width']:.6g}, {boss_base + boss_height:.6g})"
+                )
+                sequence.append(
+                    f".machine_around_profile({base_profile!r}, height={boss_base:.6g}, "
+                    f"base_height=0.0, stock_envelope={stock_envelope!r})"
+                )
+                fusion_height = max(base_top - boss_base, 0.0)
+                if fusion_height > 1e-6:
+                    sequence.append(
+                        f".machine_around_profiles([{base_profile!r}, {boss_profile!r}], "
+                        f"height={fusion_height:.6g}, base_height={boss_base:.6g}, "
+                        f"stock_envelope={stock_envelope!r})"
+                    )
+                visible_rib_height = max(rib_height - fusion_height, 0.0)
+                if visible_rib_height > 1e-6:
+                    lower_profiles = [boss_profile, *(ribs.get("profiles") or [])]
+                    sequence.append(_suggest_machine_around_profiles(lower_profiles, visible_rib_height, base_top))
+                upper_base = boss_base + rib_height
+                upper_height = max((boss_base + boss_height) - upper_base, 0.0)
+                if upper_height > 1e-6:
+                    sequence.append(
+                        f".machine_around_cylinder({boss_profile['diameter']:.6g}, "
+                        f"height={upper_height:.6g}, cx={boss_profile['cx']:.6g}, "
+                        f"cy={boss_profile['cy']:.6g}, base_height={upper_base:.6g})"
+                    )
+                plans.append({
+                    "source": "cadquery.layered_retained_profile_plan",
+                    "suggested_stock": stock,
+                    "suggested_sequence": sequence,
+                    "suggested_subcad": stock + "".join(sequence),
+                    "stock_envelope": stock_envelope,
+                    "retained_profile": base_profile,
+                })
+    return plans
+
+
+def _symmetric_stock_envelope(outer: dict[str, Any], profiles: list[dict[str, Any]]) -> dict[str, Any]:
+    xmin, ymin, xmax, ymax = _rect_bounds(outer)
+    for profile in profiles:
+        ptype = str(profile.get("type", profile.get("shape", ""))).lower()
+        if ptype in {"circle", "circular"} or "diameter" in profile or "radius" in profile:
+            radius = float(profile.get("radius", float(profile.get("diameter", 0.0)) / 2.0))
+            cx = float(profile.get("cx", 0.0))
+            cy = float(profile.get("cy", 0.0))
+            bx0, by0, bx1, by1 = cx - radius, cy - radius, cx + radius, cy + radius
+        else:
+            bx0, by0, bx1, by1 = _rect_bounds(profile)
+        xmin, ymin, xmax, ymax = min(xmin, bx0), min(ymin, by0), max(xmax, bx1), max(ymax, by1)
+    return {
+        "type": "rect",
+        "length": 2.0 * max(abs(xmin), abs(xmax)),
+        "width": 2.0 * max(abs(ymin), abs(ymax)),
+        "cx": 0.0,
+        "cy": 0.0,
+    }
 
 
 def _retained_chain_evidence(chain: str, code_text: str) -> dict[str, Any]:
