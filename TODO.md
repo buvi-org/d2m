@@ -88,11 +88,13 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 2 recorded by guarded live pilots:
+- Matched original-STEP-verified pairs: 3 recorded by guarded live pilots:
   - `hole_pilot_006`, train global index 1, UUID
     `420cc2e2-e6c4-23e5-092a-6980c7853952`.
   - `hole_batch_002_filtered`, train global index 8, UUID
     `c691d510-62b1-786d-6815-d0bbe5ece63c`.
+  - `hole_batch_003_edge_retry`, train global index 14, UUID
+    `715a4e72-092b-d79a-277e-42ff521cef71`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -199,12 +201,15 @@ Immediate next implementation targets:
   robustness as the next blocker.
 - Done: harden directional edge-chamfer selectors and make edge chamfer degrade
   safely when OpenCascade cannot build the requested chamfer.
+- Done: rerun the edge-treatment retry batch; accepted row 14 and isolated row
+  13 as a retained-material placement/union geometry gap rather than an edge
+  treatment crash.
 - Next: scale the hole/retained-material pilot from 1 accepted pair to a small
   guarded batch of 10-25 accepted/attempted rows, preserving strict stop
   conditions.
-- Next: rerun a tiny filtered retry batch to see whether the previous row 13/14
-  failures now advance to geometry comparison, then patch the next concrete
-  geometry mismatch.
+- Next: add retained-material placement support (`cx`, `cy`, explicit
+  stock_envelope) so side bosses/catches can be represented without collapsing
+  the whole stock.
 
 ## SubCAD Shop-Floor v1
 
