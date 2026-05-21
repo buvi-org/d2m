@@ -500,6 +500,37 @@ check(
 variable_points_profile_exec = run_subcad(variable_points_profile_subcad)
 check(variable_points_profile_exec["success"], "deterministic variable-points profile SubCAD code executes")
 
+arc_profile_code = """
+import cadquery as cq
+arm_length = 80
+arm_width = 30
+arm_height = 15
+radius_fillet = 5
+w = arm_width/2
+h = arm_height
+r = radius_fillet
+result = (
+    cq.Workplane('XY')
+    .moveTo(-w,0)
+    .lineTo(w,0)
+    .lineTo(w, h - r)
+    .threePointArc((w, h), (w - r, h))
+    .lineTo(-w + r, h)
+    .threePointArc((-w, h), (-w, h - r))
+    .close()
+    .extrude(arm_length)
+)
+"""
+arc_profile_subcad = build_deterministic_subcad_code(arc_profile_code, [])
+check(arc_profile_subcad is not None, "planner builds deterministic arc-profile SubCAD code")
+check(
+    "Stock.rectangular(" in arc_profile_subcad
+    and arc_profile_subcad.count("),") > 20,
+    "deterministic arc-profile code samples three-point arcs",
+)
+arc_profile_exec = run_subcad(arc_profile_subcad)
+check(arc_profile_exec["success"], "deterministic arc-profile SubCAD code executes")
+
 l_bracket_top_rib_code = """
 import cadquery as cq
 from types import SimpleNamespace as Measures

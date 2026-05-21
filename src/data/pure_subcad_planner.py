@@ -1344,10 +1344,25 @@ def _assigned_points_literal(code_text: str, name: str, env: dict[str, float]) -
 
 def _line_chain_points(code_text: str, env: dict[str, float]) -> list[tuple[float, float]]:
     points: list[tuple[float, float]] = []
-    for match in re.finditer(r"\.(moveTo|lineTo)\s*\(", code_text):
+    for match in re.finditer(r"\.(moveTo|lineTo|threePointArc)\s*\(", code_text):
         call_name = match.group(1)
         args, _ = _call_args_at(code_text, match.end() - 1)
-        if not args or len(args) < 2:
+        if not args:
+            continue
+        if call_name == "threePointArc":
+            if len(args) < 2:
+                continue
+            if not points:
+                points.append((0.0, 0.0))
+            mid = _eval_point_expr(args[0], env)
+            end = _eval_point_expr(args[1], env)
+            if mid is None or end is None:
+                continue
+            for point in _sample_three_point_arc(points[-1], mid, end):
+                if not points or (abs(points[-1][0] - point[0]) > 1e-9 or abs(points[-1][1] - point[1]) > 1e-9):
+                    points.append(point)
+            continue
+        if len(args) < 2:
             continue
         x = _eval_number(args[0], env)
         y = _eval_number(args[1], env)
@@ -1358,6 +1373,63 @@ def _line_chain_points(code_text: str, env: dict[str, float]) -> list[tuple[floa
         if not points or (abs(points[-1][0] - x) > 1e-9 or abs(points[-1][1] - y) > 1e-9):
             points.append((x, y))
     return points
+
+
+def _eval_point_expr(expr: str, env: dict[str, float]) -> tuple[float, float] | None:
+    try:
+        value = _eval_ast_value(ast.parse(expr, mode="eval").body, env, {})
+    except SyntaxError:
+        return None
+    if (
+        isinstance(value, (list, tuple))
+        and len(value) >= 2
+        and isinstance(value[0], (int, float))
+        and isinstance(value[1], (int, float))
+    ):
+        return (float(value[0]), float(value[1]))
+    return None
+
+
+def _sample_three_point_arc(
+    start: tuple[float, float],
+    mid: tuple[float, float],
+    end: tuple[float, float],
+) -> list[tuple[float, float]]:
+    x1, y1 = start
+    x2, y2 = mid
+    x3, y3 = end
+    determinant = 2.0 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2))
+    if abs(determinant) < 1e-9:
+        return [end]
+    ux = (
+        (x1 * x1 + y1 * y1) * (y2 - y3)
+        + (x2 * x2 + y2 * y2) * (y3 - y1)
+        + (x3 * x3 + y3 * y3) * (y1 - y2)
+    ) / determinant
+    uy = (
+        (x1 * x1 + y1 * y1) * (x3 - x2)
+        + (x2 * x2 + y2 * y2) * (x1 - x3)
+        + (x3 * x3 + y3 * y3) * (x2 - x1)
+    ) / determinant
+    radius = math.hypot(x1 - ux, y1 - uy)
+    if radius <= 0:
+        return [end]
+    theta_start = math.atan2(y1 - uy, x1 - ux)
+    theta_mid = math.atan2(y2 - uy, x2 - ux)
+    theta_end = math.atan2(y3 - uy, x3 - ux)
+    full = 2.0 * math.pi
+    ccw_delta = (theta_end - theta_start) % full
+    ccw_mid = (theta_mid - theta_start) % full
+    if ccw_mid <= ccw_delta:
+        sweep = ccw_delta
+    else:
+        sweep = -((theta_start - theta_end) % full)
+    segments = max(4, int(math.ceil(abs(sweep) / (math.pi / 24.0))))
+    samples: list[tuple[float, float]] = []
+    for index in range(1, segments + 1):
+        theta = theta_start + sweep * (index / segments)
+        samples.append((ux + radius * math.cos(theta), uy + radius * math.sin(theta)))
+    return samples
 
 
 def _point_on_polygon_edge(
