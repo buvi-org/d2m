@@ -2,7 +2,10 @@
 
 import json
 
+import pytest
+
 from src.data import run_zero_to_cad_feature_benchmarks as bench
+from src.data.zero_to_cad_dataset_manifest import load_manifest_jsonl
 
 
 def _rows(*items):
@@ -16,6 +19,15 @@ def _rows(*items):
             "parquet_file": "fake.parquet",
             "row_index": index,
         }
+
+
+def _primitive_rows(count):
+    return _rows(
+        *[
+            (f"primitive-{index}", ["box"], f".box({index + 1}, 2, 3)")
+            for index in range(count)
+        ]
+    )
 
 
 def test_dry_run_buckets_rows_by_planner_family_and_writes_summary(tmp_path, monkeypatch):
@@ -44,7 +56,9 @@ def test_dry_run_buckets_rows_by_planner_family_and_writes_summary(tmp_path, mon
     assert summary["executed"] == 0
     assert summary["matched"] == 0
     assert summary["failed"] == 0
+    assert summary["consecutive_failures"] == 0
     assert summary["unsupported"] == 1
+    assert summary["stopped_reason"] is None
     assert summary["remaining_to_goal"] == 100000
     assert summary["families"]["primitive"]["plannable"] == 2
     assert summary["families"]["hole"]["plannable"] == 1
@@ -96,12 +110,198 @@ def test_executor_metrics_and_per_family_limits_are_distinct(tmp_path, monkeypat
     assert summary["executed"] == 2
     assert summary["matched"] == 1
     assert summary["failed"] == 1
+    assert summary["consecutive_failures"] == 1
     assert summary["match_rate"] == 0.5
+    assert summary["stopped_reason"] is None
     assert summary["families"]["hole"]["attempted"] == 1
     assert summary["families"]["hole"]["matched"] == 1
     assert summary["families"]["primitive"]["plannable"] == 2
     assert summary["families"]["primitive"]["attempted"] == 1
     assert summary["families"]["primitive"]["failed"] == 1
+
+
+def test_executor_stops_at_max_attempts(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        bench,
+        "iter_zero_to_cad_rows",
+        lambda *args, **kwargs: _primitive_rows(5),
+    )
+    calls = []
+
+    def fake_executor(row, context):
+        calls.append(row["uuid"])
+        return {"executed": True, "matched": True}
+
+    summary = bench.run_feature_family_benchmark(
+        source_dir="fake",
+        output_dir=str(tmp_path),
+        dry_run=False,
+        max_attempts=2,
+        executor=fake_executor,
+        write_summary=False,
+    )
+
+    assert calls == ["primitive-0", "primitive-1"]
+    assert summary["stopped_reason"] == "max_attempts"
+    assert summary["scanned"] == 2
+    assert summary["attempted"] == 2
+    assert summary["executed"] == 2
+    assert summary["matched"] == 2
+    assert summary["failed"] == 0
+    assert summary["families"]["primitive"]["attempted"] == 2
+
+
+def test_executor_stops_at_max_failures_without_resetting_total(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        bench,
+        "iter_zero_to_cad_rows",
+        lambda *args, **kwargs: _primitive_rows(5),
+    )
+    outcomes = [False, True, False, True]
+
+    def fake_executor(row, context):
+        return {"executed": True, "matched": outcomes.pop(0)}
+
+    summary = bench.run_feature_family_benchmark(
+        source_dir="fake",
+        output_dir=str(tmp_path),
+        dry_run=False,
+        max_failures=2,
+        executor=fake_executor,
+        write_summary=False,
+    )
+
+    assert summary["stopped_reason"] == "max_failures"
+    assert summary["attempted"] == 3
+    assert summary["executed"] == 3
+    assert summary["matched"] == 1
+    assert summary["failed"] == 2
+    assert summary["consecutive_failures"] == 1
+    assert summary["families"]["primitive"]["failed"] == 2
+
+
+def test_executor_stops_at_max_consecutive_failures(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        bench,
+        "iter_zero_to_cad_rows",
+        lambda *args, **kwargs: _primitive_rows(5),
+    )
+
+    def fake_executor(row, context):
+        return {"executed": True, "matched": False}
+
+    summary = bench.run_feature_family_benchmark(
+        source_dir="fake",
+        output_dir=str(tmp_path),
+        dry_run=False,
+        max_consecutive_failures=2,
+        executor=fake_executor,
+        write_summary=False,
+    )
+
+    assert summary["stopped_reason"] == "max_consecutive_failures"
+    assert summary["attempted"] == 2
+    assert summary["failed"] == 2
+    assert summary["consecutive_failures"] == 2
+
+
+def test_executor_stops_at_target_matches(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        bench,
+        "iter_zero_to_cad_rows",
+        lambda *args, **kwargs: _primitive_rows(5),
+    )
+    calls = []
+
+    def fake_executor(row, context):
+        calls.append(row["uuid"])
+        return {"executed": True, "matched": True}
+
+    summary = bench.run_feature_family_benchmark(
+        source_dir="fake",
+        output_dir=str(tmp_path),
+        dry_run=False,
+        target_matches=2,
+        executor=fake_executor,
+        write_summary=False,
+    )
+
+    assert calls == ["primitive-0", "primitive-1"]
+    assert summary["stopped_reason"] == "target_matches"
+    assert summary["attempted"] == 2
+    assert summary["matched"] == 2
+    assert summary["remaining_to_goal"] == 99998
+
+
+def test_executor_writes_manifest_jsonl_when_requested(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        bench,
+        "iter_zero_to_cad_rows",
+        lambda *args, **kwargs: _primitive_rows(2),
+    )
+    manifest_path = tmp_path / "attempts.jsonl"
+
+    def fake_executor(row, context):
+        return {
+            "executed": True,
+            "matched": row["uuid"] == "primitive-0",
+            "sample_dir": str(tmp_path / row["uuid"]),
+            "comparison_methods": ["slice"],
+            "trusted_tolerance_mm": 0.1,
+            "min_mesh_score": 95.0,
+            "trusted_match": row["uuid"] == "primitive-0",
+        }
+
+    summary = bench.run_feature_family_benchmark(
+        source_dir="fake",
+        split="train",
+        output_dir=str(tmp_path),
+        dry_run=False,
+        executor=fake_executor,
+        manifest_jsonl=str(manifest_path),
+        write_summary=False,
+    )
+
+    records = load_manifest_jsonl(manifest_path)
+    assert summary["attempted"] == 2
+    assert len(records) == 2
+    assert records[0]["status"] == "matched"
+    assert records[0]["accepted"] is True
+    assert records[0]["source"]["split"] == "train"
+    assert records[0]["families"] == ["primitive"]
+    assert records[0]["tolerance_policy"]["comparison_methods"] == ["slice"]
+    assert records[1]["status"] == "executed"
+    assert records[1]["accepted"] is False
+
+
+def test_executor_stops_at_min_match_rate_after_attempts(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        bench,
+        "iter_zero_to_cad_rows",
+        lambda *args, **kwargs: _primitive_rows(5),
+    )
+    outcomes = [False, True, False, True]
+
+    def fake_executor(row, context):
+        return {"executed": True, "matched": outcomes.pop(0)}
+
+    summary = bench.run_feature_family_benchmark(
+        source_dir="fake",
+        output_dir=str(tmp_path),
+        dry_run=False,
+        min_match_rate_after_attempts=[(3, 0.5)],
+        executor=fake_executor,
+        write_summary=False,
+    )
+
+    assert summary["stopped_reason"] == "min_match_rate_after_attempts:3:0.5"
+    assert summary["min_match_rate_after_attempts"] == [
+        {"attempts": 3, "min_match_rate": 0.5}
+    ]
+    assert summary["attempted"] == 3
+    assert summary["matched"] == 1
+    assert summary["failed"] == 2
+    assert summary["match_rate"] == 0.3333
 
 
 def test_family_filter_selects_matching_rows_only(tmp_path, monkeypatch):
@@ -166,3 +366,15 @@ def test_parse_methods_supports_disabled_and_comma_lists():
     assert bench._parse_methods("slice,sdf") == ["slice", "sdf"]
     assert bench._parse_methods("none") == []
     assert bench._parse_methods("") == []
+
+
+def test_parse_match_rate_guardrails_supports_attempt_rate_pairs():
+    assert bench._parse_match_rate_guardrails(["10:0.6", "3:0.5"]) == [
+        (3, 0.5),
+        (10, 0.6),
+    ]
+
+
+def test_execute_still_requires_translator_executor():
+    with pytest.raises(SystemExit):
+        bench.main(["--execute", "--no-summary-file"])

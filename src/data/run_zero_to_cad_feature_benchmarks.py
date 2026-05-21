@@ -23,6 +23,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from .pure_subcad_planner import plan_pure_subcad_features
+from .zero_to_cad_dataset_manifest import make_attempt_record, write_manifest_jsonl
 
 
 DEFAULT_SOURCE_DIR = "data/zero_to_cad_100k"
@@ -31,6 +32,7 @@ UNSUPPORTED_FAMILY = "__unsupported__"
 ALL_SPLITS = ("train", "val", "test")
 
 RowExecutor = Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]]
+MatchRateGuardrail = tuple[int, float]
 
 
 def iter_zero_to_cad_rows(*args: Any, **kwargs: Any):
@@ -66,6 +68,12 @@ class BenchmarkStats:
     per_family_limit: int | None
     family_filter: list[str] = field(default_factory=list)
     target_successes: int = 100000
+    max_attempts: int | None = None
+    max_failures: int | None = None
+    max_consecutive_failures: int | None = None
+    target_matches: int | None = None
+    min_match_rate_after_attempts: list[dict[str, float | int]] = field(default_factory=list)
+    stopped_reason: str | None = None
     scanned: int = 0
     plannable: int = 0
     selected: int = 0
@@ -74,6 +82,7 @@ class BenchmarkStats:
     executed: int = 0
     matched: int = 0
     failed: int = 0
+    consecutive_failures: int = 0
     unsupported: int = 0
     elapsed_seconds: float = 0.0
 
@@ -96,9 +105,19 @@ def run_feature_family_benchmark(
     per_family_limit: int | None = None,
     family_filter: list[str] | None = None,
     target_successes: int = 100000,
+    max_attempts: int | None = None,
+    max_failures: int | None = None,
+    max_consecutive_failures: int | None = None,
+    target_matches: int | None = None,
+    min_match_rate_after_attempts: list[MatchRateGuardrail] | None = None,
     dry_run: bool = True,
     executor: RowExecutor | None = None,
     write_summary: bool = True,
+    manifest_jsonl: str | None = None,
+    _initial_attempted: int = 0,
+    _initial_executed: int = 0,
+    _initial_matched: int = 0,
+    _initial_failed: int = 0,
 ) -> dict[str, Any]:
     """Scan or execute Zero-to-CAD rows grouped by planner feature family.
 
@@ -110,6 +129,7 @@ def run_feature_family_benchmark(
     root = Path(output_dir)
     if write_summary:
         root.mkdir(parents=True, exist_ok=True)
+    manifest_path = Path(manifest_jsonl) if manifest_jsonl else None
 
     stats = BenchmarkStats(
         source_dir=source_dir,
@@ -120,13 +140,35 @@ def run_feature_family_benchmark(
         per_family_limit=per_family_limit,
         family_filter=sorted(_normalize_family_filter(family_filter)),
         target_successes=target_successes,
+        max_attempts=max_attempts,
+        max_failures=max_failures,
+        max_consecutive_failures=max_consecutive_failures,
+        target_matches=target_matches,
+        min_match_rate_after_attempts=_serialize_match_rate_guardrails(
+            _normalize_match_rate_guardrails(min_match_rate_after_attempts)
+        ),
     )
     family_stats: dict[str, FamilyStats] = {}
     attempts_by_family: Counter[str] = Counter()
     started = time.perf_counter()
     requested_families = set(stats.family_filter)
+    match_rate_guardrails = _normalize_match_rate_guardrails(min_match_rate_after_attempts)
+    stats.stopped_reason = _stop_reason(
+        stats,
+        max_attempts=max_attempts,
+        max_failures=max_failures,
+        max_consecutive_failures=max_consecutive_failures,
+        target_matches=target_matches,
+        min_match_rate_after_attempts=match_rate_guardrails,
+        initial_attempted=_initial_attempted,
+        initial_executed=_initial_executed,
+        initial_matched=_initial_matched,
+        initial_failed=_initial_failed,
+    )
 
     for row in iter_zero_to_cad_rows(source_dir, split, start_offset=start_offset, limit=scan_limit):
+        if stats.stopped_reason:
+            break
         stats.scanned += 1
         plan = plan_pure_subcad_features(row.get("ops_trace") or [], row.get("cadquery_code") or "")
         row_summary = summarize_row(row, plan.to_dict())
@@ -195,8 +237,31 @@ def run_feature_family_benchmark(
                 family_stats[family].matched += 1
         if failed:
             stats.failed += 1
+            stats.consecutive_failures += 1
             for family in selected_families:
                 family_stats[family].failed += 1
+        else:
+            stats.consecutive_failures = 0
+
+        if manifest_path is not None:
+            write_manifest_jsonl(
+                manifest_path,
+                [_manifest_record(row, split, selected_families, plan.to_dict(), result)],
+                append=True,
+            )
+
+        stats.stopped_reason = _stop_reason(
+            stats,
+            max_attempts=max_attempts,
+            max_failures=max_failures,
+            max_consecutive_failures=max_consecutive_failures,
+            target_matches=target_matches,
+            min_match_rate_after_attempts=match_rate_guardrails,
+            initial_attempted=_initial_attempted,
+            initial_executed=_initial_executed,
+            initial_matched=_initial_matched,
+            initial_failed=_initial_failed,
+        )
 
     stats.elapsed_seconds = time.perf_counter() - started
     summary = {
@@ -224,9 +289,15 @@ def run_feature_family_benchmark_splits(
     per_family_limit: int | None = None,
     family_filter: list[str] | None = None,
     target_successes: int = 100000,
+    max_attempts: int | None = None,
+    max_failures: int | None = None,
+    max_consecutive_failures: int | None = None,
+    target_matches: int | None = None,
+    min_match_rate_after_attempts: list[MatchRateGuardrail] | None = None,
     dry_run: bool = True,
     executor: RowExecutor | None = None,
     write_summary: bool = True,
+    manifest_jsonl: str | None = None,
 ) -> dict[str, Any]:
     """Run split-level scans and return one aggregate summary."""
     root = Path(output_dir)
@@ -235,6 +306,10 @@ def run_feature_family_benchmark_splits(
 
     split_summaries = []
     for split in splits:
+        attempted_so_far = sum(int(summary.get("attempted", 0)) for summary in split_summaries)
+        failed_so_far = sum(int(summary.get("failed", 0)) for summary in split_summaries)
+        matched_so_far = sum(int(summary.get("matched", 0)) for summary in split_summaries)
+        executed_so_far = sum(int(summary.get("executed", 0)) for summary in split_summaries)
         split_summary = run_feature_family_benchmark(
             source_dir=source_dir,
             split=split,
@@ -244,11 +319,23 @@ def run_feature_family_benchmark_splits(
             per_family_limit=per_family_limit,
             family_filter=family_filter,
             target_successes=target_successes,
+            max_attempts=max_attempts,
+            max_failures=max_failures,
+            max_consecutive_failures=max_consecutive_failures,
+            target_matches=target_matches,
+            min_match_rate_after_attempts=min_match_rate_after_attempts,
             dry_run=dry_run,
             executor=executor,
             write_summary=write_summary,
+            manifest_jsonl=manifest_jsonl,
+            _initial_attempted=attempted_so_far,
+            _initial_executed=executed_so_far,
+            _initial_matched=matched_so_far,
+            _initial_failed=failed_so_far,
         )
         split_summaries.append(split_summary)
+        if split_summary.get("stopped_reason"):
+            break
 
     aggregate = _aggregate_split_summaries(
         split_summaries,
@@ -256,6 +343,11 @@ def run_feature_family_benchmark_splits(
         output_dir=str(root),
         family_filter=family_filter,
         target_successes=target_successes,
+        max_attempts=max_attempts,
+        max_failures=max_failures,
+        max_consecutive_failures=max_consecutive_failures,
+        target_matches=target_matches,
+        min_match_rate_after_attempts=min_match_rate_after_attempts,
         dry_run=dry_run,
         scan_limit=scan_limit,
         per_family_limit=per_family_limit,
@@ -341,6 +433,10 @@ def make_translation_executor(
             "sample_dir": str(sample_dir),
             "stop_reason": result.get("stop_reason"),
             "trusted_match": result.get("trusted_match"),
+            "comparison_methods": comparison_methods or [],
+            "trusted_tolerance_mm": trusted_tolerance_mm,
+            "min_mesh_score": min_mesh_score,
+            "volume_only_success": volume_only_success,
             "error": result.get("error"),
         }
 
@@ -357,6 +453,62 @@ def summarize_row(row: dict[str, Any], planner: dict[str, Any]) -> dict[str, Any
         "families": sorted({feature.get("family") for feature in features if feature.get("family")}),
         "operations": sorted({feature.get("operation") for feature in features if feature.get("operation")}),
     }
+
+
+def _manifest_record(
+    row: dict[str, Any],
+    split: str,
+    selected_families: list[str],
+    planner: dict[str, Any],
+    result: dict[str, Any],
+) -> dict[str, Any]:
+    sample_dir = Path(str(result.get("sample_dir", ""))) if result.get("sample_dir") else None
+    status = "matched" if result.get("matched") else "failed"
+    if result.get("executed") and not result.get("matched"):
+        status = "executed"
+    if result.get("failed"):
+        status = "failed"
+    artifact_base = sample_dir.as_posix() if sample_dir else ""
+    artifacts = {}
+    if sample_dir:
+        artifacts = {
+            "original_step": f"{artifact_base}/original_model.step",
+            "generated_subcad": f"{artifact_base}/generated_subcad.py",
+            "generated_step": f"{artifact_base}/generated.step",
+            "process_plan": f"{artifact_base}/process_plan.json",
+            "validation": f"{artifact_base}/validation.json",
+            "comparison": f"{artifact_base}/result.json",
+            "economics": f"{artifact_base}/economics.json",
+        }
+    return make_attempt_record(
+        split=split,
+        uuid=str(row.get("uuid", "")),
+        global_index=int(row.get("global_index", 0)),
+        parquet_file=str(row.get("parquet_file", "")),
+        row_index=row.get("row_index"),
+        artifacts=artifacts,
+        planner="pure_subcad",
+        families=selected_families,
+        planner_tags=[
+            str(feature.get("operation"))
+            for feature in planner.get("features", [])
+            if feature.get("operation")
+        ],
+        status=status,
+        accepted=bool(result.get("matched")),
+        tolerance_policy={
+            "comparison_methods": result.get("comparison_methods", []),
+            "tolerance_mm": result.get("trusted_tolerance_mm"),
+            "min_mesh_score": result.get("min_mesh_score"),
+            "volume_only_success": result.get("volume_only_success"),
+            "extra": {
+                "trusted_match": result.get("trusted_match"),
+                "stop_reason": result.get("stop_reason"),
+            },
+        },
+        errors=[result.get("error")] if result.get("error") else [],
+        notes=str(result.get("stop_reason") or ""),
+    )
 
 
 def _append_example(bucket: FamilyStats, row_summary: dict[str, Any], limit: int = 5) -> None:
@@ -379,6 +531,11 @@ def _aggregate_split_summaries(
     output_dir: str,
     family_filter: list[str] | None,
     target_successes: int,
+    max_attempts: int | None,
+    max_failures: int | None,
+    max_consecutive_failures: int | None,
+    target_matches: int | None,
+    min_match_rate_after_attempts: list[MatchRateGuardrail] | None,
     dry_run: bool,
     scan_limit: int | None,
     per_family_limit: int | None,
@@ -426,6 +583,10 @@ def _aggregate_split_summaries(
 
     matched = int(totals["matched"])
     executed = int(totals["executed"])
+    stopped_reason = next(
+        (summary.get("stopped_reason") for summary in split_summaries if summary.get("stopped_reason")),
+        None,
+    )
     return {
         "schema": "zero_to_cad_feature_family_benchmark.aggregate.v1",
         "source_dir": source_dir,
@@ -437,7 +598,20 @@ def _aggregate_split_summaries(
         "per_family_limit": per_family_limit,
         "family_filter": sorted(_normalize_family_filter(family_filter)),
         "target_successes": target_successes,
+        "max_attempts": max_attempts,
+        "max_failures": max_failures,
+        "max_consecutive_failures": max_consecutive_failures,
+        "target_matches": target_matches,
+        "min_match_rate_after_attempts": _serialize_match_rate_guardrails(
+            _normalize_match_rate_guardrails(min_match_rate_after_attempts)
+        ),
+        "stopped_reason": stopped_reason,
         **totals,
+        "consecutive_failures": (
+            int(split_summaries[-1].get("consecutive_failures", 0))
+            if split_summaries
+            else 0
+        ),
         "match_rate": round(matched / executed, 4) if executed else 0.0,
         "remaining_to_goal": max(int(target_successes) - matched, 0),
         "per_split": {
@@ -450,6 +624,66 @@ def _aggregate_split_summaries(
 
 def _write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+
+
+def _stop_reason(
+    stats: BenchmarkStats,
+    *,
+    max_attempts: int | None,
+    max_failures: int | None,
+    max_consecutive_failures: int | None,
+    target_matches: int | None,
+    min_match_rate_after_attempts: list[MatchRateGuardrail],
+    initial_attempted: int = 0,
+    initial_executed: int = 0,
+    initial_matched: int = 0,
+    initial_failed: int = 0,
+) -> str | None:
+    total_attempted = initial_attempted + stats.attempted
+    total_executed = initial_executed + stats.executed
+    total_matched = initial_matched + stats.matched
+    total_failed = initial_failed + stats.failed
+    match_rate = round(total_matched / total_executed, 4) if total_executed else 0.0
+
+    if max_attempts is not None and total_attempted >= max_attempts:
+        return "max_attempts"
+    if max_failures is not None and total_failed >= max_failures:
+        return "max_failures"
+    if (
+        max_consecutive_failures is not None
+        and stats.consecutive_failures >= max_consecutive_failures
+    ):
+        return "max_consecutive_failures"
+    if target_matches is not None and total_matched >= target_matches:
+        return "target_matches"
+    for attempts, min_rate in min_match_rate_after_attempts:
+        if total_attempted >= attempts and match_rate < min_rate:
+            return f"min_match_rate_after_attempts:{attempts}:{min_rate:g}"
+    return None
+
+
+def _normalize_match_rate_guardrails(
+    guardrails: list[MatchRateGuardrail] | None,
+) -> list[MatchRateGuardrail]:
+    normalized: list[MatchRateGuardrail] = []
+    for attempts, min_rate in guardrails or []:
+        attempts = int(attempts)
+        min_rate = float(min_rate)
+        if attempts <= 0:
+            raise ValueError("min_match_rate_after_attempts attempts must be positive")
+        if min_rate < 0 or min_rate > 1:
+            raise ValueError("min_match_rate_after_attempts rate must be between 0 and 1")
+        normalized.append((attempts, min_rate))
+    return sorted(normalized)
+
+
+def _serialize_match_rate_guardrails(
+    guardrails: list[MatchRateGuardrail],
+) -> list[dict[str, float | int]]:
+    return [
+        {"attempts": attempts, "min_match_rate": min_rate}
+        for attempts, min_rate in guardrails
+    ]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -469,6 +703,37 @@ def main(argv: list[str] | None = None) -> int:
         help="Restrict selected rows to a planner family. May be repeated.",
     )
     parser.add_argument("--target-successes", type=int, default=100000)
+    parser.add_argument(
+        "--max-attempts",
+        type=int,
+        default=None,
+        help="Stop after this many selected rows have been attempted.",
+    )
+    parser.add_argument(
+        "--max-failures",
+        type=int,
+        default=None,
+        help="Stop after this many attempted rows fail.",
+    )
+    parser.add_argument(
+        "--max-consecutive-failures",
+        type=int,
+        default=None,
+        help="Stop after this many attempted rows fail in a row.",
+    )
+    parser.add_argument(
+        "--target-matches",
+        type=int,
+        default=None,
+        help="Stop after this many attempted rows match.",
+    )
+    parser.add_argument(
+        "--min-match-rate-after-attempts",
+        action="append",
+        default=[],
+        metavar="ATTEMPTS:RATE",
+        help="Stop when match rate is below RATE after ATTEMPTS attempts. May be repeated.",
+    )
     parser.add_argument(
         "--executor",
         default="disabled",
@@ -496,8 +761,17 @@ def main(argv: list[str] | None = None) -> int:
         help="Attempt selected rows. Requires --executor translator for live AI runs.",
     )
     parser.add_argument("--no-summary-file", action="store_true")
+    parser.add_argument(
+        "--manifest-jsonl",
+        default=None,
+        help="Optional JSONL path for per-attempt dataset manifest records.",
+    )
     args = parser.parse_args(argv)
     comparison_methods = _parse_methods(args.comparison_methods)
+    try:
+        match_rate_guardrails = _parse_match_rate_guardrails(args.min_match_rate_after_attempts)
+    except ValueError as exc:
+        parser.error(str(exc))
     executor = None
     if args.execute and args.executor == "disabled":
         parser.error("--execute requires --executor translator so live AI spend is explicit.")
@@ -525,9 +799,15 @@ def main(argv: list[str] | None = None) -> int:
             per_family_limit=args.per_family_limit,
             family_filter=args.family,
             target_successes=args.target_successes,
+            max_attempts=args.max_attempts,
+            max_failures=args.max_failures,
+            max_consecutive_failures=args.max_consecutive_failures,
+            target_matches=args.target_matches,
+            min_match_rate_after_attempts=match_rate_guardrails,
             dry_run=not args.execute,
             executor=executor,
             write_summary=not args.no_summary_file,
+            manifest_jsonl=args.manifest_jsonl,
         )
     else:
         summary = run_feature_family_benchmark(
@@ -539,9 +819,15 @@ def main(argv: list[str] | None = None) -> int:
             per_family_limit=args.per_family_limit,
             family_filter=args.family,
             target_successes=args.target_successes,
+            max_attempts=args.max_attempts,
+            max_failures=args.max_failures,
+            max_consecutive_failures=args.max_consecutive_failures,
+            target_matches=args.target_matches,
+            min_match_rate_after_attempts=match_rate_guardrails,
             dry_run=not args.execute,
             executor=executor,
             write_summary=not args.no_summary_file,
+            manifest_jsonl=args.manifest_jsonl,
         )
     print(json.dumps(summary, indent=2, default=str))
     return 0
@@ -551,6 +837,19 @@ def _parse_methods(value: str | None) -> list[str]:
     if not value or value.lower() in {"none", "off", "false"}:
         return []
     return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _parse_match_rate_guardrails(values: list[str] | None) -> list[MatchRateGuardrail]:
+    guardrails: list[MatchRateGuardrail] = []
+    for value in values or []:
+        try:
+            attempts_text, rate_text = value.split(":", 1)
+            guardrails.append((int(attempts_text), float(rate_text)))
+        except ValueError as exc:
+            raise ValueError(
+                "--min-match-rate-after-attempts must use ATTEMPTS:RATE, e.g. 10:0.6"
+            ) from exc
+    return _normalize_match_rate_guardrails(guardrails)
 
 
 if __name__ == "__main__":

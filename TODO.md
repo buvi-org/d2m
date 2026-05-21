@@ -64,7 +64,7 @@ The hierarchy is:
 
 Current baseline:
 
-- Latest pushed implementation commit: `ca8c9ef Harden pure SubCAD translation coverage`
+- Latest pushed implementation commit before the current dataset-pipeline slice: `c0867c2 Plan STEP dataset collection hierarchy`
 - Core local tests expected to remain green:
   - `python test_agentic_translator.py`
   - `python test_sim_bridge.py`
@@ -173,6 +173,9 @@ Immediate next implementation targets:
 
 - Done: extend the feature-family benchmark runner with all-split scans, family filters, selected/filtered counts, and aggregate summaries.
 - Done: connect the benchmark runner to the existing live translator executor in a guarded mode with explicit `--execute --executor translator`.
+- Done: add dataset attempt manifest JSONL utilities and optional benchmark-runner manifest output.
+- Done: add Markdown reporting for feature-family benchmark summaries.
+- Done: add live pilot stop guardrails for max attempts, max failures, consecutive failures, target matches, and minimum match-rate checks.
 - Next: run larger aggregate dry scans across train/val/test and use the results to pick the first live verification family.
 - Next: run tiny live pilots with strict per-family limits and stop if pass rate/API-error guardrails indicate wasted AI requests.
 
