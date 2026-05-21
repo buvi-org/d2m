@@ -451,6 +451,114 @@ check(
 simple_l_profile_exec = run_subcad(simple_l_profile_subcad)
 check(simple_l_profile_exec["success"], "deterministic simple L-profile SubCAD code executes")
 
+l_bracket_top_rib_code = """
+import cadquery as cq
+from types import SimpleNamespace as Measures
+horizontal_leg_length = 80.0
+vertical_leg_length = 70.0
+thickness = 10.0
+vertical_thickness = thickness
+rib_length = 60.0
+rib_thickness = 8.0
+rib_height = 12.0
+clearance_hole_diameter = 12.0
+chamfer_dist = 1.0
+class LBracket:
+    def __init__(self, workplane, measures):
+        self.model = workplane
+        self.measures = measures
+        self.build()
+    def build(self):
+        m = self.measures
+        base = cq.Workplane("XY").moveTo(0, 0).lineTo(m.horizontal_leg_length, 0).lineTo(m.horizontal_leg_length, m.thickness).lineTo(m.vertical_thickness, m.thickness).lineTo(m.vertical_thickness, m.vertical_leg_length + m.thickness).lineTo(0, m.vertical_leg_length + m.thickness).close().extrude(m.thickness)
+        rib = base.faces(">Z").workplane().center(m.horizontal_leg_length / 2, m.thickness / 2).rect(m.rib_length, m.rib_thickness).extrude(m.rib_height)
+        rib = rib.faces(">Z").workplane().hole(m.clearance_hole_diameter)
+        self.model = rib.edges("|Z").chamfer(m.chamfer_dist)
+measures = Measures(horizontal_leg_length=horizontal_leg_length, vertical_leg_length=vertical_leg_length, thickness=thickness, vertical_thickness=vertical_thickness, rib_length=rib_length, rib_thickness=rib_thickness, rib_height=rib_height, clearance_hole_diameter=clearance_hole_diameter, chamfer_dist=chamfer_dist)
+result = LBracket(cq.Workplane("XY"), measures).model
+"""
+l_bracket_top_rib_subcad = build_deterministic_subcad_code(l_bracket_top_rib_code, [])
+check(l_bracket_top_rib_subcad is not None, "planner builds deterministic L-bracket top-rib SubCAD code")
+check(
+    "Stock.rectangular(80, 80, 22)" in l_bracket_top_rib_subcad
+    and "base_height=10" in l_bracket_top_rib_subcad
+    and ".drill(" not in l_bracket_top_rib_subcad,
+    "deterministic L-bracket top-rib code preserves z-band rib and skips no-op hole",
+)
+l_bracket_top_rib_exec = run_subcad(l_bracket_top_rib_subcad)
+check(l_bracket_top_rib_exec["success"], "deterministic L-bracket top-rib SubCAD code executes")
+
+tapered_l_profile_code = """
+import cadquery as cq
+from types import SimpleNamespace as Measures
+horizontal_length = 80.0
+vertical_height = 80.0
+leg_thickness = 10.0
+taper_length = 20.0
+extrude_depth = 10.0
+hole_diameter = 4.5
+hole_count = 5
+hole_spacing = 12.0
+hole_offset_from_bottom = 15.0
+chamfer_size = 1.0
+notch_width = 6.0
+notch_height = 12.0
+notch_offset_y = 30.0
+class LBracket:
+    def __init__(self, workplane, measures):
+        self.model = workplane
+        self.measures = measures
+        self.build()
+    def build(self):
+        m = self.measures
+        base = cq.Workplane("XY").polyline([(0, 0), (m.horizontal_length - m.taper_length, 0), (m.horizontal_length, m.leg_thickness), (m.horizontal_length, m.vertical_height), (m.leg_thickness, m.vertical_height), (m.leg_thickness, m.leg_thickness), (0, m.leg_thickness), (0, 0)]).close().extrude(m.extrude_depth)
+        solid = base.edges("|Z").chamfer(m.chamfer_size)
+        self.model = solid
+measures = Measures(horizontal_length=horizontal_length, vertical_height=vertical_height, leg_thickness=leg_thickness, taper_length=taper_length, extrude_depth=extrude_depth, hole_diameter=hole_diameter, hole_count=hole_count, hole_spacing=hole_spacing, hole_offset_from_bottom=hole_offset_from_bottom, chamfer_size=chamfer_size, notch_width=notch_width, notch_height=notch_height, notch_offset_y=notch_offset_y)
+result = LBracket(cq.Workplane("XY"), measures).model
+"""
+tapered_l_profile_subcad = build_deterministic_subcad_code(tapered_l_profile_code, [])
+check(tapered_l_profile_subcad is not None, "planner builds deterministic tapered L-profile SubCAD code")
+check(
+    "Stock.rectangular(80, 80, 10)" in tapered_l_profile_subcad
+    and ".edge_chamfer(\"|Z\", width=1)" in tapered_l_profile_subcad
+    and ".drill(" not in tapered_l_profile_subcad,
+    "deterministic tapered L-profile code preserves taper and skips no-op holes",
+)
+tapered_l_profile_exec = run_subcad(tapered_l_profile_subcad)
+check(tapered_l_profile_exec["success"], "deterministic tapered L-profile SubCAD code executes")
+
+box_union_l_code = """
+import cadquery as cq
+from types import SimpleNamespace as Measures
+class LBracket:
+    def __init__(self, workplane, measures):
+        self.model = workplane
+        self.measures = measures
+        self.build()
+    def build(self):
+        m = self.measures
+        leg_long = cq.Workplane('XY').box(m.leg_long_length, m.leg_width, m.thickness).translate((m.leg_long_length/2, m.leg_width/2, m.thickness/2))
+        leg_short = cq.Workplane('XY').box(m.leg_width, m.leg_short_length, m.thickness).translate((m.leg_width/2, m.leg_short_length/2, m.thickness/2))
+        base = leg_long.union(leg_short)
+        bracket = base.faces('>Z').workplane().center(m.edge_clearance + (m.leg_long_length - 2*m.edge_clearance)/2, m.leg_width/2).rect(m.leg_long_length - 2*m.edge_clearance, m.leg_width - 2*m.edge_clearance, forConstruction=True).vertices().hole(m.hole_diameter)
+        bracket = bracket.faces('>Z').workplane().center(m.leg_width/2, m.edge_clearance + (m.leg_short_length - 2*m.edge_clearance)/2).rect(m.leg_width - 2*m.edge_clearance, m.leg_short_length - 2*m.edge_clearance, forConstruction=True).vertices().hole(m.hole_diameter)
+        bracket = bracket.edges('|Z').chamfer(m.chamfer_size)
+        self.model = bracket
+measures = Measures(leg_long_length=80.0, leg_short_length=60.0, leg_width=30.0, thickness=10.0, rib_thickness=5.0, edge_clearance=8.0, hole_diameter=5.0, chamfer_size=0.8)
+result = LBracket(cq.Workplane('XY'), measures).model
+"""
+box_union_l_subcad = build_deterministic_subcad_code(box_union_l_code, [])
+check(box_union_l_subcad is not None, "planner builds deterministic box-union L SubCAD code")
+check(
+    "Stock.rectangular(80, 60, 10)" in box_union_l_subcad
+    and box_union_l_subcad.count(".drill(5, through=True") == 6
+    and "cx=8, cy=-7" in box_union_l_subcad,
+    "deterministic box-union L code preserves construction-vertex hole pattern",
+)
+box_union_l_exec = run_subcad(box_union_l_subcad)
+check(box_union_l_exec["success"], "deterministic box-union L SubCAD code executes")
+
 top_rib_code = """
 plate_length = 80.0
 plate_width = 60.0

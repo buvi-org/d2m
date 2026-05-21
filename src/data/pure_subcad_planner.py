@@ -261,6 +261,9 @@ def build_deterministic_subcad_code(
     split_shroud_code = _deterministic_split_shroud_code(cadquery_code)
     if split_shroud_code:
         return split_shroud_code
+    l_bracket_variant_code = _deterministic_l_bracket_variant_code(cadquery_code)
+    if l_bracket_variant_code:
+        return l_bracket_variant_code
     l_bracket_code = _deterministic_l_bracket_code(cadquery_code)
     if l_bracket_code:
         return l_bracket_code
@@ -369,6 +372,145 @@ def _deterministic_profile_extrude_code(cadquery_code: str) -> str | None:
         stock,
         [f".profile_cutout({{'type': 'polygon', 'points': {_format_points(shifted)}}}, through=True)"],
     )
+
+
+def _deterministic_l_bracket_variant_code(cadquery_code: str) -> str | None:
+    env = _measure_env(cadquery_code)
+    if "class LBracket" not in cadquery_code:
+        return None
+
+    if {
+        "horizontal_leg_length",
+        "vertical_leg_length",
+        "thickness",
+        "vertical_thickness",
+        "rib_length",
+        "rib_thickness",
+        "rib_height",
+    }.issubset(env):
+        h = env["horizontal_leg_length"]
+        v = env["vertical_leg_length"] + env["thickness"]
+        base_height = env["thickness"]
+        total_height = base_height + env["rib_height"]
+        vertical_thickness = env["vertical_thickness"]
+        if min(h, v, base_height, total_height, vertical_thickness) <= 0:
+            return None
+        x_shift = h / 2.0
+        y_shift = v / 2.0
+        points = [
+            (0.0 - x_shift, 0.0 - y_shift),
+            (h - x_shift, 0.0 - y_shift),
+            (h - x_shift, env["thickness"] - y_shift),
+            (vertical_thickness - x_shift, env["thickness"] - y_shift),
+            (vertical_thickness - x_shift, v - y_shift),
+            (0.0 - x_shift, v - y_shift),
+        ]
+        rib_cx = h / 2.0 - x_shift
+        rib_cy = env["thickness"] / 2.0 - y_shift
+        sequence = [
+            f".profile_cutout({{'type': 'polygon', 'points': {_format_points(points)}}}, through=True)",
+            f".machine_around_profile({{'type': 'rectangle', 'length': {env['rib_length']:.6g}, "
+            f"'width': {env['rib_thickness']:.6g}, 'cx': {rib_cx:.6g}, 'cy': {rib_cy:.6g}}}, "
+            f"height={env['rib_height']:.6g}, base_height={base_height:.6g})",
+        ]
+        chamfer = env.get("chamfer_dist") or env.get("chamfer_size")
+        if chamfer:
+            sequence.append(f'.edge_chamfer("|Z", width={chamfer:.6g})')
+        return _format_fluent_subcad_code(
+            f"Stock.rectangular({h:.6g}, {v:.6g}, {total_height:.6g})",
+            sequence,
+        )
+
+    if {
+        "horizontal_length",
+        "vertical_height",
+        "leg_thickness",
+        "taper_length",
+        "extrude_depth",
+    }.issubset(env):
+        h = env["horizontal_length"]
+        v = env["vertical_height"]
+        leg = env["leg_thickness"]
+        taper = env["taper_length"]
+        depth = env["extrude_depth"]
+        if min(h, v, leg, taper, depth) <= 0:
+            return None
+        x_shift = h / 2.0
+        y_shift = v / 2.0
+        points = [
+            (0.0 - x_shift, 0.0 - y_shift),
+            (h - taper - x_shift, 0.0 - y_shift),
+            (h - x_shift, leg - y_shift),
+            (h - x_shift, v - y_shift),
+            (leg - x_shift, v - y_shift),
+            (leg - x_shift, leg - y_shift),
+            (0.0 - x_shift, leg - y_shift),
+        ]
+        sequence = [
+            f".profile_cutout({{'type': 'polygon', 'points': {_format_points(points)}}}, through=True)",
+        ]
+        chamfer = env.get("chamfer_size")
+        if chamfer:
+            sequence.append(f'.edge_chamfer("|Z", width={chamfer:.6g})')
+        return _format_fluent_subcad_code(
+            f"Stock.rectangular({h:.6g}, {v:.6g}, {depth:.6g})",
+            sequence,
+        )
+
+    if {
+        "leg_long_length",
+        "leg_short_length",
+        "leg_width",
+        "thickness",
+        "edge_clearance",
+        "hole_diameter",
+    }.issubset(env):
+        long = env["leg_long_length"]
+        short = env["leg_short_length"]
+        width = env["leg_width"]
+        height = env["thickness"]
+        edge = env["edge_clearance"]
+        hole_diameter = env["hole_diameter"]
+        if min(long, short, width, height, edge, hole_diameter) <= 0:
+            return None
+        x_shift = long / 2.0
+        y_shift = short / 2.0
+        points = [
+            (0.0 - x_shift, 0.0 - y_shift),
+            (long - x_shift, 0.0 - y_shift),
+            (long - x_shift, width - y_shift),
+            (width - x_shift, width - y_shift),
+            (width - x_shift, short - y_shift),
+            (0.0 - x_shift, short - y_shift),
+        ]
+        second_center_x = long / 2.0 + width / 2.0
+        second_center_y = width / 2.0 + short / 2.0
+        second_half_x = (width - 2.0 * edge) / 2.0
+        second_half_y = (short - 2.0 * edge) / 2.0
+        hole_points = [
+            (edge, edge),
+            (long - edge, edge),
+            (edge, width - edge),
+            (long - edge, width - edge),
+            (second_center_x - second_half_x, second_center_y - second_half_y),
+            (second_center_x + second_half_x, second_center_y - second_half_y),
+        ]
+        sequence = [
+            f".profile_cutout({{'type': 'polygon', 'points': {_format_points(points)}}}, through=True)",
+        ]
+        for x, y in hole_points:
+            sequence.append(
+                f".drill({hole_diameter:.6g}, through=True, cx={x - x_shift:.6g}, cy={y - y_shift:.6g})"
+            )
+        chamfer = env.get("chamfer_size")
+        if chamfer:
+            sequence.append(f'.edge_chamfer("|Z", width={chamfer:.6g})')
+        return _format_fluent_subcad_code(
+            f"Stock.rectangular({long:.6g}, {short:.6g}, {height:.6g})",
+            sequence,
+        )
+
+    return None
 
 
 def _deterministic_l_bracket_code(cadquery_code: str) -> str | None:

@@ -101,12 +101,13 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 26 recorded by guarded live pilots.
+- Matched original-STEP-verified pairs: 29 recorded by guarded live pilots.
   - Accepted train global indexes:
-    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 107, 111, 118`.
-  - Latest accepted rows: train global indexes 111 and 118, manifests
-    `runs/zero_to_cad_live_pilots/deterministic_l_profile_row111_probe/attempts.jsonl`
-    and `runs/zero_to_cad_live_pilots/deterministic_l_profile_row118_probe/attempts.jsonl`.
+    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 118`.
+  - Latest accepted rows: train global indexes 87, 88, and 90, manifests
+    `runs/zero_to_cad_live_pilots/deterministic_l_top_rib_row87_probe/attempts.jsonl`,
+    `runs/zero_to_cad_live_pilots/deterministic_tapered_l_row88_probe/attempts.jsonl`,
+    and `runs/zero_to_cad_live_pilots/deterministic_box_union_l_row90_probe/attempts.jsonl`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -245,9 +246,9 @@ Immediate next implementation targets:
 - Done: prevent outside-stock retained islands from cutting away the whole
   stock, and reinforce literal CadQuery `translate((x, y, z))` coordinate use
   in the translator prompt.
-- Next: scale the hole/profile/retained-material/axisymmetric pilot from 8
-  accepted pairs to a small guarded batch of 10-25 accepted/attempted rows,
-  preserving strict stop conditions.
+- Next: continue accepted-index guarded forward scans from the 29 accepted
+  pairs, preserving strict stop conditions and fixing deterministic blockers
+  before spending larger live batches.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.
@@ -260,12 +261,12 @@ Immediate next implementation targets:
 - Blocked rows: train global indexes 20 and 21 failed in the next filtered
   batch; pause retries until patterned retained ribs and gear/tooth-like
   retained/cut features are planned more explicitly.
-- Blocked row: train global index 23 failed because generated code used a bare
+- Superseded blocker: train global index 23 failed because generated code used a bare
   undefined measure variable instead of `m.<name>`; this is a translator prompt
   or static preflight repair issue, not a missing SubCAD operation.
 - Done: strengthen translator prompt tests and instructions against bare
   copied measure variables such as `flange_thickness`.
-- Blocked row: train global index 23 now executes after the measure prompt fix
+- Superseded blocker: train global index 23 now executes after the measure prompt fix
   but still diverges geometrically; pause retries until hex/profile feature
   evidence and prompt examples improve.
 - Done: run the next filtered batch; accepted row 25.
@@ -300,7 +301,7 @@ Immediate next implementation targets:
   selected retained-material operations, and related coverage ops; update the
   translator prompt to preserve CadQuery workplane face selectors such as
   `<Z` instead of silently converting underside operations to top-side work.
-- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, row 83, row 107, row 111, and row 118 accepted manifests in future
+- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, row 83, row 87, row 88, row 90, row 107, row 111, and row 118 accepted manifests in future
   accepted-index guarded runs.
 - Done: add Z-band retained-material support and planner evidence for retained
   rib/boss loops and polar arrays.
@@ -346,6 +347,10 @@ Immediate next implementation targets:
   `polyline` and `moveTo`/`lineTo` chains, including implicit-origin
   `lineTo`, and accept train global indexes 111 and 118 with original-STEP
   trusted mesh score 100.0.
+- Done: add deterministic L-bracket variants for z-band top ribs, tapered
+  L-profiles with no-op cut/hole filtering, and translated box-union L brackets
+  with construction-vertex holes; accept train global indexes 87, 88, and 90
+  with original-STEP trusted mesh score 100.0.
 - Next: run the next accepted-index guarded forward scan and fix the next
   deterministic feature-family blocker before spending larger live batches.
 
@@ -549,11 +554,11 @@ Still deferred: controller-certified production G-code, formal quoting/ERP integ
   - The compatibility gate now uses a typed pure-operation planner. Current local train/val/test scan finds 86,923 plannable rows out of 100,516 after rejecting inaccessible closed shells.
   - Treat planner coverage as an attempt queue, not success. Each family still needs geometry/toolpath maturation and original-STEP verification before it counts toward 100k.
   - Initial geometry-backed slice is complete for selected-edge chamfers/fillets, lightweight profile pockets/cutouts/contours, and retained profile/cylindrical bosses.
-  - Active next slice: Retained Feature And Face-Setup Fidelity v1.
-    - Make top/bottom retained ribs, bosses, pads, and cylinders preserve the intended island volume instead of erasing surrounding upper features.
-    - Preserve CadQuery workplane face selectors in generated SubCAD operations and process plans.
-    - Gate side-face additive gussets as manual-review/unsupported until oriented side-profile machining is implemented.
-    - Continue feature-family benchmark reporting for plannable, attempted, executed, matched, failed, and unsupported rows.
+  - Active next slice: Forward Scan And Bucketization v1.
+    - Run accepted-index guarded scans from the latest verified row.
+    - Fix the next deterministic blocker only after it is classified.
+    - Maintain per-family match metrics before scaling any live batch.
+    - Track the corpus-capacity gap: 86,923 currently plannable rows cannot produce 100k accepted pairs unless unsupported families mature or more source STEP rows are added.
   - Later SubCAD capability maturation targets for 100k: side-face/oriented profile machining, robust retained multi-island planning, shells/thin walls, turning/revolves, sweeps, lofts, and original-STEP verification at scale.
 - GNN feature recognition and LLM fine-tuning should wait for execution-scored data.
 - RL remains later-stage research after simulator fidelity is validated.

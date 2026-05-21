@@ -29,7 +29,7 @@ The concrete project objective is to train and evaluate a STEP -> pure SubCAD
 model/workflow from at least 100,000 original-STEP-verified Zero-to-CAD pairs.
 The current local corpus scan has 86,923 plannable rows out of 100,516
 Zero-to-CAD rows, but planner coverage is only the attempt queue. Guarded live
-pilots currently record 26 accepted original-STEP-verified pairs.
+pilots currently record 29 accepted original-STEP-verified pairs.
 
 A pair is accepted only when:
 
@@ -250,7 +250,7 @@ Current scan of `data/zero_to_cad_100k` with the pure planner:
 - test: 8,431 plannable rows out of 9,767.
 - total: 86,923 plannable rows out of 100,516 local rows.
 
-Guarded live pilots currently record 26 accepted original-STEP-verified pairs.
+Guarded live pilots currently record 29 accepted original-STEP-verified pairs.
 The reduction from earlier planner counts is intentional: closed/inaccessible
 shell operations are now rejected as unsupported CNC work instead of counted as
 plannable rows.
@@ -282,15 +282,18 @@ Completed implementation slice:
 
 Active next implementation slice:
 
-- Run larger feature-family benchmark scans across all train/val/test splits.
-- Use family filters to choose small live translator batches by operation
-  family instead of spending requests on the whole corpus at once.
-- Use the guarded benchmark executor with explicit
-  `--execute --executor translator` for live translator/original-STEP
-  comparison attempts.
-- Scale only the families that show measured execution and match rates.
+- Run accepted-index guarded forward scans after the latest verified row and
+  classify each blocker before spending larger live batches.
+- Promote deterministic builders for families that repeatedly match original
+  STEP targets: simple profiles, L-brackets, retained ribs, construction
+  patterns, no-op source features, and later thin-wall/turning/surface families.
+- Track family metrics for selected, attempted, executed, matched, failed, and
+  unsupported rows before scaling any bucket.
 - Maintain accepted-index manifests so previously verified rows count toward
   the 100k target without re-running paid/live translator calls.
+- Track the corpus-capacity gap explicitly: 86,923 current plannable rows cannot
+  yield 100k accepted pairs unless unsupported families mature or more source
+  STEP rows are added.
 - Release training-ready datasets only as versioned manifests that separate
   accepted original-STEP-verified pairs from failed attempts, manual-review
   rows, and synthetic/self-generated auxiliary pairs.
