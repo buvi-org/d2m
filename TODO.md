@@ -226,6 +226,12 @@ Immediate next implementation targets:
   retained material.
 - Done: run the next filtered hole-family batch; accepted rows 17 and 18, and
   isolated row 15 as another retained/side-feature geometry blocker.
+- Blocked rows: train global indexes 20 and 21 failed in the next filtered
+  batch; pause retries until patterned retained ribs and gear/tooth-like
+  retained/cut features are planned more explicitly.
+- Blocked row: train global index 23 failed because generated code used a bare
+  undefined measure variable instead of `m.<name>`; this is a translator prompt
+  or static preflight repair issue, not a missing SubCAD operation.
 
 ## SubCAD Shop-Floor v1
 
