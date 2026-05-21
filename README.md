@@ -170,7 +170,7 @@ Phased solo build using AI-assisted development (Claude Code, Cursor):
 |-------|----------|-------|----------|
 | **0**: Prototype | Week 1-2 | Partially complete — core SubCAD, translator scaffolding, and rule/process-plan primitives exist; full upload-to-plan UX is not complete. | 0 |
 | **1**: Synthetic Data | Week 2-3 | ✅ Complete — 9,994 labeled parts with STEP + JSON. CadQuery CSG engine + rule-based labeling. | 2,000-8,000 |
-| **2**: Feature Recognition / Translation | Week 3-5 | In progress — translator and comparison utilities exist; GNN feature recognition remains planned. | 8,000-15,000 |
+| **2**: Feature Recognition / Translation | Week 3-5 | Prototype hardening — typed pure-operation planner, translator scaffolding, and comparison utilities exist; feature-family verification is next. GNN feature recognition remains planned. | 8,000-15,000 |
 | **2.5**: SubCAD Shop-Floor v1 | Complete | Schema v1, neutral toolpaths, setup-sheet export, validation buckets, and deferred production G-code contract. | TBD |
 | **2.6**: Phase 2 Toolpaths | ✅ Complete | Non-empty neutral paths for Phase 2 ops, plan summaries, preview-only G-code adapter, malformed-path validation, and authored-path estimation. | TBD |
 | **2.7**: Fixture + Tool Inventory v1 | ✅ Complete | Structured fixture/tool catalogs, selected tool assemblies, fixture/clamp visualization, and browser review metadata. | TBD |
@@ -241,11 +241,11 @@ python test_subcad_manufacturing_economics.py
 
 ## Status
 
-**Completed** — Phase 1 synthetic dataset, SubCAD operation model, process-plan/export basics, fixture/setup metadata, SubCAD Shop-Floor v1, Phase 2 neutral toolpaths, fixture/tool inventory v1, Manufacturing Economics v1 initial slice, browser fixture/tool/economics review metadata, preview-only G-code adapter, authored-path validation/estimation, and non-live agentic translator tests.
+**Completed** — Phase 1 synthetic dataset, SubCAD operation model, process-plan/export basics, fixture/setup metadata, SubCAD Shop-Floor v1, Phase 2 neutral toolpaths, fixture/tool inventory v1, Manufacturing Economics v1 initial slice, browser fixture/tool/economics review metadata, preview-only G-code adapter, authored-path validation/estimation, typed pure SubCAD operation planner, initial geometry-backed pure operations for selected-edge/profile/retained-boss features, and non-live agentic translator tests.
 
-**Current hardening priority** — Manufacturing Trust v1 follow-through: broaden inventory-aware planning to more operations, strengthen fixture-body/stock-envelope clearance, validate simulation/comparison on larger real part examples, and calibrate economics against real shop rates/tool life.
+**Current hardening priority** — Profile Fidelity + Feature-Family Verification v1: improve arc/spline/slot profile fidelity, group Zero-to-CAD attempts by operation family, run original-STEP verification by family, and report measured pass rates before claiming dataset scale.
 
-**In progress / prototype** — Agentic CadQuery -> SubCAD translation, STEP-to-SubCAD AI model planning, localized/feature-aware comparison validation, and simulation feedback quality. The corrected live runner now uses original Zero-to-CAD STEP targets and can collect currently compatible execution-scored pairs, but a 100k external benchmark needs broader SubCAD feature coverage. See [docs/step_to_subcad_ai.md](docs/step_to_subcad_ai.md) for the current decision: STEP/B-Rep JSON is the source of truth, while images/video with projected dimensions are supporting evidence.
+**In progress / prototype** — Agentic CadQuery -> SubCAD translation against original STEP targets, localized/feature-aware comparison validation, feature-family benchmark reporting, and simulation feedback quality. The corrected live runner now uses original Zero-to-CAD STEP targets and can attempt most local rows through the pure planner, but 100k success still requires each family to execute and match the original STEP. See [docs/step_to_subcad_ai.md](docs/step_to_subcad_ai.md) for the current decision: STEP/B-Rep JSON is the source of truth, while images/video with projected dimensions are supporting evidence.
 
 **Recently fixed** — Simulation bridge zero-volume failure. Core dexel volume and material-removal tests now pass, but simulation/RL claims should still be treated as roadmap until validated on representative real workflows.
 

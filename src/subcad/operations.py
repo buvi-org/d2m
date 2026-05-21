@@ -39,6 +39,7 @@ from .geometry import (
     machine_around_profile_cut,
     machine_around_cylinder_cut,
 )
+from .profiles import profile_span_yx
 from .tool_library import ToolSpec, ToolCatalog
 from .tool_selection import ToolRequirement, ToolSelectionResult, select_or_fallback, select_tool
 from .material import get_feeds_speeds
@@ -389,25 +390,7 @@ def _rect_raster_toolpath(
 
 def _profile_bounds(profile: Any) -> tuple[float, float]:
     """Best-effort profile bounding box for pure operation placeholders."""
-    if isinstance(profile, dict):
-        if "diameter" in profile:
-            d = float(profile["diameter"])
-            return d, d
-        if "width" in profile or "length" in profile:
-            width = float(profile.get("width", profile.get("length", 10.0)))
-            length = float(profile.get("length", profile.get("width", 10.0)))
-            return width, length
-        points = profile.get("points") or profile.get("vertices")
-    else:
-        points = profile
-    if points:
-        try:
-            xs = [float(p[0]) for p in points]
-            ys = [float(p[1]) for p in points]
-            return max(ys) - min(ys), max(xs) - min(xs)
-        except Exception:
-            pass
-    return 10.0, 10.0
+    return profile_span_yx(profile)
 
 
 def _profile_payload(profile: Any) -> Any:

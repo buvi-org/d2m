@@ -32,31 +32,13 @@ from .geometry import (
     _HAS_CADQUERY,
 )
 from .process_plan import ProcessPlan
+from .profiles import profile_span_yx
 from .tool_library import ToolSpec
 
 
 def _profile_bounds_for_stock(profile) -> tuple[float, float]:
     """Return (width_y, length_x) from a lightweight profile description."""
-    if isinstance(profile, dict):
-        if "diameter" in profile:
-            d = float(profile["diameter"])
-            return d, d
-        if "width" in profile or "length" in profile:
-            return (
-                float(profile.get("width", profile.get("length", 10.0))),
-                float(profile.get("length", profile.get("width", 10.0))),
-            )
-        points = profile.get("points") or profile.get("vertices")
-    else:
-        points = profile
-    if points:
-        try:
-            xs = [float(point[0]) for point in points]
-            ys = [float(point[1]) for point in points]
-            return max(ys) - min(ys), max(xs) - min(xs)
-        except Exception:
-            pass
-    return 10.0, 10.0
+    return profile_span_yx(profile)
 
 
 @dataclass

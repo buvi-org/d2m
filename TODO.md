@@ -212,7 +212,11 @@ Still deferred: controller-certified production G-code, formal quoting/ERP integ
   - Use `python -m src.data.run_zero_to_cad_translations` for the corrected flow.
   - The compatibility gate now uses a typed pure-operation planner. Current local train/val/test scan finds 100,235 plannable rows out of 100,516.
   - Treat planner coverage as an attempt queue, not success. Each family still needs geometry/toolpath maturation and original-STEP verification before it counts toward 100k.
-  - Initial geometry-backed slice is in place for selected-edge chamfers/fillets, lightweight profile pockets/cutouts/contours, and retained profile/cylindrical bosses.
-  - Next SubCAD capability maturation targets for 100k: richer arc/spline profile fidelity, round stock/circle extrusions, shells/thin walls, turning/revolves, sweeps, lofts, and original-STEP verification by feature family.
+  - Initial geometry-backed slice is complete for selected-edge chamfers/fillets, lightweight profile pockets/cutouts/contours, and retained profile/cylindrical bosses.
+  - Active next slice: Profile Fidelity + Feature-Family Verification v1.
+    - Improve rectangle/circle/polygon/slot/arc/spline profile fidelity.
+    - Add feature-family benchmark reporting for plannable, attempted, executed, matched, failed, and unsupported rows.
+    - Harden translator prompts and repair feedback around pure-operation candidates and original-STEP comparison.
+  - Later SubCAD capability maturation targets for 100k: round stock/circle extrusions, shells/thin walls, turning/revolves, sweeps, lofts, and original-STEP verification at scale.
 - GNN feature recognition and LLM fine-tuning should wait for execution-scored data.
 - RL remains later-stage research after simulator fidelity is validated.

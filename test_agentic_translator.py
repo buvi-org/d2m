@@ -131,6 +131,10 @@ check(".edge_chamfer" in sys_prompt, "system prompt mentions selected edge chamf
 check(".machine_around_profile" in sys_prompt, "system prompt mentions retained-material operations")
 check("hybrid_feature" in sys_prompt and "Never" in sys_prompt,
       "system prompt forbids hybrid/opaque placeholders")
+check("directly with cq.Workplane" in sys_prompt or "cq.Workplane/CadQuery" in sys_prompt,
+      "system prompt forbids direct CadQuery reconstruction")
+check("choose among the planned" in sys_prompt,
+      "system prompt limits ambiguous choices to planner candidates")
 check("counterbore(hole_diameter, counterbore_diameter, counterbore_depth" in sys_prompt,
       "system prompt documents exact counterbore signature")
 check("pilot_diameter" in sys_prompt and "Never use keyword names" in sys_prompt,
@@ -212,6 +216,15 @@ check("part" in prompt, "user prompt mentions 'part' variable")
 check("execute_subcad" in prompt, "user prompt asks for execute_subcad call")
 check("Extracted Numeric Measures" in prompt, "user prompt includes extracted measures section")
 check("STEP volume: 0.0" not in prompt, "user prompt computes nonzero STEP volume")
+check("Pure SubCAD Operation Plan" in prompt, "user prompt includes planner candidate section")
+check("coverage_mode: pure_subcad_operations" in prompt,
+      "user prompt identifies pure SubCAD planner mode")
+check("choose among those planned operation candidates only" in prompt,
+      "user prompt limits ambiguity decisions to planner candidates")
+check("target is the original STEP reference geometry" in prompt,
+      "user prompt names original STEP as target geometry")
+check("hybrid_feature" in prompt and "direct CadQuery reconstruction" in prompt,
+      "user prompt rejects hybrid and direct CadQuery reconstruction fallbacks")
 
 
 # =========================================================================
@@ -239,6 +252,10 @@ check("Previous Attempt" in iter_prompt, "iteration prompt references previous a
 check("too small" in iter_prompt or "0.75" in iter_prompt, "iteration prompt shows mismatch")
 check("Stock.rectangular" in iter_prompt, "iteration prompt has API reference")
 check(prev_code in iter_prompt, "iteration prompt includes previous code")
+check("original STEP reference" in iter_prompt,
+      "iteration prompt repairs against original STEP target")
+check("hybrid_feature" in iter_prompt and "CadQuery reconstruction" in iter_prompt,
+      "iteration prompt rejects hybrid/direct reconstruction repairs")
 
 mesh_comp = {"feedback": "RMS deviation: 0.250 mm near top pocket", "score": 91.0}
 feature_comp = {"feedback": "Hole at (0, 0): MISSING", "score": 75.0}
@@ -254,6 +271,8 @@ check("Localized Shape Deviation" in rich_iter_prompt,
       "iteration prompt includes mesh comparison section")
 check("RMS deviation" in rich_iter_prompt,
       "iteration prompt includes mesh feedback text")
+check("original-STEP comparison" in rich_iter_prompt,
+      "mesh repair feedback references original STEP comparison")
 check("Per-Feature Comparison" in rich_iter_prompt,
       "iteration prompt includes feature comparison section")
 check("MISSING" in rich_iter_prompt,

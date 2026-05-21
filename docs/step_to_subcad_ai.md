@@ -240,6 +240,16 @@ Geometry-backed pure operation slice:
 - These are still v1 geometry implementations; original-STEP verification is
   still required before counting translated samples as successful.
 
+Active next implementation slice:
+
+- Improve profile fidelity for rectangle, circle, polygon, slot/obround,
+  arc-chain, and spline/polyline approximations.
+- Add feature-family benchmark reporting so Zero-to-CAD progress is visible by
+  operation family: plannable, attempted, executed, matched, failed, and
+  unsupported.
+- Harden translator prompts and repair feedback so generated code stays within
+  pure SubCAD operations and compares against the original STEP target.
+
 ### Self-generated SubCAD-pair flow
 
 This is only for supervised pretraining and regression data:

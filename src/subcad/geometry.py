@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import math
 
+from .profiles import normalize_profile_points, profile_bounds_xy
+
 # ---------------------------------------------------------------------------
 # CadQuery import guard
 # ---------------------------------------------------------------------------
@@ -328,39 +330,34 @@ def contour_cut_outer(
 
 
 def _profile_points(profile) -> list[tuple[float, float]]:
-    if isinstance(profile, dict):
-        points = profile.get("points") or profile.get("vertices")
-    else:
-        points = profile
-    if not points:
-        return []
-    return [(float(p[0]), float(p[1])) for p in points]
+    return normalize_profile_points(profile)
 
 
 def _profile_bounds(profile) -> tuple[float, float, float, float]:
-    points = _profile_points(profile)
-    if points:
-        xs = [p[0] for p in points]
-        ys = [p[1] for p in points]
-        return min(xs), min(ys), max(xs), max(ys)
-    if isinstance(profile, dict):
-        width = float(profile.get("width", profile.get("diameter", 10.0)))
-        length = float(profile.get("length", profile.get("diameter", width)))
-    else:
-        width = length = 10.0
-    return -length / 2.0, -width / 2.0, length / 2.0, width / 2.0
+    return profile_bounds_xy(profile)
 
 
 def _draw_profile(wp: "cq.Workplane", profile) -> "cq.Workplane":
     if isinstance(profile, dict):
-        if "diameter" in profile:
-            return wp.circle(float(profile["diameter"]) / 2.0)
-        if profile.get("type") == "circle" and "radius" in profile:
-            return wp.circle(float(profile["radius"]))
-        if "width" in profile or "length" in profile:
+        profile_type = str(profile.get("type", profile.get("shape", ""))).lower()
+        cx = float(profile.get("cx", profile.get("x", 0.0)))
+        cy = float(profile.get("cy", profile.get("y", 0.0)))
+        if profile.get("center") is not None:
+            cx = float(profile["center"][0])
+            cy = float(profile["center"][1])
+        if (
+            profile_type not in {"slot", "obround", "obround_slot", "slot2d"}
+            and (profile_type in {"circle", "circular"} or "diameter" in profile or "radius" in profile)
+            and not profile.get("segments")
+        ):
+            radius = float(profile.get("radius", float(profile.get("diameter", 10.0)) / 2.0))
+            return wp.center(cx, cy).circle(radius).center(-cx, -cy)
+        if profile_type not in {"slot", "obround", "obround_slot", "slot2d"} and (
+            profile_type in {"rectangle", "rect", "rib", "pad"} or "width" in profile or "length" in profile
+        ):
             width = float(profile.get("width", profile.get("length", 10.0)))
             length = float(profile.get("length", profile.get("width", 10.0)))
-            return wp.rect(length, width)
+            return wp.center(cx, cy).rect(length, width).center(-cx, -cy)
     points = _profile_points(profile)
     if len(points) >= 3:
         return wp.polyline(points).close()
@@ -410,7 +407,7 @@ def machine_around_profile_cut(
     outer_w = max(ymax - ymin + 2 * margin, 1.0)
     cx = (xmin + xmax) / 2.0
     cy = (ymin + ymax) / 2.0
-    wp = shape.faces(face_selector).workplane().center(cx, cy).rect(outer_l, outer_w)
+    wp = shape.faces(face_selector).workplane().center(cx, cy).rect(outer_l, outer_w).center(-cx, -cy)
     wp = _draw_profile(wp, profile)
     return wp.cutBlind(-height)
 

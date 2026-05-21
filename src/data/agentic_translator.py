@@ -31,6 +31,7 @@ from .cadquery_to_subcad import (
     step_to_stock_dims,
     _extract_measures,
 )
+from .pure_subcad_planner import plan_pure_subcad_features
 
 # Optional imports for richer mesh comparison (requires trimesh + scipy)
 try:
@@ -170,8 +171,9 @@ Stock instance (immutable/fluent pattern).
 13. Do NOT call .face_mill(depth=0) — if the stock is already at the right
     height, just skip face_mill entirely.
 14. Use pure SubCAD operations only. Never import CadQuery, never reconstruct
-    the original model directly, never use opaque STEP/B-Rep geometry, and never
-    emit a hybrid_feature placeholder.
+    the original model directly with cq.Workplane/CadQuery syntax, never import
+    or reuse opaque STEP/B-Rep/mesh geometry, and never emit a hybrid_feature
+    placeholder.
 15. For `cboreHole`, drill the pilot hole and then call
     `counterbore(hole_diameter, counterbore_diameter, counterbore_depth, cx=..., cy=...)`.
     Never use keyword names `diameter`, `depth`, or `pilot_diameter` with
@@ -179,6 +181,10 @@ Stock instance (immutable/fluent pattern).
 16. If CadQuery uses shell/revolve/sweep/loft/freeform surfaces, use the pure
     CNC operation family: thin_wall_pocket/hollow_bore/tube_profile,
     turn_profile, sweep_mill, loft_mill, surface_mill, or dome_mill.
+17. Prefer the pure SubCAD operation families supplied by the planner. If the
+    CadQuery trace and STEP evidence are ambiguous, choose among the planned
+    operation candidates only; do not invent a hybrid/imported/direct-rebuild
+    fallback.
 """)
 
 # Shorter reference for iteration prompts (the LLM already saw the full one)
@@ -346,6 +352,8 @@ def build_user_prompt(
 
     # Extract the Measures block from the CadQuery source for reuse
     measures_block = _extract_measures_block(cq_code)
+    planner_plan = plan_pure_subcad_features(ops_trace, cq_code)
+    planner_summary = _format_planner_candidates(planner_plan.to_dict())
 
     prompt = f"""## Task
 
@@ -378,6 +386,9 @@ margin in X/Y.
 ## Operations Trace (reconstructed chains)
 {chr(10).join(chain_summary)}
 
+## Pure SubCAD Operation Plan (planner candidates)
+{planner_summary}
+
 ## Instructions
 
 Translate this constructive CadQuery program into an equivalent subCAD
@@ -385,17 +396,48 @@ subtractive program. Remember:
 - Stock XY = final part XY (use {stock_dims['length']:.0f} x {stock_dims['width']:.0f}).
   Only add extra Z height for face_mill.
 - Cut AWAY material to reveal the final shape.
-- The target volume is approximately {ref_vol} mm^3.
+- The target is the original STEP reference geometry. Match that original STEP;
+  do not import, read, reuse, or wrap the STEP/B-Rep/mesh inside generated code.
+- The target volume from the original STEP is approximately {ref_vol} mm^3.
 - Assign the final Stock to a variable named `part`.
 - Copy the Measures block above when useful and use m.width, m.depth, etc.
 - Call the `execute_subcad` tool with raw Python code. Do not include markdown
   fences or explanation text in the tool argument.
+- Prefer the pure SubCAD operation families in the planner candidates above.
+  If evidence is ambiguous, choose among those planned operation candidates only.
 - Use simple SubCAD operations first: face_mill, pocket, circular_pocket,
   drill, slot, and chamfer. Use counterbore/countersink only when visible in
   the CadQuery source.
+- Forbidden fallbacks: hybrid_feature placeholders, direct CadQuery reconstruction
+  with cq.Workplane or CadQuery imports, import_step, opaque B-Rep/mesh reuse,
+  or any hybrid/imported geometry that hides the manufacturing operations.
 
 CALL `execute_subcad` NOW with your best first SubCAD translation."""
     return prompt
+
+
+def _format_planner_candidates(plan: dict) -> str:
+    """Return a compact pure-operation planner summary for the prompt."""
+    lines = [
+        f"- coverage_mode: {plan.get('coverage_mode', 'pure_subcad_operations')}",
+        f"- compatible: {bool(plan.get('compatible'))}",
+    ]
+    features = plan.get("features") or []
+    if not features:
+        lines.append("- candidates: none detected; use conservative basic SubCAD operations only")
+        return "\n".join(lines)
+
+    lines.append("- candidates:")
+    for feature in features:
+        operation = feature.get("operation", "unknown")
+        status = feature.get("planner_status", "unknown")
+        family = feature.get("family", "unknown")
+        source = feature.get("source", "unknown")
+        reason = feature.get("reason", "")
+        lines.append(
+            f"  - {operation} ({status}, {family}) from {source}: {reason}"
+        )
+    return "\n".join(lines)
 
 
 def _load_reference_volume(step_path: str) -> float:
@@ -445,15 +487,18 @@ def build_iteration_prompt(
 {feedback}
 
 The subCAD volume is {direction} (volume ratio: {vol_ratio:.3f}).
-Target volume: {target_volume:.1f} mm^3."""]
+Target volume from the original STEP reference: {target_volume:.1f} mm^3.
+Repair against the original STEP comparison, not the previous candidate. Keep
+the fix as pure SubCAD operations; do not switch to CadQuery reconstruction,
+import_step, hybrid_feature, or opaque STEP/B-Rep/mesh reuse."""]
 
     # --- Include localized mesh deviation feedback ---
     if mesh_comparison and mesh_comparison.get("feedback"):
         parts.append("")
         parts.append("## Localized Shape Deviation")
-        parts.append("The following analysis identifies *where* the candidate "
-                     "shape deviates from the reference. Use this to fix "
-                     "specific dimensions (depths, widths, positions).")
+        parts.append("The following original-STEP comparison identifies *where* "
+                     "the candidate shape deviates from the reference. Use this "
+                     "to fix specific dimensions (depths, widths, positions).")
         score = mesh_comparison.get("score")
         if score is not None:
             parts.append(f"Mesh quality score: {score:.0f}/100")
@@ -465,8 +510,9 @@ Target volume: {target_volume:.1f} mm^3."""]
         parts.append("")
         parts.append("## Per-Feature Comparison")
         parts.append("The following compares individual features (pockets, holes, "
-                     "chamfers) between the reference and candidate. Features "
-                     "listed as MISSING, WRONG SIZE, or SHIFTED should be fixed.")
+                     "chamfers) between the original STEP reference and candidate. "
+                     "Features listed as MISSING, WRONG SIZE, or SHIFTED should "
+                     "be fixed with pure SubCAD operations.")
         fscore = feature_comparison.get("score")
         if fscore is not None:
             parts.append(f"Feature quality score: {fscore:.0f}/100")
@@ -485,7 +531,9 @@ Target volume: {target_volume:.1f} mm^3."""]
 Call the `execute_subcad` tool again with corrected raw SubCAD Python code.
 No markdown fences, no explanation, no analysis, no file writes. The code must
 assign the final Stock to `part` and should start with the Measures block if
-needed, followed by `part = Stock.rectangular(...`.""")
+needed, followed by `part = Stock.rectangular(...`. Preserve the planner-backed
+pure operation policy; do not repair by importing or reconstructing the original
+CadQuery/STEP geometry directly.""")
 
     return "\n".join(parts)
 
@@ -650,6 +698,11 @@ def _comparison_feedback_payload(
         "error": exec_result.get("error")
         if not exec_result.get("success", False) else None,
         "feedback": format_feedback(code, exec_result, comparison),
+        "repair_policy": (
+            "Repair against the original STEP reference target using pure SubCAD "
+            "operations only; do not use hybrid_feature, direct CadQuery "
+            "reconstruction, import_step, or opaque STEP/B-Rep/mesh reuse."
+        ),
     }
 
     if mesh_comparison and mesh_comparison.get("feedback"):

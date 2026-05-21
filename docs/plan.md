@@ -314,6 +314,19 @@ Current implementation:
 - Use `--comparison-methods slice` for the current 2.5D collection pass; SDF is
   retained as feedback but is too noisy on sparse STEP tessellations to be the
   hard success gate today.
+- The typed pure-operation planner and the first geometry-backed pure operation
+  slice are complete. Selected-edge chamfers/fillets, lightweight profile
+  pockets/cutouts/contours, and retained profile/cylindrical bosses now execute
+  through SubCAD geometry rather than being only planned records.
+
+Active next slice:
+
+- Improve profile fidelity for slot/obround, arc-chain, and spline/polyline
+  approximations.
+- Add feature-family benchmark reporting so progress is measured by operation
+  family, not only by aggregate planner coverage.
+- Harden translator prompts and repair feedback so accepted programs remain
+  pure SubCAD and are judged against the original STEP target.
 
 ### Build Dataset From Successful Translations
 
@@ -356,10 +369,11 @@ Acceptance criteria met:
 | Phase 2 toolpaths | Complete | Maintain authored neutral paths, summaries, preview-only G-code adapter, malformed-path validation, and path-based estimates. |
 | Fixture/tool inventory v1 | Complete | Maintain structured catalogs, selected tool assemblies, fixture/clamp visualization, and browser review metadata. |
 | Manufacturing Economics v1 | Initial slice complete | Maintain engineering estimates, setup/tool-change time, material/machine/setup/tooling cost, and program comparison; calibrate against real shop data next. |
-| Agentic translator | Implemented; non-live tests pass | Run live Zero-to-CAD trials; compare generated SubCAD output against each original `model.step`. |
+| Agentic translator | Implemented; non-live tests pass | Harden prompts around pure-operation candidates, then run live Zero-to-CAD trials against each original `model.step`. |
 | Mesh comparison | Implemented | Verify and tune; no need to reimplement first. |
 | Feature comparison | Implemented | Validate on known samples and feed into translator loop. |
-| Manufacturing Trust v1 | Active next priority | Broaden inventory-aware planning, realistic passes, fixture/tool-holder clearance, simulation comparison reliability, warning-focused visualization, and economics calibration. |
+| Manufacturing Trust v1 | Initial slice complete | Maintain inventory-aware planning, realistic passes, fixture/tool-holder clearance, simulation comparison reliability, warning-focused visualization, and economics calibration while STEP coverage work continues. |
+| Pure STEP-to-SubCAD coverage | Active next priority | Improve profile fidelity, add feature-family verification reporting, and require original-STEP matches before counting dataset pairs. |
 | Simulation bridge | Prototype passing tests | Harden as part of Manufacturing Trust v1 against representative target meshes, authored toolpaths, and gouge/deviation cases. |
 | STEP-to-SubCAD AI model | Planned | Use STEP/B-Rep feature JSON as source of truth, with rendered views/video as supporting evidence; see `docs/step_to_subcad_ai.md`. |
 | GNN feature recognition | Planned | Defer until subtractive workflow proves what features are needed. |
