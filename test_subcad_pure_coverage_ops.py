@@ -833,6 +833,56 @@ check("base_height=1.5" in annular_rib_subcad,
 annular_rib_exec = run_subcad(annular_rib_subcad)
 check(annular_rib_exec["success"], "deterministic annular-rib SubCAD code executes")
 
+flange_collar_code = """
+flange_radius = 40.0
+flange_thickness = 5.0
+collar_height = 10.0
+collar_outer_radius = 15.0
+collar_inner_radius = 10.0
+collar_fillet = 0.6
+hole_diameter = 2.0
+hole_spacing = 10.0
+hole_pattern_rows = 6
+hole_pattern_cols = 8
+hole_clearance_from_collar = 5.0
+hole_clearance_from_edge = 5.0
+base = cq.Workplane("XY").circle(flange_radius).extrude(flange_thickness)
+points = []
+col_offset = -(hole_pattern_cols // 2) * hole_spacing
+row_offset = -(hole_pattern_rows // 2) * hole_spacing
+for i in range(hole_pattern_cols + 1):
+    for j in range(hole_pattern_rows + 1):
+        x = col_offset + i * hole_spacing
+        y = row_offset + j * hole_spacing
+        r2 = x * x + y * y
+        if r2 < (flange_radius - hole_clearance_from_edge) ** 2 and r2 > (collar_outer_radius + hole_clearance_from_collar) ** 2:
+            points.append((x, y))
+if points:
+    base = base.faces(">Z").workplane().pushPoints(points).hole(hole_diameter)
+collar = (
+    cq.Workplane("XY", origin=(0, 0, flange_thickness))
+    .circle(collar_outer_radius)
+    .circle(collar_inner_radius)
+    .extrude(collar_height)
+)
+collar = collar.fillet(collar_fillet)
+result = base.union(collar)
+"""
+flange_collar_subcad = build_deterministic_subcad_code(flange_collar_code, [])
+check(flange_collar_subcad is not None, "planner builds deterministic flange-collar SubCAD code")
+check(
+    "Stock.cylindrical(80, 15)" in flange_collar_subcad
+    and ".machine_around_cylinder(30, height=10" in flange_collar_subcad
+    and ".circular_pocket(20, depth=10" in flange_collar_subcad,
+    "deterministic flange-collar code preserves flange and collar dimensions",
+)
+check(
+    flange_collar_subcad.count(".drill(2, through=True") == 24,
+    "deterministic flange-collar code preserves filtered hole grid",
+)
+flange_collar_exec = run_subcad(flange_collar_subcad)
+check(flange_collar_exec["success"], "deterministic flange-collar SubCAD code executes")
+
 grid_boss_code = """
 outer_diameter = 80.0
 plate_thickness = 8.0

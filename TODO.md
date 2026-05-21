@@ -117,11 +117,12 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 50 recorded by guarded live pilots.
+- Matched original-STEP-verified pairs: 51 recorded by guarded live pilots.
   - Accepted train global indexes:
-    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 381, 415, 438, 503, 697, 698, 702, 870, 1126, 1170, 1173, 1278, 1293, 1458, 1536, 1823, 1906, 2288`.
-  - Latest accepted rows: train global indexes 1536, 1823, 1906, and 2288,
-    manifests `runs/zero_to_cad_live_pilots/deterministic_row1536_probe/attempts.jsonl`,
+    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 342, 381, 415, 438, 503, 697, 698, 702, 870, 1126, 1170, 1173, 1278, 1293, 1458, 1536, 1823, 1906, 2288`.
+  - Latest accepted rows: train global indexes 342, 1536, 1823, 1906, and 2288,
+    manifests `runs/zero_to_cad_live_pilots/deterministic_flange_collar_row342_probe/attempts.jsonl`,
+    `runs/zero_to_cad_live_pilots/deterministic_row1536_probe/attempts.jsonl`,
     `runs/zero_to_cad_live_pilots/deterministic_profile_row1823_probe/attempts.jsonl`,
     `runs/zero_to_cad_live_pilots/deterministic_profile_row1906_probe/attempts.jsonl`,
     and `runs/zero_to_cad_live_pilots/deterministic_box_row2288_probe/attempts.jsonl`.
@@ -263,7 +264,7 @@ Immediate next implementation targets:
 - Done: prevent outside-stock retained islands from cutting away the whole
   stock, and reinforce literal CadQuery `translate((x, y, z))` coordinate use
   in the translator prompt.
-- Next: continue accepted-index guarded forward scans from the 50 accepted
+- Next: continue accepted-index guarded forward scans from the 51 accepted
   pairs, preserving strict stop conditions and fixing deterministic blockers
   before spending larger live batches.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
@@ -318,7 +319,7 @@ Immediate next implementation targets:
   selected retained-material operations, and related coverage ops; update the
   translator prompt to preserve CadQuery workplane face selectors such as
   `<Z` instead of silently converting underside operations to top-side work.
-- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, row 83, row 87, row 88, row 90, row 107, row 111, row 115, row 118, row 132, row 238, row 381, row 415, row 438, row 503, row 697, row 698, row 702, row 870, row 1126, row 1170, row 1173, row 1278, row 1293, row 1458, row 1536, row 1823, row 1906, and row 2288 accepted manifests in future
+- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, row 83, row 87, row 88, row 90, row 107, row 111, row 115, row 118, row 132, row 238, row 342, row 381, row 415, row 438, row 503, row 697, row 698, row 702, row 870, row 1126, row 1170, row 1173, row 1278, row 1293, row 1458, row 1536, row 1823, row 1906, and row 2288 accepted manifests in future
   accepted-index guarded runs.
 - Done: add Z-band retained-material support and planner evidence for retained
   rib/boss loops and polar arrays.
@@ -384,10 +385,9 @@ Immediate next implementation targets:
 - Blocked row: train global index 1166 has a side ribbed flange and counterbore
   holes; the simple box/chamfer recognizer is now guarded against `cboreHole`,
   `pushPoints`, `polyline`, and extra `extrude` chains.
-- Blocked row: train global index 342 is a flange/collar union with a filtered
-  hole grid. The simple washer recognizer was too broad and is now guarded
-  against union/multi-extrude sources; row 342 needs a dedicated flange/collar
-  plus hole-grid builder.
+- Done: add a deterministic cylindrical flange/collar builder for filtered
+  hole grids, and accept train global index 342 via
+  `deterministic_flange_collar_row342_probe`.
 - Next: run the next accepted-index guarded forward scan and fix the next
   deterministic feature-family blocker before spending larger live batches.
 

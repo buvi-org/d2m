@@ -304,6 +304,9 @@ def build_deterministic_subcad_code(
     annular_rib_code = _deterministic_cylindrical_annular_rib_code(cadquery_code)
     if annular_rib_code:
         return annular_rib_code
+    flange_collar_code = _deterministic_cylindrical_flange_collar_code(cadquery_code)
+    if flange_collar_code:
+        return flange_collar_code
     grid_boss_code = _deterministic_cylindrical_grid_boss_code(cadquery_code)
     if grid_boss_code:
         return grid_boss_code
@@ -1052,6 +1055,53 @@ def _deterministic_cylindrical_annular_rib_code(cadquery_code: str) -> str | Non
     return _format_fluent_subcad_code(stock, sequence)
 
 
+def _deterministic_cylindrical_flange_collar_code(cadquery_code: str) -> str | None:
+    env = _numeric_env(cadquery_code)
+    required = {
+        "flange_radius",
+        "flange_thickness",
+        "collar_height",
+        "collar_outer_radius",
+        "collar_inner_radius",
+    }
+    if not required.issubset(env):
+        return None
+    lower = cadquery_code.lower()
+    if ".union(collar)" not in lower or "pushpoints(points)" not in lower:
+        return None
+    flange_radius = env["flange_radius"]
+    flange_thickness = env["flange_thickness"]
+    collar_height = env["collar_height"]
+    collar_outer_radius = env["collar_outer_radius"]
+    collar_inner_radius = env["collar_inner_radius"]
+    if (
+        flange_radius <= 0
+        or flange_thickness <= 0
+        or collar_height <= 0
+        or collar_outer_radius <= collar_inner_radius
+        or collar_inner_radius <= 0
+        or collar_outer_radius >= flange_radius
+    ):
+        return None
+    stock = f"Stock.cylindrical({2.0 * flange_radius:.6g}, {flange_thickness + collar_height:.6g})"
+    sequence = [
+        (
+            f".machine_around_cylinder({2.0 * collar_outer_radius:.6g}, "
+            f"height={collar_height:.6g}, cx=0.0, cy=0.0, "
+            f"base_height={flange_thickness:.6g})"
+        ),
+        (
+            f".circular_pocket({2.0 * collar_inner_radius:.6g}, "
+            f"depth={collar_height:.6g}, cx=0.0, cy=0.0)"
+        ),
+    ]
+    sequence.extend(_filtered_grid_hole_drill_calls(cadquery_code))
+    fillet = env.get("collar_fillet")
+    if fillet is not None and fillet > 0:
+        sequence.append(f'.edge_fillet(">Z", radius={fillet:.6g})')
+    return _format_fluent_subcad_code(stock, sequence)
+
+
 def _deterministic_cylindrical_grid_boss_code(cadquery_code: str) -> str | None:
     cylinder = _cylindrical_stock_from_circle_extrude(cadquery_code)
     grid = _rarray_circle_bosses_from_code(cadquery_code)
@@ -1438,6 +1488,43 @@ def _push_points_hole_drill_calls(code_text: str) -> list[str]:
             continue
         for x, y in points:
             calls.append(f".drill({diameter:.6g}, through=True, cx={x:.6g}, cy={y:.6g})")
+    return calls
+
+
+def _filtered_grid_hole_drill_calls(code_text: str) -> list[str]:
+    env = _numeric_env(code_text)
+    required = {
+        "hole_pattern_rows",
+        "hole_pattern_cols",
+        "hole_spacing",
+        "hole_clearance_from_collar",
+        "hole_clearance_from_edge",
+        "flange_radius",
+        "collar_outer_radius",
+        "hole_diameter",
+    }
+    if not required.issubset(env):
+        return []
+    rows = int(env["hole_pattern_rows"])
+    cols = int(env["hole_pattern_cols"])
+    spacing = env["hole_spacing"]
+    hole_diameter = env["hole_diameter"]
+    edge_limit = env["flange_radius"] - env["hole_clearance_from_edge"]
+    collar_limit = env["collar_outer_radius"] + env["hole_clearance_from_collar"]
+    if rows < 0 or cols < 0 or rows > 200 or cols > 200 or spacing <= 0 or hole_diameter <= 0:
+        return []
+    if edge_limit <= collar_limit:
+        return []
+    col_offset = -(cols // 2) * spacing
+    row_offset = -(rows // 2) * spacing
+    calls: list[str] = []
+    for i in range(cols + 1):
+        for j in range(rows + 1):
+            x = col_offset + i * spacing
+            y = row_offset + j * spacing
+            r2 = x * x + y * y
+            if r2 < edge_limit * edge_limit and r2 > collar_limit * collar_limit:
+                calls.append(f".drill({hole_diameter:.6g}, through=True, cx={x:.6g}, cy={y:.6g})")
     return calls
 
 
