@@ -117,12 +117,12 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 66 recorded by guarded live pilots.
+- Matched original-STEP-verified pairs: 70 recorded by guarded live pilots.
   - Accepted train global indexes:
-    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 342, 381, 415, 438, 503, 697, 698, 702, 870, 1126, 1170, 1173, 1278, 1293, 1458, 1479, 1536, 1595, 1647, 1823, 1906, 2162, 2209, 2257, 2288, 2450, 3047, 3175, 3231, 3487, 3777, 4081, 4227, 5606`.
+    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 342, 381, 415, 438, 503, 697, 698, 702, 870, 1126, 1170, 1173, 1278, 1293, 1458, 1479, 1536, 1595, 1647, 1823, 1906, 2162, 2209, 2257, 2288, 2450, 2896, 3047, 3175, 3231, 3414, 3487, 3777, 3787, 3966, 4081, 4227, 5606`.
   - Latest accepted rows include train global indexes 342, 1536, 1595, 1647,
     1823, 1906, 2162, 2209, 2257, 2288, 2450, 3047, 3175, 3231, 3487,
-    3777, 4081, 4227, 5606, and 1479,
+    3777, 4081, 4227, 5606, 1479, 2896, 3414, 3787, and 3966,
     manifests `runs/zero_to_cad_live_pilots/deterministic_flange_collar_row342_probe/attempts.jsonl`,
     `runs/zero_to_cad_live_pilots/deterministic_row1536_probe/attempts.jsonl`,
     `runs/zero_to_cad_live_pilots/deterministic_profile_row1595_probe/attempts.jsonl`,
@@ -142,7 +142,11 @@ Latest measured dry scan:
     `runs/zero_to_cad_live_pilots/deterministic_box_hole_row4081_probe/attempts.jsonl`,
     `runs/zero_to_cad_live_pilots/deterministic_box_chamfer_row4227_probe/attempts.jsonl`,
     `runs/zero_to_cad_live_pilots/deterministic_box_chamfer_row5606_probe/attempts.jsonl`,
-    and `runs/zero_to_cad_live_pilots/deterministic_rect_plate_row1479_probe/attempts.jsonl`.
+    `runs/zero_to_cad_live_pilots/deterministic_rect_plate_row1479_probe/attempts.jsonl`,
+    `runs/zero_to_cad_live_pilots/deterministic_profile_row2896_probe/attempts.jsonl`,
+    `runs/zero_to_cad_live_pilots/deterministic_profile_row3414_probe/attempts.jsonl`,
+    `runs/zero_to_cad_live_pilots/deterministic_profile_row3787_probe/attempts.jsonl`,
+    and `runs/zero_to_cad_live_pilots/deterministic_profile_row3966_probe/attempts.jsonl`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -281,7 +285,7 @@ Immediate next implementation targets:
 - Done: prevent outside-stock retained islands from cutting away the whole
   stock, and reinforce literal CadQuery `translate((x, y, z))` coordinate use
   in the translator prompt.
-- Next: continue accepted-index guarded forward scans from the 66 accepted
+- Next: continue accepted-index guarded forward scans from the 70 accepted
   pairs, preserving strict stop conditions and fixing deterministic blockers
   before spending larger live batches.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
@@ -336,7 +340,7 @@ Immediate next implementation targets:
   selected retained-material operations, and related coverage ops; update the
   translator prompt to preserve CadQuery workplane face selectors such as
   `<Z` instead of silently converting underside operations to top-side work.
-- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, row 83, row 87, row 88, row 90, row 107, row 111, row 115, row 118, row 132, row 238, row 342, row 381, row 415, row 438, row 503, row 697, row 698, row 702, row 870, row 1126, row 1170, row 1173, row 1278, row 1293, row 1458, row 1479, row 1536, row 1595, row 1647, row 1823, row 1906, row 2162, row 2209, row 2257, row 2288, row 2450, row 3047, row 3175, row 3231, row 3487, row 3777, row 4081, row 4227, and row 5606 accepted manifests in future
+- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, row 83, row 87, row 88, row 90, row 107, row 111, row 115, row 118, row 132, row 238, row 342, row 381, row 415, row 438, row 503, row 697, row 698, row 702, row 870, row 1126, row 1170, row 1173, row 1278, row 1293, row 1458, row 1479, row 1536, row 1595, row 1647, row 1823, row 1906, row 2162, row 2209, row 2257, row 2288, row 2450, row 2896, row 3047, row 3175, row 3231, row 3414, row 3487, row 3777, row 3787, row 3966, row 4081, row 4227, and row 5606 accepted manifests in future
   accepted-index guarded runs.
 - Done: add Z-band retained-material support and planner evidence for retained
   rib/boss loops and polar arrays.
@@ -422,6 +426,8 @@ Immediate next implementation targets:
 - Done: add a deterministic raised rectangular plate builder that omits row
   1479's no-op positive `cutBlind` pockets, and accept train global index 1479
   via `deterministic_rect_plate_row1479_probe`.
+- Done: accept train global indexes 2896, 3414, 3787, and 3966 with existing
+  deterministic profile builders.
 - Next: run the next accepted-index guarded forward scan and fix the next
   deterministic feature-family blocker before spending larger live batches.
 
