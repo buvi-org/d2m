@@ -277,6 +277,9 @@ def build_deterministic_subcad_code(
     polar_rib_code = _deterministic_cylindrical_polar_rib_code(cadquery_code, plan)
     if polar_rib_code:
         return polar_rib_code
+    shell_cover_code = _deterministic_cylindrical_shell_cover_code(cadquery_code)
+    if shell_cover_code:
+        return shell_cover_code
     annular_rib_code = _deterministic_cylindrical_annular_rib_code(cadquery_code)
     if annular_rib_code:
         return annular_rib_code
@@ -456,6 +459,26 @@ def _cylindrical_stock_from_circle_extrude(code_text: str) -> dict[str, float] |
     if radius is None or height is None or radius <= 0 or height <= 0:
         return None
     return {"diameter": 2.0 * radius, "height": height}
+
+
+def _deterministic_cylindrical_shell_cover_code(cadquery_code: str) -> str | None:
+    env = _numeric_env(cadquery_code)
+    outer_radius = env.get("outer_radius")
+    height = env.get("cover_height")
+    shell = env.get("shell_thickness")
+    if outer_radius is None or height is None or shell is None:
+        return None
+    if "outer.cut(inner)" not in cadquery_code or outer_radius <= shell or height <= 0:
+        return None
+    inner_diameter = 2.0 * (outer_radius - shell)
+    stock = f"Stock.cylindrical({2.0 * outer_radius:.6g}, {height:.6g})"
+    sequence = [
+        f".circular_pocket({inner_diameter:.6g}, depth={height:.6g}, cx=0.0, cy=0.0)",
+    ]
+    fillet = env.get("fillet_radius")
+    if fillet is not None and ".fillet(" in cadquery_code.lower():
+        sequence.append(f'.edge_fillet("|Z", radius={fillet:.6g})')
+    return _format_fluent_subcad_code(stock, sequence)
 
 
 def _largest_unpositioned_hole_diameter(code_text: str) -> float | None:

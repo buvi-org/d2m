@@ -429,6 +429,37 @@ check(".drill(5, through=True, cx=35, cy=0)" in polar_rib_subcad,
 polar_rib_exec = run_subcad(polar_rib_subcad)
 check(polar_rib_exec["success"], "deterministic cylindrical polar-rib SubCAD code executes")
 
+shell_cover_code = """
+outer_radius = 40
+cover_height = 10
+shell_thickness = 2
+sensor_pocket_width = 15
+sensor_pocket_length = 20
+sensor_pocket_depth = 5
+sensor_offset = 20
+fillet_radius = 1
+hole_diameter = 5
+mount_radius = 30
+cable_hole_diameter = 3
+outer = cq.Workplane('XY').circle(outer_radius).extrude(cover_height)
+inner = cq.Workplane('XY').circle(outer_radius - shell_thickness).extrude(cover_height)
+cover_shell = outer.cut(inner)
+pocketed = cover_shell.faces('>Z').workplane().center(sensor_offset, 0).rect(sensor_pocket_width, sensor_pocket_length).cutBlind(-sensor_pocket_depth)
+holes = pocketed.faces('>Z').workplane().polarArray(mount_radius, 0, 360/3, 3).hole(hole_diameter)
+cable = holes.faces('>Z').workplane().center(sensor_offset, 0).circle(cable_hole_diameter/2).cutBlind(-sensor_pocket_depth)
+result = cable.edges('|Z').fillet(fillet_radius)
+"""
+shell_cover_subcad = build_deterministic_subcad_code(shell_cover_code, [])
+check(shell_cover_subcad is not None, "planner builds deterministic cylindrical shell-cover SubCAD code")
+check(
+    "Stock.cylindrical(80, 10)" in shell_cover_subcad
+    and ".circular_pocket(76, depth=10" in shell_cover_subcad
+    and ".edge_fillet(\"|Z\", radius=1)" in shell_cover_subcad,
+    "deterministic shell-cover code preserves hollow shell and vertical fillets",
+)
+shell_cover_exec = run_subcad(shell_cover_subcad)
+check(shell_cover_exec["success"], "deterministic cylindrical shell-cover SubCAD code executes")
+
 annular_rib_code = """
 plate_diameter = 80.0
 plate_thickness = 5.0
