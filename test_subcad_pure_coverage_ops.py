@@ -378,6 +378,45 @@ check(
     polar_evidence and len(polar_evidence[0].get("profiles", [])) == 6,
     "planner extracts polarArray retained-rib evidence",
 )
+polar_rib_code = """
+outer_diameter = 80.0
+inner_diameter = 30.0
+plate_thickness = 8.0
+rib_width = 4.0
+rib_height = 2.0
+rib_thickness = 1.5
+rib_count = 6
+mount_hole_dia = 5.0
+mount_hole_offset = 20.0
+base = cq.Workplane("XY").circle(outer_diameter / 2).extrude(plate_thickness)
+rib_radius = outer_diameter / 2 - rib_width / 2 - 2.0
+result = (
+    base.faces(">Z").workplane()
+    .polarArray(radius=rib_radius, count=rib_count, startAngle=0, angle=360)
+    .rect(rib_width, rib_thickness)
+    .extrude(rib_height)
+)
+result = result.faces("<Z").workplane().hole(inner_diameter)
+mount_radius = inner_diameter / 2 + mount_hole_offset
+result = (
+    result.faces("<Z").workplane()
+    .polarArray(radius=mount_radius, count=4, startAngle=0, angle=360)
+    .hole(mount_hole_dia)
+)
+"""
+polar_rib_subcad = build_deterministic_subcad_code(polar_rib_code, [])
+check(polar_rib_subcad is not None, "planner builds deterministic cylindrical polar-rib SubCAD code")
+check(
+    "Stock.cylindrical(80, 10)" in polar_rib_subcad
+    and ".machine_around_profiles(" in polar_rib_subcad,
+    "deterministic polar-rib code preserves cylindrical stock and retained ribs",
+)
+check(".drill(30, through=True, cx=0.0, cy=0.0)" in polar_rib_subcad,
+      "deterministic polar-rib code includes center bore")
+check(".drill(5, through=True, cx=35, cy=0)" in polar_rib_subcad,
+      "deterministic polar-rib code includes polar mount holes")
+polar_rib_exec = run_subcad(polar_rib_subcad)
+check(polar_rib_exec["success"], "deterministic cylindrical polar-rib SubCAD code executes")
 
 
 print("\n2. Fluent pure operation API serializes process-plan records ...")

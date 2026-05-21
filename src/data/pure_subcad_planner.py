@@ -271,6 +271,9 @@ def build_deterministic_subcad_code(
     top_rib_code = _deterministic_top_retained_rib_code(cadquery_code, plan)
     if top_rib_code:
         return top_rib_code
+    polar_rib_code = _deterministic_cylindrical_polar_rib_code(cadquery_code, plan)
+    if polar_rib_code:
+        return polar_rib_code
     return None
 
 
@@ -360,6 +363,131 @@ def _base_rect_from_sketch_extrude(code_text: str) -> dict[str, float] | None:
         "width": float(sketch["width"]),
         "height": float(depth),
     }
+
+
+def _deterministic_cylindrical_polar_rib_code(cadquery_code: str, plan: PureSubCADPlan) -> str | None:
+    cylinder = _cylindrical_stock_from_circle_extrude(cadquery_code)
+    if not cylinder:
+        return None
+    retained = [
+        feature.evidence for feature in plan.features
+        if feature.operation == "machine_around_profile"
+        and feature.source == "cadquery.faces.top.workplane.extrude"
+        and len(feature.evidence.get("profiles") or []) > 1
+    ]
+    if len(retained) != 1:
+        return None
+    evidence = retained[0]
+    profiles = list(evidence.get("profiles") or [])
+    rib_height = float(evidence.get("height") or 0.0)
+    if not profiles or rib_height <= 0:
+        return None
+
+    stock = f"Stock.cylindrical({cylinder['diameter']:.6g}, {cylinder['height'] + rib_height:.6g})"
+    sequence = [
+        _suggest_machine_around_profiles(profiles, rib_height, cylinder["height"]),
+    ]
+    center_hole = _largest_unpositioned_hole_diameter(cadquery_code)
+    if center_hole is not None:
+        sequence.append(f".drill({center_hole:.6g}, through=True, cx=0.0, cy=0.0)")
+    sequence.extend(_polar_hole_drill_calls(cadquery_code, skip_diameter=center_hole))
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _cylindrical_stock_from_circle_extrude(code_text: str) -> dict[str, float] | None:
+    env = _numeric_env(code_text)
+    match = re.search(
+        r"\.circle\((?P<radius>[^)]*)\)\s*\.extrude\((?P<height>[^)]*)\)",
+        code_text,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None
+    radius = _eval_number(match.group("radius"), env)
+    height = _eval_number(match.group("height"), env)
+    if radius is None or height is None or radius <= 0 or height <= 0:
+        return None
+    return {"diameter": 2.0 * radius, "height": height}
+
+
+def _largest_unpositioned_hole_diameter(code_text: str) -> float | None:
+    env = _numeric_env(code_text)
+    diameters: list[float] = []
+    for match in re.finditer(r"\.hole\((?P<args>[^)]*)\)", code_text, re.IGNORECASE):
+        prefix = code_text[max(0, match.start() - 120):match.start()].lower()
+        if ".polararray(" in prefix:
+            continue
+        args = _split_args(match.group("args"))
+        if not args:
+            continue
+        diameter = _eval_number(args[0], env)
+        if diameter is not None and diameter > 0:
+            diameters.append(diameter)
+    return max(diameters) if diameters else None
+
+
+def _polar_hole_drill_calls(code_text: str, *, skip_diameter: float | None = None) -> list[str]:
+    env = _numeric_env(code_text)
+    calls: list[str] = []
+    for match in re.finditer(r"\.polararray\s*\(", code_text, re.IGNORECASE):
+        polar_args, end = _call_args_at(code_text, match.end() - 1)
+        if polar_args is None:
+            continue
+        next_polar = re.search(r"\.polararray\s*\(", code_text[end:], re.IGNORECASE)
+        segment_end = end + next_polar.start() if next_polar else min(len(code_text), end + 500)
+        segment = code_text[end:segment_end]
+        hole_match = re.search(r"\.hole\((?P<hole>[^)]*)\)", segment, re.IGNORECASE)
+        if not hole_match:
+            continue
+        rect_match = re.search(r"\.rect\(", segment, re.IGNORECASE)
+        if rect_match and rect_match.start() < hole_match.start():
+            continue
+        hole_args = _split_args(hole_match.group("hole"))
+        if not hole_args:
+            continue
+        diameter = _eval_number(hole_args[0], env)
+        if diameter is None or diameter <= 0:
+            continue
+        if skip_diameter is not None and abs(diameter - skip_diameter) < 1e-9:
+            continue
+        polar = _parse_keyword_args(polar_args, env)
+        radius = polar.get("radius")
+        count = polar.get("count")
+        start = polar.get("startangle", 0.0)
+        sweep = polar.get("angle", 360.0)
+        if radius is None and polar_args:
+            radius = _eval_number(polar_args[0], env)
+        if count is None and len(polar_args) > 1:
+            count = _eval_number(polar_args[1], env)
+        if radius is None or count is None or count <= 0 or count > 100:
+            continue
+        step = sweep / count
+        for index in range(int(count)):
+            angle = start + step * index
+            radians = math.radians(angle)
+            calls.append(
+                f".drill({diameter:.6g}, through=True, "
+                f"cx={radius * math.cos(radians):.6g}, "
+                f"cy={radius * math.sin(radians):.6g})"
+            )
+    return calls
+
+
+def _call_args_at(text: str, open_paren_index: int) -> tuple[list[str] | None, int]:
+    if open_paren_index < 0 or open_paren_index >= len(text) or text[open_paren_index] != "(":
+        return None, open_paren_index
+    depth = 1
+    index = open_paren_index + 1
+    while index < len(text) and depth:
+        char = text[index]
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+        index += 1
+    if depth:
+        return None, index
+    return _split_args(text[open_paren_index + 1:index - 1]), index
 
 
 def _deterministic_drill_calls(code_text: str) -> list[str]:
