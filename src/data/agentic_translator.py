@@ -14,6 +14,7 @@ subtractive programs. The loop:
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import sys
@@ -366,6 +367,63 @@ def _extract_balanced_assignment(source: str, start_pattern: str) -> str:
     return source[line_start:].strip()
 
 
+def _cadquery_variable_volume_evidence(cq_code: str, *, max_items: int = 16) -> str:
+    """Execute trusted CadQuery source and summarize Workplane variable volumes.
+
+    Zero-to-CAD rows are local benchmark programs.  This evidence is used only
+    to tell the translator which named CadQuery intermediates changed geometry;
+    generated SubCAD is still compared against the original STEP target.
+    """
+    try:
+        import cadquery as cq  # type: ignore
+    except Exception:
+        return "CadQuery unavailable; no variable volume evidence."
+
+    namespace: dict[str, object] = {"cq": cq, "math": math}
+    try:
+        exec(cq_code, namespace)
+    except Exception as exc:
+        return f"CadQuery source execution failed; no variable volume evidence: {exc}"
+
+    rows: list[str] = []
+    previous_volume: float | None = None
+    for name, value in namespace.items():
+        if name.startswith("__") or name in {"cq", "math"}:
+            continue
+        volume = _object_volume(value)
+        if volume is None:
+            continue
+        if previous_volume is None:
+            delta = ""
+        else:
+            change = volume - previous_volume
+            if abs(change) < 1e-6:
+                delta = " (no volume change vs previous solid)"
+            else:
+                delta = f" (delta {change:+.3f} mm^3)"
+        rows.append(f"- `{name}`: {volume:.3f} mm^3{delta}")
+        previous_volume = volume
+        if len(rows) >= max_items:
+            break
+
+    if not rows:
+        return "No CadQuery Workplane/Solid variable volumes found."
+    return "\n".join(rows)
+
+
+def _object_volume(value: object) -> float | None:
+    try:
+        if hasattr(value, "val"):
+            solid = value.val()  # type: ignore[attr-defined]
+            if hasattr(solid, "Volume"):
+                return float(solid.Volume())
+        if hasattr(value, "Volume"):
+            return float(value.Volume())  # type: ignore[attr-defined]
+    except Exception:
+        return None
+    return None
+
+
 def build_system_prompt() -> str:
     """Build the system prompt with subCAD API reference."""
     return f"""CRITICAL: You are a tool-using code generator.
@@ -414,6 +472,7 @@ def build_user_prompt(
     measures_block = _extract_measures_block(cq_code)
     planner_plan = plan_pure_subcad_features(ops_trace, cq_code)
     planner_summary = _format_planner_candidates(planner_plan.to_dict())
+    volume_evidence = _cadquery_variable_volume_evidence(cq_code)
 
     prompt = f"""## Task
 
@@ -448,6 +507,9 @@ margin in X/Y. Never use bare measure names like `flange_thickness` or
 ## Operations Trace (reconstructed chains)
 {chr(10).join(chain_summary)}
 
+## CadQuery Variable Volume Evidence
+{volume_evidence}
+
 ## Pure SubCAD Operation Plan (planner candidates)
 {planner_summary}
 
@@ -467,6 +529,12 @@ subtractive program. Remember:
   CadQuery `taper=-angle` on a positive-Z extrusion makes the TOP diameter
   larger; `taper=+angle` makes the TOP diameter smaller.
 - Cut AWAY material to reveal the final shape.
+- Use the CadQuery Variable Volume Evidence above to avoid machining no-op
+  source operations. If two consecutive named CadQuery solids have the same
+  volume, the later source operation did not affect the final target for this
+  benchmark row. Do not translate the operations that produced that no-change
+  variable. Example: if `recess` has "no volume change", omit the corresponding
+  pocket/cut; if `peripheral` has "no volume change", omit those hole operations.
 - The target is the original STEP reference geometry. Match that original STEP;
   do not import, read, reuse, or wrap the STEP/B-Rep/mesh inside generated code.
 - The target volume from the original STEP is approximately {ref_vol} mm^3.

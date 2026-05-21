@@ -223,6 +223,8 @@ check("execute_subcad" in prompt, "user prompt asks for execute_subcad call")
 check("Extracted Numeric Measures" in prompt, "user prompt includes extracted measures section")
 check("STEP volume: 0.0" not in prompt, "user prompt computes nonzero STEP volume")
 check("Pure SubCAD Operation Plan" in prompt, "user prompt includes planner candidate section")
+check("CadQuery Variable Volume Evidence" in prompt,
+      "user prompt includes CadQuery variable volume evidence")
 check("coverage_mode: pure_subcad_operations" in prompt,
       "user prompt identifies pure SubCAD planner mode")
 check("choose among those planned operation candidates only" in prompt,
@@ -263,6 +265,10 @@ check(".polygon(n, diameter)" in prompt and "circumdiameter" in prompt and "hex_
       "user prompt maps CadQuery polygon diameter to SubCAD circumdiameter")
 check("Copy the exact second argument" in prompt and "do not multiply it by" in prompt,
       "user prompt forbids recomputing CadQuery polygon dimensions")
+check("no volume change" in prompt or "variable volume evidence" in prompt.lower(),
+      "user prompt can warn about no-op CadQuery source operations")
+check("omit the corresponding" in prompt and "omit those hole operations" in prompt,
+      "user prompt requires omitting no-volume-change source operations")
 
 
 # =========================================================================

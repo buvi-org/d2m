@@ -88,7 +88,7 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 7 recorded by guarded live pilots:
+- Matched original-STEP-verified pairs: 8 recorded by guarded live pilots:
   - `hole_pilot_006`, train global index 1, UUID
     `420cc2e2-e6c4-23e5-092a-6980c7853952`.
   - `hole_batch_002_filtered`, train global index 8, UUID
@@ -103,6 +103,8 @@ Latest measured dry scan:
     `ca8ac443-0284-9d83-4ef9-db3c9b930a47`.
   - `hole_row29_retry_taper_prompt2`, train global index 29, UUID
     `e7b057a8-03c2-5b83-99b5-2cce0bb055c5`.
+  - `hole_row23_retry_strict_noop_evidence`, train global index 23, UUID
+    `8562152c-3c84-b0c7-e887-1975fe1a0c4e`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -274,14 +276,13 @@ Immediate next implementation targets:
   bottom setup / face-selector handling for retained boss and rib operations.
 - Done: add `circumdiameter` profile support so CadQuery `.polygon(n, value)`
   can be translated without confusing its diameter argument with a radius.
-- Blocked row: train global index 23 now executes with polygon profile support
-  but still diverges. The remaining issue is translator/feature evidence for
-  profile dimensions and recess semantics. Prompt-only retries now copy the
-  CadQuery polygon argument more reliably but still add an inner hex pocket
-  that appears to be a no-op in the CadQuery/STEP target. Next fix should
-  extract exact polygon diameter and per-operation volume deltas from the
-  CadQuery source/ops trace, then suppress no-op pockets/cuts instead of
-  leaving those choices to LLM inference.
+- Done: add CadQuery variable-volume evidence to translator prompts so no-op
+  source variables/chains can be omitted instead of forced into SubCAD.
+- Done: accept train global index 23 via
+  `hole_row23_retry_strict_noop_evidence` with trusted slice score 99.4.
+- Next: include the new row 23 accepted manifest in future accepted-index
+  guarded runs, then continue forward to rows after 29 and the row 28
+  bottom-setup retained boss/rib blocker.
 
 ## SubCAD Shop-Floor v1
 
