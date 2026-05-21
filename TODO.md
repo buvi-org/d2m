@@ -64,7 +64,8 @@ The hierarchy is:
 
 Current baseline:
 
-- Latest pushed implementation commit before this retained-material/live-pilot slice: `0a08706 Add guarded STEP dataset pilot tooling`
+- Latest pushed implementation commit for the coverage/live-pilot slice:
+  `6f644a2 Expose face selectors for coverage ops`
 - Core local tests expected to remain green:
   - `python test_agentic_translator.py`
   - `python test_sim_bridge.py`
@@ -229,7 +230,7 @@ Immediate next implementation targets:
 - Done: prevent outside-stock retained islands from cutting away the whole
   stock, and reinforce literal CadQuery `translate((x, y, z))` coordinate use
   in the translator prompt.
-- Next: scale the hole/profile/retained-material/axisymmetric pilot from 7
+- Next: scale the hole/profile/retained-material/axisymmetric pilot from 8
   accepted pairs to a small guarded batch of 10-25 accepted/attempted rows,
   preserving strict stop conditions.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
@@ -269,7 +270,7 @@ Immediate next implementation targets:
   through cutouts now retain the requested profile outline and leave a usable
   top face for later pockets/drills.
 - Done: add regular polygon profile dict support and clarify that CadQuery
-  `.polygon(n, diameter)` maps to SubCAD `circumradius=diameter/2`.
+  `.polygon(n, diameter)` maps to SubCAD `circumdiameter=diameter`.
 - Blocked row: train global index 28 no longer fails from an empty top face or
   fallback 10x10 profile. It now fails because bottom-side boss/rib retained
   material is not sequenced/accessed correctly; next fix should add explicit
@@ -280,9 +281,13 @@ Immediate next implementation targets:
   source variables/chains can be omitted instead of forced into SubCAD.
 - Done: accept train global index 23 via
   `hole_row23_retry_strict_noop_evidence` with trusted slice score 99.4.
-- Next: include the new row 23 accepted manifest in future accepted-index
-  guarded runs, then continue forward to rows after 29 and the row 28
-  bottom-setup retained boss/rib blocker.
+- Done: expose `face_selector` through fluent pocket, circular pocket, drill,
+  selected retained-material operations, and related coverage ops; update the
+  translator prompt to preserve CadQuery workplane face selectors such as
+  `<Z` instead of silently converting underside operations to top-side work.
+- Next: include the row 23 and row 29 accepted manifests in future
+  accepted-index guarded runs, then continue forward to rows after 29 and the
+  row 28/30/34/42 retained rib/boss and side-face gusset blockers.
 
 ## SubCAD Shop-Floor v1
 
@@ -481,13 +486,14 @@ Still deferred: controller-certified production G-code, formal quoting/ERP integ
   - Save generated SubCAD, comparison metrics, validation, economics, and repair history.
   - Do not count self-generated SubCAD -> STEP pairs as translator success; they are auxiliary supervised/pretraining data only.
   - Use `python -m src.data.run_zero_to_cad_translations` for the corrected flow.
-  - The compatibility gate now uses a typed pure-operation planner. Current local train/val/test scan finds 100,235 plannable rows out of 100,516.
+  - The compatibility gate now uses a typed pure-operation planner. Current local train/val/test scan finds 86,923 plannable rows out of 100,516 after rejecting inaccessible closed shells.
   - Treat planner coverage as an attempt queue, not success. Each family still needs geometry/toolpath maturation and original-STEP verification before it counts toward 100k.
   - Initial geometry-backed slice is complete for selected-edge chamfers/fillets, lightweight profile pockets/cutouts/contours, and retained profile/cylindrical bosses.
-  - Active next slice: Profile Fidelity + Feature-Family Verification v1.
-    - Improve rectangle/circle/polygon/slot/arc/spline profile fidelity.
-    - Add feature-family benchmark reporting for plannable, attempted, executed, matched, failed, and unsupported rows.
-    - Harden translator prompts and repair feedback around pure-operation candidates and original-STEP comparison.
-  - Later SubCAD capability maturation targets for 100k: round stock/circle extrusions, shells/thin walls, turning/revolves, sweeps, lofts, and original-STEP verification at scale.
+  - Active next slice: Retained Feature And Face-Setup Fidelity v1.
+    - Make top/bottom retained ribs, bosses, pads, and cylinders preserve the intended island volume instead of erasing surrounding upper features.
+    - Preserve CadQuery workplane face selectors in generated SubCAD operations and process plans.
+    - Gate side-face additive gussets as manual-review/unsupported until oriented side-profile machining is implemented.
+    - Continue feature-family benchmark reporting for plannable, attempted, executed, matched, failed, and unsupported rows.
+  - Later SubCAD capability maturation targets for 100k: side-face/oriented profile machining, robust retained multi-island planning, shells/thin walls, turning/revolves, sweeps, lofts, and original-STEP verification at scale.
 - GNN feature recognition and LLM fine-tuning should wait for execution-scored data.
 - RL remains later-stage research after simulator fidelity is validated.

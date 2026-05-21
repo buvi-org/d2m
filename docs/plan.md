@@ -311,7 +311,7 @@ Current implementation:
 - Original-STEP verification remains the success gate. Each new operation
   family must mature from "planned" to "executes and matches" before it counts
   toward the 100k dataset.
-- Guarded live pilots currently record 7 accepted original-STEP-verified pairs.
+- Guarded live pilots currently record 8 accepted original-STEP-verified pairs.
 - Use `--comparison-methods slice` for the current 2.5D collection pass; SDF is
   retained as feedback but is too noisy on sparse STEP tessellations to be the
   hard success gate today.

@@ -225,7 +225,7 @@ Current scan of `data/zero_to_cad_100k` with the pure planner:
 - test: 8,431 plannable rows out of 9,767.
 - total: 86,923 plannable rows out of 100,516 local rows.
 
-Guarded live pilots currently record 7 accepted original-STEP-verified pairs.
+Guarded live pilots currently record 8 accepted original-STEP-verified pairs.
 The reduction from earlier planner counts is intentional: closed/inaccessible
 shell operations are now rejected as unsupported CNC work instead of counted as
 plannable rows.
