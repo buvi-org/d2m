@@ -207,6 +207,7 @@ bottom_face_part = (
     .pocket(8, 12, 2, face_selector="<Z")
     .circular_pocket(6, 1, face_selector="<Z")
     .drill(3, through=True, face_selector="<Z")
+    .slot(10, 3, 1, face_selector="<Z")
     .machine_around_cylinder(5, 2, face_selector="<Z")
 )
 bottom_ops = bottom_face_part.process_plan()["operations"]

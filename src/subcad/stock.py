@@ -538,6 +538,7 @@ class Stock:
         cx: float = 0.0,
         cy: float = 0.0,
         through: bool = False,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Cut a straight slot (obround).
@@ -561,6 +562,7 @@ class Stock:
             depth=depth,
             angle=angle,
             through=through,
+            face_selector=face_selector,
             tool=tool,
             material=self._material,
         )
@@ -598,6 +600,7 @@ class Stock:
         cy: float = 0.0,
         peck_step: float = 2.0,
         through: bool = False,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Peck-drill a deep hole."""
@@ -610,6 +613,7 @@ class Stock:
             depth=depth,
             peck_step=peck_step,
             through=through,
+            face_selector=face_selector,
             tool=tool,
             material=self._material,
         )

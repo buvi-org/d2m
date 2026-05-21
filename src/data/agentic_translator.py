@@ -93,7 +93,7 @@ Stock instance (immutable/fluent pattern).
   Preserve directional CadQuery selectors such as `"|Z"` for vertical edges.
 - `.edge_fillet(selector, radius)` — Machine selected edge radii with ball/bull-nose finishing.
 
-- `.slot(length, width, depth=5.0, *, angle=0.0, cx=0.0, cy=0.0, through=False)`
+- `.slot(length, width, depth=5.0, *, angle=0.0, cx=0.0, cy=0.0, through=False, face_selector=">Z")`
   Cut a straight slot (obround).
 
 - `.contour(depth, *, stepdown=None)` — Profile/contour milling around outer boundary.
@@ -275,7 +275,7 @@ Stock.cylindrical(D, H, material="aluminum_6061")
 .chamfer(width)
 .edge_chamfer(selector, width, angle=45)
 .edge_fillet(selector, radius)
-.slot(L, W, depth, angle, cx, cy, through=False)
+.slot(L, W, depth, angle=0, cx=cx, cy=cy, through=False, face_selector=">Z")
 .contour(depth)
 .profile_pocket(profile, depth)
 .profile_cutout(profile, depth=None, through=False)
