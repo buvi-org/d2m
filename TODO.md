@@ -88,13 +88,17 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 3 recorded by guarded live pilots:
+- Matched original-STEP-verified pairs: 5 recorded by guarded live pilots:
   - `hole_pilot_006`, train global index 1, UUID
     `420cc2e2-e6c4-23e5-092a-6980c7853952`.
   - `hole_batch_002_filtered`, train global index 8, UUID
     `c691d510-62b1-786d-6815-d0bbe5ece63c`.
   - `hole_batch_003_edge_retry`, train global index 14, UUID
     `715a4e72-092b-d79a-277e-42ff521cef71`.
+  - `hole_batch_004_forward_filtered`, train global index 17, UUID
+    `648b1adc-9964-9e71-82a5-7a4ceeaf0db9`.
+  - `hole_batch_004_forward_filtered`, train global index 18, UUID
+    `9771f32b-c614-f1ed-9533-5ff2617f3471`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -216,6 +220,12 @@ Immediate next implementation targets:
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.
+- Blocked row: train global index 13 still fails after placement/fallback
+  fixes; it is now executable but diverges geometrically, so pause retries until
+  feature evidence can distinguish construction-only internal unions from real
+  retained material.
+- Done: run the next filtered hole-family batch; accepted rows 17 and 18, and
+  isolated row 15 as another retained/side-feature geometry blocker.
 
 ## SubCAD Shop-Floor v1
 
