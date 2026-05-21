@@ -152,7 +152,7 @@ Current test status:
 
 | Test | Result | Notes |
 |------|--------|-------|
-| `python test_agentic_translator.py` | PASS, 76/76 | Covers non-LLM translator components, corrected Zero-to-CAD runner policy tests, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
+| `python test_agentic_translator.py` | PASS, 121/121 | Covers non-LLM translator components, corrected Zero-to-CAD runner policy tests, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
 
 Important caveat: the passing translator test is not a live LLM success metric. No live DeepSeek/Anthropic/OpenAI translation batch is documented as passing here.
 
@@ -311,7 +311,7 @@ Current implementation:
 - Original-STEP verification remains the success gate. Each new operation
   family must mature from "planned" to "executes and matches" before it counts
   toward the 100k dataset.
-- Guarded live pilots currently record 14 accepted original-STEP-verified pairs.
+- Guarded live pilots currently record 16 accepted original-STEP-verified pairs.
 - Use `--comparison-methods slice` for the current 2.5D collection pass; SDF is
   retained as feedback but is too noisy on sparse STEP tessellations to be the
   hard success gate today.
@@ -324,16 +324,17 @@ Active next slice:
 
 - Run guarded feature-family batches with explicit attempt, execution, match,
   failure, unsupported, and remaining-to-goal counts.
-- Preserve accepted-index manifests so the 14 verified rows count toward future
+- Preserve accepted-index manifests so the 16 verified rows count toward future
   runs without re-spending live translator calls.
 - Harden retained rib/boss, bottom-face, and side-face setup fidelity while
   keeping side-face additive gussets manual-review/unsupported until oriented
   side-profile machining is implemented.
-- Deterministic preflight now accepts layered retained row 31 and top-retained
-  rib row 34, cylindrical polar-rib row 42, annular-rib row 44, and cylindrical
-  grid-boss row 45, and washer/polar-hole row 46 against their original STEP
+- Deterministic preflight now accepts layered retained row 31, top-retained
+  rib row 34, cylindrical polar-rib row 42, annular-rib row 44, cylindrical
+  grid-boss row 45, washer/polar-hole row 46, circular vent plate row 47, and
+  no-op-aware star/radial-pocket plate row 49 against their original STEP
   targets; the next deterministic target should be chosen from the next guarded
-  forward scan after row 46.
+  forward scan after row 49.
 - Keep accepted programs pure SubCAD: no hybrid/imported opaque geometry, no
   direct CadQuery reconstruction, and no skipped unsupported features.
 
@@ -427,7 +428,7 @@ Roadmap success:
 5. UI exposes plans, warnings, geometry feedback, and estimate assumptions clearly.
 6. Any ML fine-tuning is evaluated against executable outcomes, not just text similarity.
 7. STEP-to-SubCAD generation uses exact STEP/B-Rep evidence as the primary input, with vision/video benchmarked as supporting context rather than treated as geometry truth.
-8. The STEP-to-SubCAD training set reaches 100,000 accepted original-STEP-verified Zero-to-CAD pairs, with current progress reported separately from planner coverage: 14 accepted pairs and 86,923 plannable rows out of 100,516 local rows as of 2026-05-21.
+8. The STEP-to-SubCAD training set reaches 100,000 accepted original-STEP-verified Zero-to-CAD pairs, with current progress reported separately from planner coverage: 16 accepted pairs and 86,923 plannable rows out of 100,516 local rows as of 2026-05-21.
 
 ## Cost Notes
 

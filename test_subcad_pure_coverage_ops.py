@@ -534,6 +534,58 @@ check(".edge_chamfer(\"all_edges\", width=0.7)" in washer_subcad,
 washer_exec = run_subcad(washer_subcad)
 check(washer_exec["success"], "deterministic cylindrical washer SubCAD code executes")
 
+star_plate_code = """
+import math
+outer_diameter = 100.0
+plate_thickness = 6.0
+star_points = 5
+star_outer_radius = 35.0
+star_inner_radius = 15.0
+blind_hole_diameter = 9.0
+blind_hole_depth = plate_thickness * 0.8
+chamfer_size = 0.8
+mount_hole_diameter = 6.0
+mount_hole_radius = outer_diameter/2 - 12.0
+rib_width = 8.0
+rib_depth = plate_thickness * 0.5
+rib_spacing_angle = 30.0
+result = cq.Workplane("XY").circle(outer_diameter/2).extrude(plate_thickness)
+angle_step = math.pi / star_points
+pts = []
+for i in range(2*star_points):
+    r = star_outer_radius if i % 2 == 0 else star_inner_radius
+    angle = i * angle_step
+    pts.append((r*math.cos(angle), r*math.sin(angle)))
+star_cut = cq.Workplane("XY").polyline(pts).close().extrude(-plate_thickness)
+result = result.cut(star_cut)
+result = result.faces(">Z").workplane().hole(blind_hole_diameter, blind_hole_depth)
+mount_pts = []
+for i in range(4):
+    angle = math.radians(i*90)
+    mount_pts.append((mount_hole_radius*math.cos(angle), mount_hole_radius*math.sin(angle)))
+result = result.faces(">Z").workplane().pushPoints(mount_pts).hole(mount_hole_diameter)
+num_pockets = int(360 / rib_spacing_angle)
+for i in range(num_pockets):
+    angle = math.radians(i * rib_spacing_angle)
+    offset = outer_diameter/2 - rib_width/2 - 5
+    x = offset * math.cos(angle)
+    y = offset * math.sin(angle)
+    result = result.faces(">Z").workplane().center(x, y).rect(rib_width, rib_width).cutBlind(rib_depth)
+result = result.edges().chamfer(chamfer_size)
+"""
+star_plate_subcad = build_deterministic_subcad_code(star_plate_code, [])
+check(star_plate_subcad is not None, "planner builds deterministic star-plate SubCAD code")
+check(
+    "Stock.cylindrical(100, 6)" in star_plate_subcad
+    and ".profile_pocket({'type': 'polygon'" not in star_plate_subcad
+    and star_plate_subcad.count(".profile_pocket(") == 12,
+    "deterministic star-plate code omits no-op star cut and preserves radial pockets",
+)
+check(".drill(6, through=True, cx=38, cy=0)" in star_plate_subcad,
+      "deterministic star-plate code preserves mount holes")
+star_plate_exec = run_subcad(star_plate_subcad)
+check(star_plate_exec["success"], "deterministic cylindrical star-plate SubCAD code executes")
+
 
 print("\n2. Fluent pure operation API serializes process-plan records ...")
 profile = {"type": "polygon", "points": [(-10, -5), (10, -5), (12, 0), (10, 5), (-10, 5)]}
@@ -629,6 +681,9 @@ base = Stock.rectangular(80, 50, 20)
 base_volume = base.volume
 profile_part = base.profile_pocket(profile, 3.0)
 check(profile_part.volume < base_volume, "profile_pocket changes B-Rep volume")
+through_pocket = base.profile_pocket(profile, 20.0, through=True)
+check(through_pocket.volume < profile_part.volume,
+      "profile_pocket supports internal through cuts")
 cutout_part = base.profile_cutout(profile, depth=4.0)
 check(cutout_part.volume < base_volume, "profile_cutout changes B-Rep volume")
 through_cutout = base.profile_cutout(profile, through=True)

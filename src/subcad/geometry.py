@@ -832,6 +832,12 @@ def _cut_profile_region_around_islands(
     """Cut an outer profile while retaining multiple inner islands."""
     if depth <= 0.0 and not through:
         return shape
+    island_profiles = [
+        island for island in list(island_profiles or [])
+        if _profile_bounds_overlap(outer_profile, island)
+    ]
+    if not island_profiles:
+        return shape
     if face_selector in {">Z", "<Z"}:
         return _cut_profile_region_around_islands_boolean(
             shape,
@@ -845,6 +851,12 @@ def _cut_profile_region_around_islands(
     for island_profile in island_profiles:
         wp = _draw_profile(wp, island_profile)
     return wp.cutThruAll() if through else wp.cutBlind(-depth)
+
+
+def _profile_bounds_overlap(a, b) -> bool:
+    ax0, ay0, ax1, ay1 = _profile_bounds(a)
+    bx0, by0, bx1, by1 = _profile_bounds(b)
+    return ax0 < bx1 and ax1 > bx0 and ay0 < by1 and ay1 > by0
 
 
 def _cut_profile_region_around_islands_boolean(

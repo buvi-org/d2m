@@ -280,6 +280,9 @@ def build_deterministic_subcad_code(
     grid_boss_code = _deterministic_cylindrical_grid_boss_code(cadquery_code)
     if grid_boss_code:
         return grid_boss_code
+    star_plate_code = _deterministic_cylindrical_star_plate_code(cadquery_code)
+    if star_plate_code:
+        return star_plate_code
     washer_code = _deterministic_cylindrical_washer_code(cadquery_code)
     if washer_code:
         return washer_code
@@ -553,6 +556,110 @@ def _deterministic_cylindrical_washer_code(cadquery_code: str) -> str | None:
     if chamfer is not None:
         sequence.append(f'.edge_chamfer("all_edges", width={chamfer:.6g})')
     return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_cylindrical_star_plate_code(cadquery_code: str) -> str | None:
+    """Emit a circular plate with star/profile cutouts and repeated top pockets."""
+    env = _numeric_env(cadquery_code)
+    required = {
+        "outer_diameter",
+        "plate_thickness",
+        "star_points",
+        "star_outer_radius",
+        "star_inner_radius",
+    }
+    if not required.issubset(env):
+        return None
+    if ".polyline(pts)" not in cadquery_code or "star_cut" not in cadquery_code:
+        return None
+
+    outer_diameter = env["outer_diameter"]
+    plate_thickness = env["plate_thickness"]
+    star_points = int(env["star_points"])
+    outer_radius = env["star_outer_radius"]
+    inner_radius = env["star_inner_radius"]
+    if outer_diameter <= 0 or plate_thickness <= 0 or star_points < 3:
+        return None
+
+    points: list[tuple[float, float]] = []
+    angle_step = math.pi / star_points
+    for index in range(2 * star_points):
+        radius = outer_radius if index % 2 == 0 else inner_radius
+        angle = index * angle_step
+        points.append((radius * math.cos(angle), radius * math.sin(angle)))
+
+    stock = f"Stock.cylindrical({outer_diameter:.6g}, {plate_thickness:.6g})"
+    sequence: list[str] = []
+    star_depth = _assigned_extrude_depth(cadquery_code, "star_cut")
+    if star_depth is None or star_depth > 0:
+        sequence.append(
+            (
+                f".profile_pocket({{'type': 'polygon', 'points': {_format_points(points)}}}, "
+                f"depth={plate_thickness:.6g}, through=True)"
+            )
+        )
+
+    blind = _central_blind_hole_from_code(cadquery_code)
+    if blind:
+        sequence.append(
+            f".circular_pocket({blind['diameter']:.6g}, depth={blind['depth']:.6g}, "
+            "cx=0.0, cy=0.0)"
+        )
+
+    mount_diameter = env.get("mount_hole_diameter")
+    mount_radius = env.get("mount_hole_radius")
+    if mount_diameter and mount_radius:
+        for index in range(4):
+            angle = math.radians(index * 90.0)
+            sequence.append(
+                f".drill({mount_diameter:.6g}, through=True, "
+                f"cx={mount_radius * math.cos(angle):.6g}, "
+                f"cy={mount_radius * math.sin(angle):.6g})"
+            )
+
+    rib_width = env.get("rib_width")
+    rib_depth = env.get("rib_depth")
+    spacing_angle = env.get("rib_spacing_angle")
+    if rib_width and rib_depth and spacing_angle:
+        pocket_count = int(360.0 / spacing_angle)
+        offset = outer_diameter / 2.0 - rib_width / 2.0 - 5.0
+        if pocket_count > 0 and pocket_count <= 72 and offset > 0:
+            for index in range(pocket_count):
+                angle = math.radians(index * spacing_angle)
+                x = offset * math.cos(angle)
+                y = offset * math.sin(angle)
+                sequence.append(
+                    f".profile_pocket({{'type': 'rectangle', 'width': {rib_width:.6g}, "
+                    f"'length': {rib_width:.6g}, 'cx': {x:.6g}, 'cy': {y:.6g}}}, "
+                    f"depth={rib_depth:.6g})"
+                )
+
+    chamfer = _first_call_number(cadquery_code, "chamfer", env)
+    if chamfer is not None:
+        sequence.append(f'.edge_chamfer("all_edges", width={chamfer:.6g})')
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _format_points(points: list[tuple[float, float]]) -> str:
+    return "[" + ", ".join(f"({x:.6g}, {y:.6g})" for x, y in points) + "]"
+
+
+def _assigned_extrude_depth(code_text: str, name: str) -> float | None:
+    env = _numeric_env(code_text)
+    match = re.search(
+        rf"{re.escape(name)}\s*=\s*\(.*?\.extrude\((?P<depth>[^)]*)\).*?\)",
+        code_text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if not match:
+        match = re.search(
+            rf"{re.escape(name)}\s*=.*?\.extrude\((?P<depth>[^)]*)\)",
+            code_text,
+            re.IGNORECASE,
+        )
+    if not match:
+        return None
+    return _eval_number(match.group("depth"), env)
 
 
 def _washer_stock_from_code(code_text: str) -> dict[str, float] | None:

@@ -917,12 +917,13 @@ class Stock:
         return self.edge_chamfer(selector, width, angle=45.0, tool=tool)
 
     def profile_pocket(self, profile, depth: float, *, face_selector: str = ">Z",
-                       islands=None, tool: Optional[ToolSpec] = None) -> "Stock":
+                       through: bool = False, islands=None,
+                       tool: Optional[ToolSpec] = None) -> "Stock":
         from .operations import ProfilePocketOp
         width, length = _profile_bounds_for_stock(profile)
         return self._apply_op(ProfilePocketOp(
             profile=profile, islands=islands, width=width, length=length,
-            depth=depth, face_selector=face_selector,
+            depth=depth, through=through, face_selector=face_selector,
             tool=tool, material=self._material,
         ))
 

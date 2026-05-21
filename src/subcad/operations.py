@@ -2587,6 +2587,7 @@ class ProfilePocketOp(PocketOp):
 
     profile: Any = field(default_factory=dict)
     islands: Optional[list[Any]] = None
+    through: bool = False
 
     def __post_init__(self):
         if self.profile:
@@ -2601,7 +2602,7 @@ class ProfilePocketOp(PocketOp):
             self.profile or {"width": self.width, "length": self.length},
             self.depth,
             face_selector=self.face_selector,
-            through=False,
+            through=self.through,
             islands=self.islands,
         )
 
@@ -2611,6 +2612,7 @@ class ProfilePocketOp(PocketOp):
             "operation": "profile_pocket",
             "profile": _profile_payload(self.profile),
             "islands": _profile_payload(self.islands or []),
+            "through": self.through,
             "process": "mill",
             "coverage_family": "arbitrary_profile_2_5d",
             "manufacturing_completeness": "pure_operation",

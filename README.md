@@ -19,7 +19,7 @@ Initial implemented scope is concentrated on **CNC/subtractive manufacturing**. 
 Current STEP-to-SubCAD objective: build a training/evaluation set of at least
 100,000 original-STEP-verified Zero-to-CAD pairs for a model/workflow that
 generates executable pure SubCAD from STEP evidence. The accepted-pair count is
-14; the pure planner can currently queue 86,923 plannable rows out of 100,516
+16; the pure planner can currently queue 86,923 plannable rows out of 100,516
 local rows. Planner coverage is not success. A row counts only after generated
 pure SubCAD executes, emits the manufacturing artifacts, and its generated STEP
 matches the original Zero-to-CAD `model.step` under the trusted comparison
@@ -78,7 +78,7 @@ SubCAD can currently be used as a CadQuery-backed subtractive machining represen
 
 SubCAD is not yet a production CAM/postprocessor or quoting system. Controller-certified G-code, industrial CAM strategy coverage, formal ERP/shop quoting, a full upload-to-plan product UI, large-scale live translation success claims, and validated simulation/RL workflows remain future work.
 
-Current translator benchmark reality: the corrected runner compares against the original Zero-to-CAD STEP, not a self-generated STEP. The compatibility gate is now a typed pure-operation planner rather than a blocked-term filter, so 86,923 of 100,516 local train/val/test rows are plannable into operation families after inaccessible closed shells are rejected. That is planner coverage, not verified 100k success: each saved pair still must execute and pass original-STEP geometry comparison. Guarded live pilots currently have 14 accepted original-STEP-verified pairs.
+Current translator benchmark reality: the corrected runner compares against the original Zero-to-CAD STEP, not a self-generated STEP. The compatibility gate is now a typed pure-operation planner rather than a blocked-term filter, so 86,923 of 100,516 local train/val/test rows are plannable into operation families after inaccessible closed shells are rejected. That is planner coverage, not verified 100k success: each saved pair still must execute and pass original-STEP geometry comparison. Guarded live pilots currently have 16 accepted original-STEP-verified pairs.
 
 Training readiness requires versioned accepted-pair manifests that preserve
 source split/row/UUID, original STEP hash/path, generated SubCAD and generated
@@ -135,7 +135,7 @@ Recent local test status:
 
 | Test | Status |
 |------|--------|
-| `python test_agentic_translator.py` | PASS, 76/76. Includes corrected Zero-to-CAD runner policy tests; live LLM runs are separate. |
+| `python test_agentic_translator.py` | PASS, 121/121. Includes corrected Zero-to-CAD runner policy tests; live LLM runs are separate. |
 | `python test_subcad_integration.py` | PASS, 39/39 |
 | `python test_fixturing_integration.py` | PASS, 19/19 |
 | `python test_sim_bridge.py` | PASS, 51/51 |
