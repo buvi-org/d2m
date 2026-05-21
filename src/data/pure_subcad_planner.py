@@ -1069,6 +1069,9 @@ def _deterministic_cylindrical_grid_boss_code(cadquery_code: str) -> str | None:
 
 
 def _deterministic_cylindrical_washer_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if ".union(" in lower or lower.count(".extrude(") != 1:
+        return None
     washer = _washer_stock_from_code(cadquery_code)
     if not washer:
         return None
