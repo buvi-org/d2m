@@ -101,12 +101,12 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 23 recorded by guarded live pilots.
+- Matched original-STEP-verified pairs: 24 recorded by guarded live pilots.
   - Accepted train global indexes:
-    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83`.
-  - Latest accepted row: train global index 83, UUID
-    `acf50afa-40ae-7442-ea89-6d05da4a9eb3`, manifest
-    `runs/zero_to_cad_live_pilots/deterministic_l_bracket_row83_probe/attempts.jsonl`.
+    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 107`.
+  - Latest accepted row: train global index 107, UUID
+    `7c8f703e-16ec-baf1-6e3d-76a1ec5a2261`, manifest
+    `runs/zero_to_cad_live_pilots/deterministic_box_chamfer_row107_probe/attempts.jsonl`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -300,7 +300,7 @@ Immediate next implementation targets:
   selected retained-material operations, and related coverage ops; update the
   translator prompt to preserve CadQuery workplane face selectors such as
   `<Z` instead of silently converting underside operations to top-side work.
-- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, and row 83 accepted manifests in future
+- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, row 83, and row 107 accepted manifests in future
   accepted-index guarded runs.
 - Done: add Z-band retained-material support and planner evidence for retained
   rib/boss loops and polar arrays.
@@ -340,6 +340,8 @@ Immediate next implementation targets:
 - Done: fix CadQuery-centered `rarray` evidence for the related L-bracket
   variant, omit absorbed/no-op rib unions, and accept train global index 83
   with original-STEP trusted mesh score 100.0.
+- Done: accept train global index 107 with the existing deterministic
+  box/chamfer builder and original-STEP trusted mesh score 100.0.
 - Next: run the next accepted-index guarded forward scan and fix the next
   deterministic feature-family blocker before spending larger live batches.
 

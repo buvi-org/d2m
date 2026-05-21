@@ -339,7 +339,7 @@ def _deterministic_l_bracket_code(cadquery_code: str) -> str | None:
         if "class LBracket" not in cadquery_code or ".rarray(" not in cadquery_code or ".hole(" not in cadquery_code:
             return None
 
-    if {"horizontal_leg_length", "vertical_leg_length", "leg_width"}.issubset(env):
+    if {"horizontal_leg_length", "vertical_leg_length", "leg_width", "thickness"}.issubset(env):
         h = env["horizontal_leg_length"]
         v = env["vertical_leg_length"]
         leg = env["leg_width"]
