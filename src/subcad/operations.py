@@ -38,6 +38,7 @@ from .geometry import (
     profile_contour_cut,
     machine_around_profile_cut,
     machine_around_cylinder_cut,
+    thin_wall_pocket_cut,
 )
 from .profiles import profile_span_yx
 from .tool_library import ToolSpec, ToolCatalog
@@ -2582,6 +2583,7 @@ class ProfilePocketOp(PocketOp):
             self.depth,
             face_selector=self.face_selector,
             through=False,
+            islands=self.islands,
         )
 
     def to_dict(self) -> dict:
@@ -2664,6 +2666,7 @@ class MachineAroundProfileOp(ProfileCutoutOp):
             self.profile or {"width": self.width, "length": self.length},
             self.height,
             face_selector=self.face_selector,
+            stock_envelope=self.stock_envelope,
         )
 
     def to_dict(self) -> dict:
@@ -2895,6 +2898,15 @@ class ThinWallPocketOp(PureToleranceOp):
     process: str = "mill"
     wall_thickness: float = 1.0
     open_faces: Optional[list[str]] = None
+
+    def apply(self, shape):
+        return thin_wall_pocket_cut(
+            shape,
+            self.profile,
+            self.wall_thickness,
+            self.depth,
+            face_selector=self.face_selector,
+        )
 
     def to_dict(self) -> dict:
         data = super().to_dict()

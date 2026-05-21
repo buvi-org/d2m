@@ -80,7 +80,52 @@ check(base.profile_cutout(slot, depth=3.0).volume < base.volume, "profile_cutout
 check(base.profile_contour(arched_profile, 2.0).volume < base.volume, "profile_contour executes arc profile")
 retained = base.machine_around_profile(slot, 2.0)
 check(retained.volume < base.volume, "machine_around_profile removes material around slot")
-rect_retained = base.machine_around_profile(slot_rect, 2.0)
+rect_retained = base.machine_around_profile(
+    slot_rect,
+    2.0,
+    stock_envelope={"length": 44.0, "width": 20.0},
+)
 check(retained.volume < rect_retained.volume, "retained slot island keeps rounded profile boundary")
+
+rib_stock = Stock.rectangular(70, 20, 18)
+rib_profile = {"type": "rib", "length": 40.0, "width": 20.0}
+rib = rib_stock.machine_around_profile(rib_profile, 12.0)
+expected_rib_volume = 70.0 * 20.0 * 6.0 + 40.0 * 20.0 * 12.0
+check(abs(rib.volume - expected_rib_volume) < 1.0,
+      "machine_around_profile cuts full stock envelope around rectangular rib")
+
+island_rib = rib_stock.profile_pocket(
+    {"type": "rect", "length": 70.0, "width": 20.0},
+    12.0,
+    islands=[rib_profile],
+)
+check(abs(island_rib.volume - expected_rib_volume) < 1.0,
+      "profile_pocket islands retain rectangular rib geometry")
+
+chamfer_base = Stock.rectangular(30, 20, 10)
+top_chamfer = chamfer_base.edge_chamfer(">Z", 0.5)
+all_edge_chamfer = chamfer_base.edge_chamfer("all_edges", 0.5)
+check(all_edge_chamfer.volume < top_chamfer.volume,
+      "all_edges chamfer removes more than top-face-only chamfer")
+
+print("\n5. Thin-wall pockets remove inner cavities while keeping walls ...")
+shell_base = Stock.rectangular(70, 40, 8)
+thin_wall = shell_base.face_mill(2.0).thin_wall_pocket(
+    {"type": "rect", "length": 70.0, "width": 40.0},
+    wall_thickness=1.2,
+    depth=4.8,
+)
+check(thin_wall.volume < shell_base.face_mill(2.0).volume, "thin_wall_pocket removes rectangular cavity")
+expected_removed = (70.0 - 2.4) * (40.0 - 2.4) * 4.8
+actual_removed = shell_base.face_mill(2.0).volume - thin_wall.volume
+check(abs(actual_removed - expected_removed) < 1.0, "thin_wall_pocket keeps requested wall thickness")
+
+round_shell_base = Stock.rectangular(40, 40, 8)
+round_shell = round_shell_base.face_mill(2.0).thin_wall_pocket(
+    {"type": "circle", "diameter": 30.0},
+    wall_thickness=2.0,
+    depth=3.0,
+)
+check(round_shell.volume < round_shell_base.face_mill(2.0).volume, "thin_wall_pocket removes circular cavity")
 
 print("\nALL PASSED")

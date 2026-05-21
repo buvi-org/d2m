@@ -72,7 +72,8 @@ Stock instance (immutable/fluent pattern).
 - `.face_mill(depth=1.0)` — Face mill the top surface, removing *depth* mm.
 
 - `.pocket(width, length, depth, *, corner_radius=0.0, cx=0.0, cy=0.0)`
-  Cut a rectangular pocket. (cx, cy) is center on the top face.
+  Cut a rectangular pocket. IMPORTANT: width is the Y dimension and length
+  is the X dimension. (cx, cy) is center on the top face.
 
 - `.circular_pocket(diameter, depth, *, cx=0.0, cy=0.0)`
   Cut a circular pocket/bore.
@@ -82,6 +83,8 @@ Stock instance (immutable/fluent pattern).
 
 - `.chamfer(width=0.5)` — Chamfer top edges by *width* mm.
 - `.edge_chamfer(selector, width, *, angle=45.0)` — Chamfer selected edges.
+  Use selector `"all_edges"` for unqualified CadQuery `.edges().chamfer(...)`.
+  Use selector `">Z"` only when CadQuery explicitly selects top-face edges.
 - `.edge_fillet(selector, radius)` — Machine selected edge radii with ball/bull-nose finishing.
 
 - `.slot(length, width, depth=5.0, *, angle=0.0, cx=0.0, cy=0.0, through=False)`
@@ -90,7 +93,8 @@ Stock instance (immutable/fluent pattern).
 - `.contour(depth, *, stepdown=None)` — Profile/contour milling around outer boundary.
 - `.profile_pocket(profile, depth, *, face_selector=">Z", islands=None)` —
   Machine arbitrary closed profile pockets. Profiles may be dicts with
-  points/width/length/diameter.
+  points/width/length/diameter. For rectangular profiles, use
+  {"length": x_size, "width": y_size}.
 - `.profile_cutout(profile, *, depth=None, through=False, face_selector=">Z")`
   Cut through or blind arbitrary profiles.
 - `.profile_contour(profile, depth, *, side="outside")` — Contour arbitrary profiles.
@@ -99,7 +103,8 @@ Stock instance (immutable/fluent pattern).
 - `.machine_around_cylinder(diameter, height, *, cx=0.0, cy=0.0)` —
   Machine around retained cylindrical bosses.
 - `.rib(width, length, height, *, cx=0.0, cy=0.0, angle=0.0)` and
-  `.pad(profile, height)` — Retained material features.
+  `.pad(profile, height)` — Retained material features. For ribs/pads,
+  width is Y and length is X.
 
 - `.spot_drill(diameter, *, cx=0.0, cy=0.0)` — Spot a hole before drilling.
 
@@ -148,10 +153,24 @@ Stock instance (immutable/fluent pattern).
    Only add margin to Z (height): use the measures height + 2-3 mm.
 3. face_mill first to achieve the final Z-height from the stock.
 4. Pockets/profile operations replace CadQuery cut/cutBlind operations.
+   Dimension convention is critical:
+   - CadQuery `.rect(x_size, y_size)` maps to SubCAD
+     `.pocket(width=y_size, length=x_size, ...)`.
+   - CadQuery `.box(x_size, y_size, z_size)` maps to
+     `Stock.rectangular(length=x_size, width=y_size, height=z_size)`.
+   - SubCAD `width` always means Y span for rectangular pockets, ribs, pads,
+     and profile dicts; SubCAD `length` always means X span.
+   - Example: a CadQuery `.rect(34, 12).cutBlind(-6)` centered on the top face
+     becomes `.pocket(width=12, length=34, depth=6, cx=0, cy=0)`, never
+     `.pocket(width=34, length=12, ...)`.
 5. Holes (cboreHole, cskHole) become drill operations with cx, cy from the
    CadQuery source.  Drill through=True for through-holes.
 6. Selected chamfers map to .edge_chamfer(...). Selected fillets map to
-   .edge_fillet(...). Do not skip edge treatments.
+   .edge_fillet(...). Do not skip edge treatments. If CadQuery says
+   `model.edges().chamfer(...)` without a face selector, use
+   `.edge_chamfer("all_edges", width=...)` because it chamfers top, bottom,
+   vertical, and feature edges. Use `.edge_chamfer(">Z", ...)` only for
+   source code like `.faces(">Z").edges().chamfer(...)`.
 7. CadQuery "union" / constructive bosses must become retained-material
    operations: machine_around_profile, machine_around_cylinder, rib, or pad.
 8. Use profile_pocket/profile_cutout/profile_contour for polygon, polyline,
@@ -193,7 +212,7 @@ SUBCAD_API_SHORT = textwrap.dedent("""\
 
 Stock.rectangular(L, W, H, material="aluminum_6061")
 .face_mill(depth)           # mill top face
-.pocket(W, L, depth, cx, cy)  # rectangular pocket
+.pocket(W_y, L_x, depth, cx, cy)  # rectangular pocket: W_y=Y, L_x=X
 .circular_pocket(dia, depth, cx, cy)
 .drill(dia, depth, cx, cy, through=False)
 .chamfer(width)
@@ -408,6 +427,13 @@ subtractive program. Remember:
 - Use simple SubCAD operations first: face_mill, pocket, circular_pocket,
   drill, slot, and chamfer. Use counterbore/countersink only when visible in
   the CadQuery source.
+- Keep rectangular dimensions in the correct axes. CadQuery `.rect(x_size,
+  y_size)` maps to SubCAD `.pocket(width=y_size, length=x_size, ...)`.
+  SubCAD `width` always means Y span, and SubCAD `length` always means X span.
+  The same convention applies to rectangular profile dicts, ribs, and pads.
+- Preserve CadQuery edge scope. Unqualified `.edges().chamfer(...)` means all
+  model edges, so use `.edge_chamfer("all_edges", width=...)`; do not narrow it
+  to only the top face unless the CadQuery source explicitly used `.faces(">Z")`.
 - Forbidden fallbacks: hybrid_feature placeholders, direct CadQuery reconstruction
   with cq.Workplane or CadQuery imports, import_step, opaque B-Rep/mesh reuse,
   or any hybrid/imported geometry that hides the manufacturing operations.

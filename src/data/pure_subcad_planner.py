@@ -168,8 +168,13 @@ def plan_pure_subcad_features(
         add("cadquery.revolve", "axisymmetric", PLANNED_MULTI_PROCESS, "turn_profile",
             "revolved profile maps to turning or mill-turn")
     if "shell" in op_names or ".shell(" in code_text:
-        add("cadquery.shell", "thin_wall", PLANNED_MULTI_PROCESS, "thin_wall_pocket",
-            "open shell maps to thin-wall pocket or hollow bore when accessible")
+        shell_accessible = _shell_has_accessible_open_face(ops_trace, code_text)
+        if shell_accessible:
+            add("cadquery.shell", "thin_wall", PLANNED_MULTI_PROCESS, "thin_wall_pocket",
+                "open shell maps to thin-wall pocket or hollow bore when accessible")
+        else:
+            add("cadquery.shell", "thin_wall", UNSUPPORTED_UNMACHINABLE, "thin_wall_pocket",
+                "closed shell creates an inaccessible internal cavity for pure subtractive CNC")
     if "loft" in op_names or ".loft(" in code_text:
         add("cadquery.loft", "surface", PLANNED_TOLERANCE, "loft_mill",
             "loft maps to tolerance-machined surface operation")
@@ -190,6 +195,29 @@ def plan_pure_subcad_features(
         unsupported_count=len(unsupported),
         manual_review_count=len(manual),
     )
+
+
+def _shell_has_accessible_open_face(ops_trace: list[dict], code_text: str) -> bool:
+    """Best-effort gate for CadQuery shell accessibility.
+
+    ``solid.shell(-t)`` without a selected face creates a closed internal void,
+    which is not machinable from solid stock by pure subtractive CNC. Chained
+    ``faces(...).shell(...)`` evidence is treated as an open/accessed shell.
+    """
+    for op in ops_trace:
+        if not isinstance(op, dict):
+            continue
+        if str(op.get("op_name") or "").lower() != "shell":
+            continue
+        function = str(op.get("function") or "").lower()
+        if ".faces" in function or function.endswith("faces.shell"):
+            return True
+
+    shell_index = code_text.find(".shell(")
+    if shell_index < 0:
+        return False
+    recent_chain = code_text[max(0, shell_index - 120):shell_index]
+    return ".faces(" in recent_chain
 
 
 def compatibility_report(ops_trace: list[dict], cadquery_code: str = "") -> dict[str, Any]:

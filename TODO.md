@@ -64,7 +64,7 @@ The hierarchy is:
 
 Current baseline:
 
-- Latest pushed implementation commit before the current dataset-pipeline slice: `c0867c2 Plan STEP dataset collection hierarchy`
+- Latest pushed implementation commit before this retained-material/live-pilot slice: `0a08706 Add guarded STEP dataset pilot tooling`
 - Core local tests expected to remain green:
   - `python test_agentic_translator.py`
   - `python test_sim_bridge.py`
@@ -86,21 +86,28 @@ Latest measured dry scan:
 - Command: `python -m src.data.run_zero_to_cad_feature_benchmarks --split all --no-summary-file`
 - Date: 2026-05-21
 - Rows scanned: 100,516.
-- Plannable by pure-operation planner: 100,235.
-- Unsupported by current planner: 281.
-- Matched original-STEP-verified pairs: 0 recorded by this benchmark runner so far.
+- Plannable by pure-operation planner: 86,923.
+- Unsupported by current planner: 13,593.
+- Matched original-STEP-verified pairs: 1 recorded by the guarded live pilot
+  (`hole_pilot_006`, train global index 1, UUID
+  `420cc2e2-e6c4-23e5-092a-6980c7853952`).
+- Note: closed/inaccessible `shell(...)` parts are now rejected as
+  `unsupported_unmachinable` instead of being counted as plannable CNC work.
+- Note: the first accepted live pair required fixing retained rectangular
+  islands/ribs, profile-pocket islands, CadQuery `rect(x, y)` to SubCAD
+  `length=X`/`width=Y`, and all-edge chamfer scope.
 - Family membership counts overlap because one part can require multiple operation families:
-  - edge_treatment: 74,445
-  - hole: 56,104
-  - retained_material: 53,266
-  - cut: 48,562
-  - profile: 45,589
-  - primitive: 38,648
-  - pattern: 23,818
-  - boss: 21,712
-  - thin_wall: 16,316
-  - axisymmetric: 13,706
-  - surface: 7,685
+  - edge_treatment: 64,721
+  - hole: 61,216
+  - retained_material: 46,416
+  - cut: 43,039
+  - profile: 40,537
+  - primitive: 33,076
+  - pattern: 20,436
+  - boss: 18,803
+  - axisymmetric: 12,150
+  - surface: 6,690
+  - thin_wall: 3,004
 
 Definition of done:
 
@@ -176,8 +183,14 @@ Immediate next implementation targets:
 - Done: add dataset attempt manifest JSONL utilities and optional benchmark-runner manifest output.
 - Done: add Markdown reporting for feature-family benchmark summaries.
 - Done: add live pilot stop guardrails for max attempts, max failures, consecutive failures, target matches, and minimum match-rate checks.
-- Next: run larger aggregate dry scans across train/val/test and use the results to pick the first live verification family.
-- Next: run tiny live pilots with strict per-family limits and stop if pass rate/API-error guardrails indicate wasted AI requests.
+- Done: run the first guarded live original-STEP verification pilot for the
+  hole/retained-material family; first accepted pair is recorded in
+  `runs/zero_to_cad_live_pilots/hole_pilot_006`.
+- Next: scale the hole/retained-material pilot from 1 accepted pair to a small
+  guarded batch of 10-25 accepted/attempted rows, preserving strict stop
+  conditions.
+- Next: use failures from that batch to identify the next missing operation or
+  prompt rule before moving to profile/edge-treatment families.
 
 ## SubCAD Shop-Floor v1
 

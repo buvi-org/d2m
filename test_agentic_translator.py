@@ -70,12 +70,17 @@ check(planned["planner"]["coverage_mode"] == "pure_subcad_operations",
 chamfered = compatibility_report([{"op_name": "chamfer"}], "")
 check(chamfered["compatible"], "compatibility gate plans local chamfer samples")
 planner = plan_pure_subcad_features(
-    [{"op_name": "revolve"}, {"op_name": "shell"}, {"op_name": "loft"}],
-    ".revolve().shell(1).loft()",
+    [{"op_name": "revolve"}, {"op_name": "shell", "function": "part.faces.shell"}, {"op_name": "loft"}],
+    '.revolve().faces(">Z").shell(1).loft()',
 )
 ops = {feature.operation for feature in planner.features}
 check({"turn_profile", "thin_wall_pocket", "loft_mill"}.issubset(ops),
       "pure planner maps revolve/shell/loft to CNC operation families")
+closed_shell = plan_pure_subcad_features(
+    [{"op_name": "shell", "function": "base.shell"}],
+    ".box(10, 10, 10).shell(-1)",
+)
+check(not closed_shell.compatible, "pure planner rejects closed inaccessible shells")
 check(_parse_methods("none") == [], "comparison-methods=none disables rich mesh comparison")
 
 volume_only_false_positive = {
@@ -225,6 +230,18 @@ check("target is the original STEP reference geometry" in prompt,
       "user prompt names original STEP as target geometry")
 check("hybrid_feature" in prompt and "direct CadQuery reconstruction" in prompt,
       "user prompt rejects hybrid and direct CadQuery reconstruction fallbacks")
+check("CadQuery `.rect(x_size," in prompt and "y_size)` maps to SubCAD" in prompt,
+      "user prompt explains CadQuery rect to SubCAD XY mapping")
+check(".pocket(width=y_size, length=x_size" in prompt,
+      "user prompt prevents rectangular pocket width/length swaps")
+check("SubCAD `width` always means Y span" in prompt,
+      "user prompt defines SubCAD width as Y span")
+check("SubCAD `length` always means X span" in prompt,
+      "user prompt defines SubCAD length as X span")
+check('edge_chamfer("all_edges"' in prompt,
+      "user prompt maps unqualified CadQuery edge chamfer to all_edges")
+check("do not narrow it" in prompt,
+      "user prompt prevents all-edge chamfer from becoming top-only")
 
 
 # =========================================================================

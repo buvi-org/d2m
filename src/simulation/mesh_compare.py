@@ -320,6 +320,19 @@ def _plane_mesh_intersection_area(
     line segments, then chains them into closed polygons.
     """
     try:
+        section = mesh.section(plane_origin=[0, 0, z], plane_normal=[0, 0, 1])
+        if section is not None:
+            loops = [
+                np.asarray(points, dtype=np.float64)[:, :2]
+                for points in section.discrete
+                if len(points) >= 3
+            ]
+            if loops:
+                return _area_from_loops(loops)
+    except Exception:
+        pass
+
+    try:
         segments = mesh_plane(
             mesh,
             plane_normal=[0, 0, 1],
@@ -383,9 +396,9 @@ def _polygon_area_from_segments(segments: np.ndarray) -> float:
 
     unique_verts = np.unique(rounded, axis=0)
 
-    # Walk connected components
+    # Walk connected components into polygon loops.
     visited = set()
-    total_area = 0.0
+    loops: list[np.ndarray] = []
 
     for seed in adj:
         if seed in visited:
@@ -394,9 +407,36 @@ def _polygon_area_from_segments(segments: np.ndarray) -> float:
         poly_idx = _trace_polygon(adj, seed, visited)
         if poly_idx is not None and len(poly_idx) >= 3:
             poly_pts = unique_verts[poly_idx]
-            total_area += abs(_shoelace_area(poly_pts))
+            area = abs(_shoelace_area(poly_pts))
+            if area > 1e-9:
+                loops.append(poly_pts)
 
-    return total_area
+    return _area_from_loops(loops)
+
+
+def _area_from_loops(loops: list[np.ndarray]) -> float:
+    if not loops:
+        return 0.0
+    # Cross-sections with cavities produce multiple closed loops. The material
+    # area is not the sum of absolute loop areas: inner loops are holes and must
+    # be subtracted. Classify each loop by containment depth. Even depth is
+    # material boundary, odd depth is a void boundary.
+    loop_areas = [abs(_shoelace_area(loop)) for loop in loops]
+    total_area = 0.0
+    for index, loop in enumerate(loops):
+        point = _polygon_centroid_or_point(loop)
+        depth = 0
+        for other_index, other in enumerate(loops):
+            if other_index == index:
+                continue
+            if loop_areas[other_index] <= loop_areas[index]:
+                continue
+            if _point_in_polygon(point, other):
+                depth += 1
+        sign = 1.0 if depth % 2 == 0 else -1.0
+        total_area += sign * loop_areas[index]
+
+    return max(float(total_area), 0.0)
 
 
 def _trace_polygon(
@@ -465,6 +505,35 @@ def _shoelace_area(pts_2d: np.ndarray) -> float:
     x = pts_2d[:, 0]
     y = pts_2d[:, 1]
     return 0.5 * float(np.dot(x, np.roll(y, 1)) - np.dot(np.roll(x, 1), y))
+
+
+def _polygon_centroid_or_point(pts_2d: np.ndarray) -> np.ndarray:
+    """Return a stable interior-ish point for containment classification."""
+    x = pts_2d[:, 0]
+    y = pts_2d[:, 1]
+    cross = x * np.roll(y, -1) - np.roll(x, -1) * y
+    signed_area = 0.5 * float(np.sum(cross))
+    if abs(signed_area) < 1e-12:
+        return np.asarray(pts_2d[0], dtype=np.float64)
+    cx = np.sum((x + np.roll(x, -1)) * cross) / (6.0 * signed_area)
+    cy = np.sum((y + np.roll(y, -1)) * cross) / (6.0 * signed_area)
+    return np.array([cx, cy], dtype=np.float64)
+
+
+def _point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:
+    """Ray-casting point-in-polygon test in 2D."""
+    x, y = float(point[0]), float(point[1])
+    inside = False
+    x0 = polygon[-1, 0]
+    y0 = polygon[-1, 1]
+    for x1, y1 in polygon:
+        intersects = ((y1 > y) != (y0 > y)) and (
+            x < (x0 - x1) * (y - y1) / ((y0 - y1) or 1e-30) + x1
+        )
+        if intersects:
+            inside = not inside
+        x0, y0 = x1, y1
+    return inside
 
 
 def compute_z_slice_comparison(

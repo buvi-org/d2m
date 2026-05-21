@@ -371,10 +371,26 @@ def profile_pocket_cut(
     *,
     face_selector: str = ">Z",
     through: bool = False,
+    islands=None,
 ) -> "cq.Workplane":
     """Cut a closed arbitrary profile on the selected face."""
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
+    island_list = list(islands or [])
+    if island_list:
+        # Common v1 case for Zero-to-CAD: pocket a rectangular stock/region
+        # while retaining one or more rectangular islands (rib/pad/bosses).
+        result = shape
+        for island in island_list:
+            result = _cut_rectangular_region_around_island(
+                result,
+                outer_profile=profile,
+                island_profile=island,
+                depth=depth,
+                face_selector=face_selector,
+                through=through,
+            )
+        return result
     wp = _draw_profile(shape.faces(face_selector).workplane(), profile)
     return wp.cutThruAll() if through else wp.cutBlind(-depth)
 
@@ -391,6 +407,74 @@ def profile_contour_cut(
     return profile_pocket_cut(shape, profile, depth, face_selector=face_selector, through=False)
 
 
+def thin_wall_pocket_cut(
+    shape: "cq.Workplane",
+    profile,
+    wall_thickness: float,
+    depth: float,
+    *,
+    face_selector: str = ">Z",
+) -> "cq.Workplane":
+    """Cut the accessible inner cavity for a lightweight thin-wall profile.
+
+    This is a conservative v1 geometry implementation for translator coverage:
+    it keeps the outer profile as stock and removes the inward-offset cavity.
+    Rectangular and circular profiles are handled semantically; other profiles
+    fall back to their bounding box until true polygon offsetting is added.
+    """
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+    wall = max(float(wall_thickness), 0.0)
+    if isinstance(profile, dict):
+        profile_type = str(profile.get("type", profile.get("shape", ""))).lower()
+        cx = float(profile.get("cx", profile.get("x", 0.0)))
+        cy = float(profile.get("cy", profile.get("y", 0.0)))
+        if profile.get("center") is not None:
+            cx = float(profile["center"][0])
+            cy = float(profile["center"][1])
+        if profile_type in {"circle", "circular"} or "diameter" in profile or "radius" in profile:
+            radius = float(profile.get("radius", float(profile.get("diameter", 10.0)) / 2.0))
+            inner_radius = max(radius - wall, 0.0)
+            if inner_radius <= 0.0:
+                return shape
+            return (
+                shape.faces(face_selector)
+                .workplane()
+                .center(cx, cy)
+                .circle(inner_radius)
+                .cutBlind(-depth)
+            )
+        if profile_type in {"rectangle", "rect", "box"} or "width" in profile or "length" in profile:
+            width = float(profile.get("width", profile.get("length", 10.0)))
+            length = float(profile.get("length", profile.get("width", 10.0)))
+            inner_width = max(width - 2.0 * wall, 0.0)
+            inner_length = max(length - 2.0 * wall, 0.0)
+            if inner_width <= 0.0 or inner_length <= 0.0:
+                return shape
+            return (
+                shape.faces(face_selector)
+                .workplane()
+                .center(cx, cy)
+                .rect(inner_length, inner_width)
+                .cutBlind(-depth)
+            )
+
+    xmin, ymin, xmax, ymax = _profile_bounds(profile)
+    inner_length = max((xmax - xmin) - 2.0 * wall, 0.0)
+    inner_width = max((ymax - ymin) - 2.0 * wall, 0.0)
+    if inner_width <= 0.0 or inner_length <= 0.0:
+        return shape
+    cx = (xmin + xmax) / 2.0
+    cy = (ymin + ymax) / 2.0
+    return (
+        shape.faces(face_selector)
+        .workplane()
+        .center(cx, cy)
+        .rect(inner_length, inner_width)
+        .cutBlind(-depth)
+    )
+
+
 def machine_around_profile_cut(
     shape: "cq.Workplane",
     profile,
@@ -398,10 +482,21 @@ def machine_around_profile_cut(
     *,
     face_selector: str = ">Z",
     margin: float = 5.0,
+    stock_envelope=None,
 ) -> "cq.Workplane":
     """Remove a frame around a retained profile island."""
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
+    if stock_envelope is not None or _is_rectangular_profile(profile):
+        outer_profile = _stock_envelope_profile(shape, stock_envelope, margin=margin)
+        return _cut_rectangular_region_around_island(
+            shape,
+            outer_profile=outer_profile,
+            island_profile=profile,
+            depth=height,
+            face_selector=face_selector,
+            through=False,
+        )
     xmin, ymin, xmax, ymax = _profile_bounds(profile)
     outer_l = max(xmax - xmin + 2 * margin, 1.0)
     outer_w = max(ymax - ymin + 2 * margin, 1.0)
@@ -410,6 +505,90 @@ def machine_around_profile_cut(
     wp = shape.faces(face_selector).workplane().center(cx, cy).rect(outer_l, outer_w).center(-cx, -cy)
     wp = _draw_profile(wp, profile)
     return wp.cutBlind(-height)
+
+
+def _is_rectangular_profile(profile) -> bool:
+    if not isinstance(profile, dict):
+        return False
+    profile_type = str(profile.get("type", profile.get("shape", ""))).lower()
+    if profile_type:
+        return profile_type in {"rectangle", "rect", "box", "rib", "pad"}
+    return "width" in profile or "length" in profile
+
+
+def _stock_envelope_profile(shape: "cq.Workplane", stock_envelope=None, *, margin: float = 0.0) -> dict:
+    """Return a rectangular profile describing the current/declared stock XY."""
+    if isinstance(stock_envelope, dict) and (
+        "length" in stock_envelope or "width" in stock_envelope
+        or "length_mm" in stock_envelope or "width_mm" in stock_envelope
+    ):
+        length = float(stock_envelope.get("length", stock_envelope.get("length_mm", 0.0)))
+        width = float(stock_envelope.get("width", stock_envelope.get("width_mm", 0.0)))
+        cx = float(stock_envelope.get("cx", stock_envelope.get("x", 0.0)))
+        cy = float(stock_envelope.get("cy", stock_envelope.get("y", 0.0)))
+        if length > 0.0 and width > 0.0:
+            return {"type": "rect", "length": length, "width": width, "cx": cx, "cy": cy}
+
+    bb = shape.val().BoundingBox()
+    length = max((bb.xmax - bb.xmin) + 2.0 * margin, 1.0)
+    width = max((bb.ymax - bb.ymin) + 2.0 * margin, 1.0)
+    return {
+        "type": "rect",
+        "length": length,
+        "width": width,
+        "cx": (bb.xmin + bb.xmax) / 2.0,
+        "cy": (bb.ymin + bb.ymax) / 2.0,
+    }
+
+
+def _cut_rectangular_region_around_island(
+    shape: "cq.Workplane",
+    *,
+    outer_profile,
+    island_profile,
+    depth: float,
+    face_selector: str = ">Z",
+    through: bool = False,
+) -> "cq.Workplane":
+    """Cut rectangular regions inside an outer rectangle but outside an island.
+
+    This avoids fragile nested-wire sketches when an island touches the outer
+    boundary, such as a rib that spans the full Y width of the stock.
+    """
+    oxmin, oymin, oxmax, oymax = _profile_bounds(outer_profile)
+    ixmin, iymin, ixmax, iymax = _profile_bounds(island_profile)
+    ixmin = max(ixmin, oxmin)
+    ixmax = min(ixmax, oxmax)
+    iymin = max(iymin, oymin)
+    iymax = min(iymax, oymax)
+
+    if ixmin >= ixmax or iymin >= iymax:
+        return profile_pocket_cut(
+            shape,
+            outer_profile,
+            depth,
+            face_selector=face_selector,
+            through=through,
+        )
+
+    regions: list[tuple[float, float, float, float]] = []
+
+    def add_region(x0: float, y0: float, x1: float, y1: float) -> None:
+        if x1 - x0 > 1e-6 and y1 - y0 > 1e-6:
+            regions.append(((x0 + x1) / 2.0, (y0 + y1) / 2.0, x1 - x0, y1 - y0))
+
+    add_region(oxmin, oymin, ixmin, oymax)  # left of island
+    add_region(ixmax, oymin, oxmax, oymax)  # right of island
+    add_region(ixmin, oymin, ixmax, iymin)  # below island
+    add_region(ixmin, iymax, ixmax, oymax)  # above island
+
+    if not regions:
+        return shape
+
+    wp = shape.faces(face_selector).workplane()
+    for cx, cy, length, width in regions:
+        wp = wp.center(cx, cy).rect(length, width).center(-cx, -cy)
+    return wp.cutThruAll() if through else wp.cutBlind(-depth)
 
 
 def machine_around_cylinder_cut(
@@ -434,9 +613,13 @@ def machine_around_cylinder_cut(
 
 def _edge_selection(shape: "cq.Workplane", selector, *, face_selector: str = ">Z") -> "cq.Workplane":
     """Resolve lightweight edge selectors to a CadQuery edge selection."""
+    if isinstance(selector, str) and selector.lower() in {"all_edges", "global", "*"}:
+        return shape.edges()
     if selector in (None, "all"):
         return shape.faces(face_selector).edges()
     if isinstance(selector, str):
+        if selector in {">X", "<X", ">Y", "<Y", ">Z", "<Z"}:
+            return shape.faces(selector).edges()
         return shape.faces(face_selector).edges(selector)
     if isinstance(selector, dict):
         face = selector.get("face") or selector.get("face_selector") or face_selector

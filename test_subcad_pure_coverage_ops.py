@@ -19,13 +19,13 @@ plan = plan_pure_subcad_features(
         {"op_name": "circle"},
         {"op_name": "extrude"},
         {"op_name": "revolve"},
-        {"op_name": "shell"},
+        {"op_name": "shell", "function": "part.faces.shell"},
         {"op_name": "sweep"},
         {"op_name": "loft"},
         {"op_name": "polygon"},
         {"op_name": "rarray"},
     ],
-    ".circle(10).extrude(5).union(x).revolve().shell(1).sweep(p).loft()",
+    '.circle(10).extrude(5).union(x).revolve().faces(">Z").shell(1).sweep(p).loft()',
 )
 ops = {feature.operation for feature in plan.features}
 check(plan.compatible, "planner considers mapped pure operations compatible")
@@ -36,6 +36,16 @@ check("turn_profile" in ops, "planner maps revolve to turn_profile")
 check("thin_wall_pocket" in ops, "planner maps shell to thin_wall_pocket")
 check("sweep_mill" in ops, "planner maps sweep to sweep_mill")
 check("loft_mill" in ops, "planner maps loft to loft_mill")
+
+closed_shell = plan_pure_subcad_features(
+    [{"op_name": "box"}, {"op_name": "shell", "function": "base.shell"}],
+    ".box(10, 10, 10).shell(-1)",
+)
+check(not closed_shell.compatible, "planner rejects closed inaccessible shells")
+check(
+    any(feature.planner_status == "unsupported_unmachinable" for feature in closed_shell.features),
+    "closed shell is labeled unsupported_unmachinable",
+)
 
 
 print("\n2. Fluent pure operation API serializes process-plan records ...")

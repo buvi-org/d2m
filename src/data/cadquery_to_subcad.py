@@ -403,7 +403,8 @@ _DEFAULT_MEASURE_MAP: dict[str, dict[int, str]] = {
     "hole":      {0: "hole_diameter", 1: "hole_depth"},
     "circle":    {0: "radius", "kwargs_diameter": "diameter"},
     # --- Rectangular features ---
-    "rect":      {0: "width", 1: "length"},
+    # CadQuery rect(xLen, yLen): X maps to SubCAD/profile length, Y maps width.
+    "rect":      {0: "length", 1: "width"},
     "box":       {0: "length", 1: "width", 2: "height"},
     "cylinder":  {0: "height", 1: "radius", "kwargs_diameter": "diameter"},
     # --- Extrusion / cut ---
@@ -616,9 +617,9 @@ if __name__ == "__main__":
         {"lineno": 30, "function": "rect", "kwargs": {"length": 40, "width": 15}},
     ]
     measures = _extract_measures(trace2)
-    _check("length measure present", measures.get("length") in (20, 40, 100, 50),
+    _check("rect kwargs length=40", measures.get("length") == 40,
            f"measures: {measures}")
-    _check("width measure present", measures.get("width") in (15, 30, 50),
+    _check("rect kwargs width=15", measures.get("width") == 15,
            f"measures: {measures}")
     _check("box height=20", measures.get("height") == 20, f"measures: {measures}")
     _check("cut depth=5", abs(measures.get("cut_depth", 0)) == 5,
