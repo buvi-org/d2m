@@ -117,3 +117,24 @@ def test_blind_counterbore_does_not_drill_through_retained_rib() -> None:
 
     assert _slice_area(blind, 0.0) == pytest.approx(800.0, abs=1e-6)
     assert _slice_area(through, 0.0) < 800.0
+
+
+def test_z_band_retained_profiles_support_mixed_feature_heights() -> None:
+    stock = Stock.rectangular(80.0, 40.0, 20.0)
+    boss = {"type": "circle", "diameter": 12.0, "cx": 0.0, "cy": 0.0}
+    ribs = [
+        {"type": "rib", "length": 20.0, "width": 4.0, "cx": -20.0, "cy": 0.0},
+        {"type": "rib", "length": 20.0, "width": 4.0, "cx": 20.0, "cy": 0.0},
+    ]
+
+    part = (
+        stock
+        .machine_around_profile(boss, height=8.0, base_height=12.0)
+        .machine_around_profiles([boss, *ribs], height=4.0, base_height=8.0)
+    )
+
+    boss_area = math.pi * 6.0**2
+    rib_area = 2 * 20.0 * 4.0
+    assert _slice_area(part, -5.0) == pytest.approx(80.0 * 40.0, abs=1e-6)
+    assert _slice_area(part, 0.0) == pytest.approx(boss_area + rib_area, abs=1e-6)
+    assert _slice_area(part, 7.0) == pytest.approx(boss_area, abs=1e-6)

@@ -104,13 +104,13 @@ Stock instance (immutable/fluent pattern).
 - `.profile_cutout(profile, *, depth=None, through=False, face_selector=">Z")`
   Cut through or blind arbitrary profiles.
 - `.profile_contour(profile, depth, *, side="outside", face_selector=">Z")` — Contour arbitrary profiles.
-- `.machine_around_profile(profile, height, *, stock_envelope=None, face_selector=">Z")` —
+- `.machine_around_profile(profile, height, *, stock_envelope=None, base_height=None, face_selector=">Z")` —
   Machine around retained bosses, pads, ribs, and joined profiles.
-- `.machine_around_profiles([profile, ...], height, *, stock_envelope=None, face_selector=">Z")` —
+- `.machine_around_profiles([profile, ...], height, *, stock_envelope=None, base_height=None, face_selector=">Z")` —
   Machine around multiple retained islands in one operation. Use this for
   patterned ribs/bosses from `rarray`, `polarArray`, loops, or repeated
   constructive unions so earlier retained islands are not erased by later cuts.
-- `.machine_around_cylinder(diameter, height, *, cx=0.0, cy=0.0, face_selector=">Z")` —
+- `.machine_around_cylinder(diameter, height, *, cx=0.0, cy=0.0, base_height=None, face_selector=">Z")` —
   Machine around retained cylindrical bosses.
 - `.rib(width, length, height, *, cx=0.0, cy=0.0, angle=0.0, face_selector=">Z")` and
   `.pad(profile, height)` — Retained material features. For ribs/pads,
@@ -204,6 +204,11 @@ Stock instance (immutable/fluent pattern).
    features require stock height equal to base thickness plus feature height;
    do not face_mill away the material that forms the rib/boss before machining
    around it.
+   For mixed-height retained features, use `base_height=<height from stock
+   bottom to feature base>`. Example: a 12 mm boss and 4 mm ribs starting on an
+   8 mm base can be represented as an upper boss-only retained band and a lower
+   boss+ribs retained band. Prefer `suggested_subcad` from the planner when it
+   is present.
    Only machine around a unioned feature when it actually protrudes beyond the
    existing stock/base envelope or rises above the surrounding surface. If a
    unioned box lies fully inside existing solid stock at the same height, it may
@@ -630,6 +635,8 @@ def _format_planner_candidates(plan: dict) -> str:
             lines.append(f"    retained_profiles: {json.dumps(profiles, sort_keys=True)[:900]}")
         if evidence.get("height") is not None:
             lines.append(f"    retained_height: {evidence.get('height')}")
+        if evidence.get("base_height") is not None:
+            lines.append(f"    retained_base_height: {evidence.get('base_height')}")
     return "\n".join(lines)
 
 

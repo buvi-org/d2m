@@ -2671,6 +2671,7 @@ class MachineAroundProfileOp(ProfileCutoutOp):
 
     height: float = 5.0
     stock_envelope: Optional[dict] = None
+    base_height: Optional[float] = None
 
     def apply(self, shape):
         return machine_around_profile_cut(
@@ -2679,6 +2680,7 @@ class MachineAroundProfileOp(ProfileCutoutOp):
             self.height,
             face_selector=self.face_selector,
             stock_envelope=self.stock_envelope,
+            base_height=self.base_height,
         )
 
     def to_dict(self) -> dict:
@@ -2687,6 +2689,7 @@ class MachineAroundProfileOp(ProfileCutoutOp):
             "operation": "machine_around_profile",
             "height_mm": self.height,
             "stock_envelope": self.stock_envelope or {},
+            "base_height_mm": self.base_height,
             "strategy": "machine_around_retained_island",
             "coverage_family": "retained_material",
         })
@@ -2716,6 +2719,7 @@ class MachineAroundProfilesOp(MachineAroundProfileOp):
             self.height,
             face_selector=self.face_selector,
             stock_envelope=self.stock_envelope,
+            base_height=self.base_height,
         )
 
     def to_dict(self) -> dict:
@@ -2734,6 +2738,7 @@ class MachineAroundCylinderOp(CircularPocketOp):
     """Machine around a retained cylindrical boss."""
 
     height: float = 5.0
+    base_height: Optional[float] = None
 
     def apply(self, shape):
         return machine_around_cylinder_cut(
@@ -2743,6 +2748,7 @@ class MachineAroundCylinderOp(CircularPocketOp):
             cx=self.cx,
             cy=self.cy,
             face_selector=self.face_selector,
+            base_height=self.base_height,
         )
 
     def to_dict(self) -> dict:
@@ -2750,6 +2756,7 @@ class MachineAroundCylinderOp(CircularPocketOp):
         data.update({
             "operation": "machine_around_cylinder",
             "height_mm": self.height,
+            "base_height_mm": self.base_height,
             "strategy": "machine_around_retained_cylinder",
             "process": "mill",
             "coverage_family": "retained_material",

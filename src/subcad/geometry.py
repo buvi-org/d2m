@@ -586,10 +586,20 @@ def machine_around_profile_cut(
     face_selector: str = ">Z",
     margin: float = 5.0,
     stock_envelope=None,
+    base_height: float | None = None,
 ) -> "cq.Workplane":
     """Remove a frame around a retained profile island."""
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
+    if base_height is not None:
+        outer_profile = _stock_envelope_profile(shape, stock_envelope, margin=margin)
+        return _cut_profile_region_around_islands_z_band(
+            shape,
+            outer_profile=outer_profile,
+            island_profiles=[profile],
+            base_height=base_height,
+            height=height,
+        )
     if _is_rectangular_profile(profile) and not _is_rotated_profile(profile):
         outer_profile = _stock_envelope_profile(shape, stock_envelope, margin=margin)
         return _cut_profile_region_around_island(
@@ -628,6 +638,7 @@ def machine_around_profiles_cut(
     face_selector: str = ">Z",
     margin: float = 5.0,
     stock_envelope=None,
+    base_height: float | None = None,
 ) -> "cq.Workplane":
     """Remove material around multiple retained profile islands in one cut.
 
@@ -639,6 +650,15 @@ def machine_around_profiles_cut(
     islands = [profile for profile in list(profiles or []) if profile]
     if not islands:
         return shape
+    if base_height is not None:
+        outer_profile = _stock_envelope_profile(shape, stock_envelope, margin=margin)
+        return _cut_profile_region_around_islands_z_band(
+            shape,
+            outer_profile=outer_profile,
+            island_profiles=islands,
+            base_height=base_height,
+            height=height,
+        )
     if len(islands) == 1:
         return machine_around_profile_cut(
             shape,
@@ -831,6 +851,29 @@ def _cut_profile_region_around_islands_boolean(
     return shape.cut(cutting)
 
 
+def _cut_profile_region_around_islands_z_band(
+    shape: "cq.Workplane",
+    *,
+    outer_profile,
+    island_profiles,
+    base_height: float,
+    height: float,
+) -> "cq.Workplane":
+    """Cut a retained-island band measured up from the stock bottom."""
+    if height <= 0.0:
+        return shape
+    bb = shape.val().BoundingBox()
+    z_min = bb.zmin + float(base_height)
+    z_max = min(z_min + float(height), bb.zmax)
+    if z_max <= z_min:
+        return shape
+    cutting = _profile_prism(outer_profile, z_max - z_min, z_min)
+    for island_profile in island_profiles:
+        island = _profile_prism(island_profile, (z_max - z_min) + 0.02, z_min - 0.01)
+        cutting = cutting.cut(island)
+    return shape.cut(cutting)
+
+
 def _profile_prism(profile, depth: float, z_min: float) -> "cq.Workplane":
     prism = _draw_profile(cq.Workplane("XY"), profile).extrude(depth)
     return prism.translate((0.0, 0.0, z_min))
@@ -845,11 +888,21 @@ def machine_around_cylinder_cut(
     cy: float = 0.0,
     face_selector: str = ">Z",
     margin: float = 5.0,
+    base_height: float | None = None,
 ) -> "cq.Workplane":
     """Remove a frame around a retained cylindrical boss."""
-    profile = {"diameter": diameter}
+    profile = {"type": "circle", "diameter": diameter, "cx": cx, "cy": cy}
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
+    if base_height is not None:
+        outer_profile = _stock_envelope_profile(shape, None, margin=margin)
+        return _cut_profile_region_around_islands_z_band(
+            shape,
+            outer_profile=outer_profile,
+            island_profiles=[profile],
+            base_height=base_height,
+            height=height,
+        )
     outer = diameter + 2.0 * margin
     wp = shape.faces(face_selector).workplane().center(cx, cy).rect(outer, outer)
     wp = _draw_profile(wp, profile)

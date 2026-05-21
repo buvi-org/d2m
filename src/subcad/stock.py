@@ -945,6 +945,7 @@ class Stock:
 
     def machine_around_profile(self, profile, height: float, *,
                                stock_envelope=None,
+                               base_height: Optional[float] = None,
                                cx: Optional[float] = None,
                                cy: Optional[float] = None,
                                face_selector: str = ">Z",
@@ -960,12 +961,14 @@ class Stock:
         return self._apply_op(MachineAroundProfileOp(
             profile=profile, width=width, length=length, depth=height,
             height=height, stock_envelope=stock_envelope,
+            base_height=base_height,
             face_selector=face_selector,
             tool=tool, material=self._material,
         ))
 
     def machine_around_profiles(self, profiles, height: float, *,
                                 stock_envelope=None,
+                                base_height: Optional[float] = None,
                                 face_selector: str = ">Z",
                                 tool: Optional[ToolSpec] = None) -> "Stock":
         """Machine around multiple retained bosses/ribs/pads in one cut."""
@@ -975,17 +978,19 @@ class Stock:
         return self._apply_op(MachineAroundProfilesOp(
             profiles=profiles, profile=profiles, width=width, length=length,
             depth=height, height=height, stock_envelope=stock_envelope,
+            base_height=base_height,
             face_selector=face_selector, tool=tool, material=self._material,
         ))
 
     def machine_around_cylinder(self, diameter: float, height: float, *,
                                 cx: float = 0.0, cy: float = 0.0,
+                                base_height: Optional[float] = None,
                                 face_selector: str = ">Z",
                                 tool: Optional[ToolSpec] = None) -> "Stock":
         from .operations import MachineAroundCylinderOp
         return self._apply_op(MachineAroundCylinderOp(
             cx=cx, cy=cy, diameter=diameter, depth=height, height=height,
-            face_selector=face_selector,
+            base_height=base_height, face_selector=face_selector,
             tool=tool, material=self._material,
         ))
 

@@ -374,12 +374,14 @@ def _for_loop_retained_rectangles(code_text: str) -> list[dict[str, Any]]:
             if profile:
                 profiles.append(profile)
         height = _first_call_number(body, "extrude", env)
+        base_height = _translate_z_from_chain(body, env)
         if len(profiles) > 1 and height is not None:
             evidence.append({
                 "source": "cadquery.for_loop.retained_rectangles",
                 "profiles": profiles,
                 "height": height,
-                "suggested_subcad": _suggest_machine_around_profiles(profiles, height),
+                "base_height": base_height,
+                "suggested_subcad": _suggest_machine_around_profiles(profiles, height, base_height),
             })
     return evidence
 
@@ -397,6 +399,7 @@ def _standalone_union_retained_features(code_text: str) -> list[dict[str, Any]]:
         if f".union({name})" not in code_text:
             continue
         height = _first_call_number(body, "extrude", env)
+        base_height = _translate_z_from_chain(body, env)
         if height is None:
             continue
         if ".circle(" in body:
@@ -411,9 +414,11 @@ def _standalone_union_retained_features(code_text: str) -> list[dict[str, Any]]:
                     "cx": center[0],
                     "cy": center[1],
                     "height": height,
+                    "base_height": base_height,
                     "suggested_subcad": (
                         f".machine_around_cylinder({diameter:.6g}, {height:.6g}, "
-                        f"cx={center[0]:.6g}, cy={center[1]:.6g})"
+                        f"cx={center[0]:.6g}, cy={center[1]:.6g}"
+                        f"{', base_height=' + format(base_height, '.6g') if base_height is not None else ''})"
                     ),
                 })
             continue
@@ -423,7 +428,8 @@ def _standalone_union_retained_features(code_text: str) -> list[dict[str, Any]]:
                 "source": f"cadquery.union.{name}",
                 "profiles": [profile],
                 "height": height,
-                "suggested_subcad": _suggest_machine_around_profiles([profile], height),
+                "base_height": base_height,
+                "suggested_subcad": _suggest_machine_around_profiles([profile], height, base_height),
             })
     return evidence
 
@@ -591,6 +597,18 @@ def _polar_rect_profiles(chain: str, env: dict[str, float]) -> list[dict[str, An
     return profiles
 
 
+def _translate_z_from_chain(chain: str, env: dict[str, float]) -> float | None:
+    args = _first_call_args(chain, "translate")
+    if len(args) != 1:
+        return None
+    tuple_text = args[0].strip()
+    if tuple_text.startswith("(") and tuple_text.endswith(")"):
+        parts = _split_args(tuple_text[1:-1])
+        if len(parts) >= 3:
+            return _eval_number(parts[2], env)
+    return None
+
+
 def _parse_keyword_args(args: list[str], env: dict[str, float]) -> dict[str, float]:
     values: dict[str, float] = {}
     for arg in args:
@@ -663,7 +681,11 @@ def _sketch_rects(code_text: str, env: dict[str, float]) -> dict[str, dict[str, 
     return sketches
 
 
-def _suggest_machine_around_profiles(profiles: list[dict[str, Any]], height: float) -> str:
+def _suggest_machine_around_profiles(
+    profiles: list[dict[str, Any]],
+    height: float,
+    base_height: float | None = None,
+) -> str:
     clean_profiles = []
     for profile in profiles:
         clean_profiles.append({
@@ -671,8 +693,10 @@ def _suggest_machine_around_profiles(profiles: list[dict[str, Any]], height: flo
             for key, value in profile.items()
         })
     if len(clean_profiles) == 1:
-        return f".machine_around_profile({clean_profiles[0]!r}, height={height:.6g})"
-    return f".machine_around_profiles({clean_profiles!r}, height={height:.6g})"
+        base_arg = f", base_height={base_height:.6g}" if base_height is not None else ""
+        return f".machine_around_profile({clean_profiles[0]!r}, height={height:.6g}{base_arg})"
+    base_arg = f", base_height={base_height:.6g}" if base_height is not None else ""
+    return f".machine_around_profiles({clean_profiles!r}, height={height:.6g}{base_arg})"
 
 
 def _non_top_workplane_retained_material_from_trace(ops_trace: list[dict]) -> list[dict[str, Any]]:
