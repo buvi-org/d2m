@@ -280,6 +280,9 @@ def build_deterministic_subcad_code(
     shell_cover_code = _deterministic_cylindrical_shell_cover_code(cadquery_code)
     if shell_cover_code:
         return shell_cover_code
+    inner_rib_cage_code = _deterministic_cylindrical_inner_rib_cage_code(cadquery_code)
+    if inner_rib_cage_code:
+        return inner_rib_cage_code
     annular_rib_code = _deterministic_cylindrical_annular_rib_code(cadquery_code)
     if annular_rib_code:
         return annular_rib_code
@@ -478,6 +481,32 @@ def _deterministic_cylindrical_shell_cover_code(cadquery_code: str) -> str | Non
     fillet = env.get("fillet_radius")
     if fillet is not None and ".fillet(" in cadquery_code.lower():
         sequence.append(f'.edge_fillet("|Z", radius={fillet:.6g})')
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_cylindrical_inner_rib_cage_code(cadquery_code: str) -> str | None:
+    env = _numeric_env(cadquery_code)
+    required = {"cage_length", "outer_diameter", "inner_diameter"}
+    if not required.issubset(env):
+        return None
+    if "single_rib" not in cadquery_code or ".union(rib)" not in cadquery_code:
+        return None
+
+    length = env["cage_length"]
+    outer_diameter = env["outer_diameter"]
+    inner_diameter = env["inner_diameter"]
+    if min(length, outer_diameter, inner_diameter) <= 0:
+        return None
+
+    stock = f"Stock.cylindrical({outer_diameter:.6g}, {length:.6g})"
+    sequence: list[str] = []
+    fillet = env.get("fillet_radius")
+    if fillet is not None and fillet > 0:
+        sequence.extend([
+            f'.edge_fillet(">Z", radius={fillet:.6g})',
+            f'.edge_fillet("<Z", radius={fillet:.6g})',
+        ])
+    sequence.append(f".circular_pocket({inner_diameter:.6g}, depth={length:.6g}, cx=0.0, cy=0.0)")
     return _format_fluent_subcad_code(stock, sequence)
 
 

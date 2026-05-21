@@ -460,6 +460,40 @@ check(
 shell_cover_exec = run_subcad(shell_cover_subcad)
 check(shell_cover_exec["success"], "deterministic cylindrical shell-cover SubCAD code executes")
 
+inner_rib_cage_code = """
+cage_length = 80.0
+outer_diameter = 70.0
+wall_thickness = 5.0
+inner_diameter = outer_diameter - 2 * wall_thickness
+outer_radius = outer_diameter / 2.0
+inner_radius = inner_diameter / 2.0
+rib_width = 3.0
+rib_height = (outer_radius - inner_radius) - 2.0
+rib_spacing_angle = 30.0
+fillet_radius = 4.0
+outer_cyl = cq.Workplane("XY").circle(outer_radius).extrude(cage_length).edges(">Z").fillet(fillet_radius).edges("<Z").fillet(fillet_radius)
+inner_hole = cq.Workplane("XY").circle(inner_radius).extrude(cage_length)
+cage_base = outer_cyl.cut(inner_hole)
+rib_center_offset = inner_radius + rib_height / 2.0
+single_rib = cq.Workplane("XY").rect(rib_width, rib_height).extrude(cage_length).translate((rib_center_offset, 0, 0))
+num_ribs = int(360.0 / rib_spacing_angle)
+result = cage_base
+for i in range(num_ribs):
+    angle = i * rib_spacing_angle
+    rib = single_rib.rotate((0, 0, 0), (0, 0, 1), angle)
+    result = result.union(rib)
+"""
+inner_rib_cage_subcad = build_deterministic_subcad_code(inner_rib_cage_code, [])
+check(inner_rib_cage_subcad is not None, "planner builds deterministic inner-rib cage SubCAD code")
+check(
+    "Stock.cylindrical(70, 80)" in inner_rib_cage_subcad
+    and ".circular_pocket(60, depth=80" in inner_rib_cage_subcad
+    and "'type': 'rib'" not in inner_rib_cage_subcad,
+    "deterministic inner-rib cage code preserves bore and omits absorbed ribs",
+)
+inner_rib_cage_exec = run_subcad(inner_rib_cage_subcad)
+check(inner_rib_cage_exec["success"], "deterministic cylindrical inner-rib cage SubCAD code executes")
+
 annular_rib_code = """
 plate_diameter = 80.0
 plate_thickness = 5.0

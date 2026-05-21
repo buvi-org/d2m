@@ -464,6 +464,15 @@ def profile_pocket_cut(
         raise RuntimeError("cadquery is not available")
     island_list = list(islands or [])
     if island_list:
+        if not _is_rectangular_profile(profile) or len(island_list) > 1:
+            return _cut_profile_region_around_islands(
+                shape,
+                outer_profile=profile,
+                island_profiles=island_list,
+                depth=depth,
+                face_selector=face_selector,
+                through=through,
+            )
         # Common v1 case for Zero-to-CAD: pocket a rectangular stock/region
         # while retaining one or more rectangular islands (rib/pad/bosses).
         result = shape
