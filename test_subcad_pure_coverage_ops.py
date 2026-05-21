@@ -59,6 +59,53 @@ check(
     "closed shell is labeled unsupported_unmachinable",
 )
 
+side_gusset = plan_pure_subcad_features(
+    [
+        {"op_name": "box"},
+        {"op_name": "faces"},
+        {"op_name": "workplane"},
+        {"op_name": "polyline"},
+        {"op_name": "extrude"},
+    ],
+    """
+    cq.Workplane("XY")
+      .box(40, 30, 10)
+      .faces(">X").workplane()
+      .polyline([(0, 0), (12, 0), (0, 8)])
+      .close()
+      .extrude(4)
+    """,
+)
+check(not side_gusset.compatible, "planner rejects side-face additive gussets")
+check(
+    any(feature.planner_status == "needs_manual_review"
+        and feature.operation == "oriented_retained_material"
+        for feature in side_gusset.features),
+    "side-face additive gusset is labeled needs_manual_review",
+)
+
+bottom_cut = plan_pure_subcad_features(
+    [
+        {"op_name": "box"},
+        {"op_name": "faces"},
+        {"op_name": "workplane"},
+        {"op_name": "rect"},
+        {"op_name": "cutBlind"},
+    ],
+    """
+    cq.Workplane("XY")
+      .box(40, 30, 10)
+      .faces("<Z").workplane()
+      .rect(8, 12)
+      .cutBlind(2)
+    """,
+)
+check(bottom_cut.compatible, "planner preserves bottom-face cutBlind compatibility")
+check(
+    not any(feature.operation == "oriented_retained_material" for feature in bottom_cut.features),
+    "bottom-face cutBlind is not treated as retained additive material",
+)
+
 
 print("\n2. Fluent pure operation API serializes process-plan records ...")
 profile = {"type": "polygon", "points": [(-10, -5), (10, -5), (12, 0), (10, 5), (-10, 5)]}

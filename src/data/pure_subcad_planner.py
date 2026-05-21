@@ -12,6 +12,7 @@ into pure SubCAD operation families so benchmark runs can distinguish:
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -195,6 +196,12 @@ def plan_pure_subcad_features(
         add("cadquery.pattern", "pattern", PLANNED_EXACT, "pattern",
             "feature pattern maps to repeated SubCAD operations")
 
+    for evidence in _non_top_workplane_retained_material(ops_trace, code_text):
+        add("cadquery.faces.workplane.extrude", "retained_material", NEEDS_MANUAL_REVIEW,
+            "oriented_retained_material",
+            "non-top workplane additive retained material needs an oriented SubCAD operation",
+            **evidence)
+
     unsupported = [feature for feature in features if feature.planner_status == UNSUPPORTED_UNMACHINABLE]
     manual = [feature for feature in features if feature.planner_status == NEEDS_MANUAL_REVIEW]
     compatible = bool(features) and not unsupported and not manual
@@ -227,6 +234,86 @@ def _shell_has_accessible_open_face(ops_trace: list[dict], code_text: str) -> bo
         return False
     recent_chain = code_text[max(0, shell_index - 120):shell_index]
     return ".faces(" in recent_chain
+
+
+_FACE_WORKPLANE_RE = re.compile(
+    r"\.faces\(\s*['\"](?P<selector>[<>][xyz])['\"]\s*\)\s*\.workplane\(\s*\)",
+    re.IGNORECASE,
+)
+
+
+def _non_top_workplane_retained_material(
+    ops_trace: list[dict],
+    code_text: str,
+) -> list[dict[str, Any]]:
+    """Find additive sketches on selected non-top faces.
+
+    Current SubCAD retained-material operations are top-workplane operations.
+    Bottom and side subtractive cuts can still be represented through a face
+    selector, but additive side/bottom workplane features such as CadQuery
+    gussets need a real oriented retained-material operation before they should
+    be marked compatible.
+    """
+    evidence: list[dict[str, Any]] = []
+    for match in _FACE_WORKPLANE_RE.finditer(code_text):
+        selector = match.group("selector").upper()
+        if selector == ">Z":
+            continue
+        chain = code_text[match.end():_next_chain_boundary(code_text, match.end())]
+        if ".extrude(" not in chain or _chain_is_subtractive(chain):
+            continue
+        evidence.append({
+            "face_selector": selector,
+            "chain": _trim_evidence_chain(chain),
+        })
+
+    if evidence:
+        return evidence
+
+    return _non_top_workplane_retained_material_from_trace(ops_trace)
+
+
+def _next_chain_boundary(code_text: str, start: int) -> int:
+    candidates = [
+        index for index in (
+            code_text.find(".faces(", start),
+            code_text.find(";", start),
+        )
+        if index >= 0
+    ]
+    return min(candidates) if candidates else len(code_text)
+
+
+def _chain_is_subtractive(chain: str) -> bool:
+    return any(token in chain for token in (".cut", ".cutblind(", ".cutthruall("))
+
+
+def _trim_evidence_chain(chain: str) -> str:
+    compact = " ".join(chain.strip().split())
+    return compact[:160]
+
+
+def _non_top_workplane_retained_material_from_trace(ops_trace: list[dict]) -> list[dict[str, Any]]:
+    evidence: list[dict[str, Any]] = []
+    for index, op in enumerate(ops_trace):
+        if not isinstance(op, dict):
+            continue
+        if str(op.get("op_name") or "").lower() != "workplane":
+            continue
+        function = str(op.get("function") or "").lower()
+        selector = _face_selector_from_text(function)
+        if selector is None or selector == ">Z":
+            continue
+        window = ops_trace[index + 1:index + 8]
+        op_names = {str(item.get("op_name") or "").lower() for item in window if isinstance(item, dict)}
+        if "extrude" in op_names and not any(name.startswith("cut") for name in op_names):
+            evidence.append({"face_selector": selector, "trace_index": index})
+    return evidence
+
+
+def _face_selector_from_text(text: str) -> str | None:
+    match = re.search(r"\.faces\(\s*['\"](?P<selector>[<>][xyz])['\"]\s*\)", text, re.IGNORECASE)
+    return match.group("selector").upper() if match else None
 
 
 def compatibility_report(ops_trace: list[dict], cadquery_code: str = "") -> dict[str, Any]:
