@@ -14,6 +14,7 @@ Key design notes:
 from __future__ import annotations
 
 import os
+import re
 import sys
 import tempfile
 import traceback
@@ -64,6 +65,10 @@ def run_subcad(code: str) -> dict:
         On failure:
           ``{"success": False, "error": str}``
     """
+    guard_error = _generated_code_guard(code)
+    if guard_error:
+        return {"success": False, "error": guard_error}
+
     # Build a namespace with key pre-imports available to the executed code.
     # We import Stock explicitly so that generated code using
     # ``from src.subcad import Stock`` or bare ``Stock.rectangular(...)``
@@ -394,6 +399,32 @@ def format_feedback(code: str, exec_result: dict, comparison: dict) -> str:
 # =============================================================================
 #  Internal helpers
 # =============================================================================
+
+def _generated_code_guard(code: str) -> str | None:
+    """Reject generated SubCAD patterns known to erase retained geometry."""
+    code_no_comments = re.sub(r"#.*", "", code)
+    lowered = code_no_comments.lower()
+    retained_tokens = [
+        ".machine_around_profile(",
+        ".machine_around_profiles(",
+        ".machine_around_cylinder(",
+        ".rib(",
+        ".pad(",
+    ]
+    retained_positions = [lowered.find(token) for token in retained_tokens if token in lowered]
+    if not retained_positions:
+        return None
+    first_retained = min(position for position in retained_positions if position >= 0)
+    later_face_mill = lowered.find(".face_mill(", first_retained + 1)
+    if later_face_mill >= 0:
+        return (
+            "Generated SubCAD sequencing error: face_mill appears after retained "
+            "boss/rib/pad machining. Face milling after machine_around/rib/pad "
+            "operations erases retained material. Move face_mill before retained "
+            "operations or replace it with the correct base/level retained cut."
+        )
+    return None
+
 
 def _is_stock(obj) -> bool:
     """Return True if *obj* is a subCAD ``Stock`` instance."""

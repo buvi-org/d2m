@@ -383,6 +383,15 @@ result = run_subcad(bad_code2)
 check(not result["success"], "fails on syntax error")
 check("Syntax" in result.get("error", ""), "error message says Syntax")
 
+bad_sequence = run_subcad(
+    "part = Stock.rectangular(40, 20, 10)"
+    ".machine_around_profile({'length': 10, 'width': 4}, height=2)"
+    ".face_mill(5)"
+)
+check(not bad_sequence["success"], "rejects face_mill after retained features")
+check("face_mill appears after retained" in bad_sequence.get("error", ""),
+      "retained sequencing guard returns actionable error")
+
 
 # =========================================================================
 #  Test 8: compare_to_reference with real files
