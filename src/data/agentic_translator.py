@@ -32,7 +32,10 @@ from .cadquery_to_subcad import (
     step_to_stock_dims,
     _extract_measures,
 )
-from .pure_subcad_planner import plan_pure_subcad_features
+from .pure_subcad_planner import (
+    build_deterministic_subcad_code,
+    plan_pure_subcad_features,
+)
 
 # Optional imports for richer mesh comparison (requires trimesh + scipy)
 try:
@@ -1544,6 +1547,24 @@ class AgenticTranslator:
         # --- Load reference volume (try CadQuery first, fallback to trimesh) ---
         target_volume = _load_reference_volume(step_path)
 
+        deterministic_code = build_deterministic_subcad_code(cq_code, ops_trace)
+        if deterministic_code:
+            deterministic_result = self._try_deterministic_translation(
+                deterministic_code,
+                step_path,
+                ops_trace,
+            )
+            deterministic_match = (deterministic_result.get("comparison") or {}).get("match", False)
+            deterministic_trusted = True
+            if deterministic_match and self.strict_mesh_convergence and self.comparison_methods:
+                deterministic_trusted, _ = _mesh_comparison_is_trusted(
+                    deterministic_result.get("mesh_comparison"),
+                    min_mesh_score=self.min_mesh_score,
+                    tolerance_mm=self.mesh_tolerance_mm,
+                )
+            if deterministic_match and deterministic_trusted:
+                return deterministic_result
+
         # --- Build initial user prompt ---
         user_prompt = build_user_prompt(cq_code, ops_trace, step_path, stock_dims)
 
@@ -1846,6 +1867,121 @@ class AgenticTranslator:
             "returned_best_attempt": returned_best_attempt,
             "best_attempt": best_attempt,
             "error": None,
+        }
+
+    def _try_deterministic_translation(
+        self,
+        code: str,
+        step_path: str,
+        ops_trace: list[dict],
+    ) -> dict:
+        """Run deterministic planner output through the normal comparison stack."""
+        if self.verbose:
+            print("  [deterministic planner] executing...", end=" ", flush=True)
+
+        exec_result = run_subcad(code)
+        if self.verbose:
+            if exec_result.get("success"):
+                print(f"vol={exec_result.get('volume', 0.0):.1f}", end=" ", flush=True)
+            else:
+                err_msg = str(exec_result.get("error", "?"))[:80]
+                err_msg = err_msg.encode("ascii", errors="replace").decode("ascii")
+                print(f"ERR: {err_msg}", end=" ", flush=True)
+
+        if exec_result.get("success") and exec_result.get("step_path"):
+            comparison = compare_to_reference(exec_result["step_path"], step_path)
+        else:
+            comparison = {
+                "match": False,
+                "volume_ratio": 0.0,
+                "error": exec_result.get("error", "Execution failed"),
+            }
+
+        mesh_comparison = None
+        feature_comparison = None
+        candidate_mesh = None
+        candidate_compare_mesh = None
+        mesh_alignment = None
+        reference_ok = (
+            exec_result.get("success")
+            and exec_result.get("step_path")
+            and not comparison.get("error")
+        )
+        if reference_ok and (
+            (self.comparison_methods and _HAS_MESH_COMPARE)
+            or (self.feature_aware and _HAS_FEATURE_COMPARE)
+        ):
+            try:
+                candidate_mesh = _mesh_from_execution(exec_result)
+            except Exception as e:
+                if self.verbose:
+                    msg = str(e).encode("ascii", errors="replace").decode("ascii")
+                    print(f"mesh-skip={msg[:50]}", end=" ", flush=True)
+
+        if candidate_mesh is not None and self.comparison_methods and _HAS_MESH_COMPARE:
+            try:
+                reference_mesh = _load_step_mesh(step_path)
+                candidate_compare_mesh, translation = _align_candidate_mesh_to_reference(
+                    candidate_mesh,
+                    reference_mesh,
+                )
+                mesh_alignment = {
+                    "method": "bounds_min_translation",
+                    "translation": translation,
+                }
+                mesh_comparison = compare_meshes(
+                    reference_mesh,
+                    candidate_compare_mesh,
+                    methods=self.comparison_methods,
+                )
+                mesh_comparison["alignment"] = mesh_alignment
+            except Exception as e:
+                mesh_comparison = {"error": str(e)}
+
+        if candidate_mesh is not None and self.feature_aware and _HAS_FEATURE_COMPARE:
+            try:
+                feature_comparison = compare_with_features(
+                    step_path,
+                    candidate_compare_mesh if candidate_compare_mesh is not None else candidate_mesh,
+                    ops_trace=ops_trace,
+                )
+                if mesh_alignment:
+                    feature_comparison["alignment"] = mesh_alignment
+            except Exception as e:
+                feature_comparison = {"error": str(e)}
+
+        if self.verbose:
+            if comparison.get("match"):
+                print("MATCH!", end=" ")
+            else:
+                print(f"ratio={comparison.get('volume_ratio', 0.0):.3f}", end=" ")
+            if isinstance(mesh_comparison, dict) and mesh_comparison.get("score") is not None:
+                print(f"mesh={float(mesh_comparison.get('score') or 0.0):.1f}", end=" ")
+            print("\n  Stop: deterministic_planner")
+
+        history = [{
+            "attempt": 1,
+            "code": code,
+            "exec_result": exec_result,
+            "comparison": comparison,
+            "mesh_comparison": _compact_for_history(mesh_comparison),
+            "feature_comparison": _compact_for_history(feature_comparison),
+            "deterministic": True,
+        }]
+
+        return {
+            "success": comparison.get("match", False),
+            "subcad_code": code,
+            "attempts": 1,
+            "exec_result": exec_result,
+            "comparison": comparison,
+            "mesh_comparison": _compact_for_history(mesh_comparison),
+            "feature_comparison": _compact_for_history(feature_comparison),
+            "history": history,
+            "stop_reason": "deterministic_planner",
+            "returned_best_attempt": False,
+            "best_attempt": 1 if exec_result.get("success") else None,
+            "error": None if exec_result.get("success") else exec_result.get("error"),
         }
 
 

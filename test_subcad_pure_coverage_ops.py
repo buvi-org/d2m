@@ -3,7 +3,8 @@
 import math
 
 from src.subcad import Stock, create_operation
-from src.data.pure_subcad_planner import plan_pure_subcad_features
+from src.data.pure_subcad_planner import build_deterministic_subcad_code, plan_pure_subcad_features
+from src.data.subcad_repl import run_subcad
 
 
 def check(cond, label):
@@ -256,6 +257,56 @@ check(
     "Stock.rectangular(80, 40, 19.5)" in layered_evidence[0]["suggested_subcad"],
     "layered retained-profile plan expands stock to full boss envelope",
 )
+layered_with_holes_code = """
+flange_leg_length = 80.0
+flange_leg_width = 30.0
+flange_thickness = 8.0
+inner_cut_width = 20.0
+boss_diameter = 20.0
+boss_height = 12.0
+rib_height = 4.0
+rib_width = 6.0
+rib_spacing = 12.0
+fusion_overlap = 0.5
+hole_diameter = 5.5
+hole_positions = [(-20.0, 5.0), (20.0, 5.0), (30.0, -20.0), (30.0, 20.0)]
+base = cq.Workplane('XY').rect(flange_leg_length, flange_leg_width).extrude(flange_thickness)
+cut = (
+    cq.Workplane('XY')
+    .rect(flange_leg_length - inner_cut_width, flange_leg_width - inner_cut_width)
+    .translate((inner_cut_width / 2.0, inner_cut_width / 2.0))
+    .extrude(flange_thickness)
+)
+l_shape = base.cut(cut)
+boss = (
+    cq.Workplane('XY')
+    .center(inner_cut_width / 2.0, inner_cut_width / 2.0)
+    .circle(boss_diameter / 2.0)
+    .extrude(boss_height)
+    .translate((0, 0, flange_thickness - fusion_overlap))
+)
+result = l_shape.union(boss)
+for i in range(3):
+    rib_x = -4.0 + i * rib_spacing
+    rib = (
+        cq.Workplane('XY')
+        .center(rib_x, 2.0)
+        .rect(rib_spacing * 0.8, rib_width)
+        .extrude(rib_height)
+        .translate((0, 0, flange_thickness - fusion_overlap))
+    )
+    result = result.union(rib)
+for (x, y) in hole_positions:
+    result = result.faces('>Z').workplane().center(x, y).hole(hole_diameter)
+"""
+deterministic_code = build_deterministic_subcad_code(layered_with_holes_code, [])
+check(deterministic_code is not None, "planner builds deterministic layered-retained SubCAD code")
+check(
+    ".drill(5.5, through=True, cx=30, cy=20)" in deterministic_code,
+    "deterministic layered-retained code includes source-derived drill positions",
+)
+deterministic_exec = run_subcad(deterministic_code)
+check(deterministic_exec["success"], "deterministic layered-retained SubCAD code executes")
 
 polar_plan = plan_pure_subcad_features(
     [],

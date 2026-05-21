@@ -245,6 +245,115 @@ def plan_pure_subcad_features(
     )
 
 
+def build_deterministic_subcad_code(
+    cadquery_code: str,
+    ops_trace: list[dict] | None = None,
+) -> str | None:
+    """Build executable SubCAD when planner evidence is already complete.
+
+    This is intentionally narrow: it only emits code for feature families where
+    the deterministic planner has a full manufacturing sequence.  The first
+    production use is Zero-to-CAD layered retained material (L base + boss/rib
+    levels), where asking an LLM to transcribe the plan caused avoidable
+    geometry regressions and wasted live calls.
+    """
+    plan = plan_pure_subcad_features(ops_trace or [], cadquery_code)
+    for feature in plan.features:
+        if feature.operation != "layered_retained_profile_plan":
+            continue
+        evidence = feature.evidence or {}
+        stock = evidence.get("suggested_stock")
+        sequence = list(evidence.get("suggested_sequence") or [])
+        if not stock or not sequence:
+            continue
+        sequence.extend(_deterministic_drill_calls(cadquery_code))
+        return _format_fluent_subcad_code(stock, sequence)
+    return None
+
+
+def _format_fluent_subcad_code(stock_expr: str, sequence: list[str]) -> str:
+    lines = ["part = (", f"    {stock_expr}"]
+    for item in sequence:
+        text = str(item).strip()
+        if not text:
+            continue
+        lines.append(f"    {text}")
+    lines.append(")")
+    return "\n".join(lines)
+
+
+def _deterministic_drill_calls(code_text: str) -> list[str]:
+    diameter = _hole_diameter_from_code(code_text)
+    if diameter is None:
+        return []
+    calls = []
+    for x, y in _hole_positions_from_code(code_text):
+        calls.append(f".drill({diameter:.6g}, through=True, cx={x:.6g}, cy={y:.6g})")
+    return calls
+
+
+def _hole_diameter_from_code(code_text: str) -> float | None:
+    env = _numeric_env(code_text)
+    match = re.search(r"\.hole\(\s*(?P<arg>[^),]+)", code_text, re.IGNORECASE)
+    if not match:
+        return None
+    return _eval_number(match.group("arg"), env)
+
+
+def _hole_positions_from_code(code_text: str) -> list[tuple[float, float]]:
+    try:
+        tree = ast.parse(textwrap.dedent(code_text))
+    except SyntaxError:
+        return []
+
+    env = _numeric_env(code_text)
+    value_env: dict[str, Any] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
+        value = _eval_ast_value(node.value, env, value_env)
+        if value is not None:
+            value_env[target.id] = value
+
+    positions: list[tuple[float, float]] = []
+    for value in value_env.values():
+        if not isinstance(value, list):
+            continue
+        for item in value:
+            if (
+                isinstance(item, (list, tuple))
+                and len(item) >= 2
+                and isinstance(item[0], (int, float))
+                and isinstance(item[1], (int, float))
+            ):
+                positions.append((float(item[0]), float(item[1])))
+        if positions:
+            break
+    return positions
+
+
+def _eval_ast_value(
+    node: ast.AST,
+    env: dict[str, float],
+    value_env: dict[str, Any],
+) -> Any:
+    number = _eval_ast_number(node, env)
+    if number is not None:
+        return number
+    if isinstance(node, ast.Name):
+        return value_env.get(node.id)
+    if isinstance(node, ast.Tuple):
+        values = [_eval_ast_value(item, env, value_env) for item in node.elts]
+        return tuple(values) if all(value is not None for value in values) else None
+    if isinstance(node, ast.List):
+        values = [_eval_ast_value(item, env, value_env) for item in node.elts]
+        return values if all(value is not None for value in values) else None
+    return None
+
+
 def _shell_has_accessible_open_face(ops_trace: list[dict], code_text: str) -> bool:
     """Best-effort gate for CadQuery shell accessibility.
 
