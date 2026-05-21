@@ -377,6 +377,55 @@ check(
 real_box_pocket_exec = run_subcad(real_box_pocket_subcad)
 check(real_box_pocket_exec["success"], "deterministic negative box-pocket SubCAD code executes")
 
+side_counterbore_profile_code = """
+import cadquery as cq
+vertical_leg_height = 70.0
+vertical_leg_thickness = 12.0
+horizontal_leg_length = 100.0
+horizontal_leg_thickness = 12.0
+bracket_thickness = 8.0
+hole_clearance = 5.5
+cbore_diameter = 7.0
+cbore_depth = 2.0
+hole_spacing = 20.0
+hole_margin = 10.0
+edge_chamfer = 1.0
+profile = (
+    cq.Workplane("XY")
+    .moveTo(0, 0)
+    .lineTo(vertical_leg_thickness, 0)
+    .lineTo(vertical_leg_thickness, vertical_leg_height - horizontal_leg_thickness)
+    .lineTo(horizontal_leg_length, vertical_leg_height - horizontal_leg_thickness)
+    .lineTo(horizontal_leg_length, vertical_leg_height)
+    .lineTo(0, vertical_leg_height)
+    .close()
+    .extrude(bracket_thickness)
+)
+profile = profile.edges("|Z and >X").chamfer(edge_chamfer)
+usable_y_start = vertical_leg_thickness + hole_margin
+usable_y_end = horizontal_leg_length - hole_margin
+num_holes = int((usable_y_end - usable_y_start) / hole_spacing) + 1
+hole_positions = []
+for i in range(num_holes):
+    y_pos = usable_y_start + i * hole_spacing
+    z_pos = bracket_thickness / 2
+    hole_positions.append((y_pos, z_pos))
+result = (
+    profile.faces(">X").workplane()
+    .pushPoints(hole_positions)
+    .cboreHole(hole_clearance, cbore_diameter, cbore_depth)
+)
+"""
+side_counterbore_profile_subcad = build_deterministic_subcad_code(side_counterbore_profile_code, [])
+check(side_counterbore_profile_subcad is not None, "planner builds deterministic side-counterbore profile code")
+check(
+    side_counterbore_profile_subcad.count('.counterbore(5.5, 7, 2, through=True') == 4
+    and 'face_selector="<X"' in side_counterbore_profile_subcad,
+    "deterministic side-counterbore profile code maps loop-built pushPoints to side setup",
+)
+side_counterbore_profile_exec = run_subcad(side_counterbore_profile_subcad)
+check(side_counterbore_profile_exec["success"], "deterministic side-counterbore profile SubCAD code executes")
+
 rect_plate_code = """
 import cadquery as cq
 plate_width = 80.0

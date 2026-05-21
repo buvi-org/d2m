@@ -631,6 +631,7 @@ class Stock:
         cx: float = 0.0,
         cy: float = 0.0,
         through: bool = False,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Finish a pre-drilled hole with a reamer."""
@@ -655,6 +656,7 @@ class Stock:
         cx: float = 0.0,
         cy: float = 0.0,
         through: bool = False,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Bore a hole for trueness and finish."""
@@ -708,6 +710,7 @@ class Stock:
         cx: float = 0.0,
         cy: float = 0.0,
         through: bool = False,
+        face_selector: str = ">Z",
         tool: Optional[ToolSpec] = None,
     ) -> "Stock":
         """Cut a flat-bottom counterbore."""
@@ -720,6 +723,7 @@ class Stock:
             counterbore_diameter=counterbore_diameter,
             counterbore_depth=counterbore_depth,
             through=through,
+            face_selector=face_selector,
             tool=tool,
             material=self._material,
         )

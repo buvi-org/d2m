@@ -554,6 +554,7 @@ def _deterministic_profile_extrude_code(cadquery_code: str) -> str | None:
     if chamfer is not None:
         selector = "|Z" if '"|Z"' in cadquery_code or "'|Z'" in cadquery_code else "all_edges"
         sequence.append(f'.edge_chamfer("{selector}", width={chamfer:.6g})')
+    sequence.extend(_side_face_counterbore_calls(cadquery_code, x_shift, y_shift, height))
     return _format_fluent_subcad_code(stock, sequence)
 
 
@@ -926,6 +927,62 @@ def _first_top_rect_pocket(
     depth = abs(depth)
     cx, cy = _center_from_chain(tail, env)
     return (length, width, depth, cx, cy, cuts_into_stock)
+
+
+def _side_face_counterbore_calls(
+    code_text: str,
+    x_shift: float,
+    y_shift: float,
+    stock_height: float,
+) -> list[str]:
+    env = _numeric_env(code_text)
+    calls: list[str] = []
+    pattern = re.compile(
+        r"\.faces\(\s*['\"](?P<face>[<>][xyz])['\"]\s*\)\s*\.workplane\(\s*\)"
+        r"\s*\.pushpoints\((?P<points>[^)]*)\)\s*\.cborehole\((?P<hole>[^)]*)\)",
+        re.IGNORECASE | re.DOTALL,
+    )
+    for match in pattern.finditer(code_text):
+        face = match.group("face").upper()
+        if face not in {">X", "<X", ">Y", "<Y"}:
+            continue
+        points_arg = match.group("points").strip()
+        points = _eval_points_literal(points_arg, env)
+        if not points:
+            points = _assigned_points_literal(code_text, points_arg, env)
+        hole_args = _split_args(match.group("hole"))
+        if len(hole_args) < 3:
+            continue
+        hole_diameter = _eval_number(hole_args[0], env)
+        counterbore_diameter = _eval_number(hole_args[1], env)
+        counterbore_depth = _eval_number(hole_args[2], env)
+        if (
+            hole_diameter is None
+            or counterbore_diameter is None
+            or counterbore_depth is None
+            or hole_diameter <= 0
+            or counterbore_diameter <= hole_diameter
+            or counterbore_depth <= 0
+        ):
+            continue
+        for a, z in points:
+            if face in {">X", "<X"}:
+                # CadQuery side workplanes on profile-cutout solids use the
+                # original sketch's first axis for side-face point X.  SubCAD's
+                # profile-cutout stock is centered, and the side-face selector
+                # is mirrored after the outside stock is removed.
+                cx = a - x_shift
+                subcad_face = "<X" if face == ">X" else ">X"
+            else:
+                cx = a - x_shift
+                subcad_face = "<Y" if face == ">Y" else ">Y"
+            cy = z - stock_height / 2.0
+            calls.append(
+                f'.counterbore({hole_diameter:.6g}, {counterbore_diameter:.6g}, '
+                f'{counterbore_depth:.6g}, through=True, cx={cx:.6g}, cy={cy:.6g}, '
+                f'face_selector="{subcad_face}")'
+            )
+    return calls
 
 
 def _deterministic_top_retained_rib_code(cadquery_code: str, plan: PureSubCADPlan) -> str | None:
@@ -2063,14 +2120,7 @@ def _hole_positions_from_code(code_text: str) -> list[tuple[float, float]]:
     env = _numeric_env(code_text)
     value_env: dict[str, Any] = {}
     for node in tree.body:
-        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
-            continue
-        target = node.targets[0]
-        if not isinstance(target, ast.Name):
-            continue
-        value = _eval_ast_value(node.value, env, value_env)
-        if value is not None:
-            value_env[target.id] = value
+        _execute_point_builder_statement(node, env, value_env)
 
     positions: list[tuple[float, float]] = []
     for value in value_env.values():
