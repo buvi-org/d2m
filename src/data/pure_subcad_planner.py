@@ -276,6 +276,9 @@ def build_deterministic_subcad_code(
     base_extension_code = _deterministic_base_extension_code(cadquery_code)
     if base_extension_code:
         return base_extension_code
+    box_hole_code = _deterministic_box_hole_code(cadquery_code)
+    if box_hole_code:
+        return box_hole_code
     box_code = _deterministic_box_chamfer_code(cadquery_code)
     if box_code:
         return box_code
@@ -361,6 +364,28 @@ def _deterministic_box_chamfer_code(cadquery_code: str) -> str | None:
         if width is not None and width > 0:
             selector = ">Z" if ".faces('>z')" in cadquery_code.lower() or '.faces(">z")' in cadquery_code.lower() else "all_edges"
             sequence.append(f'.edge_chamfer("{selector}", width={width:.6g})')
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_box_hole_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if lower.count(".box(") != 1 or ".hole(" not in lower:
+        return None
+    blocked = (".union(", ".cut(", ".cutblind(", ".polyline(", ".cborehole(", ".pushpoints(", ".rarray(", ".polararray(")
+    if any(token in lower for token in blocked):
+        return None
+    box = _box_stock_from_code(cadquery_code)
+    if not box:
+        return None
+    env = _numeric_env(cadquery_code)
+    hole = _first_call_number(cadquery_code, "hole", env)
+    if hole is None or hole <= 0:
+        return None
+    sequence = [f".drill({hole:.6g}, through=True, cx=0.0, cy=0.0)"]
+    chamfer = _first_call_number(cadquery_code, "chamfer", env)
+    if chamfer is not None and chamfer > 0:
+        sequence.append(f'.edge_chamfer("all_edges", width={chamfer:.6g})')
+    stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
     return _format_fluent_subcad_code(stock, sequence)
 
 
@@ -1237,7 +1262,45 @@ def _first_polyline_points(code_text: str, env: dict[str, float]) -> list[tuple[
     args = _first_call_args(code_text, "polyline")
     if not args:
         return []
-    return _eval_points_literal(args[0], env)
+    points = _eval_points_literal(args[0], env)
+    if points:
+        return points
+    return _assigned_points_literal(code_text, args[0].strip(), env)
+
+
+def _assigned_points_literal(code_text: str, name: str, env: dict[str, float]) -> list[tuple[float, float]]:
+    if not re.match(r"^[A-Za-z_]\w*$", name):
+        return []
+    try:
+        tree = ast.parse(textwrap.dedent(code_text))
+    except SyntaxError:
+        return []
+    value_env: dict[str, Any] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
+        value = _eval_ast_value(node.value, env, value_env)
+        if value is not None:
+            value_env[target.id] = value
+        if target.id != name:
+            continue
+        assigned = value_env.get(name)
+        if not isinstance(assigned, list):
+            return []
+        points: list[tuple[float, float]] = []
+        for item in assigned:
+            if (
+                isinstance(item, (list, tuple))
+                and len(item) >= 2
+                and isinstance(item[0], (int, float))
+                and isinstance(item[1], (int, float))
+            ):
+                points.append((float(item[0]), float(item[1])))
+        return points
+    return []
 
 
 def _line_chain_points(code_text: str, env: dict[str, float]) -> list[tuple[float, float]]:

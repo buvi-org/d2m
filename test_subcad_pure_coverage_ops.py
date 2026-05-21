@@ -319,6 +319,17 @@ check(
 box_chamfer_exec = run_subcad(box_chamfer_subcad)
 check(box_chamfer_exec["success"], "deterministic box-chamfer SubCAD code executes")
 
+box_hole_code = "result = cq.Workplane('XY').box(50, 30, 5).hole(5)"
+box_hole_subcad = build_deterministic_subcad_code(box_hole_code, [])
+check(box_hole_subcad is not None, "planner builds deterministic box-hole SubCAD code")
+check(
+    "Stock.rectangular(50, 30, 5)" in box_hole_subcad
+    and ".drill(5, through=True, cx=0.0, cy=0.0)" in box_hole_subcad,
+    "deterministic box-hole code preserves stock and center hole",
+)
+box_hole_exec = run_subcad(box_hole_subcad)
+check(box_hole_exec["success"], "deterministic box-hole SubCAD code executes")
+
 l_bracket_code = """
 class LBracket:
     def __init__(self, workplane, measures):
@@ -450,6 +461,33 @@ check(
 )
 simple_l_profile_exec = run_subcad(simple_l_profile_subcad)
 check(simple_l_profile_exec["success"], "deterministic simple L-profile SubCAD code executes")
+
+variable_points_profile_code = """
+import cadquery as cq
+bracket_length = 80
+bracket_width = 40
+bracket_thickness = 10
+notch_size = 8
+points = [
+    (-bracket_length/2, -bracket_width/2),
+    (bracket_length/2, -bracket_width/2),
+    (bracket_length/2, bracket_width/2 - notch_size),
+    (bracket_length/2 - notch_size, bracket_width/2),
+    (-bracket_length/2, bracket_width/2),
+    (-bracket_length/2, -bracket_width/2)
+]
+result = cq.Workplane("XY").polyline(points).close().extrude(bracket_thickness)
+"""
+variable_points_profile_subcad = build_deterministic_subcad_code(variable_points_profile_code, [])
+check(variable_points_profile_subcad is not None, "planner builds deterministic variable-points profile code")
+check(
+    "Stock.rectangular(80, 40, 10)" in variable_points_profile_subcad
+    and "(40, 12)" in variable_points_profile_subcad
+    and "(32, 20)" in variable_points_profile_subcad,
+    "deterministic variable-points profile code resolves point-list expressions",
+)
+variable_points_profile_exec = run_subcad(variable_points_profile_subcad)
+check(variable_points_profile_exec["success"], "deterministic variable-points profile SubCAD code executes")
 
 l_bracket_top_rib_code = """
 import cadquery as cq
