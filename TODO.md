@@ -242,6 +242,8 @@ Immediate next implementation targets:
 - Done: run the next filtered batch; accepted row 25.
 - Blocked rows: train global index 26 volume-matches but fails trusted geometry,
   and index 28 still hits empty-selection failures after retained/boss planning.
+- Done: add translator prompt coverage for `Stock.cylindrical(...)` so round
+  stock/circle-extrusion rows are not forced into rectangular stock.
 
 ## SubCAD Shop-Floor v1
 

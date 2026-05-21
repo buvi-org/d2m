@@ -66,6 +66,10 @@ Stock instance (immutable/fluent pattern).
 
 - `Stock.rectangular(length, width, height, material="aluminum_6061")`
   Creates rectangular prismatic stock. length=X, width=Y, height=Z.
+- `Stock.cylindrical(diameter, height, material="aluminum_6061")`
+  Creates round-bar/cylindrical stock. Use this when the final outer envelope
+  is made from CadQuery `.cylinder(...)`, circle extrusion, round disk, washer,
+  sleeve, flange, or other axisymmetric blank.
 
 ### Machining Operations (each returns new Stock)
 
@@ -152,6 +156,9 @@ Stock instance (immutable/fluent pattern).
 2. Use stock dimensions = final part XY dimensions (length, width). Do NOT add
    margin — the stock should match the outer XY envelope of the final part.
    Only add margin to Z (height): use the measures height + 2-3 mm.
+   For round/cylindrical CadQuery source geometry, use
+   `Stock.cylindrical(diameter, height)` instead of approximating with a
+   rectangular block.
 3. face_mill first to achieve the final Z-height from the stock.
 4. Pockets/profile operations replace CadQuery cut/cutBlind operations.
    Dimension convention is critical:
@@ -223,6 +230,7 @@ SUBCAD_API_SHORT = textwrap.dedent("""\
 ## SubCAD API (abbreviated)
 
 Stock.rectangular(L, W, H, material="aluminum_6061")
+Stock.cylindrical(D, H, material="aluminum_6061")
 .face_mill(depth)           # mill top face
 .pocket(W_y, L_x, depth, cx, cy)  # rectangular pocket: W_y=Y, L_x=X
 .circular_pocket(dia, depth, cx, cy)
@@ -428,6 +436,9 @@ Translate this constructive CadQuery program into an equivalent subCAD
 subtractive program. Remember:
 - Stock XY = final part XY (use {stock_dims['length']:.0f} x {stock_dims['width']:.0f}).
   Only add extra Z height for face_mill.
+- If the CadQuery source uses `.cylinder(...)`, round-bar stock, or a circular
+  outer envelope, start from `Stock.cylindrical(diameter, height)` instead of
+  rectangular stock.
 - Cut AWAY material to reveal the final shape.
 - The target is the original STEP reference geometry. Match that original STEP;
   do not import, read, reuse, or wrap the STEP/B-Rep/mesh inside generated code.

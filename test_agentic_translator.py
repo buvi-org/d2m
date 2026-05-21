@@ -128,6 +128,7 @@ check(trusted_result["success"], "runner accepts volume and mesh trusted match")
 print("\n2. System prompt ...")
 sys_prompt = build_system_prompt()
 check("Stock.rectangular" in sys_prompt, "system prompt mentions Stock.rectangular")
+check("Stock.cylindrical" in sys_prompt, "system prompt mentions Stock.cylindrical")
 check(".face_mill" in sys_prompt, "system prompt mentions face_mill")
 check(".pocket" in sys_prompt, "system prompt mentions pocket")
 check(".drill" in sys_prompt, "system prompt mentions drill")
@@ -252,6 +253,8 @@ check("translate((x, y, z))" in prompt and "literally" in prompt,
       "user prompt preserves CadQuery translated feature coordinates literally")
 check("Never use bare measure names" in prompt and "m.flange_thickness" in prompt,
       "user prompt prevents undefined bare measure variables")
+check("Stock.cylindrical" in prompt and ".cylinder" in prompt,
+      "user prompt maps CadQuery cylindrical blanks to cylindrical stock")
 
 
 # =========================================================================
