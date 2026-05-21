@@ -101,13 +101,14 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 35 recorded by guarded live pilots.
+- Matched original-STEP-verified pairs: 39 recorded by guarded live pilots.
   - Accepted train global indexes:
-    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 381, 415, 438`.
-  - Latest accepted rows: train global indexes 381, 415, and 438, manifests
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row381_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_box_chamfer_row415_probe/attempts.jsonl`,
-    and `runs/zero_to_cad_live_pilots/deterministic_box_row438_probe/attempts.jsonl`.
+    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 381, 415, 438, 503, 697, 698, 702`.
+  - Latest accepted rows: train global indexes 503, 697, 698, and 702,
+    manifests `runs/zero_to_cad_live_pilots/deterministic_box_chamfer_row503_probe/attempts.jsonl`,
+    `runs/zero_to_cad_live_pilots/deterministic_washer_row697_probe/attempts.jsonl`,
+    `runs/zero_to_cad_live_pilots/deterministic_polar_rib_row698_probe/attempts.jsonl`,
+    and `runs/zero_to_cad_live_pilots/deterministic_washer_bolt_row702_probe/attempts.jsonl`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -246,7 +247,7 @@ Immediate next implementation targets:
 - Done: prevent outside-stock retained islands from cutting away the whole
   stock, and reinforce literal CadQuery `translate((x, y, z))` coordinate use
   in the translator prompt.
-- Next: continue accepted-index guarded forward scans from the 35 accepted
+- Next: continue accepted-index guarded forward scans from the 39 accepted
   pairs, preserving strict stop conditions and fixing deterministic blockers
   before spending larger live batches.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
@@ -301,7 +302,7 @@ Immediate next implementation targets:
   selected retained-material operations, and related coverage ops; update the
   translator prompt to preserve CadQuery workplane face selectors such as
   `<Z` instead of silently converting underside operations to top-side work.
-- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, row 83, row 87, row 88, row 90, row 107, row 111, row 115, row 118, row 132, row 238, row 381, row 415, and row 438 accepted manifests in future
+- Done: include row 23, row 29, row 31, row 34, row 42, row 44, row 45, row 46, row 47, row 49, row 50, row 57, row 58, row 61, row 62, row 80, row 83, row 87, row 88, row 90, row 107, row 111, row 115, row 118, row 132, row 238, row 381, row 415, row 438, row 503, row 697, row 698, and row 702 accepted manifests in future
   accepted-index guarded runs.
 - Done: add Z-band retained-material support and planner evidence for retained
   rib/boss loops and polar arrays.
@@ -359,6 +360,9 @@ Immediate next implementation targets:
   profile-extrusion builder and original-STEP trusted mesh score 100.0.
 - Done: accept train global indexes 381, 415, and 438 with existing
   deterministic profile/box builders and original-STEP trusted mesh score 100.0.
+- Done: accept train global indexes 503, 697, 698, and 702 with existing
+  deterministic box/washer/polar-rib builders and original-STEP trusted mesh
+  score 100.0.
 - Blocked row: train global index 342 is a flange/collar union with a filtered
   hole grid. The simple washer recognizer was too broad and is now guarded
   against union/multi-extrude sources; row 342 needs a dedicated flange/collar
