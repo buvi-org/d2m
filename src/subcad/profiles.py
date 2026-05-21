@@ -151,6 +151,29 @@ def _slot_points(profile: dict[str, Any], arc_segments: int) -> list[Point2D]:
     return right + left
 
 
+def _polygon_points(profile: dict[str, Any]) -> list[Point2D]:
+    n_sides = int(profile.get("n_sides", profile.get("sides", profile.get("count", 0))))
+    if n_sides < 3:
+        return []
+    radius = float(
+        profile.get(
+            "circumradius",
+            profile.get("radius", float(profile.get("diameter", 10.0)) / 2.0),
+        )
+    )
+    if radius <= 0.0:
+        return []
+    cx, cy = _center(profile)
+    start_angle = math.radians(float(profile.get("rotation_deg", profile.get("angle", 0.0))))
+    return [
+        (
+            cx + radius * math.cos(start_angle + 2.0 * math.pi * i / n_sides),
+            cy + radius * math.sin(start_angle + 2.0 * math.pi * i / n_sides),
+        )
+        for i in range(n_sides)
+    ]
+
+
 def normalize_profile_points(profile: Any, *, arc_segments: int = 16, circle_segments: int = 64) -> list[Point2D]:
     """Return a closed-profile point approximation when one is practical.
 
@@ -174,6 +197,11 @@ def normalize_profile_points(profile: Any, *, arc_segments: int = 16, circle_seg
 
         if profile_type in {"slot", "obround", "obround_slot", "slot2d"}:
             return _slot_points(profile, arc_segments)
+
+        if profile_type in {"polygon", "regular_polygon"} or "n_sides" in profile or "sides" in profile:
+            polygon = _polygon_points(profile)
+            if polygon:
+                return polygon
 
         if profile_type in {"circle", "circular"} or "diameter" in profile or "radius" in profile:
             cx, cy = _center(profile)

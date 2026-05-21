@@ -397,6 +397,10 @@ def _draw_profile(wp: "cq.Workplane", profile) -> "cq.Workplane":
         if profile.get("center") is not None:
             cx = float(profile["center"][0])
             cy = float(profile["center"][1])
+        if profile_type in {"polygon", "regular_polygon"} or "n_sides" in profile or "sides" in profile:
+            points = normalize_profile_points(profile)
+            if len(points) >= 3:
+                return wp.polyline(points).close()
         if (
             profile_type not in {"slot", "obround", "obround_slot", "slot2d"}
             and (profile_type in {"circle", "circular"} or "diameter" in profile or "radius" in profile)
@@ -465,8 +469,9 @@ def profile_cutout_cut(
     """
     if not _HAS_CADQUERY:
         raise RuntimeError("cadquery is not available")
-    if through:
-        bbox = shape.val().BoundingBox()
+    bbox = shape.val().BoundingBox()
+    current_height = bbox.zmax - bbox.zmin
+    if through or depth >= current_height - 1e-6:
         pad = 1.0
         prism = _draw_profile(
             cq.Workplane("XY").workplane(offset=bbox.zmin - pad),

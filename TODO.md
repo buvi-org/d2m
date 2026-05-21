@@ -266,9 +266,15 @@ Immediate next implementation targets:
 - Done: split `profile_cutout` from `profile_pocket` geometry semantics:
   through cutouts now retain the requested profile outline and leave a usable
   top face for later pockets/drills.
-- Next: retry row 23 and row 28 after the profile-cutout geometry fix; if they
-  still fail, classify the remaining issue by profile extraction vs retained
-  feature sequencing rather than generic empty-selection failures.
+- Done: add regular polygon profile dict support and clarify that CadQuery
+  `.polygon(n, diameter)` maps to SubCAD `circumradius=diameter/2`.
+- Blocked row: train global index 28 no longer fails from an empty top face or
+  fallback 10x10 profile. It now fails because bottom-side boss/rib retained
+  material is not sequenced/accessed correctly; next fix should add explicit
+  bottom setup / face-selector handling for retained boss and rib operations.
+- Next: retry row 23 after the profile-cutout and polygon fixes; if it still
+  fails, classify the remaining issue by profile extraction vs retained feature
+  sequencing rather than generic empty-selection failures.
 
 ## SubCAD Shop-Floor v1
 

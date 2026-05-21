@@ -144,6 +144,17 @@ check(through_cutout.volume < base_volume, "through profile_cutout retains profi
 after_cutout_pocket = through_cutout.pocket(width=2.0, length=4.0, depth=1.0, cx=0.0, cy=0.0)
 check(after_cutout_pocket.volume < through_cutout.volume,
       "profile_cutout keeps a usable top face for later operations")
+hex_cutout = Stock.rectangular(100, 90, 12).profile_cutout(
+    {"type": "polygon", "n_sides": 6, "circumradius": 30.0},
+    through=True,
+)
+check(hex_cutout.volume > 20000, "profile_cutout supports regular polygon profile dicts")
+hex_depth_cutout = Stock.rectangular(100, 90, 12).profile_cutout(
+    {"type": "polygon", "n_sides": 6, "circumradius": 30.0},
+    depth=12.0,
+)
+check(hex_depth_cutout.volume > 20000,
+      "profile_cutout treats full-depth outline cuts as through cutouts")
 contour_part = base.profile_contour(profile, 3.0)
 check(contour_part.volume < base_volume, "profile_contour changes B-Rep volume")
 around_profile = base.machine_around_profile(profile, 3.0)
