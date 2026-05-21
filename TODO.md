@@ -117,9 +117,9 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 116 recorded by guarded live pilots.
+- Matched original-STEP-verified pairs: 125 recorded by guarded live pilots.
   - Accepted train global indexes:
-    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 342, 381, 415, 438, 503, 697, 698, 702, 870, 1126, 1170, 1173, 1278, 1293, 1458, 1479, 1536, 1595, 1647, 1823, 1906, 2162, 2209, 2257, 2288, 2450, 2896, 3047, 3175, 3231, 3414, 3487, 3777, 3787, 3966, 4065, 4081, 4227, 4559, 4562, 4811, 5248, 5435, 5442, 5606, 5713, 5983, 6026, 6034, 6207, 6326, 6458, 6477, 6481, 6510, 6623, 7391, 7409, 7434, 7479, 7685, 8273, 9733, 9749, 9752, 9786, 9794, 9795, 9802, 9807, 9856, 9870, 9930, 9980, 10672, 10814, 11218, 11960, 12736, 13744, 14131, 14381, 14664, 14959`.
+    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 342, 381, 415, 438, 503, 697, 698, 702, 870, 1126, 1170, 1173, 1278, 1293, 1458, 1479, 1536, 1595, 1647, 1823, 1906, 2162, 2209, 2257, 2288, 2450, 2896, 3047, 3175, 3231, 3414, 3487, 3777, 3787, 3966, 4065, 4081, 4227, 4559, 4562, 4811, 5248, 5435, 5442, 5606, 5713, 5983, 6026, 6034, 6207, 6326, 6458, 6477, 6481, 6510, 6623, 7391, 7409, 7434, 7479, 7685, 8273, 9733, 9749, 9752, 9786, 9794, 9795, 9802, 9807, 9856, 9870, 9930, 9980, 10672, 10814, 11218, 11960, 12736, 13744, 14131, 14381, 14664, 14959, 15554, 16239, 16557, 16813, 16824, 17567, 17804, 17826, 18325`.
   - Latest accepted rows include train global indexes 342, 1536, 1595, 1647,
     1823, 1906, 2162, 2209, 2257, 2288, 2450, 3047, 3175, 3231, 3487,
     3777, 4081, 4227, 5606, 1479, 2896, 3414, 3787, 3966, 4065,
@@ -127,7 +127,8 @@ Latest measured dry scan:
     6207, 6326, 6458, 6477, 6481, 6510, 6623, 7391, 7409, 7434,
     7479, 7685, 8273, 9733, 9749, 9752, 9786, 9794, 9795, 9802,
     9807, 9856, 9870, 9930, 9980, 10672, 10814, 11218, 11960,
-    12736, 13744, 14131, 14381, 14664, and 14959,
+    12736, 13744, 14131, 14381, 14664, 14959, 15554, 16239, 16557,
+    16813, 16824, 17567, 17804, 17826, and 18325,
     manifests `runs/zero_to_cad_live_pilots/deterministic_flange_collar_row342_probe/attempts.jsonl`,
     `runs/zero_to_cad_live_pilots/deterministic_row1536_probe/attempts.jsonl`,
     `runs/zero_to_cad_live_pilots/deterministic_profile_row1595_probe/attempts.jsonl`,
@@ -165,7 +166,8 @@ Latest measured dry scan:
     6477, 6481, 6510, 6623, 7391, 7409, 7434, 7479, 7685, 8273, 9733,
     9749, 9752, 9786, 9794, 9795, 9802, 9807, 9856, 9870, 9930,
     9980, 10672, 10814, 11218, 11960, 12736, 13744, 14131, 14381,
-    14664, and 14959.
+    14664, 14959, 15554, 16239, 16557, 16813, 16824, 17567, 17804,
+    17826, and 18325.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -304,7 +306,7 @@ Immediate next implementation targets:
 - Done: prevent outside-stock retained islands from cutting away the whole
   stock, and reinforce literal CadQuery `translate((x, y, z))` coordinate use
   in the translator prompt.
-- Next: continue accepted-index guarded forward scans from the 116 accepted
+- Next: continue accepted-index guarded forward scans from the 125 accepted
   pairs, preserving strict stop conditions and fixing deterministic blockers
   before spending larger live batches.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
@@ -462,6 +464,9 @@ Immediate next implementation targets:
   with existing deterministic profile, drill/counterbore, and chamfer builders.
 - Done: accept train global indexes 12736, 13744, 14131, 14381, 14664, and
   14959 with existing deterministic drill and chamfer builders.
+- Done: accept train global indexes 15554, 16239, 16557, 16813, 16824,
+  17567, 17804, 17826, and 18325 with existing deterministic chamfer and drill
+  builders.
 - Blocked rows: train global indexes 6471 and 9028 are plannable and
   executable, but strict original-STEP comparison rejects them; treat 6471 as
   a patterned retained/profile mismatch and 9028 as a scoped side-face chamfer
