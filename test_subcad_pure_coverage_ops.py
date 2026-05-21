@@ -106,6 +106,30 @@ check(
     "bottom-face cutBlind is not treated as retained additive material",
 )
 
+top_rib_extrude = plan_pure_subcad_features(
+    [
+        {"op_name": "box"},
+        {"op_name": "faces"},
+        {"op_name": "workplane"},
+        {"op_name": "rect"},
+        {"op_name": "extrude"},
+    ],
+    """
+    cq.Workplane("XY")
+      .box(40, 30, 5)
+      .faces(">Z").workplane()
+      .rect(8, 20)
+      .extrude(4)
+    """,
+)
+check(top_rib_extrude.compatible, "planner accepts top-face additive retained material")
+check(
+    any(feature.operation == "machine_around_profile"
+        and feature.family == "retained_material"
+        for feature in top_rib_extrude.features),
+    "top-face additive extrude maps to retained-material operation",
+)
+
 
 print("\n2. Fluent pure operation API serializes process-plan records ...")
 profile = {"type": "polygon", "points": [(-10, -5), (10, -5), (12, 0), (10, 5), (-10, 5)]}

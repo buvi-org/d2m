@@ -196,6 +196,12 @@ def plan_pure_subcad_features(
         add("cadquery.pattern", "pattern", PLANNED_EXACT, "pattern",
             "feature pattern maps to repeated SubCAD operations")
 
+    for evidence in _top_workplane_retained_material(ops_trace, code_text):
+        add("cadquery.faces.top.workplane.extrude", "retained_material", PLANNED_EXACT,
+            "machine_around_profile",
+            "top-face additive extrusion maps to machining around retained material",
+            **evidence)
+
     for evidence in _non_top_workplane_retained_material(ops_trace, code_text):
         add("cadquery.faces.workplane.extrude", "retained_material", NEEDS_MANUAL_REVIEW,
             "oriented_retained_material",
@@ -240,6 +246,35 @@ _FACE_WORKPLANE_RE = re.compile(
     r"\.faces\(\s*['\"](?P<selector>[<>][xyz])['\"]\s*\)\s*\.workplane\(\s*\)",
     re.IGNORECASE,
 )
+
+
+def _top_workplane_retained_material(
+    ops_trace: list[dict],
+    code_text: str,
+) -> list[dict[str, Any]]:
+    """Find additive sketches on the top face.
+
+    CadQuery often builds ribs/bosses as
+    ``result.faces(">Z").workplane()...extrude(height)`` without an explicit
+    ``union`` call.  These still require retained-material SubCAD operations.
+    """
+    evidence: list[dict[str, Any]] = []
+    for match in _FACE_WORKPLANE_RE.finditer(code_text):
+        selector = match.group("selector").upper()
+        if selector != ">Z":
+            continue
+        chain = code_text[match.end():_next_chain_boundary(code_text, match.end())]
+        if ".extrude(" not in chain or _chain_is_subtractive(chain):
+            continue
+        evidence.append({
+            "face_selector": selector,
+            "chain": _trim_evidence_chain(chain),
+        })
+
+    if evidence:
+        return evidence
+
+    return _top_workplane_retained_material_from_trace(ops_trace)
 
 
 def _non_top_workplane_retained_material(
@@ -303,6 +338,24 @@ def _non_top_workplane_retained_material_from_trace(ops_trace: list[dict]) -> li
         function = str(op.get("function") or "").lower()
         selector = _face_selector_from_text(function)
         if selector is None or selector == ">Z":
+            continue
+        window = ops_trace[index + 1:index + 8]
+        op_names = {str(item.get("op_name") or "").lower() for item in window if isinstance(item, dict)}
+        if "extrude" in op_names and not any(name.startswith("cut") for name in op_names):
+            evidence.append({"face_selector": selector, "trace_index": index})
+    return evidence
+
+
+def _top_workplane_retained_material_from_trace(ops_trace: list[dict]) -> list[dict[str, Any]]:
+    evidence: list[dict[str, Any]] = []
+    for index, op in enumerate(ops_trace):
+        if not isinstance(op, dict):
+            continue
+        if str(op.get("op_name") or "").lower() != "workplane":
+            continue
+        function = str(op.get("function") or "").lower()
+        selector = _face_selector_from_text(function)
+        if selector != ">Z":
             continue
         window = ops_trace[index + 1:index + 8]
         op_names = {str(item.get("op_name") or "").lower() for item in window if isinstance(item, dict)}
