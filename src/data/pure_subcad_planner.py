@@ -285,6 +285,9 @@ def build_deterministic_subcad_code(
     box_hole_code = _deterministic_box_hole_code(cadquery_code)
     if box_hole_code:
         return box_hole_code
+    box_pocket_code = _deterministic_box_pocket_code(cadquery_code)
+    if box_pocket_code:
+        return box_pocket_code
     box_code = _deterministic_box_chamfer_code(cadquery_code)
     if box_code:
         return box_code
@@ -391,6 +394,38 @@ def _deterministic_box_hole_code(cadquery_code: str) -> str | None:
     chamfer = _first_call_number(cadquery_code, "chamfer", env)
     if chamfer is not None and chamfer > 0:
         sequence.append(f'.edge_chamfer("all_edges", width={chamfer:.6g})')
+    stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_box_pocket_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if lower.count(".box(") != 1 or ".cutblind(" not in lower or ".rect(" not in lower:
+        return None
+    blocked = (".union(", ".hole(", ".cborehole(", ".polyline(", ".pushpoints(", ".rarray(", ".polararray(", ".shell(")
+    if any(token in lower for token in blocked):
+        return None
+    env = _numeric_env(cadquery_code)
+    box = _box_stock_from_code(cadquery_code)
+    if not box:
+        return None
+    pocket = _first_top_rect_pocket(cadquery_code, env)
+    if not pocket:
+        return None
+    length, width, depth, cx, cy, cuts_into_stock = pocket
+    if min(length, width, depth) <= 0 or (cuts_into_stock and depth >= box["height"]):
+        return None
+    sequence: list[str] = []
+    chamfer = _first_call_number(cadquery_code, "chamfer", env)
+    if chamfer is not None and chamfer > 0:
+        sequence.append(f'.edge_chamfer("all_edges", width={chamfer:.6g})')
+    if cuts_into_stock:
+        sequence.append(
+            f".pocket(width={width:.6g}, length={length:.6g}, depth={depth:.6g}, "
+            f"cx={cx:.6g}, cy={cy:.6g})"
+        )
+    if not sequence:
+        return None
     stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
     return _format_fluent_subcad_code(stock, sequence)
 
@@ -865,6 +900,32 @@ def _box_stock_from_code(code_text: str) -> dict[str, float] | None:
     if length <= 0 or width <= 0 or height <= 0:
         return None
     return {"length": length, "width": width, "height": height}
+
+
+def _first_top_rect_pocket(
+    code_text: str,
+    env: dict[str, float],
+) -> tuple[float, float, float, float, float, bool] | None:
+    lowered = code_text.lower()
+    workplane_index = lowered.find(".faces('>z').workplane()")
+    if workplane_index < 0:
+        workplane_index = lowered.find('.faces(">z").workplane()')
+    if workplane_index < 0:
+        return None
+    tail = code_text[workplane_index:]
+    rect_args = _first_call_args(tail, "rect")
+    cut_args = _first_call_args(tail, "cutBlind")
+    if len(rect_args) < 2 or not cut_args:
+        return None
+    length = _eval_number(rect_args[0], env)
+    width = _eval_number(rect_args[1], env)
+    depth = _eval_number(cut_args[0], env)
+    if length is None or width is None or depth is None:
+        return None
+    cuts_into_stock = depth < 0
+    depth = abs(depth)
+    cx, cy = _center_from_chain(tail, env)
+    return (length, width, depth, cx, cy, cuts_into_stock)
 
 
 def _deterministic_top_retained_rib_code(cadquery_code: str, plan: PureSubCADPlan) -> str | None:
@@ -2554,11 +2615,22 @@ def _numeric_env(code_text: str, initial: dict[str, float] | None = None) -> dic
         if not isinstance(node, ast.Assign) or len(node.targets) != 1:
             continue
         target = node.targets[0]
-        if not isinstance(target, ast.Name):
+        if isinstance(target, ast.Attribute):
+            target_name = _attribute_name(target)
+        elif isinstance(target, ast.Name):
+            target_name = target.id
+        else:
             continue
         value = _eval_ast_number(node.value, env)
         if value is not None:
-            env[target.id] = value
+            env[target_name] = value
+            if "." in target_name:
+                env[target_name.split(".")[-1]] = value
+            continue
+        if isinstance(target, ast.Name):
+            for key, number in _simple_namespace_numbers(target.id, node.value, env).items():
+                env[key] = number
+                env[f"{target.id}.{key}"] = number
     return env
 
 
@@ -2574,6 +2646,12 @@ def _eval_ast_number(node: ast.AST, env: dict[str, float]) -> float | None:
         return float(node.value)
     if isinstance(node, ast.Name):
         return env.get(node.id)
+    if isinstance(node, ast.Attribute):
+        name = _attribute_name(node)
+        if name and name in env:
+            return env[name]
+        if name and name.split(".")[-1] in env:
+            return env[name.split(".")[-1]]
     if isinstance(node, ast.UnaryOp):
         value = _eval_ast_number(node.operand, env)
         if value is None:
@@ -2603,6 +2681,46 @@ def _eval_ast_number(node: ast.AST, env: dict[str, float]) -> float | None:
             return None
         return float(int(value)) if node.func.id == "int" else float(value)
     return None
+
+
+def _attribute_name(node: ast.Attribute) -> str | None:
+    parts: list[str] = []
+    current: ast.AST = node
+    while isinstance(current, ast.Attribute):
+        parts.append(current.attr)
+        current = current.value
+    if isinstance(current, ast.Name):
+        parts.append(current.id)
+        return ".".join(reversed(parts))
+    return None
+
+
+def _simple_namespace_numbers(prefix: str, node: ast.AST, env: dict[str, float]) -> dict[str, float]:
+    if not isinstance(node, ast.Call):
+        return {}
+    if isinstance(node.func, ast.Name):
+        func_name = node.func.id
+    elif isinstance(node.func, ast.Attribute):
+        func_name = node.func.attr
+    else:
+        return {}
+    if func_name not in {"Measures", "SimpleNamespace"}:
+        return {}
+    values: dict[str, float] = {}
+    for keyword in node.keywords:
+        if not keyword.arg:
+            continue
+        number = _eval_ast_number(keyword.value, env)
+        if number is not None:
+            values[keyword.arg] = number
+            continue
+        for child_key, child_number in _simple_namespace_numbers(
+            f"{prefix}.{keyword.arg}",
+            keyword.value,
+            env | values,
+        ).items():
+            values[f"{keyword.arg}.{child_key}"] = child_number
+    return values
 
 
 def _first_call_number(chain: str, call_name: str, env: dict[str, float]) -> float | None:

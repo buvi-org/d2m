@@ -341,6 +341,42 @@ check(
 box_counterbore_exec = run_subcad(box_counterbore_subcad)
 check(box_counterbore_exec["success"], "deterministic box-counterbore SubCAD code executes")
 
+box_pocket_code = """
+import cadquery as cq
+from types import SimpleNamespace as Measures
+m = Measures(plate_width=80.0, plate_depth=60.0, plate_thickness=6.0, chamfer=1.5, pocket_width=40.0, pocket_depth=30.0, pocket_cut_depth=3.0)
+result = (cq.Workplane('XY')
+    .box(m.plate_width, m.plate_depth, m.plate_thickness)
+    .translate((0,0,m.plate_thickness/2))
+    .edges().chamfer(m.chamfer)
+    .faces('>Z').workplane()
+    .rect(m.pocket_width, m.pocket_depth)
+    .cutBlind(m.pocket_cut_depth)
+)
+"""
+box_pocket_subcad = build_deterministic_subcad_code(box_pocket_code, [])
+check(box_pocket_subcad is not None, "planner builds deterministic box-pocket SubCAD code")
+check(
+    "Stock.rectangular(80, 60, 6)" in box_pocket_subcad
+    and '.edge_chamfer("all_edges", width=1.5)' in box_pocket_subcad
+    and ".pocket(" not in box_pocket_subcad,
+    "deterministic box-pocket code preserves SimpleNamespace dimensions and omits positive no-op cutBlind",
+)
+box_pocket_exec = run_subcad(box_pocket_subcad)
+check(box_pocket_exec["success"], "deterministic box-pocket SubCAD code executes")
+
+real_box_pocket_subcad = build_deterministic_subcad_code(
+    box_pocket_code.replace("cutBlind(m.pocket_cut_depth)", "cutBlind(-m.pocket_cut_depth)"),
+    [],
+)
+check(real_box_pocket_subcad is not None, "planner builds deterministic negative box-pocket SubCAD code")
+check(
+    ".pocket(width=30, length=40, depth=3" in real_box_pocket_subcad,
+    "deterministic box-pocket code emits negative cutBlind as a real pocket",
+)
+real_box_pocket_exec = run_subcad(real_box_pocket_subcad)
+check(real_box_pocket_exec["success"], "deterministic negative box-pocket SubCAD code executes")
+
 rect_plate_code = """
 import cadquery as cq
 plate_width = 80.0
