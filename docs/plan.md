@@ -316,7 +316,7 @@ Current implementation:
 - Original-STEP verification remains the success gate. Each new operation
   family must mature from "planned" to "executes and matches" before it counts
   toward the 100k dataset.
-- Guarded live pilots currently record 313 accepted original-STEP-verified pairs.
+- Guarded live pilots currently record 342 accepted original-STEP-verified pairs.
 - Use `--comparison-methods slice` for the current 2.5D collection pass; SDF is
   retained as feedback but is too noisy on sparse STEP tessellations to be the
   hard success gate today.
@@ -329,7 +329,7 @@ Active next slice:
 
 - Run guarded feature-family batches with explicit attempt, execution, match,
   failure, unsupported, and remaining-to-goal counts.
-- Preserve accepted-index manifests so the 313 verified rows count toward future
+- Preserve accepted-index manifests so the 342 verified rows count toward future
   runs without re-spending live translator calls.
 - Harden retained rib/boss, bottom-face, and side-face setup fidelity while
   keeping side-face additive gussets manual-review/unsupported until oriented
@@ -340,7 +340,7 @@ Active next slice:
   no-op-aware star/radial-pocket plate row 49, top-chamfer box row 50,
   top-chamfer box row 57, hollow shell-cover row 58, filleted cage row 61,
   split shroud row 62, L-bracket/counterbore row 80, flange/collar row 342, and
-  later deterministic profile/chamfer/counterbore rows through row 67862 against
+  later deterministic profile/chamfer/counterbore rows through row 79638 against
   their original STEP targets; the next deterministic target should be chosen
   from the next accepted-index guarded forward scan after the latest verified
   row.
@@ -437,7 +437,7 @@ Roadmap success:
 5. UI exposes plans, warnings, geometry feedback, and estimate assumptions clearly.
 6. Any ML fine-tuning is evaluated against executable outcomes, not just text similarity.
 7. STEP-to-SubCAD generation uses exact STEP/B-Rep evidence as the primary input, with vision/video benchmarked as supporting context rather than treated as geometry truth.
-8. The STEP-to-SubCAD training set reaches 100,000 accepted original-STEP-verified Zero-to-CAD pairs, with current progress reported separately from planner coverage: 313 accepted pairs and 86,923 plannable rows out of 100,516 local rows as of 2026-05-21.
+8. The STEP-to-SubCAD training set reaches 100,000 accepted original-STEP-verified Zero-to-CAD pairs, with current progress reported separately from planner coverage: 342 accepted pairs and 86,923 plannable rows out of 100,516 local rows as of 2026-05-21.
 
 ## Cost Notes
 
