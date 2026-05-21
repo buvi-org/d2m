@@ -232,6 +232,8 @@ Immediate next implementation targets:
 - Blocked row: train global index 23 failed because generated code used a bare
   undefined measure variable instead of `m.<name>`; this is a translator prompt
   or static preflight repair issue, not a missing SubCAD operation.
+- Done: strengthen translator prompt tests and instructions against bare
+  copied measure variables such as `flange_thickness`.
 
 ## SubCAD Shop-Floor v1
 

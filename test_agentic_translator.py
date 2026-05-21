@@ -250,6 +250,8 @@ check("fully inside" in prompt and "existing base stock" in prompt,
       "user prompt avoids machining around construction-only internal unions")
 check("translate((x, y, z))" in prompt and "literally" in prompt,
       "user prompt preserves CadQuery translated feature coordinates literally")
+check("Never use bare measure names" in prompt and "m.flange_thickness" in prompt,
+      "user prompt prevents undefined bare measure variables")
 
 
 # =========================================================================

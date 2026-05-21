@@ -407,7 +407,9 @@ Translate the following CadQuery program into a subCAD subtractive program.
 Use `m.width`, `m.depth`, `m.height`, `m.wall_thickness`, etc. in your
 subCAD code instead of hardcoding values when the names are relevant. If a
 measure is a final part dimension, use it directly; do not add arbitrary stock
-margin in X/Y.
+margin in X/Y. Never use bare measure names like `flange_thickness` or
+`hole_diameter` unless you first assign them as local variables; use
+`m.flange_thickness`, `m.hole_diameter`, etc.
 
 ## CadQuery Source Code
 ```python
@@ -432,6 +434,8 @@ subtractive program. Remember:
 - The target volume from the original STEP is approximately {ref_vol} mm^3.
 - Assign the final Stock to a variable named `part`.
 - Copy the Measures block above when useful and use m.width, m.depth, etc.
+  Never reference copied measure fields as bare variables; always use `m.<name>`
+  unless you explicitly assign a local helper variable in the generated code.
 - Call the `execute_subcad` tool with raw Python code. Do not include markdown
   fences or explanation text in the tool argument.
 - Prefer the pure SubCAD operation families in the planner candidates above.
