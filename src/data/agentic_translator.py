@@ -209,6 +209,9 @@ Stock instance (immutable/fluent pattern).
    or `.pad(...)` unless the CadQuery source explicitly removes those retained
    features. A later face mill will erase the boss/rib geometry and produce an
    invalid low-volume part.
+   Also do not face-mill down to the base thickness before retained Z-band
+   operations. The stock must still contain material up to the highest
+   `base_height + height` required by later boss/rib retained bands.
    For mixed-height retained features, use `base_height=<height from stock
    bottom to feature base>`. Example: a 12 mm boss and 4 mm ribs starting on an
    8 mm base can be represented as an upper boss-only retained band and a lower

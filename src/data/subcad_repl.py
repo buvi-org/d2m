@@ -423,7 +423,133 @@ def _generated_code_guard(code: str) -> str | None:
             "operations erases retained material. Move face_mill before retained "
             "operations or replace it with the correct base/level retained cut."
         )
+    height_error = _face_mill_before_retained_height_error(code_no_comments, lowered, first_retained)
+    if height_error:
+        return height_error
     return None
+
+
+def _face_mill_before_retained_height_error(
+    code_no_comments: str,
+    lowered: str,
+    first_retained: int,
+) -> str | None:
+    """Detect facing stock below later retained Z-band requirements."""
+    face_index = lowered.find(".face_mill(", 0, first_retained)
+    if face_index < 0:
+        return None
+    env = _simple_numeric_env(code_no_comments)
+    stock_height = _first_stock_height(code_no_comments, env)
+    face_depth = _first_call_kw_or_arg(code_no_comments[face_index:], "face_mill", "depth", env)
+    if stock_height is None or face_depth is None:
+        return None
+    remaining_height = stock_height - face_depth
+    required_top = _max_retained_top(code_no_comments[first_retained:], env)
+    if required_top is None:
+        return None
+    if remaining_height + 1e-6 < required_top:
+        return (
+            "Generated SubCAD sequencing error: face_mill removes stock below "
+            f"later retained feature height. Remaining height is {remaining_height:.3g} mm, "
+            f"but retained operations require material up to {required_top:.3g} mm. "
+            "Use final stock height and Z-band retained/base cuts instead of "
+            "facing down to base thickness before boss/rib machining."
+        )
+    return None
+
+
+def _simple_numeric_env(code: str) -> dict[str, float]:
+    env: dict[str, float] = {}
+    for name, expr in re.findall(r"^\s*([A-Za-z_]\w*)\s*=\s*([0-9A-Za-z_ .+*/()\\-]+)\s*$", code, re.MULTILINE):
+        value = _eval_simple_expr(expr, env)
+        if value is not None:
+            env[name] = value
+    return env
+
+
+def _eval_simple_expr(expr: str, env: dict[str, float]) -> float | None:
+    try:
+        allowed = {"__builtins__": {}}
+        value = eval(expr, allowed, dict(env))
+        return float(value) if isinstance(value, (int, float)) else None
+    except Exception:
+        return None
+
+
+def _first_stock_height(code: str, env: dict[str, float]) -> float | None:
+    match = re.search(r"Stock\.rectangular\s*\((?P<args>[^)]*)\)", code, re.IGNORECASE)
+    if not match:
+        return None
+    args = _split_call_args(match.group("args"))
+    kwargs = _call_kwargs(args, env)
+    if "height" in kwargs:
+        return kwargs["height"]
+    if len(args) >= 3 and "=" not in args[2]:
+        return _eval_simple_expr(args[2], env)
+    return None
+
+
+def _first_call_kw_or_arg(segment: str, call_name: str, kw_name: str, env: dict[str, float]) -> float | None:
+    match = re.search(rf"\.{re.escape(call_name)}\s*\((?P<args>[^)]*)\)", segment, re.IGNORECASE)
+    if not match:
+        return None
+    args = _split_call_args(match.group("args"))
+    kwargs = _call_kwargs(args, env)
+    if kw_name in kwargs:
+        return kwargs[kw_name]
+    if args and "=" not in args[0]:
+        return _eval_simple_expr(args[0], env)
+    return None
+
+
+def _max_retained_top(segment: str, env: dict[str, float]) -> float | None:
+    tops: list[float] = []
+    for match in re.finditer(
+        r"\.machine_around_(?:profile|profiles|cylinder)\s*\((?P<args>[^)]*)\)",
+        segment,
+        re.IGNORECASE | re.DOTALL,
+    ):
+        args = _split_call_args(match.group("args"))
+        kwargs = _call_kwargs(args, env)
+        height = kwargs.get("height")
+        if height is None and "cylinder" in match.group(0).lower() and len(args) >= 2:
+            height = _eval_simple_expr(args[1], env)
+        if height is None and len(args) >= 2:
+            height = _eval_simple_expr(args[1], env)
+        base_height = kwargs.get("base_height", 0.0)
+        if height is not None:
+            tops.append(base_height + height)
+    return max(tops) if tops else None
+
+
+def _split_call_args(arg_text: str) -> list[str]:
+    args: list[str] = []
+    start = 0
+    depth = 0
+    for index, char in enumerate(arg_text):
+        if char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth -= 1
+        elif char == "," and depth == 0:
+            args.append(arg_text[start:index].strip())
+            start = index + 1
+    tail = arg_text[start:].strip()
+    if tail:
+        args.append(tail)
+    return args
+
+
+def _call_kwargs(args: list[str], env: dict[str, float]) -> dict[str, float]:
+    kwargs: dict[str, float] = {}
+    for arg in args:
+        if "=" not in arg:
+            continue
+        key, value = arg.split("=", 1)
+        number = _eval_simple_expr(value.strip(), env)
+        if number is not None:
+            kwargs[key.strip()] = number
+    return kwargs
 
 
 def _is_stock(obj) -> bool:

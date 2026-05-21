@@ -392,6 +392,15 @@ check(not bad_sequence["success"], "rejects face_mill after retained features")
 check("face_mill appears after retained" in bad_sequence.get("error", ""),
       "retained sequencing guard returns actionable error")
 
+bad_pre_face = run_subcad(
+    "part = Stock.rectangular(80, 35, 20)"
+    ".face_mill(depth=12)"
+    ".machine_around_cylinder(20, 12, cx=10, cy=10, base_height=7.5)"
+)
+check(not bad_pre_face["success"], "rejects face_mill below retained z-band height")
+check("retained operations require material" in bad_pre_face.get("error", ""),
+      "retained height guard returns actionable error")
+
 
 # =========================================================================
 #  Test 8: compare_to_reference with real files
