@@ -563,13 +563,7 @@ def _cut_rectangular_region_around_island(
     iymax = min(iymax, oymax)
 
     if ixmin >= ixmax or iymin >= iymax:
-        return profile_pocket_cut(
-            shape,
-            outer_profile,
-            depth,
-            face_selector=face_selector,
-            through=through,
-        )
+        return shape
 
     regions: list[tuple[float, float, float, float]] = []
 

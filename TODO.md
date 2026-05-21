@@ -207,6 +207,9 @@ Immediate next implementation targets:
 - Done: add retained-material placement support (`cx`, `cy`, explicit
   stock_envelope) and translator prompt rules for construction-only internal
   unions.
+- Done: prevent outside-stock retained islands from cutting away the whole
+  stock, and reinforce literal CadQuery `translate((x, y, z))` coordinate use
+  in the translator prompt.
 - Next: scale the hole/retained-material pilot from 1 accepted pair to a small
   guarded batch of 10-25 accepted/attempted rows, preserving strict stop
   conditions.

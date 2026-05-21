@@ -181,6 +181,10 @@ Stock instance (immutable/fluent pattern).
    existing stock/base envelope or rises above the surrounding surface. If a
    unioned box lies fully inside existing solid stock at the same height, it may
    be construction-only evidence and should not remove surrounding material.
+   Use the CadQuery `translate((x, y, z))` coordinates literally; do not infer
+   that a feature is on the left/right edge unless the source coordinates put it
+   there. If a unioned feature protrudes beyond the final outer envelope, the
+   initial SubCAD stock dimensions must include that envelope.
 8. Use profile_pocket/profile_cutout/profile_contour for polygon, polyline,
    arc-chain, slot-like, and non-rectangular profiles.
 9. Coordinate system: (cx=0, cy=0) is the FACE CENTER (CadQuery convention).
@@ -442,7 +446,9 @@ subtractive program. Remember:
 - Preserve retained-feature locations. For a CadQuery union/boss/pad translated
   to a nonzero X/Y location, pass `cx=...` and `cy=...` or include them in the
   profile dict. Do not machine around a translated box that is fully inside the
-  existing base stock and does not add material.
+  existing base stock and does not add material. Use the source
+  `translate((x, y, z))` values literally; do not move the feature to a stock
+  edge unless the source coordinate is actually at that edge.
 - Preserve CadQuery edge scope. Unqualified `.edges().chamfer(...)` means all
   model edges, so use `.edge_chamfer("all_edges", width=...)`; do not narrow it
   to only the top face unless the CadQuery source explicitly used `.faces(">Z")`.

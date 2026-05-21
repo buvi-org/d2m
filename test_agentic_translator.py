@@ -248,6 +248,8 @@ check("machine_around_profile" in prompt and "cx=..." in prompt and "cy=..." in 
       "user prompt allows retained feature placement through cx/cy kwargs")
 check("fully inside" in prompt and "existing base stock" in prompt,
       "user prompt avoids machining around construction-only internal unions")
+check("translate((x, y, z))" in prompt and "literally" in prompt,
+      "user prompt preserves CadQuery translated feature coordinates literally")
 
 
 # =========================================================================

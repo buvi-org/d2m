@@ -104,6 +104,16 @@ offset_rib = rib_stock.machine_around_profile(
 check(offset_rib.volume < rib_stock.volume,
       "machine_around_profile accepts explicit cx/cy placement")
 
+outside_rib = rib_stock.machine_around_profile(
+    {"type": "rib", "length": 10.0, "width": 10.0},
+    4.0,
+    cx=100.0,
+    cy=0.0,
+    stock_envelope={"length": 70.0, "width": 20.0},
+)
+check(outside_rib.volume == rib_stock.volume,
+      "outside-stock retained profile does not cut away the stock")
+
 island_rib = rib_stock.profile_pocket(
     {"type": "rect", "length": 70.0, "width": 20.0},
     12.0,
