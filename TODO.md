@@ -311,15 +311,17 @@ Immediate next implementation targets:
   selected retained-material operations, and related coverage ops; update the
   translator prompt to preserve CadQuery workplane face selectors such as
   `<Z` instead of silently converting underside operations to top-side work.
-- Next: include the row 23 and row 29 accepted manifests in future
-  accepted-index guarded runs, then continue forward to rows after 29 and the
-  row 28/30/34/42 retained rib/boss and side-face gusset blockers.
+- Done: include row 23, row 29, row 31, and row 34 accepted manifests in future
+  accepted-index guarded runs.
 - Done: add Z-band retained-material support and planner evidence for retained
   rib/boss loops and polar arrays.
-- Active blocker: row 31 still fails live translation because the model
-  correctly uses retained Z-band operations but then face-mills after retained
-  features, erasing the boss/ribs. Keep this as a translator sequencing rule
-  and deterministic repair target before spending larger live batches.
+- Done: accept train global index 31 via deterministic layered retained
+  SubCAD preflight with original-STEP trusted slice score 97.6.
+- Done: accept train global index 34 via deterministic top-retained rib
+  SubCAD preflight with original-STEP trusted slice score 98.1.
+- Active blocker: row 42 exercises polar/radial retained ribs on cylindrical
+  stock plus circular holes/pockets. Add a deterministic cylindrical retained
+  rib generator before spending larger live batches.
 
 ## SubCAD Shop-Floor v1
 

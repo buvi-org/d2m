@@ -308,6 +308,52 @@ check(
 deterministic_exec = run_subcad(deterministic_code)
 check(deterministic_exec["success"], "deterministic layered-retained SubCAD code executes")
 
+top_rib_code = """
+plate_length = 80.0
+plate_width = 60.0
+plate_thickness = 5.0
+rib_height = 6.0
+rib_width = 20.0
+rib_margin = 10.0
+mount_hole_diameter = 6.0
+mount_hole_spacing_x = 60.0
+mount_hole_spacing_y = 40.0
+chamfer_size = 1.0
+fillet_radius = 0.5
+base_sketch = cq.Sketch().rect(plate_length, plate_width)
+result = cq.Workplane("XY").placeSketch(base_sketch).extrude(plate_thickness)
+rib_sketch = cq.Sketch().rect(rib_width, plate_width - 2 * rib_margin)
+rib_center_x = plate_length/2 - rib_margin - rib_width/2
+result = (
+    result
+    .faces(">Z")
+    .workplane()
+    .center(rib_center_x, 0)
+    .placeSketch(rib_sketch)
+    .extrude(rib_height)
+)
+mount_points = [
+    (-mount_hole_spacing_x/2, -mount_hole_spacing_y/2),
+    ( mount_hole_spacing_x/2, -mount_hole_spacing_y/2),
+    ( mount_hole_spacing_x/2,  mount_hole_spacing_y/2),
+    (-mount_hole_spacing_x/2,  mount_hole_spacing_y/2),
+]
+result = result.faces(">Z").workplane().pushPoints(mount_points).hole(mount_hole_diameter)
+result = result.edges("|Z").chamfer(chamfer_size)
+result = result.edges(">Z").fillet(fillet_radius)
+"""
+top_rib_subcad = build_deterministic_subcad_code(top_rib_code, [])
+check(top_rib_subcad is not None, "planner builds deterministic top-rib SubCAD code")
+check(
+    "Stock.rectangular(80, 60, 11)" in top_rib_subcad
+    and ".rib(width=40, length=20, height=6, cx=20, cy=0)" in top_rib_subcad,
+    "deterministic top-rib code preserves stock and rib dimensions",
+)
+check(".drill(6, through=True, cx=-30, cy=-20)" in top_rib_subcad,
+      "deterministic top-rib code includes source pushPoint drills")
+top_rib_exec = run_subcad(top_rib_subcad)
+check(top_rib_exec["success"], "deterministic top-rib SubCAD code executes")
+
 polar_plan = plan_pure_subcad_features(
     [],
     """

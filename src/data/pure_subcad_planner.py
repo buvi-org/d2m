@@ -268,6 +268,9 @@ def build_deterministic_subcad_code(
             continue
         sequence.extend(_deterministic_drill_calls(cadquery_code))
         return _format_fluent_subcad_code(stock, sequence)
+    top_rib_code = _deterministic_top_retained_rib_code(cadquery_code, plan)
+    if top_rib_code:
+        return top_rib_code
     return None
 
 
@@ -280,6 +283,83 @@ def _format_fluent_subcad_code(stock_expr: str, sequence: list[str]) -> str:
         lines.append(f"    {text}")
     lines.append(")")
     return "\n".join(lines)
+
+
+def _deterministic_top_retained_rib_code(cadquery_code: str, plan: PureSubCADPlan) -> str | None:
+    """Emit code for a flat base with one top retained rectangular rib.
+
+    Several Zero-to-CAD samples use CadQuery calls whose positive ``cutBlind``
+    direction points out of the body, so the original STEP contains the rib and
+    through-hole pattern but not those commented cuts.  This builder follows
+    deterministic source evidence and lets the original-STEP comparison remain
+    the final authority.
+    """
+    base = _base_rect_from_sketch_extrude(cadquery_code)
+    if not base:
+        return None
+
+    retained = [
+        feature.evidence for feature in plan.features
+        if feature.operation == "machine_around_profile"
+        and feature.source == "cadquery.faces.top.workplane.extrude"
+        and feature.evidence.get("profiles")
+    ]
+    if len(retained) != 1:
+        return None
+    evidence = retained[0]
+    profiles = list(evidence.get("profiles") or [])
+    if len(profiles) != 1:
+        return None
+    profile = profiles[0]
+    if profile.get("type") != "rib":
+        return None
+    rib_height = float(evidence.get("height") or 0.0)
+    if rib_height <= 0:
+        return None
+
+    stock = (
+        f"Stock.rectangular({base['length']:.6g}, {base['width']:.6g}, "
+        f"{base['height'] + rib_height:.6g})"
+    )
+    sequence = [
+        (
+            f".rib(width={float(profile['width']):.6g}, "
+            f"length={float(profile['length']):.6g}, height={rib_height:.6g}, "
+            f"cx={float(profile.get('cx', 0.0)):.6g}, cy={float(profile.get('cy', 0.0)):.6g})"
+        )
+    ]
+    sequence.extend(_deterministic_drill_calls(cadquery_code))
+    lowered = cadquery_code.lower()
+    if ".chamfer(" in lowered:
+        chamfer_width = _first_call_number(cadquery_code, "chamfer", _numeric_env(cadquery_code)) or 1.0
+        sequence.append(f'.edge_chamfer("|Z", width={chamfer_width:.6g})')
+    if ".fillet(" in lowered:
+        fillet_radius = _first_call_number(cadquery_code, "fillet", _numeric_env(cadquery_code)) or 0.5
+        sequence.append(f'.edge_fillet(">Z", radius={fillet_radius:.6g})')
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _base_rect_from_sketch_extrude(code_text: str) -> dict[str, float] | None:
+    env = _numeric_env(code_text)
+    sketches = _sketch_rects(code_text, env)
+    if not sketches:
+        return None
+    match = re.search(
+        r"\.placesketch\(\s*(?P<name>\w+)\s*\)\s*\.extrude\((?P<depth>[^)]*)\)",
+        code_text,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None
+    sketch = sketches.get(match.group("name"))
+    depth = _eval_number(match.group("depth"), env)
+    if not sketch or depth is None:
+        return None
+    return {
+        "length": float(sketch["length"]),
+        "width": float(sketch["width"]),
+        "height": float(depth),
+    }
 
 
 def _deterministic_drill_calls(code_text: str) -> list[str]:
