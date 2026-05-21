@@ -204,6 +204,11 @@ Stock instance (immutable/fluent pattern).
    features require stock height equal to base thickness plus feature height;
    do not face_mill away the material that forms the rib/boss before machining
    around it.
+   Never call `.face_mill(...)` after `.machine_around_profile(...)`,
+   `.machine_around_profiles(...)`, `.machine_around_cylinder(...)`, `.rib(...)`,
+   or `.pad(...)` unless the CadQuery source explicitly removes those retained
+   features. A later face mill will erase the boss/rib geometry and produce an
+   invalid low-volume part.
    For mixed-height retained features, use `base_height=<height from stock
    bottom to feature base>`. Example: a 12 mm boss and 4 mm ribs starting on an
    8 mm base can be represented as an upper boss-only retained band and a lower

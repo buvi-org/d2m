@@ -314,6 +314,12 @@ Immediate next implementation targets:
 - Next: include the row 23 and row 29 accepted manifests in future
   accepted-index guarded runs, then continue forward to rows after 29 and the
   row 28/30/34/42 retained rib/boss and side-face gusset blockers.
+- Done: add Z-band retained-material support and planner evidence for retained
+  rib/boss loops and polar arrays.
+- Active blocker: row 31 still fails live translation because the model
+  correctly uses retained Z-band operations but then face-mills after retained
+  features, erasing the boss/ribs. Keep this as a translator sequencing rule
+  and deterministic repair target before spending larger live batches.
 
 ## SubCAD Shop-Floor v1
 
