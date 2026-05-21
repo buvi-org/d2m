@@ -261,6 +261,8 @@ check("second `.circle(...)`" in prompt and "center bore" in prompt,
       "user prompt avoids hallucinating bores from nested sketch circles")
 check(".polygon(n, diameter)" in prompt and "circumdiameter" in prompt and "hex_radius" in prompt,
       "user prompt maps CadQuery polygon diameter to SubCAD circumdiameter")
+check("Copy the exact second argument" in prompt and "do not multiply it by" in prompt,
+      "user prompt forbids recomputing CadQuery polygon dimensions")
 
 
 # =========================================================================

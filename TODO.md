@@ -276,10 +276,12 @@ Immediate next implementation targets:
   can be translated without confusing its diameter argument with a radius.
 - Blocked row: train global index 23 now executes with polygon profile support
   but still diverges. The remaining issue is translator/feature evidence for
-  profile dimensions and recess semantics: attempts either oversize the outer
-  hex or scale dimensions from volume feedback. Next fix should extract exact
-  polygon diameter and pocket/recess depth from the CadQuery ops trace instead
-  of leaving those dimensions to LLM inference.
+  profile dimensions and recess semantics. Prompt-only retries now copy the
+  CadQuery polygon argument more reliably but still add an inner hex pocket
+  that appears to be a no-op in the CadQuery/STEP target. Next fix should
+  extract exact polygon diameter and per-operation volume deltas from the
+  CadQuery source/ops trace, then suppress no-op pockets/cuts instead of
+  leaving those choices to LLM inference.
 
 ## SubCAD Shop-Floor v1
 
