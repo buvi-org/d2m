@@ -276,6 +276,9 @@ def build_deterministic_subcad_code(
     base_extension_code = _deterministic_base_extension_code(cadquery_code)
     if base_extension_code:
         return base_extension_code
+    rect_plate_code = _deterministic_rect_extrude_plate_code(cadquery_code)
+    if rect_plate_code:
+        return rect_plate_code
     box_counterbore_code = _deterministic_box_counterbore_code(cadquery_code)
     if box_counterbore_code:
         return box_counterbore_code
@@ -389,6 +392,59 @@ def _deterministic_box_hole_code(cadquery_code: str) -> str | None:
     if chamfer is not None and chamfer > 0:
         sequence.append(f'.edge_chamfer("all_edges", width={chamfer:.6g})')
     stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_rect_extrude_plate_code(cadquery_code: str) -> str | None:
+    env = _numeric_env(cadquery_code)
+    required = {
+        "plate_width",
+        "plate_depth",
+        "plate_thickness",
+        "rib_width",
+        "rib_height",
+        "hole_diameter",
+        "hole_spacing_x",
+        "hole_spacing_y",
+        "num_holes_x",
+        "num_holes_y",
+        "chamfer_size",
+    }
+    if not required.issubset(env):
+        return None
+    lower = cadquery_code.lower()
+    required_tokens = [".rect(plate_width, plate_depth)", ".rect(plate_width + 2 * rib_width", ".rarray(", ".hole("]
+    if not all(token in lower for token in required_tokens):
+        return None
+    if any(token in lower for token in (".union(", ".shell(", ".loft(", ".sweep(", ".polyline(", ".cborehole(")):
+        return None
+    plate_width = env["plate_width"]
+    plate_depth = env["plate_depth"]
+    plate_thickness = env["plate_thickness"]
+    rib_width = env["rib_width"]
+    rib_height = env["rib_height"]
+    if min(plate_width, plate_depth, plate_thickness, rib_width, rib_height) <= 0:
+        return None
+    holes = _centered_rarray_hole_calls(cadquery_code)
+    if not holes:
+        return None
+    outer_length = plate_width + 2.0 * rib_width
+    outer_width = plate_depth + 2.0 * rib_width
+    stock = f"Stock.rectangular({outer_length:.6g}, {outer_width:.6g}, {plate_thickness + rib_height:.6g})"
+    stock_envelope = (
+        "{'type': 'rect', "
+        f"'length': {outer_length:.6g}, 'width': {outer_width:.6g}, 'cx': 0.0, 'cy': 0.0"
+        "}"
+    )
+    sequence = [
+        (
+            f".machine_around_profile({{'type': 'rect', 'length': {plate_width:.6g}, "
+            f"'width': {plate_depth:.6g}, 'cx': 0.0, 'cy': 0.0}}, "
+            f"height={plate_thickness:.6g}, stock_envelope={stock_envelope}, base_height=0.0)"
+        ),
+        f'.edge_chamfer(">Z", width={env["chamfer_size"]:.6g})',
+    ]
+    sequence.extend(holes)
     return _format_fluent_subcad_code(stock, sequence)
 
 
@@ -1662,6 +1718,38 @@ def _push_points_hole_drill_calls(code_text: str) -> list[str]:
             continue
         for x, y in points:
             calls.append(f".drill({diameter:.6g}, through=True, cx={x:.6g}, cy={y:.6g})")
+    return calls
+
+
+def _centered_rarray_hole_calls(code_text: str) -> list[str]:
+    env = _numeric_env(code_text)
+    pattern = re.compile(
+        r"\.rarray\((?P<rarray>[^)]*)\)\s*\.hole\((?P<hole>[^)]*)\)",
+        re.IGNORECASE | re.DOTALL,
+    )
+    calls: list[str] = []
+    for match in pattern.finditer(code_text):
+        args = _split_args(match.group("rarray"))
+        if len(args) < 4:
+            continue
+        x_spacing = _eval_number(args[0], env)
+        y_spacing = _eval_number(args[1], env)
+        x_count = _eval_number(args[2], env)
+        y_count = _eval_number(args[3], env)
+        centered = True
+        if len(args) >= 5:
+            centered = args[4].strip().lower() in {"true", "1"}
+        hole_args = _split_args(match.group("hole"))
+        diameter = _eval_number(hole_args[0], env) if hole_args else None
+        if None in {x_spacing, y_spacing, x_count, y_count, diameter}:
+            continue
+        if not centered or x_count <= 0 or y_count <= 0 or x_count > 100 or y_count > 100 or diameter <= 0:
+            continue
+        for ix in range(int(x_count)):
+            x = (ix - (x_count - 1.0) / 2.0) * x_spacing
+            for iy in range(int(y_count)):
+                y = (iy - (y_count - 1.0) / 2.0) * y_spacing
+                calls.append(f".drill({diameter:.6g}, through=True, cx={x:.6g}, cy={y:.6g})")
     return calls
 
 

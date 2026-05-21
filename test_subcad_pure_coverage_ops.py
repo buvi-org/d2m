@@ -341,6 +341,57 @@ check(
 box_counterbore_exec = run_subcad(box_counterbore_subcad)
 check(box_counterbore_exec["success"], "deterministic box-counterbore SubCAD code executes")
 
+rect_plate_code = """
+import cadquery as cq
+plate_width = 80.0
+plate_depth = 60.0
+plate_thickness = 4.0
+rib_width = 5.0
+rib_height = 2.0
+hole_diameter = 6.0
+hole_spacing_x = 20.0
+hole_spacing_y = 25.0
+num_holes_x = 4
+num_holes_y = 2
+central_pocket_width = 20.0
+central_pocket_depth = 15.0
+central_pocket_cut = plate_thickness * 0.6
+chamfer_size = 0.5
+result = (
+    cq.Workplane("XY")
+    .rect(plate_width, plate_depth)
+    .extrude(plate_thickness)
+    .faces("+Z").workplane()
+    .rect(central_pocket_width, central_pocket_depth)
+    .cutBlind(central_pocket_cut)
+    .faces("+Z").workplane()
+    .rect(plate_width + 2 * rib_width, plate_depth + 2 * rib_width)
+    .extrude(rib_height)
+    .faces("+Z").workplane()
+    .rect(plate_width, plate_depth)
+    .cutBlind(rib_height)
+    .faces("+Z").edges()
+    .chamfer(chamfer_size)
+    .faces("+Z").workplane()
+    .rarray(hole_spacing_x, hole_spacing_y, num_holes_x, num_holes_y, True)
+    .hole(hole_diameter)
+)
+"""
+rect_plate_subcad = build_deterministic_subcad_code(rect_plate_code, [])
+check(rect_plate_subcad is not None, "planner builds deterministic raised rectangular plate code")
+check(
+    "Stock.rectangular(90, 70, 6)" in rect_plate_subcad
+    and ".machine_around_profile({'type': 'rect', 'length': 80" in rect_plate_subcad
+    and rect_plate_subcad.count(".drill(6, through=True") == 8,
+    "deterministic raised rectangular plate code preserves frame and rarray holes",
+)
+check(
+    "central_pocket" not in rect_plate_subcad and "pocket(" not in rect_plate_subcad,
+    "deterministic raised rectangular plate code omits no-op positive cutBlind pockets",
+)
+rect_plate_exec = run_subcad(rect_plate_subcad)
+check(rect_plate_exec["success"], "deterministic raised rectangular plate SubCAD code executes")
+
 l_bracket_code = """
 class LBracket:
     def __init__(self, workplane, measures):
