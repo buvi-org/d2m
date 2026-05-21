@@ -133,10 +133,22 @@ check(
 retained_pattern_plan = plan_pure_subcad_features(
     [],
     """
+    flange_thickness = 8.0
+    fusion_overlap = 0.5
     rib_count = 3
     rib_spacing = 12.0
     rib_width = 6.0
     rib_height = 4.0
+    boss_height = 12.0
+    boss_diameter = 20.0
+    boss = (
+        cq.Workplane("XY")
+        .center(10.0, 10.0)
+        .circle(boss_diameter / 2.0)
+        .extrude(boss_height)
+        .translate((0, 0, flange_thickness - fusion_overlap))
+    )
+    result = result.union(boss)
     for i in range(rib_count):
         rib_x = -4.0 + i * rib_spacing
         rib = (
@@ -144,6 +156,7 @@ retained_pattern_plan = plan_pure_subcad_features(
             .center(rib_x, 2.0)
             .rect(rib_spacing * 0.8, rib_width)
             .extrude(rib_height)
+            .translate((0, 0, flange_thickness - fusion_overlap))
         )
         result = result.union(rib)
     """,
@@ -158,6 +171,40 @@ check(
     [round(profile["cx"], 6) for profile in pattern_evidence[0]["profiles"]] == [-4.0, 8.0, 20.0],
     "retained-pattern evidence preserves loop-derived rib centers",
 )
+level_evidence = [
+    feature.evidence for feature in retained_pattern_plan.features
+    if feature.evidence.get("suggested_sequence")
+]
+check(bool(level_evidence), "planner suggests mixed-height retained operation sequence")
+check(
+    "base_height=11.5" in level_evidence[0]["suggested_subcad"]
+    and "base_height=7.5" in level_evidence[0]["suggested_subcad"],
+    "mixed-height retained sequence preserves upper and lower z bands",
+)
+
+base_cut_plan = plan_pure_subcad_features(
+    [],
+    """
+    flange_leg_length = 80.0
+    flange_leg_width = 30.0
+    flange_thickness = 8.0
+    inner_cut_width = 20.0
+    cut = (
+        cq.Workplane('XY')
+        .rect(flange_leg_length - inner_cut_width, flange_leg_width - inner_cut_width)
+        .translate((inner_cut_width / 2.0, inner_cut_width / 2.0))
+        .extrude(flange_thickness)
+    )
+    l_shape = base.cut(cut)
+    """,
+)
+base_cut_evidence = [
+    feature.evidence for feature in base_cut_plan.features
+    if feature.operation == "pocket" and feature.evidence.get("suggested_subcad")
+]
+check(bool(base_cut_evidence), "planner extracts base-band rectangular cut evidence")
+check("base_height=0.0" in base_cut_evidence[0]["suggested_subcad"],
+      "base-band rectangular cut suggests z-band pocket")
 
 polar_plan = plan_pure_subcad_features(
     [],

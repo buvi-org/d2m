@@ -132,6 +132,11 @@ def plan_pure_subcad_features(
     if "rect" in op_names and ("cutblind" in op_names or ".cutblind(" in code_text):
         add("cadquery.rect.cutBlind", "cut", PLANNED_EXACT, "profile_pocket",
             "rectangular cut maps to profile pocket")
+    for evidence in _base_cut_pocket_evidence(code_text):
+        add(evidence.get("source", "cadquery.base_cut"),
+            "cut", PLANNED_EXACT, "pocket",
+            "source-derived lower/base-band rectangular cut is available",
+            **{key: value for key, value in evidence.items() if key != "source"})
     if "circle" in op_names or ".circle(" in code_text:
         if "extrude" in op_names or ".extrude(" in code_text:
             if "union" in op_names or ".union(" in code_text or "combine" in op_names:
@@ -346,8 +351,46 @@ def _trim_evidence_chain(chain: str) -> str:
 
 def _retained_material_parameter_evidence(code_text: str) -> list[dict[str, Any]]:
     evidence: list[dict[str, Any]] = []
-    evidence.extend(_for_loop_retained_rectangles(code_text))
-    evidence.extend(_standalone_union_retained_features(code_text))
+    loop_evidence = _for_loop_retained_rectangles(code_text)
+    standalone_evidence = _standalone_union_retained_features(code_text)
+    evidence.extend(loop_evidence)
+    evidence.extend(standalone_evidence)
+    evidence.extend(_mixed_height_retained_level_evidence(loop_evidence, standalone_evidence))
+    return evidence
+
+
+def _base_cut_pocket_evidence(code_text: str) -> list[dict[str, Any]]:
+    env = _numeric_env(code_text)
+    evidence: list[dict[str, Any]] = []
+    assignment_re = re.compile(
+        r"^\s*(?P<name>\w+)\s*=\s*\(\s*cq\.workplane\([^)]*\)(?P<body>.*?\.rect\([^)]*\).*?\.translate\([^)]*\).*?\.extrude\([^)]*\).*?)\n\s*\)",
+        re.IGNORECASE | re.DOTALL | re.MULTILINE,
+    )
+    for match in assignment_re.finditer(code_text):
+        name = match.group("name")
+        body = match.group("body")
+        if f".cut({name})" not in code_text:
+            continue
+        profile = _rect_profile_from_chain(body, env)
+        if not profile:
+            continue
+        translate = _translate_xy_from_chain(body, env)
+        if translate:
+            profile["cx"], profile["cy"] = translate
+        depth = _first_call_number(body, "extrude", env)
+        if depth is None:
+            continue
+        evidence.append({
+            "source": f"cadquery.base_cut.{name}",
+            "profile": profile,
+            "depth": depth,
+            "base_height": 0.0,
+            "suggested_subcad": (
+                f".pocket(width={profile['width']:.6g}, length={profile['length']:.6g}, "
+                f"depth={depth:.6g}, cx={profile['cx']:.6g}, cy={profile['cy']:.6g}, "
+                "base_height=0.0)"
+            ),
+        })
     return evidence
 
 
@@ -390,7 +433,7 @@ def _standalone_union_retained_features(code_text: str) -> list[dict[str, Any]]:
     env = _numeric_env(code_text)
     evidence: list[dict[str, Any]] = []
     assignment_re = re.compile(
-        r"^(?P<name>\w+)\s*=\s*\(\s*cq\.workplane\([^)]*\)(?P<body>.*?\.extrude\([^)]*\).*?)\n\s*\)",
+        r"^\s*(?P<name>\w+)\s*=\s*\(\s*cq\.workplane\([^)]*\)(?P<body>.*?\.extrude\([^)]*\).*?)\n\s*\)",
         re.IGNORECASE | re.DOTALL | re.MULTILINE,
     )
     for match in assignment_re.finditer(code_text):
@@ -410,6 +453,12 @@ def _standalone_union_retained_features(code_text: str) -> list[dict[str, Any]]:
                 evidence.append({
                     "source": f"cadquery.union.{name}",
                     "profile_type": "circle",
+                    "profile": {
+                        "type": "circle",
+                        "diameter": diameter,
+                        "cx": center[0],
+                        "cy": center[1],
+                    },
                     "diameter": diameter,
                     "cx": center[0],
                     "cy": center[1],
@@ -432,6 +481,47 @@ def _standalone_union_retained_features(code_text: str) -> list[dict[str, Any]]:
                 "suggested_subcad": _suggest_machine_around_profiles([profile], height, base_height),
             })
     return evidence
+
+
+def _mixed_height_retained_level_evidence(
+    loop_evidence: list[dict[str, Any]],
+    standalone_evidence: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    suggestions: list[dict[str, Any]] = []
+    for ribs in loop_evidence:
+        rib_profiles = list(ribs.get("profiles") or [])
+        rib_height = ribs.get("height")
+        base_height = ribs.get("base_height")
+        if not rib_profiles or rib_height is None or base_height is None:
+            continue
+        for boss in standalone_evidence:
+            if boss.get("profile_type") != "circle":
+                continue
+            if boss.get("base_height") != base_height:
+                continue
+            boss_height = boss.get("height")
+            boss_profile = boss.get("profile")
+            if boss_height is None or boss_profile is None or boss_height <= rib_height:
+                continue
+            upper_height = boss_height - rib_height
+            lower_profiles = [boss_profile, *rib_profiles]
+            sequence = [
+                (
+                    f".machine_around_cylinder({boss_profile['diameter']:.6g}, {upper_height:.6g}, "
+                    f"cx={boss_profile['cx']:.6g}, cy={boss_profile['cy']:.6g}, "
+                    f"base_height={base_height + rib_height:.6g})"
+                ),
+                _suggest_machine_around_profiles(lower_profiles, rib_height, base_height),
+            ]
+            suggestions.append({
+                "source": "cadquery.retained_levels.mixed_height",
+                "profiles": lower_profiles,
+                "height": rib_height,
+                "base_height": base_height,
+                "suggested_sequence": sequence,
+                "suggested_subcad": " then ".join(sequence),
+            })
+    return suggestions
 
 
 def _retained_chain_evidence(chain: str, code_text: str) -> dict[str, Any]:
@@ -606,6 +696,21 @@ def _translate_z_from_chain(chain: str, env: dict[str, float]) -> float | None:
         parts = _split_args(tuple_text[1:-1])
         if len(parts) >= 3:
             return _eval_number(parts[2], env)
+    return None
+
+
+def _translate_xy_from_chain(chain: str, env: dict[str, float]) -> tuple[float, float] | None:
+    args = _first_call_args(chain, "translate")
+    if len(args) != 1:
+        return None
+    tuple_text = args[0].strip()
+    if tuple_text.startswith("(") and tuple_text.endswith(")"):
+        parts = _split_args(tuple_text[1:-1])
+        if len(parts) >= 2:
+            return (
+                _eval_number(parts[0], env) or 0.0,
+                _eval_number(parts[1], env) or 0.0,
+            )
     return None
 
 

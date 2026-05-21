@@ -639,6 +639,9 @@ def _format_planner_candidates(plan: dict) -> str:
         suggested = evidence.get("suggested_subcad")
         if suggested:
             lines.append(f"    suggested_subcad: {suggested}")
+        sequence = evidence.get("suggested_sequence") or []
+        if sequence:
+            lines.append(f"    suggested_sequence: {json.dumps(sequence, sort_keys=True)[:900]}")
         profiles = evidence.get("profiles") or []
         if profiles:
             lines.append(f"    retained_profiles: {json.dumps(profiles, sort_keys=True)[:900]}")
