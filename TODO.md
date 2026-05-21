@@ -88,7 +88,7 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 86,923.
 - Unsupported by current planner: 13,593.
-- Matched original-STEP-verified pairs: 5 recorded by guarded live pilots:
+- Matched original-STEP-verified pairs: 6 recorded by guarded live pilots:
   - `hole_pilot_006`, train global index 1, UUID
     `420cc2e2-e6c4-23e5-092a-6980c7853952`.
   - `hole_batch_002_filtered`, train global index 8, UUID
@@ -99,6 +99,8 @@ Latest measured dry scan:
     `648b1adc-9964-9e71-82a5-7a4ceeaf0db9`.
   - `hole_batch_004_forward_filtered`, train global index 18, UUID
     `9771f32b-c614-f1ed-9533-5ff2617f3471`.
+  - `hole_batch_007_forward_filtered`, train global index 25, UUID
+    `ca8ac443-0284-9d83-4ef9-db3c9b930a47`.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -234,6 +236,12 @@ Immediate next implementation targets:
   or static preflight repair issue, not a missing SubCAD operation.
 - Done: strengthen translator prompt tests and instructions against bare
   copied measure variables such as `flange_thickness`.
+- Blocked row: train global index 23 now executes after the measure prompt fix
+  but still diverges geometrically; pause retries until hex/profile feature
+  evidence and prompt examples improve.
+- Done: run the next filtered batch; accepted row 25.
+- Blocked rows: train global index 26 volume-matches but fails trusted geometry,
+  and index 28 still hits empty-selection failures after retained/boss planning.
 
 ## SubCAD Shop-Floor v1
 
