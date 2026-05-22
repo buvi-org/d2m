@@ -251,6 +251,29 @@ Current scan of `data/zero_to_cad_100k` with the pure planner:
 - total: 79,911 plannable rows out of 100,516 local rows.
 
 Guarded live pilots currently record 518 unique accepted original-STEP-verified pairs.
+
+## AI-Heavy Translation Mode
+
+The previous guarded pilots leaned heavily on deterministic planner builders.
+That proved the original-STEP verification loop, but it is too slow for the
+100k target. The translator now has `translation_mode="ai_heavy"` and the CLI
+flag `--translation-mode ai_heavy`.
+
+In AI-heavy mode:
+
+- deterministic SubCAD builders are skipped;
+- planner candidates are still shown to the model as evidence;
+- the model may infer pure SubCAD operations that are absent from the planner
+  when the CadQuery source, operation trace, measures, or STEP dimensions
+  support them;
+- hybrid/imported geometry and direct CadQuery reconstruction remain forbidden;
+- accepted rows still require execution and original-STEP verification.
+
+Recommended pilot command:
+
+```powershell
+python -m src.data.run_zero_to_cad_feature_benchmarks --split train --source-dir data/zero_to_cad_100k --output-dir runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD --accepted-index runs/zero_to_cad_live_pilots/accepted_index.jsonl --manifest-jsonl runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD/attempts.jsonl --execute --executor translator --translation-mode ai_heavy --provider deepseek --model deepseek-v4-pro --comparison-methods volume,mesh,slices --min-mesh-score 95 --target-matches 5 --max-attempts 20 --max-failures 8 --safety-cap 5
+```
 The reduction from earlier planner counts is intentional: closed/inaccessible
 shell operations are now rejected as unsupported CNC work instead of counted as
 plannable rows.

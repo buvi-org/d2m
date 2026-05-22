@@ -37,6 +37,10 @@ from .pure_subcad_planner import (
     plan_pure_subcad_features,
 )
 
+TRANSLATION_MODE_PLANNER_GUIDED = "planner_guided"
+TRANSLATION_MODE_AI_HEAVY = "ai_heavy"
+TRANSLATION_MODES = {TRANSLATION_MODE_PLANNER_GUIDED, TRANSLATION_MODE_AI_HEAVY}
+
 # Optional imports for richer mesh comparison (requires trimesh + scipy)
 try:
     from ..simulation.mesh_compare import compare_meshes, generate_error_feedback
@@ -460,8 +464,32 @@ def _object_volume(value: object) -> float | None:
     return None
 
 
-def build_system_prompt() -> str:
+def _normalize_translation_mode(translation_mode: str | None) -> str:
+    mode = (translation_mode or TRANSLATION_MODE_PLANNER_GUIDED).strip().lower().replace("-", "_")
+    if mode not in TRANSLATION_MODES:
+        raise ValueError(
+            f"Unknown translation_mode: {translation_mode!r}. "
+            f"Expected one of {sorted(TRANSLATION_MODES)}."
+        )
+    return mode
+
+
+def build_system_prompt(translation_mode: str = TRANSLATION_MODE_PLANNER_GUIDED) -> str:
     """Build the system prompt with subCAD API reference."""
+    mode = _normalize_translation_mode(translation_mode)
+    ai_heavy_appendix = ""
+    if mode == TRANSLATION_MODE_AI_HEAVY:
+        ai_heavy_appendix = """
+
+### AI-Heavy Translation Mode
+
+In this mode, the planner is evidence, not a cage. You may infer and emit pure
+SubCAD operations that are not listed in the planner candidates when the
+CadQuery source, operations trace, measures, or STEP dimensions support them.
+This overrides any instruction that says to choose only among planner
+candidates. Still obey the hard safety rule: use pure SubCAD operations only,
+never direct CadQuery reconstruction, never imported STEP/B-Rep/mesh geometry,
+and never hybrid placeholders. The original STEP comparison is the judge."""
     return f"""CRITICAL: You are a tool-using code generator.
 Your job is to translate CadQuery constructive CAD into executable SubCAD.
 You MUST call the `execute_subcad` tool with raw Python code in its `code`
@@ -469,6 +497,7 @@ argument. Do not put markdown fences, explanations, comments about your
 reasoning, JSON outside the tool call, or prose in the code string.
 
 {SUBCAD_API_REFERENCE}
+{ai_heavy_appendix}
 
 `Stock` is pre-imported. Do not import CadQuery or SubCAD. Avoid `.contour()`
 unless the source clearly requires outer profiling that cannot be represented
@@ -480,6 +509,7 @@ def build_user_prompt(
     ops_trace: list[dict],
     step_path: str,
     stock_dims: dict,
+    translation_mode: str = TRANSLATION_MODE_PLANNER_GUIDED,
 ) -> str:
     """Build the user prompt with CadQuery sample data.
 
@@ -509,6 +539,22 @@ def build_user_prompt(
     planner_plan = plan_pure_subcad_features(ops_trace, cq_code)
     planner_summary = _format_planner_candidates(planner_plan.to_dict())
     volume_evidence = _cadquery_variable_volume_evidence(cq_code)
+    mode = _normalize_translation_mode(translation_mode)
+    if mode == TRANSLATION_MODE_AI_HEAVY:
+        planner_instruction = """- AI-heavy mode is active: use the planner candidates as hints only.
+  You may add pure SubCAD operations absent from the planner when the CadQuery
+  source, operation trace, measures, or STEP dimensions support them. Do not
+  wait for deterministic planner support. The original STEP verifier will
+  accept or reject the result."""
+        absent_feature_instruction = """- Do not add unsupported hybrid/imported geometry. You may add major pure
+  SubCAD feature operations absent from the planner only when source evidence
+  clearly shows them."""
+    else:
+        planner_instruction = """- Prefer the pure SubCAD operation families in the planner candidates above.
+  If evidence is ambiguous, choose among those planned operation candidates only."""
+        absent_feature_instruction = """- Do not add major feature operations absent from the planner candidates. For
+  example, do not add a center `circular_pocket`/bore unless the planner/source
+  shows a circular cut, hole, bore, or other real opening."""
 
     prompt = f"""## Task
 
@@ -580,11 +626,8 @@ subtractive program. Remember:
   unless you explicitly assign a local helper variable in the generated code.
 - Call the `execute_subcad` tool with raw Python code. Do not include markdown
   fences or explanation text in the tool argument.
-- Prefer the pure SubCAD operation families in the planner candidates above.
-  If evidence is ambiguous, choose among those planned operation candidates only.
-- Do not add major feature operations absent from the planner candidates. For
-  example, do not add a center `circular_pocket`/bore unless the planner/source
-  shows a circular cut, hole, bore, or other real opening.
+{planner_instruction}
+{absent_feature_instruction}
 - Use simple SubCAD operations first: face_mill, pocket, circular_pocket,
   drill, slot, and chamfer. Use counterbore/countersink only when visible in
   the CadQuery source.
@@ -1442,6 +1485,7 @@ class AgenticTranslator:
         min_mesh_score: float = 95.0,
         mesh_tolerance_mm: float = 0.25,
         deterministic_only: bool = False,
+        translation_mode: str = TRANSLATION_MODE_PLANNER_GUIDED,
     ):
         """Initialize the translator.
 
@@ -1465,7 +1509,13 @@ class AgenticTranslator:
             mesh_tolerance_mm: Maximum SDF deviation for strict convergence.
             deterministic_only: If True, return deterministic planner output
                 immediately and never spend an LLM repair call.
+            translation_mode: "planner_guided" keeps deterministic/planner-first
+                behavior. "ai_heavy" skips deterministic code generation and
+                treats planner candidates as advisory evidence for the LLM.
         """
+        self.translation_mode = _normalize_translation_mode(translation_mode)
+        if deterministic_only and self.translation_mode == TRANSLATION_MODE_AI_HEAVY:
+            raise ValueError("deterministic_only cannot be combined with translation_mode='ai_heavy'")
         self.llm = LLMClient(
             provider=provider,
             model=model,
@@ -1483,7 +1533,7 @@ class AgenticTranslator:
         self.min_mesh_score = min_mesh_score
         self.mesh_tolerance_mm = mesh_tolerance_mm
         self.deterministic_only = deterministic_only
-        self._system_prompt = build_system_prompt()
+        self._system_prompt = build_system_prompt(self.translation_mode)
 
     def translate(
         self,
@@ -1551,7 +1601,9 @@ class AgenticTranslator:
         # --- Load reference volume (try CadQuery first, fallback to trimesh) ---
         target_volume = _load_reference_volume(step_path)
 
-        deterministic_code = build_deterministic_subcad_code(cq_code, ops_trace)
+        deterministic_code = None
+        if self.translation_mode != TRANSLATION_MODE_AI_HEAVY:
+            deterministic_code = build_deterministic_subcad_code(cq_code, ops_trace)
         if deterministic_code:
             deterministic_result = self._try_deterministic_translation(
                 deterministic_code,
@@ -1587,7 +1639,13 @@ class AgenticTranslator:
             }
 
         # --- Build initial user prompt ---
-        user_prompt = build_user_prompt(cq_code, ops_trace, step_path, stock_dims)
+        user_prompt = build_user_prompt(
+            cq_code,
+            ops_trace,
+            step_path,
+            stock_dims,
+            translation_mode=self.translation_mode,
+        )
 
         messages = [
             {"role": "system", "content": self._system_prompt},
@@ -1887,6 +1945,7 @@ class AgenticTranslator:
             "stop_reason": stop_reason,
             "returned_best_attempt": returned_best_attempt,
             "best_attempt": best_attempt,
+            "translation_mode": self.translation_mode,
             "error": None,
         }
 
@@ -2136,6 +2195,7 @@ def translate_exploration_sample(
     stagnation_limit: int = 3,
     safety_cap: int = 20,
     verbose: bool = True,
+    translation_mode: str = TRANSLATION_MODE_PLANNER_GUIDED,
 ) -> dict:
     """Translate a single exploration sample directory.
 
@@ -2151,6 +2211,7 @@ def translate_exploration_sample(
         stagnation_limit: Non-improving attempts before giving up.
         safety_cap: Absolute max attempts.
         verbose: Print progress.
+        translation_mode: "planner_guided" or "ai_heavy".
 
     Returns:
         Result dict from AgenticTranslator.translate().
@@ -2184,5 +2245,6 @@ def translate_exploration_sample(
         stagnation_limit=stagnation_limit,
         safety_cap=safety_cap,
         verbose=verbose,
+        translation_mode=translation_mode,
     )
     return translator.translate(sample, step_path=step_path)

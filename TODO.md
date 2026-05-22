@@ -31,8 +31,9 @@ The hierarchy is:
 3. Dataset generation pipeline.
    - Parse Zero-to-CAD row: CadQuery source, ops trace, UUID, split, and
      original STEP bytes.
-   - Build pure SubCAD feature plan.
    - Generate SubCAD with the translator/model.
+   - Use the pure SubCAD feature plan as evidence and a safety hint, not as
+     the primary generation mechanism when `translation_mode=ai_heavy`.
    - Execute generated SubCAD.
    - Export generated STEP and manufacturing artifacts.
    - Compare generated STEP to original STEP.
@@ -76,18 +77,24 @@ The hierarchy is:
 
 Current next actions:
 
-- Run the next accepted-index guarded forward scan from the latest accepted row
-  and record selected, attempted, executed, matched, failed, unsupported, and
-  remaining-to-goal counts.
-- Classify the next deterministic blocker before spending larger live batches.
+- Switch the next live batches to AI-heavy mode and measure quality/speed:
+  `--translation-mode ai_heavy` skips deterministic builders and lets the LLM
+  infer pure SubCAD operations from CadQuery/STEP evidence while the verifier
+  remains strict.
+- Run small accepted-index guarded AI-heavy pilots from the latest accepted
+  region and record selected, attempted, executed, matched, failed,
+  unsupported, API/token spend, and remaining-to-goal counts.
+- Use repeated AI-heavy failures to improve prompts, SubCAD API coverage, or
+  source evidence extraction. Avoid adding more narrow row-specific deterministic
+  builders unless a pattern obviously unlocks many rows.
 - Maintain an accepted-manifest summary as the source of truth for row counts,
   latest accepted rows, comparison policy, and rejected/manual-review counts;
   propagate that summary to README and docs after each accepted slice.
   Regenerate it locally with `python -m src.data.build_zero_to_cad_accepted_index`;
   count unique `source.split + source.uuid` rows where `accepted == true` and
   `status == "matched"`.
-- Standard guarded scan command:
-  `python -m src.data.run_zero_to_cad_feature_benchmarks --split all --source-dir data/zero_to_cad_100k --output-dir runs/zero_to_cad_live_pilots/forward_scan_YYYYMMDD --accepted-index runs/zero_to_cad_live_pilots/accepted_index.jsonl --manifest-jsonl runs/zero_to_cad_live_pilots/forward_scan_YYYYMMDD/attempts.jsonl --execute --executor translator --deterministic-only --comparison-methods volume,mesh,slices --min-mesh-score 95 --target-matches 5 --max-attempts 10 --max-failures 3`.
+- Standard AI-heavy guarded pilot command:
+  `python -m src.data.run_zero_to_cad_feature_benchmarks --split train --source-dir data/zero_to_cad_100k --output-dir runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD --accepted-index runs/zero_to_cad_live_pilots/accepted_index.jsonl --manifest-jsonl runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD/attempts.jsonl --execute --executor translator --translation-mode ai_heavy --provider deepseek --model deepseek-v4-pro --comparison-methods volume,mesh,slices --min-mesh-score 95 --target-matches 5 --max-attempts 20 --max-failures 8 --safety-cap 5`.
 - Start a separate STEP-only evidence-builder workstream so the eventual model
   can consume STEP/B-Rep evidence directly instead of depending on CadQuery
   source text.

@@ -25,7 +25,7 @@ from .cadquery_to_subcad import step_to_stock_dims
 DEFAULT_SAMPLE_DIR = "data/zero_to_cad_exploration/sample_1"
 
 
-def build_dry_run_preview(sample_dir: str) -> dict[str, Any]:
+def build_dry_run_preview(sample_dir: str, translation_mode: str = "planner_guided") -> dict[str, Any]:
     """Load a sample and build prompt metadata without calling an LLM."""
     paths = _sample_paths(sample_dir)
     _require_sample_files(paths)
@@ -33,12 +33,13 @@ def build_dry_run_preview(sample_dir: str) -> dict[str, Any]:
     cq_code = paths["cadquery"].read_text(encoding="utf-8")
     ops_trace = json.loads(paths["ops"].read_text(encoding="utf-8"))
     stock_dims = step_to_stock_dims(paths["step"].read_bytes())
-    system_prompt = build_system_prompt()
+    system_prompt = build_system_prompt(translation_mode)
     user_prompt = build_user_prompt(
         cq_code,
         ops_trace,
         str(paths["step"]),
         stock_dims,
+        translation_mode=translation_mode,
     )
 
     return {
@@ -46,6 +47,7 @@ def build_dry_run_preview(sample_dir: str) -> dict[str, Any]:
         "cadquery_chars": len(cq_code),
         "ops_trace_count": len(ops_trace) if isinstance(ops_trace, list) else 0,
         "stock_dims": stock_dims,
+        "translation_mode": translation_mode,
         "system_prompt_chars": len(system_prompt),
         "user_prompt_chars": len(user_prompt),
         "system_prompt_preview": system_prompt[:700],
@@ -66,6 +68,7 @@ def run_live_translation(
     comparison_methods: list[str] | None = None,
     feature_aware: bool = False,
     verbose: bool = True,
+    translation_mode: str = "planner_guided",
 ) -> dict[str, Any]:
     """Run the live translator and save a durable result bundle."""
     paths = _sample_paths(sample_dir)
@@ -90,6 +93,7 @@ def run_live_translation(
         verbose=verbose,
         comparison_methods=comparison_methods,
         feature_aware=feature_aware,
+        translation_mode=translation_mode,
     )
     result = translator.translate(sample, step_path=str(paths["step"]))
 
@@ -118,6 +122,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Comma-separated mesh comparison methods, or 'none'.",
     )
     parser.add_argument("--feature-aware", action="store_true")
+    parser.add_argument(
+        "--translation-mode",
+        default="planner_guided",
+        choices=["planner_guided", "ai_heavy"],
+        help="planner_guided uses deterministic/planner-first behavior; ai_heavy skips deterministic builders and treats planner candidates as advisory.",
+    )
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument(
         "--dry-run",
@@ -127,7 +137,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.dry_run:
-        print(json.dumps(build_dry_run_preview(args.sample_dir), indent=2, default=str))
+        print(json.dumps(build_dry_run_preview(args.sample_dir, args.translation_mode), indent=2, default=str))
         return 0
 
     comparison_methods = _parse_methods(args.comparison_methods)
@@ -144,6 +154,7 @@ def main(argv: list[str] | None = None) -> int:
             comparison_methods=comparison_methods,
             feature_aware=args.feature_aware,
             verbose=not args.quiet,
+            translation_mode=args.translation_mode,
         )
     except Exception as exc:
         print(f"ERROR: {exc}")

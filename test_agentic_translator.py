@@ -424,6 +424,11 @@ check("part" in sys_prompt, "system prompt mentions 'part' variable")
 check("execute_subcad" in sys_prompt, "system prompt requires execute_subcad tool")
 check("markdown fences" in sys_prompt, "system prompt forbids markdown fences in tool code")
 check(len(sys_prompt) > 500, f"system prompt is substantial ({len(sys_prompt)} chars)")
+ai_sys_prompt = build_system_prompt("ai_heavy")
+check("AI-Heavy Translation Mode" in ai_sys_prompt,
+      "ai-heavy system prompt declares AI-heavy mode")
+check("planner is evidence, not a cage" in ai_sys_prompt,
+      "ai-heavy system prompt makes planner advisory")
 
 
 # =========================================================================
@@ -504,6 +509,13 @@ check("coverage_mode: pure_subcad_operations" in prompt,
       "user prompt identifies pure SubCAD planner mode")
 check("choose among those planned operation candidates only" in prompt,
       "user prompt limits ambiguity decisions to planner candidates")
+ai_prompt = build_user_prompt(cq_code, ops_trace, step_path, stock_dims, translation_mode="ai_heavy")
+check("AI-heavy mode is active" in ai_prompt,
+      "ai-heavy user prompt identifies advisory planner mode")
+check("You may add pure SubCAD operations absent from the planner" in ai_prompt,
+      "ai-heavy user prompt permits source-backed operations outside planner candidates")
+check("choose among those planned operation candidates only" not in ai_prompt,
+      "ai-heavy user prompt removes planner-only restriction")
 check("target is the original STEP reference geometry" in prompt,
       "user prompt names original STEP as target geometry")
 check("hybrid_feature" in prompt and "direct CadQuery reconstruction" in prompt,
@@ -1006,6 +1018,95 @@ finally:
     agentic_mod.run_subcad = _orig_run_subcad
     agentic_mod.compare_to_reference = _orig_compare_to_reference
     agentic_mod.step_to_stock_dims = _orig_step_to_stock_dims
+    agentic_mod._HAS_MESH_COMPARE = _orig_has_mesh_compare
+
+
+# =========================================================================
+#  Test 13: AI-heavy mode bypasses deterministic builders
+# =========================================================================
+
+print("\n13. AI-heavy mode ...")
+
+_orig_llm_client = agentic_mod.LLMClient
+_orig_run_subcad = agentic_mod.run_subcad
+_orig_compare_to_reference = agentic_mod.compare_to_reference
+_orig_step_to_stock_dims = agentic_mod.step_to_stock_dims
+_orig_build_deterministic = agentic_mod.build_deterministic_subcad_code
+_orig_has_mesh_compare = agentic_mod._HAS_MESH_COMPARE
+
+
+class _AIHeavyLLMClient:
+    def __init__(self, *args, **kwargs):
+        self.calls = 0
+
+    def tool_chat(self, messages, tools, temperature=0.2, max_tokens=4096):
+        self.calls += 1
+        return {
+            "id": f"ai-heavy-call-{self.calls}",
+            "name": "execute_subcad",
+            "arguments": {"code": "part = Stock.rectangular(10, 10, 10)"},
+        }
+
+
+try:
+    def _deterministic_should_not_run(*args, **kwargs):
+        raise AssertionError("deterministic builder should be skipped in ai_heavy mode")
+
+    agentic_mod.LLMClient = _AIHeavyLLMClient
+    agentic_mod.build_deterministic_subcad_code = _deterministic_should_not_run
+    agentic_mod.run_subcad = lambda code: {
+        "success": True,
+        "volume": 1000.0,
+        "faces": 6,
+        "part": _FakePart(),
+        "step_path": "candidate.step",
+        "stl_path": None,
+        "process_plan": {"operations": []},
+    }
+    agentic_mod.compare_to_reference = lambda candidate, reference: {
+        "match": True,
+        "volume_ratio": 1.0,
+        "target_volume": 1000.0,
+        "candidate_volume": 1000.0,
+    }
+    agentic_mod.step_to_stock_dims = lambda step_bytes: {
+        "length": 10.0, "width": 10.0, "height": 10.0
+    }
+    agentic_mod._HAS_MESH_COMPARE = False
+
+    with tempfile.NamedTemporaryFile(suffix=".step", delete=False) as tf:
+        tf.write(b"mock-step")
+        mock_step_path = tf.name
+
+    try:
+        translator = AgenticTranslator(
+            provider="mock",
+            verbose=False,
+            tolerance=0.01,
+            safety_cap=1,
+            comparison_methods=None,
+            translation_mode="ai_heavy",
+        )
+        ai_heavy_result = translator.translate(
+            {
+                "cadquery_file": "part = cq.Workplane('XY').box(10, 10, 10)",
+                "cadquery_ops_json": "[]",
+            },
+            step_path=mock_step_path,
+        )
+    finally:
+        if os.path.exists(mock_step_path):
+            os.unlink(mock_step_path)
+
+    check(ai_heavy_result["success"], "ai-heavy mode can translate through the LLM path")
+    check(ai_heavy_result["translation_mode"] == "ai_heavy",
+          "ai-heavy result records translation mode")
+finally:
+    agentic_mod.LLMClient = _orig_llm_client
+    agentic_mod.run_subcad = _orig_run_subcad
+    agentic_mod.compare_to_reference = _orig_compare_to_reference
+    agentic_mod.step_to_stock_dims = _orig_step_to_stock_dims
+    agentic_mod.build_deterministic_subcad_code = _orig_build_deterministic
     agentic_mod._HAS_MESH_COMPARE = _orig_has_mesh_compare
 
 

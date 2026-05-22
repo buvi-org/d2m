@@ -82,6 +82,7 @@ def run_batch(
     min_pilot_pass_rate: float = 0.1,
     resume: bool = True,
     dry_run: bool = False,
+    translation_mode: str = "planner_guided",
 ) -> dict[str, Any]:
     _load_local_env_if_present()
     _require_provider_key(provider)
@@ -135,6 +136,7 @@ def run_batch(
         strict_mesh_convergence=not volume_only_success,
         min_mesh_score=min_mesh_score,
         mesh_tolerance_mm=trusted_tolerance_mm,
+        translation_mode=translation_mode,
     )
 
     started = time.perf_counter()
@@ -353,6 +355,12 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Debug mode only: count volume-ratio matches as successes even without mesh/slice trust checks.",
     )
+    parser.add_argument(
+        "--translation-mode",
+        default="planner_guided",
+        choices=["planner_guided", "ai_heavy"],
+        help="planner_guided uses deterministic/planner-first behavior; ai_heavy skips deterministic builders and lets the LLM infer pure SubCAD operations from evidence.",
+    )
     parser.add_argument("--max-api-errors", type=int, default=3)
     parser.add_argument("--pilot-attempts", type=int, default=10)
     parser.add_argument("--min-pilot-pass-rate", type=float, default=0.1)
@@ -390,6 +398,7 @@ def main(argv: list[str] | None = None) -> int:
         min_pilot_pass_rate=args.min_pilot_pass_rate,
         resume=not args.no_resume,
         dry_run=args.dry_run,
+        translation_mode=args.translation_mode,
     )
     print(json.dumps(summary, indent=2, default=str))
     return 0 if summary.get("failed", 0) == 0 and summary.get("api_errors", 0) == 0 else 1
