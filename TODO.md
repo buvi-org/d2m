@@ -319,6 +319,12 @@ Immediate next implementation targets:
 - Done: run a small `--attempt-unsupported` AI-heavy pilot; it recovered row
   21964, so continue with small guarded batches and stop quickly if
   execution/match rate degrades.
+- Done: run follow-up AI-heavy batch from train row 21965 with
+  `--attempt-unsupported`; it stopped at `max_failures` after 2 attempted rows,
+  1 executed row, and 0 strict matches. Failure pattern: retained boss
+  sequencing/no-`part` output on row 21965, and thin-wall/profile/pattern
+  geometry divergence on row 21966. Do not blindly scale unsupported rows until
+  these prompt/API gaps are addressed.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.
