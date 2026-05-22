@@ -27,6 +27,7 @@ from typing import Any, Optional, Tuple
 from .geometry import (
     face_mill_cut,
     rectangular_pocket_cut,
+    sloped_rectangular_cut,
     circular_pocket_cut,
     drill_hole,
     countersink_cut,
@@ -772,6 +773,155 @@ class PocketOp(MachiningOperation):
             pass_type="roughing",
             rest_machining=self.finish_op is not None,
             finish_passes=1 if self.finish_op is not None else 0,
+        ))
+
+
+@dataclass
+class SlopedFloorOp(MachiningOperation):
+    """Rectangular trough/pocket with an axis-aligned planar sloped floor."""
+
+    cx: float = 0.0
+    cy: float = 0.0
+    width: float = 20.0
+    length: float = 30.0
+    start_depth: float = 1.0
+    end_depth: float = 5.0
+    slope_axis: str = "X"
+
+    tool: Optional[ToolSpec] = None
+    material: str = "aluminum_6061"
+
+    def __post_init__(self):
+        self.slope_axis = str(self.slope_axis or "X").upper()
+        if self.slope_axis == "LENGTH":
+            self.slope_axis = "X"
+        elif self.slope_axis == "WIDTH":
+            self.slope_axis = "Y"
+        if self.slope_axis not in {"X", "Y"}:
+            raise ValueError("slope_axis must be 'X'/'length' or 'Y'/'width'")
+        if self.width <= 0.0 or self.length <= 0.0:
+            raise ValueError("sloped floor width and length must be positive")
+        if self.start_depth < 0.0 or self.end_depth < 0.0:
+            raise ValueError("sloped floor depths must be non-negative")
+
+        if self.tool is None:
+            max_tool_dia = max(min(self.width, self.length) * 0.8, 0.5)
+            fallback = ToolSpec("flat_endmill", max_tool_dia)
+            self.tool, self.tool_selection = _select_inventory_tool(
+                ToolRequirement(
+                    "flat_endmill",
+                    max_diameter_mm=max_tool_dia,
+                    min_flute_length_mm=max(self.start_depth, self.end_depth),
+                    feature="sloped_floor",
+                    reason="largest available end mill that fits sloped rectangular trough",
+                    prefer_largest=True,
+                ),
+                fallback,
+            )
+
+        self.feeds_speeds = get_feeds_speeds(
+            _resolve_fs_tool_type(self.tool.tool_type), self.tool.diameter, self.material
+        )
+        self.position = (self.cx, self.cy)
+
+    @property
+    def depth(self) -> float:
+        return max(self.start_depth, self.end_depth)
+
+    def apply(self, shape):
+        return sloped_rectangular_cut(
+            shape,
+            self.cx,
+            self.cy,
+            self.width,
+            self.length,
+            self.start_depth,
+            self.end_depth,
+            slope_axis=self.slope_axis,
+            face_selector=self.face_selector,
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "sloped_floor",
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
+            "depth_mm": self.depth,
+            "start_depth_mm": self.start_depth,
+            "end_depth_mm": self.end_depth,
+            "slope_axis": self.slope_axis,
+            "slope_depth_delta_mm": self.end_depth - self.start_depth,
+            "dimensions": {
+                "length": self.length,
+                "width": self.width,
+                "start_depth": self.start_depth,
+                "end_depth": self.end_depth,
+            },
+            "position": list(self.position) if self.position else None,
+            "face_selector": self.face_selector,
+            "feeds_speeds": self.feeds_speeds if "error" not in self.feeds_speeds else None,
+            "process": "mill",
+            "coverage_family": "axis_aligned_sloped_prismatic_cut",
+            "manufacturing_completeness": "pure_operation",
+            "notes": "Planar sloped floor represented as a wedge cut",
+        }
+
+    def to_toolpath(self) -> Toolpath:
+        stepover = _tool_stepover(self.tool, 0.45, 0.1)
+        feed = _feed_rate(self.feeds_speeds)
+        tp = _new_toolpath(
+            "sloped_floor",
+            self.tool,
+            self.feeds_speeds,
+            metadata={
+                "width_mm": self.width,
+                "length_mm": self.length,
+                "start_depth_mm": self.start_depth,
+                "end_depth_mm": self.end_depth,
+                "slope_axis": self.slope_axis,
+                "tool_selection": _tool_selection_dict(self.tool_selection),
+            },
+        )
+
+        lanes = 0
+        direction = 1
+        if self.slope_axis == "X":
+            x0, x1 = self.cx - self.length / 2.0, self.cx + self.length / 2.0
+            y = self.cy - self.width / 2.0
+            while y <= self.cy + self.width / 2.0 + 1e-9:
+                lanes += 1
+                start = (x0, y, -abs(self.start_depth))
+                end = (x1, y, -abs(self.end_depth))
+                a, b = (start, end) if direction > 0 else (end, start)
+                _move(tp, "rapid", a[0], a[1], tp.safe_z)
+                _move(tp, "plunge", a[0], a[1], a[2], feed=feed)
+                _move(tp, "feed", b[0], b[1], b[2], feed=feed)
+                y += stepover
+                direction *= -1
+        else:
+            y0, y1 = self.cy - self.width / 2.0, self.cy + self.width / 2.0
+            x = self.cx - self.length / 2.0
+            while x <= self.cx + self.length / 2.0 + 1e-9:
+                lanes += 1
+                start = (x, y0, -abs(self.start_depth))
+                end = (x, y1, -abs(self.end_depth))
+                a, b = (start, end) if direction > 0 else (end, start)
+                _move(tp, "rapid", a[0], a[1], tp.safe_z)
+                _move(tp, "plunge", a[0], a[1], a[2], feed=feed)
+                _move(tp, "feed", b[0], b[1], b[2], feed=feed)
+                x += stepover
+                direction *= -1
+
+        if tp.moves:
+            last_x, last_y, _ = tp.moves[-1].position
+            _move(tp, "retract", last_x, last_y, tp.safe_z)
+        return _attach_pass_plan(tp, _pass_plan(
+            strategy="sloped_floor_raster",
+            tool=self.tool,
+            depth_levels=[-abs(self.start_depth), -abs(self.end_depth)],
+            lane_count=max(lanes, 1),
+            pass_type="finishing",
         ))
 
 
@@ -3185,6 +3335,8 @@ class WireCutInternalOp(WireCutProfileOp):
 _OP_REGISTRY: dict[str, type[MachiningOperation]] = {
     "face_mill":        FaceMillOp,
     "pocket":           PocketOp,
+    "sloped_floor":     SlopedFloorOp,
+    "slope_cut":        SlopedFloorOp,
     "circular_pocket":  CircularPocketOp,
     "drill":            DrillOp,
     "tap":              TapOp,

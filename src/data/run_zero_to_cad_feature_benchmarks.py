@@ -10,8 +10,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import multiprocessing as mp
+import queue
 import sys
 import time
+import traceback
 from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -421,11 +424,210 @@ def run_feature_family_benchmark_splits(
     return aggregate
 
 
+def _translation_timeout_result(timeout_s: float) -> dict[str, Any]:
+    return {
+        "success": False,
+        "translator_success": False,
+        "subcad_code": None,
+        "attempts": 0,
+        "exec_result": None,
+        "comparison": None,
+        "mesh_comparison": None,
+        "feature_comparison": None,
+        "history": [],
+        "stop_reason": "row_timeout",
+        "error": f"Translation row exceeded timeout of {timeout_s:g} seconds.",
+    }
+
+
+def _translation_worker_entry(
+    queue_out,
+    row: dict[str, Any],
+    sample_dir_str: str,
+    provider: str,
+    model: str | None,
+    api_timeout_s: float,
+    tolerance: float,
+    safety_cap: int,
+    stagnation_limit: int,
+    divergence_limit: int,
+    comparison_methods: list[str] | None,
+    feature_aware: bool,
+    trusted_tolerance_mm: float,
+    min_mesh_score: float,
+    volume_only_success: bool,
+    deterministic_only: bool,
+    translation_mode: str,
+) -> None:
+    """Run one live translation in an interruptible child process.
+
+    Windows cannot safely interrupt arbitrary CadQuery/OCC or HTTP work inside
+    the parent process, so the feature benchmark uses a child process whenever a
+    per-row timeout is active.  The child writes durable artifacts, then returns
+    only a small picklable summary to the parent.
+    """
+    from .agentic_translator import AgenticTranslator, _load_local_env_if_present
+    from .run_zero_to_cad_translations import (
+        _apply_match_policy,
+        _require_provider_key,
+        _save_result,
+        _translate_row,
+    )
+
+    sample_dir = Path(sample_dir_str)
+    try:
+        _load_local_env_if_present()
+        _require_provider_key(provider)
+        translator = AgenticTranslator(
+            provider=provider,
+            model=model,
+            api_timeout_s=api_timeout_s,
+            tolerance=tolerance,
+            stagnation_limit=stagnation_limit,
+            divergence_limit=divergence_limit,
+            safety_cap=safety_cap,
+            verbose=True,
+            comparison_methods=comparison_methods,
+            feature_aware=feature_aware,
+            strict_mesh_convergence=not volume_only_success,
+            min_mesh_score=min_mesh_score,
+            mesh_tolerance_mm=trusted_tolerance_mm,
+            deterministic_only=deterministic_only,
+            translation_mode=translation_mode,
+        )
+        result = _translate_row(translator, row, sample_dir)
+        result = _apply_match_policy(
+            result,
+            comparison_methods=comparison_methods,
+            trusted_tolerance_mm=trusted_tolerance_mm,
+            min_mesh_score=min_mesh_score,
+            volume_only_success=volume_only_success,
+            volume_tolerance=tolerance,
+        )
+    except Exception as exc:
+        result = {
+            "success": False,
+            "translator_success": False,
+            "error": str(exc),
+            "stop_reason": "runner_exception",
+            "traceback": traceback.format_exc(),
+        }
+
+    _save_result(sample_dir, row, result, provider, model)
+    exec_result = result.get("exec_result") or {}
+    queue_out.put({
+        "executed": bool(exec_result.get("success")),
+        "matched": bool(result.get("success")),
+        "failed": not bool(result.get("success")),
+        "sample_dir": str(sample_dir),
+        "stop_reason": result.get("stop_reason"),
+        "trusted_match": result.get("trusted_match"),
+        "comparison_methods": comparison_methods or [],
+        "trusted_tolerance_mm": trusted_tolerance_mm,
+        "min_mesh_score": min_mesh_score,
+        "volume_only_success": volume_only_success,
+        "error": result.get("error"),
+    })
+
+
+def _run_translation_with_timeout(
+    *,
+    row: dict[str, Any],
+    sample_dir: Path,
+    provider: str,
+    model: str | None,
+    api_timeout_s: float,
+    tolerance: float,
+    safety_cap: int,
+    stagnation_limit: int,
+    divergence_limit: int,
+    comparison_methods: list[str] | None,
+    feature_aware: bool,
+    trusted_tolerance_mm: float,
+    min_mesh_score: float,
+    volume_only_success: bool,
+    deterministic_only: bool,
+    translation_mode: str,
+    row_timeout_s: float,
+) -> dict[str, Any]:
+    from .run_zero_to_cad_translations import _save_result
+
+    ctx = mp.get_context("spawn")
+    queue_out = ctx.Queue(maxsize=1)
+    proc = ctx.Process(
+        target=_translation_worker_entry,
+        args=(
+            queue_out,
+            row,
+            str(sample_dir),
+            provider,
+            model,
+            api_timeout_s,
+            tolerance,
+            safety_cap,
+            stagnation_limit,
+            divergence_limit,
+            comparison_methods,
+            feature_aware,
+            trusted_tolerance_mm,
+            min_mesh_score,
+            volume_only_success,
+            deterministic_only,
+            translation_mode,
+        ),
+    )
+    proc.start()
+    proc.join(float(row_timeout_s))
+    if proc.is_alive():
+        proc.terminate()
+        proc.join(10)
+        result = _translation_timeout_result(row_timeout_s)
+        _save_result(sample_dir, row, result, provider, model)
+        return {
+            "executed": False,
+            "matched": False,
+            "failed": True,
+            "sample_dir": str(sample_dir),
+            "stop_reason": "row_timeout",
+            "trusted_match": None,
+            "comparison_methods": comparison_methods or [],
+            "trusted_tolerance_mm": trusted_tolerance_mm,
+            "min_mesh_score": min_mesh_score,
+            "volume_only_success": volume_only_success,
+            "error": result["error"],
+        }
+    try:
+        return queue_out.get_nowait()
+    except queue.Empty:
+        error = f"Translation worker exited with code {proc.exitcode} without returning a result."
+        result = {
+            "success": False,
+            "translator_success": False,
+            "error": error,
+            "stop_reason": "row_worker_no_result",
+        }
+        _save_result(sample_dir, row, result, provider, model)
+        return {
+            "executed": False,
+            "matched": False,
+            "failed": True,
+            "sample_dir": str(sample_dir),
+            "stop_reason": "row_worker_no_result",
+            "trusted_match": None,
+            "comparison_methods": comparison_methods or [],
+            "trusted_tolerance_mm": trusted_tolerance_mm,
+            "min_mesh_score": min_mesh_score,
+            "volume_only_success": volume_only_success,
+            "error": error,
+        }
+
+
 def make_translation_executor(
     *,
     provider: str = "deepseek",
     model: str | None = None,
     api_timeout_s: float = 120.0,
+    row_timeout_s: float | None = None,
     tolerance: float = 0.05,
     safety_cap: int = 5,
     stagnation_limit: int = 2,
@@ -455,23 +657,27 @@ def make_translation_executor(
 
     _load_local_env_if_present()
     _require_provider_key(provider)
-    translator = AgenticTranslator(
-        provider=provider,
-        model=model,
-        api_timeout_s=api_timeout_s,
-        tolerance=tolerance,
-        stagnation_limit=stagnation_limit,
-        divergence_limit=divergence_limit,
-        safety_cap=safety_cap,
-        verbose=True,
-        comparison_methods=comparison_methods,
-        feature_aware=feature_aware,
-        strict_mesh_convergence=not volume_only_success,
-        min_mesh_score=min_mesh_score,
-        mesh_tolerance_mm=trusted_tolerance_mm,
-        deterministic_only=deterministic_only,
-        translation_mode=translation_mode,
-    )
+    if row_timeout_s is None:
+        row_timeout_s = max(api_timeout_s * max(safety_cap + 1, 1), 180.0)
+    translator = None
+    if row_timeout_s <= 0:
+        translator = AgenticTranslator(
+            provider=provider,
+            model=model,
+            api_timeout_s=api_timeout_s,
+            tolerance=tolerance,
+            stagnation_limit=stagnation_limit,
+            divergence_limit=divergence_limit,
+            safety_cap=safety_cap,
+            verbose=True,
+            comparison_methods=comparison_methods,
+            feature_aware=feature_aware,
+            strict_mesh_convergence=not volume_only_success,
+            min_mesh_score=min_mesh_score,
+            mesh_tolerance_mm=trusted_tolerance_mm,
+            deterministic_only=deterministic_only,
+            translation_mode=translation_mode,
+        )
 
     def _execute(row: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         output_root = Path(context["output_dir"])
@@ -484,6 +690,26 @@ def make_translation_executor(
             "selected_families": context.get("selected_families", context.get("families", [])),
         }
         _write_source_artifacts(sample_dir, row_for_run)
+        if row_timeout_s > 0:
+            return _run_translation_with_timeout(
+                row=row_for_run,
+                sample_dir=sample_dir,
+                provider=provider,
+                model=model,
+                api_timeout_s=api_timeout_s,
+                tolerance=tolerance,
+                safety_cap=safety_cap,
+                stagnation_limit=stagnation_limit,
+                divergence_limit=divergence_limit,
+                comparison_methods=comparison_methods,
+                feature_aware=feature_aware,
+                trusted_tolerance_mm=trusted_tolerance_mm,
+                min_mesh_score=min_mesh_score,
+                volume_only_success=volume_only_success,
+                deterministic_only=deterministic_only,
+                translation_mode=translation_mode,
+                row_timeout_s=float(row_timeout_s),
+            )
         result = _translate_row(translator, row_for_run, sample_dir)
         result = _apply_match_policy(
             result,
@@ -862,6 +1088,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--provider", default="deepseek")
     parser.add_argument("--model", default=None)
     parser.add_argument("--api-timeout-s", type=float, default=120.0)
+    parser.add_argument(
+        "--row-timeout-s",
+        type=float,
+        default=None,
+        help=(
+            "Maximum wall-clock seconds for one live row. Defaults to a "
+            "guarded value derived from --api-timeout-s and --safety-cap; "
+            "set 0 to disable child-process row timeouts."
+        ),
+    )
     parser.add_argument("--tolerance", type=float, default=0.05)
     parser.add_argument("--safety-cap", type=int, default=5)
     parser.add_argument("--stagnation-limit", type=int, default=2)
@@ -923,6 +1159,7 @@ def main(argv: list[str] | None = None) -> int:
             provider=args.provider,
             model=args.model,
             api_timeout_s=args.api_timeout_s,
+            row_timeout_s=args.row_timeout_s,
             tolerance=args.tolerance,
             safety_cap=args.safety_cap,
             stagnation_limit=args.stagnation_limit,

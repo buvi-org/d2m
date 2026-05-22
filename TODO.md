@@ -359,6 +359,12 @@ Immediate next implementation targets:
   executed because both AI attempts still returned narrative/comment-heavy code.
   Harden generated-code validation further: tool code now rejects all Python
   comment lines, not only obvious exploratory comments.
+- Done: add a child-process row timeout guard for live Zero-to-CAD feature
+  benchmarks. A local CadQuery/OCC/mesh hang now records `row_timeout` and a
+  durable result instead of leaving a hot Python process with no manifest row.
+- Done: add SubCAD `slope_cut` / `sloped_floor` for axis-aligned wedge/sloped
+  trough machining, including geometry, process-plan/toolpath/pass metadata,
+  translator prompt exposure, and focused tests.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.

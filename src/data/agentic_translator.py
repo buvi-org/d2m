@@ -103,6 +103,13 @@ Stock instance (immutable/fluent pattern).
 - `.slot(length, width, depth=5.0, *, angle=0.0, cx=0.0, cy=0.0, through=False, face_selector=">Z")`
   Cut a straight slot (obround).
 
+- `.slope_cut(width, length, start_depth, end_depth, *, cx=0.0, cy=0.0,
+  slope_axis="X", face_selector=">Z")` / `.sloped_floor(...)`
+  Cut an axis-aligned rectangular trough with a planar sloped floor. Use this
+  for wedge-cut or sloped-bottom trough features instead of approximating with
+  many flat pockets. `slope_axis="X"` changes depth along length; `"Y"` changes
+  depth along width.
+
 - `.contour(depth, *, stepdown=None)` — Profile/contour milling around outer boundary.
 - `.profile_pocket(profile, depth, *, face_selector=">Z", islands=None)` —
   Machine arbitrary closed profile pockets. Profiles may be dicts with
@@ -308,6 +315,7 @@ Stock.cylindrical(D, H, material="aluminum_6061")
 .edge_chamfer(selector, width, angle=45)
 .edge_fillet(selector, radius)
 .slot(L, W, depth, angle=0, cx=cx, cy=cy, through=False, face_selector=">Z")
+.slope_cut(W, L, start_depth, end_depth, cx=cx, cy=cy, slope_axis="X")
 .contour(depth)
 .profile_pocket(profile, depth)
 .profile_cutout(profile, depth=None, through=False)
@@ -655,8 +663,11 @@ subtractive program. Remember:
 {planner_instruction}
 {absent_feature_instruction}
 - Use simple SubCAD operations first: face_mill, pocket, circular_pocket,
-  drill, slot, and chamfer. Use counterbore/countersink only when visible in
-  the CadQuery source.
+  drill, slot, slope_cut, and chamfer. Use counterbore/countersink only when
+  visible in the CadQuery source.
+- For wedge-cut or sloped-bottom trough features, use
+  `.slope_cut(width, length, start_depth, end_depth, cx=..., cy=...,
+  slope_axis="X"|"Y")` to represent the sloped floor directly.
 - Keep rectangular dimensions in the correct axes. CadQuery `.rect(x_size,
   y_size)` maps to SubCAD `.pocket(width=y_size, length=x_size, ...)`.
   SubCAD `width` always means Y span, and SubCAD `length` always means X span.

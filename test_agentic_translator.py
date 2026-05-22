@@ -186,6 +186,9 @@ check(_validate_generated_subcad_code("part = Stock.rectangular(10, 10, 5)\npass
       "generated SubCAD validator rejects pass placeholders")
 check(_validate_generated_subcad_code("stock = Stock.rectangular(10, 10, 5)") is not None,
       "generated SubCAD validator requires final part assignment")
+timeout_result = feature_benchmark_mod._translation_timeout_result(12.5)
+check(timeout_result["stop_reason"] == "row_timeout" and not timeout_result["success"],
+      "feature runner records row wall-clock timeouts as failed translation results")
 
 trusted_result = _apply_match_policy(
     {
@@ -481,6 +484,7 @@ check("Stock.cylindrical" in sys_prompt, "system prompt mentions Stock.cylindric
 check(".face_mill" in sys_prompt, "system prompt mentions face_mill")
 check(".pocket" in sys_prompt, "system prompt mentions pocket")
 check(".drill" in sys_prompt, "system prompt mentions drill")
+check(".slope_cut" in sys_prompt, "system prompt mentions sloped floor cuts")
 check(".chamfer" in sys_prompt, "system prompt mentions chamfer")
 check(".edge_chamfer" in sys_prompt, "system prompt mentions selected edge chamfer")
 check(".machine_around_profile" in sys_prompt, "system prompt mentions retained-material operations")
@@ -625,6 +629,8 @@ check("Never use bare measure names" in prompt and "m.flange_thickness" in promp
       "user prompt prevents undefined bare measure variables")
 check("Stock.cylindrical" in prompt and ".cylinder" in prompt,
       "user prompt maps CadQuery cylindrical blanks to cylindrical stock")
+check(".slope_cut" in prompt and "sloped floor" in prompt,
+      "user prompt exposes sloped trough machining")
 check("extrude(..., taper=...)" in prompt and "tapered_cylinder" in prompt,
       "user prompt maps tapered extrudes to turn_profile")
 check("second `.circle(...)`" in prompt and "center bore" in prompt,

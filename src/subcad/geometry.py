@@ -263,6 +263,82 @@ def rectangular_pocket_cut(
     return result
 
 
+def sloped_rectangular_cut(
+    shape: "cq.Workplane",
+    cx: float,
+    cy: float,
+    width: float,
+    length: float,
+    start_depth: float,
+    end_depth: float,
+    *,
+    slope_axis: str = "X",
+    face_selector: str = ">Z",
+) -> "cq.Workplane":
+    """Cut an axis-aligned rectangular pocket with a planar sloped floor.
+
+    Depths are measured down from the current top face. ``slope_axis`` selects
+    whether the floor changes along X/length or Y/width.
+    """
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+
+    width = float(width)
+    length = float(length)
+    start_depth = float(start_depth)
+    end_depth = float(end_depth)
+    if width <= 0.0 or length <= 0.0:
+        raise ValueError("sloped cut width and length must be positive")
+    if start_depth < 0.0 or end_depth < 0.0:
+        raise ValueError("sloped cut depths must be non-negative")
+    if max(start_depth, end_depth) <= 0.0:
+        return shape
+    if face_selector != ">Z":
+        raise ValueError("sloped rectangular cuts currently support face_selector='>Z' only")
+
+    bbox = shape.val().BoundingBox()
+    z_top = bbox.zmax
+    z_pad = min(max(max(start_depth, end_depth), 1.0), 5.0)
+    axis = str(slope_axis or "X").upper()
+
+    if axis in {"X", "LENGTH"}:
+        x0 = cx - length / 2.0
+        x1 = cx + length / 2.0
+        profile = [
+            (x0, z_top + z_pad),
+            (x1, z_top + z_pad),
+            (x1, z_top - end_depth),
+            (x0, z_top - start_depth),
+        ]
+        cutter = (
+            cq.Workplane("XZ")
+            .polyline(profile)
+            .close()
+            .extrude(width / 2.0, both=True)
+            .translate((0.0, cy, 0.0))
+        )
+    elif axis in {"Y", "WIDTH"}:
+        y0 = cy - width / 2.0
+        y1 = cy + width / 2.0
+        profile = [
+            (y0, z_top + z_pad),
+            (y1, z_top + z_pad),
+            (y1, z_top - end_depth),
+            (y0, z_top - start_depth),
+        ]
+        cutter = (
+            cq.Workplane("YZ")
+            .polyline(profile)
+            .close()
+            .extrude(length / 2.0, both=True)
+            .translate((cx, 0.0, 0.0))
+        )
+    else:
+        raise ValueError("slope_axis must be 'X'/'length' or 'Y'/'width'")
+
+    return shape.cut(cutter)
+
+
 def circular_pocket_cut(
     shape: "cq.Workplane",
     cx: float,

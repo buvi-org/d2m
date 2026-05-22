@@ -351,6 +351,52 @@ class Stock:
 
         return result
 
+    def slope_cut(
+        self,
+        width: float,
+        length: float,
+        start_depth: float,
+        end_depth: float,
+        *,
+        cx: float = 0.0,
+        cy: float = 0.0,
+        slope_axis: str = "X",
+        face_selector: str = ">Z",
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Cut a rectangular trough with a planar sloped floor.
+
+        Depths are measured down from the top face. ``slope_axis`` may be
+        ``"X"``/``"length"`` or ``"Y"``/``"width"``.
+        """
+        from .operations import SlopedFloorOp
+
+        op = SlopedFloorOp(
+            cx=cx,
+            cy=cy,
+            width=width,
+            length=length,
+            start_depth=start_depth,
+            end_depth=end_depth,
+            slope_axis=slope_axis,
+            face_selector=face_selector,
+            tool=tool,
+            material=self._material,
+        )
+        op.sequence_number = self._next_op_number
+        return self._apply_op(op)
+
+    def sloped_floor(
+        self,
+        width: float,
+        length: float,
+        start_depth: float,
+        end_depth: float,
+        **kwargs,
+    ) -> "Stock":
+        """Alias for :meth:`slope_cut`."""
+        return self.slope_cut(width, length, start_depth, end_depth, **kwargs)
+
     def circular_pocket(
         self,
         diameter: float,

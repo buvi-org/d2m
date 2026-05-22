@@ -152,9 +152,10 @@ Recent local test status:
 
 | Test | Status |
 |------|--------|
-| `python test_agentic_translator.py` | PASS, 173/173. Includes strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt coverage, generated-code discipline checks, and STEP-envelope prompt guards; live LLM runs are separate. |
+| `python test_agentic_translator.py` | PASS, 176/176. Includes strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt coverage, generated-code discipline checks, STEP-envelope prompt guards, sloped-trough prompt coverage, and row-timeout failure handling; live LLM runs are separate. |
 | `python test_subcad_tube_profile.py` | PASS, 6/6. Covers axis-aligned tube_profile geometry and process-plan records. |
 | `python test_subcad_side_profile_cutout.py` | PASS, 6/6. Covers side-face triangular profile cutouts for XZ/YZ cross-sections. |
+| `python test_subcad_sloped_floor.py` | PASS, 10/10. Covers `slope_cut`/`sloped_floor` wedge geometry, process-plan records, toolpaths, and pass-plan metadata. |
 | `python test_subcad_integration.py` | PASS, 39/39 |
 | `python test_fixturing_integration.py` | PASS, 19/19 |
 | `python test_sim_bridge.py` | PASS, 51/51 |
