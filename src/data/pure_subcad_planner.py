@@ -387,10 +387,17 @@ def _deterministic_box_hole_code(cadquery_code: str) -> str | None:
     if not box:
         return None
     env = _numeric_env(cadquery_code)
-    hole = _first_call_number(cadquery_code, "hole", env)
+    hole_args = _first_call_args(cadquery_code, "hole")
+    if not hole_args:
+        return None
+    hole = _eval_number(hole_args[0], env)
     if hole is None or hole <= 0:
         return None
-    sequence = [f".drill({hole:.6g}, through=True, cx=0.0, cy=0.0)"]
+    depth = _hole_depth_from_args(hole_args, env)
+    if depth is not None and depth > 0:
+        sequence = [f".drill({hole:.6g}, depth={depth:.6g}, through=False, cx=0.0, cy=0.0)"]
+    else:
+        sequence = [f".drill({hole:.6g}, through=True, cx=0.0, cy=0.0)"]
     chamfer = _first_call_number(cadquery_code, "chamfer", env)
     if chamfer is not None and chamfer > 0:
         sequence.append(f'.edge_chamfer("all_edges", width={chamfer:.6g})')
@@ -2097,18 +2104,37 @@ def _deterministic_drill_calls(code_text: str) -> list[str]:
     diameter = _hole_diameter_from_code(code_text)
     if diameter is None:
         return []
+    depth = _hole_depth_from_code(code_text)
     calls = []
     for x, y in _hole_positions_from_code(code_text):
-        calls.append(f".drill({diameter:.6g}, through=True, cx={x:.6g}, cy={y:.6g})")
+        if depth is not None and depth > 0:
+            calls.append(
+                f".drill({diameter:.6g}, depth={depth:.6g}, through=False, "
+                f"cx={x:.6g}, cy={y:.6g})"
+            )
+        else:
+            calls.append(f".drill({diameter:.6g}, through=True, cx={x:.6g}, cy={y:.6g})")
     return calls
 
 
 def _hole_diameter_from_code(code_text: str) -> float | None:
     env = _numeric_env(code_text)
-    match = re.search(r"\.hole\(\s*(?P<arg>[^),]+)", code_text, re.IGNORECASE)
-    if not match:
+    args = _first_call_args(code_text, "hole")
+    if not args:
         return None
-    return _eval_number(match.group("arg"), env)
+    return _eval_number(args[0], env)
+
+
+def _hole_depth_from_code(code_text: str) -> float | None:
+    env = _numeric_env(code_text)
+    return _hole_depth_from_args(_first_call_args(code_text, "hole"), env)
+
+
+def _hole_depth_from_args(args: list[str], env: dict[str, float]) -> float | None:
+    if len(args) >= 2 and "=" not in args[1]:
+        return _eval_number(args[1], env)
+    keywords = _parse_keyword_args(args, env)
+    return keywords.get("depth")
 
 
 def _hole_positions_from_code(code_text: str) -> list[tuple[float, float]]:

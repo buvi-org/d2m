@@ -49,7 +49,7 @@ from src.data.run_zero_to_cad_translations import (
     _parse_methods,
     compatibility_report,
 )
-from src.data.pure_subcad_planner import plan_pure_subcad_features
+from src.data.pure_subcad_planner import build_deterministic_subcad_code, plan_pure_subcad_features
 import src.data.agentic_translator as agentic_mod
 
 from src.data.subcad_repl import run_subcad, compare_to_reference, format_feedback
@@ -119,6 +119,22 @@ trusted_result = _apply_match_policy(
     volume_only_success=False,
 )
 check(trusted_result["success"], "runner accepts volume and mesh trusted match")
+
+blind_hole_code = build_deterministic_subcad_code(
+    "import cadquery as cq\n"
+    "result = cq.Workplane('XY').box(10,10,10).faces('>Z').workplane().hole(4,2)",
+    [{"op_name": "box"}, {"op_name": "hole"}],
+)
+check(blind_hole_code is not None and ".drill(4, depth=2, through=False" in blind_hole_code,
+      "deterministic box hole preserves explicit blind depth")
+
+through_hole_code = build_deterministic_subcad_code(
+    "import cadquery as cq\n"
+    "result = cq.Workplane('XY').box(10,10,10).faces('>Z').workplane().hole(4)",
+    [{"op_name": "box"}, {"op_name": "hole"}],
+)
+check(through_hole_code is not None and ".drill(4, through=True" in through_hole_code,
+      "deterministic box hole keeps implicit through hole")
 
 
 # =========================================================================
