@@ -42,6 +42,7 @@ from src.data.agentic_translator import (
     translate_batch,
     SUBCAD_API_REFERENCE,
     _extract_measures_block,
+    _validate_generated_subcad_code,
 )
 from src.data.run_agentic_translation import build_dry_run_preview
 from src.data.run_zero_to_cad_translations import (
@@ -175,6 +176,14 @@ check(not volume_mismatch_result["success"],
       "runner rejects mesh-perfect rows outside trusted volume tolerance")
 check(volume_mismatch_result["match_policy"]["status"] == "volume_mismatch",
       "runner records strict volume mismatch before mesh trust")
+check(_validate_generated_subcad_code("part = Stock.rectangular(10, 10, 5)") is None,
+      "generated SubCAD validator accepts concise executable code")
+check(_validate_generated_subcad_code("# Let me try a few approaches\npart = Stock.rectangular(10, 10, 5)") is not None,
+      "generated SubCAD validator rejects exploratory reasoning comments")
+check(_validate_generated_subcad_code("part = Stock.rectangular(10, 10, 5)\npass") is not None,
+      "generated SubCAD validator rejects pass placeholders")
+check(_validate_generated_subcad_code("stock = Stock.rectangular(10, 10, 5)") is not None,
+      "generated SubCAD validator requires final part assignment")
 
 trusted_result = _apply_match_policy(
     {

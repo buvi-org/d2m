@@ -325,6 +325,10 @@ Immediate next implementation targets:
   sequencing/no-`part` output on row 21965, and thin-wall/profile/pattern
   geometry divergence on row 21966. Do not blindly scale unsupported rows until
   these prompt/API gaps are addressed.
+- Done: harden the AI-heavy translator against narrative/non-executable code:
+  prompts now forbid exploratory generated-code comments, `pass`, unfinished
+  branches, and "let me try" reasoning; the translator rejects these before
+  geometry execution and feeds the error back into the repair loop.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.

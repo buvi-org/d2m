@@ -151,7 +151,7 @@ Recent local test status:
 
 | Test | Status |
 |------|--------|
-| `python test_agentic_translator.py` | PASS, 166/166. Includes strict Zero-to-CAD runner policy tests and AI-heavy unsupported-attempt coverage; live LLM runs are separate. |
+| `python test_agentic_translator.py` | PASS, 170/170. Includes strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt coverage, and generated-code discipline checks; live LLM runs are separate. |
 | `python test_subcad_integration.py` | PASS, 39/39 |
 | `python test_fixturing_integration.py` | PASS, 19/19 |
 | `python test_sim_bridge.py` | PASS, 51/51 |

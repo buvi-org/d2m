@@ -496,6 +496,9 @@ Your job is to translate CadQuery constructive CAD into executable SubCAD.
 You MUST call the `execute_subcad` tool with raw Python code in its `code`
 argument. Do not put markdown fences, explanations, comments about your
 reasoning, JSON outside the tool call, or prose in the code string.
+The code must be concise executable construction code: no exploratory
+reasoning, no `pass`, no unfinished branches, no "let me try" commentary, and
+the final non-empty line should leave the completed Stock assigned to `part`.
 
 {SUBCAD_API_REFERENCE}
 {ai_heavy_appendix}
@@ -627,6 +630,10 @@ subtractive program. Remember:
   unless you explicitly assign a local helper variable in the generated code.
 - Call the `execute_subcad` tool with raw Python code. Do not include markdown
   fences or explanation text in the tool argument.
+- Return only executable construction code. Do not include exploratory comments,
+  `pass`, unfinished sketches, multiple abandoned approaches, or comments like
+  "let me try" / "I think" / "this is complex". If a geometry is difficult,
+  choose the best available pure SubCAD approximation and finish the program.
 {planner_instruction}
 {absent_feature_instruction}
 - Use simple SubCAD operations first: face_mill, pocket, circular_pocket,
@@ -1033,6 +1040,26 @@ def extract_code(response: str) -> Optional[str]:
         if "Stock.rectangular" in code:
             return code
 
+    return None
+
+
+def _validate_generated_subcad_code(code: str) -> str | None:
+    """Catch non-executable narrative code before spending geometry work."""
+    if not re.search(r"(?m)^\s*part\s*=", code):
+        return "Generated code must assign the final Stock to a variable named 'part'."
+    if re.search(r"(?m)^\s*pass\s*(#.*)?$", code):
+        return "Generated code contains `pass`; return a complete executable SubCAD program instead."
+    narrative_pattern = re.compile(
+        r"(?im)^\s*#\s*(let me|actually|hmm|i think|wait\b|this is getting complex|best i can do)"
+    )
+    if narrative_pattern.search(code):
+        return (
+            "Generated code contains exploratory reasoning comments. Return only "
+            "concise executable SubCAD construction code."
+        )
+    nonempty_lines = [line.strip() for line in code.splitlines() if line.strip()]
+    if nonempty_lines and nonempty_lines[-1].startswith("#"):
+        return "Generated code ends with a comment; finish with executable SubCAD code assigning `part`."
     return None
 
 
@@ -1740,7 +1767,14 @@ class AgenticTranslator:
                 print(f"{len(code)} chars", end=" ", flush=True)
 
             # --- Execute code ---
-            exec_result = run_subcad(code)
+            code_validation_error = _validate_generated_subcad_code(code)
+            if code_validation_error:
+                exec_result = {
+                    "success": False,
+                    "error": code_validation_error,
+                }
+            else:
+                exec_result = run_subcad(code)
 
             if self.verbose:
                 if exec_result["success"]:
