@@ -365,6 +365,9 @@ Immediate next implementation targets:
 - Done: add SubCAD `slope_cut` / `sloped_floor` for axis-aligned wedge/sloped
   trough machining, including geometry, process-plan/toolpath/pass metadata,
   translator prompt exposure, and focused tests.
+- Done: normalize AI-generated SubCAD by stripping full-line Python comments
+  before validation/execution. This lets the agentic loop use geometry feedback
+  when a model returns comment-prefaced but otherwise executable code.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.

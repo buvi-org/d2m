@@ -42,6 +42,7 @@ from src.data.agentic_translator import (
     translate_batch,
     SUBCAD_API_REFERENCE,
     _extract_measures_block,
+    _normalize_generated_subcad_code,
     _validate_generated_subcad_code,
 )
 from src.data.run_agentic_translation import build_dry_run_preview
@@ -180,6 +181,8 @@ check(_validate_generated_subcad_code("part = Stock.rectangular(10, 10, 5)") is 
       "generated SubCAD validator accepts concise executable code")
 check(_validate_generated_subcad_code("# harmless-looking comment\npart = Stock.rectangular(10, 10, 5)") is not None,
       "generated SubCAD validator rejects all comment lines")
+check(_normalize_generated_subcad_code("# harmless-looking comment\npart = Stock.rectangular(10, 10, 5)") == "part = Stock.rectangular(10, 10, 5)",
+      "generated SubCAD normalizer strips full-line comments before execution")
 check(_validate_generated_subcad_code("# Let me try a few approaches\npart = Stock.rectangular(10, 10, 5)") is not None,
       "generated SubCAD validator rejects exploratory reasoning comments")
 check(_validate_generated_subcad_code("part = Stock.rectangular(10, 10, 5)\npass") is not None,

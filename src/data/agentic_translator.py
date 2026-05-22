@@ -1094,6 +1094,16 @@ def _validate_generated_subcad_code(code: str) -> str | None:
     return None
 
 
+def _normalize_generated_subcad_code(code: str) -> str:
+    """Strip full-line Python comments before validation/execution."""
+    kept = [
+        line
+        for line in str(code or "").splitlines()
+        if not line.lstrip().startswith("#")
+    ]
+    return "\n".join(kept).strip()
+
+
 # =========================================================================
 #  LLM client abstraction
 # =========================================================================
@@ -1793,9 +1803,11 @@ class AgenticTranslator:
                 })
                 continue
 
-            code = tool_result["arguments"]["code"]
+            raw_code = tool_result["arguments"]["code"]
+            code = _normalize_generated_subcad_code(raw_code)
             if self.verbose:
-                print(f"{len(code)} chars", end=" ", flush=True)
+                suffix = " normalized" if code != raw_code else ""
+                print(f"{len(raw_code)} chars{suffix}", end=" ", flush=True)
 
             # --- Execute code ---
             code_validation_error = _validate_generated_subcad_code(code)
