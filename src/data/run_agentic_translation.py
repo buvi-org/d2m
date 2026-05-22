@@ -60,6 +60,7 @@ def run_live_translation(
     *,
     provider: str = "deepseek",
     model: str | None = None,
+    api_timeout_s: float = 120.0,
     output_dir: str | None = None,
     tolerance: float = 0.05,
     stagnation_limit: int = 3,
@@ -86,6 +87,7 @@ def run_live_translation(
     translator = AgenticTranslator(
         provider=provider,
         model=model,
+        api_timeout_s=api_timeout_s,
         tolerance=tolerance,
         stagnation_limit=stagnation_limit,
         divergence_limit=divergence_limit,
@@ -111,6 +113,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sample-dir", default=DEFAULT_SAMPLE_DIR)
     parser.add_argument("--provider", default="deepseek")
     parser.add_argument("--model", default=None)
+    parser.add_argument("--api-timeout-s", type=float, default=120.0)
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--tolerance", type=float, default=0.05)
     parser.add_argument("--stagnation-limit", type=int, default=3)
@@ -146,6 +149,7 @@ def main(argv: list[str] | None = None) -> int:
             args.sample_dir,
             provider=args.provider,
             model=args.model,
+            api_timeout_s=args.api_timeout_s,
             output_dir=args.output_dir,
             tolerance=args.tolerance,
             stagnation_limit=args.stagnation_limit,

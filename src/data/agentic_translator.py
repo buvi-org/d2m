@@ -1048,6 +1048,7 @@ class LLMClient:
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
+        api_timeout_s: float = 120.0,
     ):
         self.provider = provider.lower()
         _load_local_env_if_present()
@@ -1063,6 +1064,7 @@ class LLMClient:
             self._client = OpenAI(
                 api_key=resolved_key,
                 base_url=base_url or "https://api.deepseek.com",
+                timeout=api_timeout_s,
             )
             self._is_anthropic = False
             self._is_openai_compat = True
@@ -1075,7 +1077,7 @@ class LLMClient:
                     "OpenAI API key not found. Set OPENAI_API_KEY env var."
                 )
             from openai import OpenAI
-            self._client = OpenAI(api_key=resolved_key)
+            self._client = OpenAI(api_key=resolved_key, timeout=api_timeout_s)
             self._is_anthropic = False
             self._is_openai_compat = True
 
@@ -1087,7 +1089,7 @@ class LLMClient:
                     "Anthropic API key not found. Set ANTHROPIC_API_KEY env var."
                 )
             import anthropic
-            self._client = anthropic.Anthropic(api_key=resolved_key)
+            self._client = anthropic.Anthropic(api_key=resolved_key, timeout=api_timeout_s)
             self._is_anthropic = True
             self._is_openai_compat = False
 
@@ -1485,6 +1487,7 @@ class AgenticTranslator:
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
+        api_timeout_s: float = 120.0,
         tolerance: float = 0.05,
         stagnation_limit: int = 3,
         divergence_limit: int = 2,
@@ -1505,6 +1508,7 @@ class AgenticTranslator:
             model: Model name. Uses provider default if None.
             api_key: API key. Reads from env var if None.
             base_url: API base URL override.
+            api_timeout_s: Per-request LLM timeout in seconds.
             tolerance: Volume ratio error that counts as success (0.05 = 5%).
             stagnation_limit: Non-improving attempts before giving up.
             divergence_limit: Worsening attempts before giving up.
@@ -1532,6 +1536,7 @@ class AgenticTranslator:
             model=model,
             api_key=api_key,
             base_url=base_url,
+            api_timeout_s=api_timeout_s,
         )
         self.tolerance = tolerance
         self.stagnation_limit = stagnation_limit
@@ -2202,6 +2207,7 @@ def translate_exploration_sample(
     sample_dir: str,
     provider: str = "deepseek",
     model: Optional[str] = None,
+    api_timeout_s: float = 120.0,
     tolerance: float = 0.05,
     stagnation_limit: int = 3,
     safety_cap: int = 20,
@@ -2218,6 +2224,7 @@ def translate_exploration_sample(
                     ops_trace.json, and model.step.
         provider: LLM provider.
         model: Model override.
+        api_timeout_s: Per-request LLM timeout in seconds.
         tolerance: Volume ratio error that counts as success (0.05 = 5%).
         stagnation_limit: Non-improving attempts before giving up.
         safety_cap: Absolute max attempts.
@@ -2252,6 +2259,7 @@ def translate_exploration_sample(
     translator = AgenticTranslator(
         provider=provider,
         model=model,
+        api_timeout_s=api_timeout_s,
         tolerance=tolerance,
         stagnation_limit=stagnation_limit,
         safety_cap=safety_cap,

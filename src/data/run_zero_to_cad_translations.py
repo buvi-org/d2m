@@ -67,6 +67,7 @@ def run_batch(
     start_offset: int = 0,
     provider: str = "deepseek",
     model: str | None = None,
+    api_timeout_s: float = 120.0,
     tolerance: float = 0.05,
     safety_cap: int = 5,
     stagnation_limit: int = 2,
@@ -126,6 +127,7 @@ def run_batch(
     translator = AgenticTranslator(
         provider=provider,
         model=model,
+        api_timeout_s=api_timeout_s,
         tolerance=tolerance,
         stagnation_limit=stagnation_limit,
         divergence_limit=divergence_limit,
@@ -340,6 +342,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--start-offset", type=int, default=0)
     parser.add_argument("--provider", default="deepseek")
     parser.add_argument("--model", default=None)
+    parser.add_argument("--api-timeout-s", type=float, default=120.0)
     parser.add_argument("--tolerance", type=float, default=0.05)
     parser.add_argument("--safety-cap", type=int, default=5)
     parser.add_argument("--stagnation-limit", type=int, default=2)
@@ -383,6 +386,7 @@ def main(argv: list[str] | None = None) -> int:
         start_offset=args.start_offset,
         provider=args.provider,
         model=args.model,
+        api_timeout_s=args.api_timeout_s,
         tolerance=args.tolerance,
         safety_cap=args.safety_cap,
         stagnation_limit=args.stagnation_limit,
