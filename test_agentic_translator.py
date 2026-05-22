@@ -205,6 +205,17 @@ check(side_extrude_hole_code is not None and "Stock.rectangular(80" in side_extr
 check(side_extrude_hole_code is not None and 'face_selector=">X"' in side_extrude_hole_code,
       "deterministic YZ extrude maps hole to side face")
 
+open_shell_code = build_deterministic_subcad_code(
+    "import cadquery as cq\n"
+    "result = cq.Workplane('XY').box(80,50,30, centered=(True,True,False))\n"
+    "result = result.faces('>Z').shell(-3)",
+    [{"op_name": "box"}, {"op_name": "faces"}, {"op_name": "shell", "function": "part.faces.shell"}],
+)
+check(open_shell_code is not None and ".thin_wall_pocket(" in open_shell_code,
+      "deterministic open box shell maps to thin-wall pocket")
+check(open_shell_code is not None and "depth=30" in open_shell_code,
+      "deterministic open shell removes the selected-face cavity through the stock")
+
 
 # =========================================================================
 #  Test 2: System prompt

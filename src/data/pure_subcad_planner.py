@@ -297,6 +297,9 @@ def build_deterministic_subcad_code(
     box_pocket_code = _deterministic_box_pocket_code(cadquery_code)
     if box_pocket_code:
         return box_pocket_code
+    box_shell_code = _deterministic_box_shell_code(cadquery_code)
+    if box_shell_code:
+        return box_shell_code
     box_code = _deterministic_box_chamfer_code(cadquery_code)
     if box_code:
         return box_code
@@ -547,6 +550,52 @@ def _deterministic_box_pocket_code(cadquery_code: str) -> str | None:
     if not sequence:
         return None
     stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_box_shell_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if lower.count(".box(") != 1 or ".shell(" not in lower:
+        return None
+    if any(token in lower for token in (
+        ".union(",
+        ".hole(",
+        ".cskhole(",
+        ".cborehole(",
+        ".cut(",
+        ".cutblind(",
+        ".cutthruall(",
+        ".polyline(",
+        ".loft(",
+        ".sweep(",
+    )):
+        return None
+    if ".faces('>z')" not in lower and '.faces(">z")' not in lower:
+        return None
+    box = _box_stock_from_code(cadquery_code)
+    if not box:
+        return None
+    env = _numeric_env(cadquery_code)
+    shell_args = _first_call_args(cadquery_code, "shell")
+    if not shell_args:
+        return None
+    wall = _eval_number(shell_args[0], env)
+    if wall is None:
+        return None
+    wall = abs(float(wall))
+    depth = box["height"]
+    if wall <= 0 or depth <= 0:
+        return None
+    stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
+    profile = (
+        "{"
+        f"'type': 'rectangle', 'length': {box['length']:.6g}, "
+        f"'width': {box['width']:.6g}"
+        "}"
+    )
+    sequence = [
+        f".thin_wall_pocket({profile}, wall_thickness={wall:.6g}, depth={depth:.6g}, open_faces=['>Z'])"
+    ]
     return _format_fluent_subcad_code(stock, sequence)
 
 
