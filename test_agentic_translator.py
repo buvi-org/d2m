@@ -302,6 +302,27 @@ check(line_cutout_code is not None and ".profile_pocket(" in line_cutout_code,
 check(line_cutout_code is not None and "through=True" in line_cutout_code,
       "deterministic box line-chain cutout preserves through cut")
 
+panel_rib_holes_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "panel_width=80; panel_height=60; panel_thickness=5; chamfer_size=1",
+        "rib_count=3; rib_spacing=panel_height / (rib_count + 1); rib_width=panel_width * 0.9",
+        "rib_thickness=1.5; rib_depth=1.5; hole_diameter=4; hole_spacing=8; hole_row_y=panel_height/4",
+        "result = cq.Workplane('XY').rect(panel_width, panel_height).extrude(panel_thickness).edges('|Z').chamfer(chamfer_size)",
+        "for i in range(rib_count):",
+        "    y_pos = -panel_height/2 + (i + 1) * rib_spacing",
+        "    result = result.faces('>Z').workplane().center(0, y_pos).rect(rib_width, rib_thickness).cutBlind(rib_depth)",
+        "for i in range(8):",
+        "    x_pos = -((7/2) * hole_spacing) + i * hole_spacing",
+        "    result = result.faces('>Z').workplane().center(x_pos, hole_row_y).hole(hole_diameter)",
+    ]),
+    [{"op_name": "rect"}, {"op_name": "cutBlind"}, {"op_name": "hole"}],
+)
+check(panel_rib_holes_code is not None and panel_rib_holes_code.count(".pocket(") == 3,
+      "deterministic panel rib builder expands rib pockets")
+check(panel_rib_holes_code is not None and panel_rib_holes_code.count(".drill(4") == 8,
+      "deterministic panel rib builder expands hole row")
+
 
 # =========================================================================
 #  Test 2: System prompt

@@ -291,6 +291,9 @@ def build_deterministic_subcad_code(
     rect_plate_code = _deterministic_rect_extrude_plate_code(cadquery_code)
     if rect_plate_code:
         return rect_plate_code
+    panel_rib_hole_code = _deterministic_panel_rib_hole_row_code(cadquery_code)
+    if panel_rib_hole_code:
+        return panel_rib_hole_code
     transformed_csk_code = _deterministic_transformed_cskhole_code(cadquery_code)
     if transformed_csk_code:
         return transformed_csk_code
@@ -696,6 +699,56 @@ def _deterministic_rect_extrude_plate_code(cadquery_code: str) -> str | None:
         f'.edge_chamfer(">Z", width={env["chamfer_size"]:.6g})',
     ]
     sequence.extend(holes)
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_panel_rib_hole_row_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    required_tokens = ("rib_count", "rib_spacing", "hole_row_y", "for i in range(8)")
+    if not all(token in lower for token in required_tokens):
+        return None
+    if any(token in lower for token in (".union(", ".shell(", ".loft(", ".sweep(", ".cborehole(", ".cskhole(")):
+        return None
+    env = _numeric_env(cadquery_code)
+    required = {
+        "panel_width",
+        "panel_height",
+        "panel_thickness",
+        "chamfer_size",
+        "rib_count",
+        "rib_spacing",
+        "rib_width",
+        "rib_thickness",
+        "rib_depth",
+        "hole_diameter",
+        "hole_spacing",
+        "hole_row_y",
+    }
+    if not required.issubset(env):
+        return None
+    panel_width = env["panel_width"]
+    panel_height = env["panel_height"]
+    panel_thickness = env["panel_thickness"]
+    if min(panel_width, panel_height, panel_thickness) <= 0:
+        return None
+    stock = f"Stock.rectangular({panel_width:.6g}, {panel_height:.6g}, {panel_thickness:.6g})"
+    sequence: list[str] = []
+    chamfer = env["chamfer_size"]
+    if chamfer > 0:
+        sequence.append(f'.edge_chamfer("|Z", width={chamfer:.6g})')
+    rib_count = int(round(env["rib_count"]))
+    for index in range(rib_count):
+        y_pos = -panel_height / 2.0 + (index + 1) * env["rib_spacing"]
+        sequence.append(
+            f".pocket(width={env['rib_thickness']:.6g}, length={env['rib_width']:.6g}, "
+            f"depth={env['rib_depth']:.6g}, cx=0.0, cy={y_pos:.6g})"
+        )
+    for index in range(8):
+        x_pos = -((7.0 / 2.0) * env["hole_spacing"]) + index * env["hole_spacing"]
+        sequence.append(
+            f".drill({env['hole_diameter']:.6g}, through=True, "
+            f"cx={x_pos:.6g}, cy={env['hole_row_y']:.6g})"
+        )
     return _format_fluent_subcad_code(stock, sequence)
 
 
