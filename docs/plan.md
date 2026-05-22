@@ -159,6 +159,7 @@ Current test status:
 |------|--------|-------|
 | `python test_agentic_translator.py` | PASS, 172/172 | Covers non-LLM translator components, strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt selection, generated-code discipline checks, STEP-envelope prompt guards, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
 | `python test_subcad_tube_profile.py` | PASS, 6/6 | Covers axis-aligned `tube_profile` geometry, union/replace behavior, and process-plan records. |
+| `python test_subcad_side_profile_cutout.py` | PASS, 6/6 | Covers side-face triangular `profile_cutout(..., through=True)` for XZ/YZ cross-section retention. |
 
 Important caveat: the passing translator test is not a live LLM success metric. No live DeepSeek/Anthropic/OpenAI translation batch is documented as passing here.
 
@@ -341,6 +342,8 @@ Active next slice:
 - Add exact operation support when live AI failures expose missing primitives.
   The first post-AI-heavy addition is axis-aligned `tube_profile` geometry for
   horizontal/vertical hollow tube bosses from CadQuery circle extrudes.
+  The next addition is side-face through `profile_cutout` support for triangular
+  and V-like XZ/YZ cross-sections.
 - Harden retained rib/boss, bottom-face, and side-face setup fidelity while
   keeping side-face additive gussets manual-review/unsupported until oriented
   side-profile machining is implemented.

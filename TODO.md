@@ -348,6 +348,13 @@ Immediate next implementation targets:
 - Done: retry train row 21965 after the bbox/volume prompt guard; it converged
   in two attempts and passed strict original-STEP comparison with
   `volume_ratio=0.9837`, raising the accepted index to 501 unique pairs.
+- Done: run a guarded AI-heavy batch from train row 21966; rows 21966 and 21967
+  both failed, exposing side-face profile cutout and sloped thin-wall/V-profile
+  gaps rather than a scalable batch opportunity.
+- Done: implement side-face through `profile_cutout` support for XZ/YZ
+  cross-section profiles on `>Y`, `<Y`, `>X`, and `<X` faces. This removes the
+  previous "Selected faces must be co-planar" failure mode for triangular side
+  profile retention.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.

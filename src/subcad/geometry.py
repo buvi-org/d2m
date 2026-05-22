@@ -563,6 +563,8 @@ def profile_cutout_cut(
     bbox = shape.val().BoundingBox()
     current_height = bbox.zmax - bbox.zmin
     if through or depth >= current_height - 1e-6:
+        if face_selector not in {">Z", "<Z"}:
+            return shape.intersect(_profile_prism_through_face(shape, profile, face_selector))
         pad = 1.0
         prism = _draw_profile(
             cq.Workplane("XY").workplane(offset=bbox.zmin - pad),
@@ -583,6 +585,35 @@ def profile_cutout_cut(
     wp = _draw_profile(shape.faces(face_selector).workplane(), outer_profile)
     wp = _draw_profile(wp, profile)
     return wp.cutBlind(-depth)
+
+
+def _profile_prism_through_face(shape: "cq.Workplane", profile, face_selector: str) -> "cq.Workplane":
+    """Create a through prism from a side-face profile.
+
+    `profile_cutout(..., through=True)` means retain the supplied 2D profile.
+    For side faces, the profile coordinates are interpreted on the selected
+    face plane: X/Z for +/-Y faces and Y/Z for +/-X faces.
+    """
+    bbox = shape.val().BoundingBox()
+    pad = 1.0
+    face = str(face_selector or ">Z").upper()
+    if face in {">Y", "<Y"}:
+        length = (bbox.ymax - bbox.ymin) + 2.0 * pad
+        y_center = (bbox.ymin + bbox.ymax) / 2.0
+        return _draw_profile(cq.Workplane("XZ"), profile).extrude(length, both=True).translate(
+            (0.0, y_center, 0.0)
+        )
+    if face in {">X", "<X"}:
+        length = (bbox.xmax - bbox.xmin) + 2.0 * pad
+        x_center = (bbox.xmin + bbox.xmax) / 2.0
+        return _draw_profile(cq.Workplane("YZ"), profile).extrude(length, both=True).translate(
+            (x_center, 0.0, 0.0)
+        )
+    pad_prism = _draw_profile(
+        cq.Workplane("XY").workplane(offset=bbox.zmin - pad),
+        profile,
+    ).extrude((bbox.zmax - bbox.zmin) + 2.0 * pad)
+    return pad_prism
 
 
 def profile_contour_cut(
