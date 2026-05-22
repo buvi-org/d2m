@@ -45,6 +45,7 @@ from .geometry import (
     thin_wall_shell_cut,
     create_tapered_cylinder,
     create_axis_aligned_tube,
+    create_axis_aligned_profile_tube,
 )
 from .profiles import profile_span_yx
 from .tool_library import ToolSpec, ToolCatalog
@@ -3229,7 +3230,26 @@ class TubeProfileOp(HollowBoreOp):
             or self.outer_profile.get("outer_diameter_mm")
         )
         if outer is None:
-            return shape
+            axis = self.outer_profile.get("axis", self.axis)
+            start = self.outer_profile.get("start", self.outer_profile.get("start_mm", self.start))
+            end = self.outer_profile.get("end", self.outer_profile.get("end_mm", self.end))
+            tube = create_axis_aligned_profile_tube(
+                self.outer_profile,
+                self.inner_profile,
+                self.length,
+                axis=str(axis or "X"),
+                cx=float(self.outer_profile.get("cx", self.cx)),
+                cy=float(self.outer_profile.get("cy", self.cy)),
+                cz=float(self.outer_profile.get("cz", self.outer_profile.get("z", self.cz))),
+                start=start,
+                end=end,
+            )
+            mode = str(self.combine or "union").lower()
+            if mode == "replace":
+                return tube
+            if mode in {"intersect", "intersection"}:
+                return shape.intersect(tube)
+            return shape.union(tube)
         inner = 0.0
         if isinstance(self.inner_profile, dict):
             inner = (

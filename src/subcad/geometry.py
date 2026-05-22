@@ -163,6 +163,56 @@ def create_axis_aligned_tube(
     return profile.extrude(length).translate(translation)
 
 
+def create_axis_aligned_profile_tube(
+    outer_profile,
+    inner_profile,
+    length: float,
+    *,
+    axis: str = "X",
+    cx: float = 0.0,
+    cy: float = 0.0,
+    cz: float = 0.0,
+    start: float | None = None,
+    end: float | None = None,
+) -> "cq.Workplane":
+    """Create a straight tube/duct from arbitrary outer and inner profiles."""
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+    length = float(length)
+    axis_name = str(axis or "X").upper()
+    if start is not None and end is not None:
+        lo = min(float(start), float(end))
+        hi = max(float(start), float(end))
+        length = hi - lo
+        center_axis = (lo + hi) / 2.0
+    else:
+        center_axis = {"X": cx, "Y": cy, "Z": cz}.get(axis_name, cx)
+    if length <= 0.0:
+        raise ValueError("profile tube length/start/end must span a positive length")
+
+    if axis_name == "X":
+        wp = cq.Workplane("YZ")
+        translation = (center_axis - length / 2.0, cy, cz)
+    elif axis_name == "Y":
+        wp = cq.Workplane("XZ")
+        translation = (cx, center_axis - length / 2.0, cz)
+    elif axis_name == "Z":
+        wp = cq.Workplane("XY")
+        translation = (cx, cy, center_axis - length / 2.0)
+    else:
+        raise ValueError(f"unsupported profile tube axis: {axis!r}")
+
+    outer = _draw_profile(wp, outer_profile).extrude(length)
+    if inner_profile:
+        inner = _draw_profile(wp, inner_profile).extrude(length + 0.02).translate(
+            (translation[0] - 0.01 if axis_name == "X" else translation[0],
+             translation[1] - 0.01 if axis_name == "Y" else translation[1],
+             translation[2] - 0.01 if axis_name == "Z" else translation[2])
+        )
+        return outer.translate(translation).cut(inner)
+    return outer.translate(translation)
+
+
 # =============================================================================
 #  Helpers
 # =============================================================================

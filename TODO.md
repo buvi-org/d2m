@@ -382,6 +382,9 @@ Immediate next implementation targets:
   shell recognition to exact sloped-shell/rib/side-hole geometry; do not keep
   spending repeated live calls on this single row without adding better
   post-shell retained/additive rib support or feature-specific repair evidence.
+- Done: extend `tube_profile` beyond circular tubes to arbitrary outer/inner
+  profile ducts extruded along a principal axis. This targets the V/trapezoid
+  duct shell failures seen in guarded rows 21967 and 21968.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.

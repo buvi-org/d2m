@@ -53,6 +53,21 @@ check(with_tube.volume > base.volume, "union tube can add retained tube intent a
 check(with_tube.process_plan()["total_operations"] == base.process_plan()["total_operations"] + 1,
       "tube operation preserves fluent chain")
 
+outer_rect = {"type": "polygon", "points": [(-5, -3), (5, -3), (5, 3), (-5, 3)]}
+inner_rect = {"type": "polygon", "points": [(-3, -1), (3, -1), (3, 1), (-3, 1)]}
+profile_tube = Stock.rectangular(1, 1, 1).tube_profile(
+    outer_rect,
+    inner_rect,
+    20,
+    axis="X",
+    combine="replace",
+)
+expected_profile_volume = ((10 * 6) - (6 * 2)) * 20
+check(abs(profile_tube.volume - expected_profile_volume) < 1.0,
+      f"profile tube volume matches polygon annulus ({profile_tube.volume:.1f})")
+profile_op = profile_tube.process_plan()["operations"][-1]
+check(profile_op["operation"] == "tube_profile", "profile tube records tube_profile operation")
+
 print("\n" + "=" * 60)
 if failed:
     print(f"FAILED: {failed} failed, {passed} passed")
