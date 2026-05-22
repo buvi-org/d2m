@@ -288,6 +288,20 @@ check(sketch_cross_code is not None and ".machine_around_cylinder(12" in sketch_
 check(sketch_cross_code is not None and sketch_cross_code.count(".drill(5") == 4,
       "deterministic sketch cross preserves four blind holes")
 
+line_cutout_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "result = cq.Workplane('XY').box(20,20,2)",
+        "result = result.faces('>Z').workplane()",
+        "result = result.moveTo(-5,-5).lineTo(5,-5).lineTo(5,5).lineTo(-5,5).close().cutThruAll()",
+    ]),
+    [{"op_name": "box"}, {"op_name": "moveTo"}, {"op_name": "lineTo"}, {"op_name": "cutThruAll"}],
+)
+check(line_cutout_code is not None and ".profile_pocket(" in line_cutout_code,
+      "deterministic box line-chain through cutout maps to profile pocket")
+check(line_cutout_code is not None and "through=True" in line_cutout_code,
+      "deterministic box line-chain cutout preserves through cut")
+
 
 # =========================================================================
 #  Test 2: System prompt

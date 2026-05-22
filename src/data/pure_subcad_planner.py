@@ -297,6 +297,9 @@ def build_deterministic_subcad_code(
     box_counterbore_code = _deterministic_box_counterbore_code(cadquery_code)
     if box_counterbore_code:
         return box_counterbore_code
+    box_line_cutout_code = _deterministic_box_line_cutout_code(cadquery_code)
+    if box_line_cutout_code:
+        return box_line_cutout_code
     box_cutout_holes_code = _deterministic_box_cutout_hole_panel_code(cadquery_code)
     if box_cutout_holes_code:
         return box_cutout_holes_code
@@ -459,6 +462,41 @@ def _deterministic_box_cutout_hole_panel_code(cadquery_code: str) -> str | None:
     if fillet is not None and fillet > 0:
         sequence.append(f'.edge_fillet("|Z", radius={fillet:.6g})')
     stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_box_line_cutout_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if lower.count(".box(") != 1 or ".cutthruall(" not in lower:
+        return None
+    if any(token in lower for token in (
+        ".union(",
+        ".hole(",
+        ".cskhole(",
+        ".cborehole(",
+        ".cutblind(",
+        ".shell(",
+        ".loft(",
+        ".sweep(",
+        ".chamfer(",
+        ".fillet(",
+    )):
+        return None
+    box = _box_stock_from_code(cadquery_code)
+    if not box:
+        return None
+    env = _numeric_env(cadquery_code)
+    points = _line_chain_points(cadquery_code, env)
+    if len(points) < 3:
+        return None
+    x_shift = sum(x for x, _ in points) / len(points)
+    y_shift = sum(y for _, y in points) / len(points)
+    shifted = [(x - x_shift, y - y_shift) for x, y in points]
+    stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
+    sequence = [
+        f".profile_pocket({{'type': 'polygon', 'points': {_format_points(shifted)}, "
+        f"'cx': {x_shift:.6g}, 'cy': {y_shift:.6g}}}, depth={box['height']:.6g}, through=True)"
+    ]
     return _format_fluent_subcad_code(stock, sequence)
 
 
