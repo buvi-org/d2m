@@ -1101,6 +1101,53 @@ try:
     check(ai_heavy_result["success"], "ai-heavy mode can translate through the LLM path")
     check(ai_heavy_result["translation_mode"] == "ai_heavy",
           "ai-heavy result records translation mode")
+
+    class _ToolChoiceRejectingCompletions:
+        def __init__(self):
+            self.calls = []
+
+        def create(self, **kwargs):
+            self.calls.append(kwargs)
+            if "tool_choice" in kwargs:
+                raise RuntimeError("deepseek-reasoner does not support this tool_choice")
+
+            class _Function:
+                name = "execute_subcad"
+                arguments = json.dumps({"code": "part = Stock.rectangular(10, 10, 10)"})
+
+            class _ToolCall:
+                id = "fallback-tool-call"
+                function = _Function()
+
+            class _Message:
+                tool_calls = [_ToolCall()]
+
+            class _Choice:
+                message = _Message()
+
+            class _Response:
+                choices = [_Choice()]
+
+            return _Response()
+
+    class _ToolChoiceRejectingClient:
+        def __init__(self):
+            self.chat = type("Chat", (), {})()
+            self.chat.completions = _ToolChoiceRejectingCompletions()
+
+    fallback_client = object.__new__(_orig_llm_client)
+    fallback_client._is_anthropic = False
+    fallback_client.model = "deepseek-v4-pro"
+    fallback_client._client = _ToolChoiceRejectingClient()
+    fallback_tool = fallback_client.tool_chat(
+        [{"role": "user", "content": "call execute_subcad"}],
+        [agentic_mod.EXECUTE_SUBCAD_TOOL],
+    )
+    calls = fallback_client._client.chat.completions.calls
+    check(fallback_tool is not None and fallback_tool["arguments"]["code"].startswith("part = Stock"),
+          "tool-chat falls back when model rejects forced tool_choice")
+    check("tool_choice" in calls[0] and "tool_choice" not in calls[1],
+          "tool-chat retry removes unsupported tool_choice")
 finally:
     agentic_mod.LLMClient = _orig_llm_client
     agentic_mod.run_subcad = _orig_run_subcad

@@ -1183,14 +1183,25 @@ class LLMClient:
 
         else:
             # OpenAI-compatible (DeepSeek, OpenAI)
-            resp = self._client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                tools=tools,
-                tool_choice="required",
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
+            kwargs = {
+                "model": self.model,
+                "messages": messages,
+                "tools": tools,
+                "tool_choice": "required",
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            }
+            try:
+                resp = self._client.chat.completions.create(**kwargs)
+            except Exception as exc:
+                # Some OpenAI-compatible models expose tools but reject forced
+                # tool_choice. Retry once with ordinary tool availability; the
+                # prompt still strongly requires calling execute_subcad.
+                message = str(exc)
+                if "tool_choice" not in message and "does not support" not in message:
+                    raise
+                kwargs.pop("tool_choice", None)
+                resp = self._client.chat.completions.create(**kwargs)
             msg = resp.choices[0].message
             if msg.tool_calls:
                 tc = msg.tool_calls[0]
