@@ -235,6 +235,26 @@ check(profile_side_drill_code is not None and profile_side_drill_code.count('.dr
 check(profile_side_drill_code is not None and 'face_selector=">X"' in profile_side_drill_code,
       "deterministic profile side holes map mirrored SubCAD side face")
 
+cross_arm_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "block_width=30.0; block_depth=30.0; block_thickness=10.0",
+        "arm_length=40.0; arm_width=15.0; hole_diameter=8.0",
+        "chamfer_distance=2.0; tap_depth=block_thickness-2.0; fillet_radius=0.5; epsilon=0.1",
+        "result = cq.Workplane('XY').rect(block_width, block_depth).extrude(block_thickness)",
+        "for dx, dy in [(1,0),(-1,0),(0,1),(0,-1)]:",
+        "    arm = cq.Workplane('XY').center(dx, dy).rect(arm_length, arm_width).extrude(block_thickness)",
+        "    result = result.union(arm)",
+        "for direction, face_selector in [((1,0), '>X'),((-1,0), '<X'),((0,1), '>Y'),((0,-1), '<Y')]:",
+        "    result = result.faces(face_selector).workplane(centerOption='CenterOfMass').hole(hole_diameter, depth=tap_depth)",
+    ]),
+    [{"op_name": "rect"}, {"op_name": "union"}, {"op_name": "hole"}],
+)
+check(cross_arm_code is not None and ".machine_around_profiles(" in cross_arm_code,
+      "deterministic looped cross arms map to retained profile islands")
+check(cross_arm_code is not None and cross_arm_code.count(".drill(8") == 4,
+      "deterministic looped cross arms preserve side-face holes")
+
 
 # =========================================================================
 #  Test 2: System prompt

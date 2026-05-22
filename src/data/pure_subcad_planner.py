@@ -273,6 +273,9 @@ def build_deterministic_subcad_code(
     box_union_profile_code = _deterministic_box_union_profile_code(cadquery_code)
     if box_union_profile_code:
         return box_union_profile_code
+    cross_arm_code = _deterministic_cross_arm_side_hole_code(cadquery_code)
+    if cross_arm_code:
+        return cross_arm_code
     base_extension_code = _deterministic_base_extension_code(cadquery_code)
     if base_extension_code:
         return base_extension_code
@@ -763,6 +766,62 @@ def _deterministic_box_union_profile_code(cadquery_code: str) -> str | None:
         f"Stock.rectangular({width:.6g}, {stock_width:.6g}, {plate:.6g})",
         [f".profile_cutout({{'type': 'polygon', 'points': {_format_points(points)}}}, through=True)"],
     )
+
+
+def _deterministic_cross_arm_side_hole_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    required_tokens = ("for dx, dy in", ".union(arm)", ".faces(face_selector)", ".hole(")
+    if not all(token in lower for token in required_tokens):
+        return None
+    env = _numeric_env(cadquery_code)
+    required = {
+        "block_width",
+        "block_depth",
+        "block_thickness",
+        "arm_length",
+        "arm_width",
+        "hole_diameter",
+    }
+    if not required.issubset(env):
+        return None
+    block_width = env["block_width"]
+    block_depth = env["block_depth"]
+    thickness = env["block_thickness"]
+    arm_length = env["arm_length"]
+    arm_width = env["arm_width"]
+    epsilon = env.get("epsilon", 0.0)
+    hole_diameter = env["hole_diameter"]
+    tap_depth = env.get("tap_depth", max(thickness - 2.0, 0.0))
+    if min(block_width, block_depth, thickness, arm_length, arm_width, hole_diameter) <= 0:
+        return None
+    x_offset = block_width / 2.0 + arm_length / 2.0 - epsilon
+    y_offset = block_depth / 2.0 + arm_length / 2.0 - epsilon
+    total_x = block_width + 2.0 * arm_length - 2.0 * epsilon
+    total_y = block_depth + 2.0 * arm_length - 2.0 * epsilon
+    profiles = [
+        {"type": "rect", "length": block_width, "width": block_depth, "cx": 0.0, "cy": 0.0},
+        {"type": "rect", "length": arm_length, "width": arm_width, "cx": x_offset, "cy": 0.0},
+        {"type": "rect", "length": arm_length, "width": arm_width, "cx": -x_offset, "cy": 0.0},
+        {"type": "rect", "length": arm_width, "width": arm_length, "cx": 0.0, "cy": y_offset},
+        {"type": "rect", "length": arm_width, "width": arm_length, "cx": 0.0, "cy": -y_offset},
+    ]
+    sequence = [
+        f".machine_around_profiles({profiles!r}, height={thickness:.6g}, base_height=0.0)",
+    ]
+    chamfer = env.get("chamfer_distance")
+    if chamfer is not None and chamfer > 0:
+        sequence.append(f'.edge_chamfer("|Z", width={chamfer:.6g})')
+    if tap_depth and tap_depth > 0:
+        for face in (">X", "<X", ">Y", "<Y"):
+            sequence.append(
+                f'.drill({hole_diameter:.6g}, depth={tap_depth:.6g}, through=False, '
+                f'cx=0.0, cy=0.0, face_selector="{face}")'
+            )
+    fillet = env.get("fillet_radius")
+    if fillet is not None and fillet > 0:
+        sequence.append(f'.edge_fillet("all_edges", radius={fillet:.6g})')
+    stock = f"Stock.rectangular({total_x:.6g}, {total_y:.6g}, {thickness:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
 
 
 def _deterministic_base_extension_code(cadquery_code: str) -> str | None:
