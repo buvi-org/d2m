@@ -571,6 +571,10 @@ prompt = build_user_prompt(cq_code, ops_trace, step_path, stock_dims)
 check("CadQuery" in prompt, "user prompt mentions CadQuery")
 check(cq_code[:40] in prompt, "user prompt contains CadQuery code snippet")
 check("90" in prompt or "90.0" in prompt, "user prompt includes stock length")
+check("STEP-derived stock dimensions above are hard evidence" in prompt,
+      "user prompt forbids overriding STEP stock envelope")
+check("Trust STEP bbox/volume over symmetry assumptions" in prompt,
+      "user prompt prevents rotation-loop symmetry overreach")
 check("part" in prompt, "user prompt mentions 'part' variable")
 check("execute_subcad" in prompt, "user prompt asks for execute_subcad call")
 check("Extracted Numeric Measures" in prompt, "user prompt includes extracted measures section")

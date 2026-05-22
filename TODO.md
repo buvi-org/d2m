@@ -338,6 +338,11 @@ Immediate next implementation targets:
   vertical hollow tube bosses. It supports outer/inner diameter, X/Y/Z axis,
   start/end placement, `combine="union"` for retained tube intent after a base
   pad, and `combine="replace"` for standalone tube parts.
+- Done: retry train row 21965 after `tube_profile`; it now executes but
+  overbuilds (`volume_ratio=1.7758`) because the model enlarged the STEP-derived
+  87 x 46 mm envelope to 87 x 87 mm and inferred four separated radial legs.
+  Prompt now says the STEP bbox/volume are hard evidence and must override
+  intuitive symmetry/rotation-loop assumptions.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.

@@ -613,6 +613,11 @@ Translate this constructive CadQuery program into an equivalent subCAD
 subtractive program. Remember:
 - Stock XY = final part XY (use {stock_dims['length']:.0f} x {stock_dims['width']:.0f}).
   Only add extra Z height for face_mill.
+- The STEP-derived stock dimensions above are hard evidence. Do not override
+  them because a hand interpretation of CadQuery loops, rotations, or extrusion
+  directions appears to need a larger envelope. If your inferred feature extents
+  exceed the STEP bbox, your interpretation is probably wrong; repair the
+  feature placement to fit the STEP bbox and target volume.
 - If the CadQuery source uses `.cylinder(...)`, round-bar stock, or a circular
   outer envelope, start from `Stock.cylindrical(diameter, height)` instead of
   rectangular stock.
@@ -623,6 +628,9 @@ subtractive program. Remember:
   CadQuery `taper=-angle` on a positive-Z extrusion makes the TOP diameter
   larger; `taper=+angle` makes the TOP diameter smaller.
 - Cut AWAY material to reveal the final shape.
+- Trust STEP bbox/volume over symmetry assumptions. Do not infer separate
+  radial copies from a rotation loop when the STEP bbox and volume show the
+  repeated CadQuery solids overlap or occupy one side only.
 - Use the CadQuery Variable Volume Evidence above to avoid machining no-op
   source operations. If two consecutive named CadQuery solids have the same
   volume, the later source operation did not affect the final target for this
