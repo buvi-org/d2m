@@ -68,6 +68,26 @@ check(abs(profile_tube.volume - expected_profile_volume) < 1.0,
 profile_op = profile_tube.process_plan()["operations"][-1]
 check(profile_op["operation"] == "tube_profile", "profile tube records tube_profile operation")
 
+v_profile = {"type": "polygon", "points": [(0, 0), (-30, 40), (30, 40)]}
+v_shell = Stock.rectangular(1, 1, 1).tube_profile(
+    v_profile,
+    {"type": "shell", "wall_thickness": 2.0},
+    80,
+    axis="X",
+    combine="replace",
+)
+check(abs(v_shell.volume - 27498.7) < 1.0,
+      f"profile shell tube matches CadQuery shell volume ({v_shell.volume:.1f})")
+shell_op = v_shell.process_plan()["operations"][-1]
+check(shell_op["operation"] == "tube_profile", "profile shell tube records tube_profile operation")
+check(shell_op["inner_profile"]["type"] == "shell", "profile shell tube records shell inner profile")
+
+v_with_holes = v_shell.edge_fillet("|X and <Z", 3.0)
+for x in (-20.0, 0.0, 20.0):
+    v_with_holes = v_with_holes.drill(4.0, through=True, cx=x, cy=20.0, face_selector=">Y")
+check(abs(v_with_holes.volume - 27010.4) < 1.0,
+      f"profile shell tube supports repeated side drills ({v_with_holes.volume:.1f})")
+
 print("\n" + "=" * 60)
 if failed:
     print(f"FAILED: {failed} failed, {passed} passed")

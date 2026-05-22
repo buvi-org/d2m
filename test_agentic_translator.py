@@ -498,6 +498,8 @@ check(".slope_cut" in sys_prompt, "system prompt mentions sloped floor cuts")
 check(".shell_wall" in sys_prompt, "system prompt mentions current-shape shell walls")
 check("non-round ducts" in sys_prompt and "tube_profile" in sys_prompt,
       "system prompt mentions arbitrary-profile tube ducts")
+check('"type": "shell"' in sys_prompt and "Do not guess a separate inner" in sys_prompt,
+      "system prompt mentions shell-offset profile ducts")
 check(".chamfer" in sys_prompt, "system prompt mentions chamfer")
 check(".edge_chamfer" in sys_prompt, "system prompt mentions selected edge chamfer")
 check(".machine_around_profile" in sys_prompt, "system prompt mentions retained-material operations")
@@ -646,6 +648,8 @@ check(".slope_cut" in prompt and "sloped floor" in prompt,
       "user prompt exposes sloped trough machining")
 check(".shell_wall" in prompt and "sloped shell" in prompt,
       "user prompt maps CadQuery sloped shells to shell_wall")
+check('{"type": "shell"' in prompt and "profile_contour(...).shell_wall" in prompt,
+      "user prompt maps extruded profile shells to tube_profile")
 check("such as `slope_height`" in prompt and "Workplane(\"XZ\").extrude(width)" in prompt,
       "user prompt preserves literal wedge sketch and one-sided extrusion evidence")
 check("extrude(..., taper=...)" in prompt and "tapered_cylinder" in prompt,

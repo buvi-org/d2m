@@ -165,6 +165,11 @@ Stock instance (immutable/fluent pattern).
   `tube_profile` accepts arbitrary polygon/profile dicts for non-round ducts
   as well as circular diameter profiles. Use it for V-shaped, trapezoid, or
   rectangular duct profiles extruded along X/Y/Z.
+  If the source is a closed 2D duct profile followed by `.extrude(length)` and
+  `.shell(-wall_thickness)`, keep the exact outer profile and pass
+  `{"type": "shell", "wall_thickness": wall_thickness}` as the inner profile.
+  Do not guess a separate inner triangle/trapezoid unless the source explicitly
+  draws one.
   Use `tube_profile` for horizontal/vertical hollow tube bosses from CadQuery
   circle extrudes on `Workplane("YZ")`, `Workplane("XZ")`, or `Workplane("XY")`.
   Example for a tube running from X=18 to X=80, centered at Y=0, Z=5:
@@ -693,6 +698,12 @@ subtractive program. Remember:
   shape, call `.shell_wall(wall_thickness)` after that shape. Do not replace a
   sloped shell with a flat rectangular pocket unless the source shell is a
   simple flat open-top box.
+- If CadQuery builds a closed profile on `Workplane("YZ")`, `Workplane("XZ")`,
+  or `Workplane("XY")`, then calls `.extrude(length).shell(-wall_thickness)`,
+  use `.tube_profile(outer_profile, {{"type": "shell", "wall_thickness":
+  wall_thickness}}, length, axis=..., combine="replace")`. This is the stable
+  SubCAD representation for V/trapezoid/rectangular ducts; do not use
+  `profile_contour(...).shell_wall(...)` for this pattern.
 - Keep rectangular dimensions in the correct axes. CadQuery `.rect(x_size,
   y_size)` maps to SubCAD `.pocket(width=y_size, length=x_size, ...)`.
   SubCAD `width` always means Y span, and SubCAD `length` always means X span.

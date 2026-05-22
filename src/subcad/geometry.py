@@ -203,6 +203,20 @@ def create_axis_aligned_profile_tube(
         raise ValueError(f"unsupported profile tube axis: {axis!r}")
 
     outer = _draw_profile(wp, outer_profile).extrude(length)
+    if isinstance(inner_profile, dict) and str(inner_profile.get("type", "")).lower() in {
+        "shell",
+        "offset_shell",
+        "wall",
+    }:
+        wall = float(
+            inner_profile.get("wall_thickness")
+            or inner_profile.get("wall_thickness_mm")
+            or inner_profile.get("thickness")
+            or 0.0
+        )
+        if wall <= 0.0:
+            raise ValueError("profile tube shell wall_thickness must be positive")
+        return outer.shell(-wall).translate(translation)
     if inner_profile:
         inner = _draw_profile(wp, inner_profile).extrude(length + 0.02).translate(
             (translation[0] - 0.01 if axis_name == "X" else translation[0],
@@ -232,6 +246,40 @@ def _to_face_coords(shape: "cq.Workplane", face_selector: str, cx: float, cy: fl
         except Exception:
             pass
     return cx, cy
+
+
+def _selected_face_workplane(shape: "cq.Workplane", face_selector: str) -> "cq.Workplane":
+    """Build a workplane on selected faces, falling back for multi-face selections."""
+    faces = shape.faces(face_selector)
+    try:
+        return faces.workplane()
+    except Exception:
+        return faces.workplane(centerOption="CenterOfMass")
+
+
+def _side_drill_fallback(
+    shape: "cq.Workplane",
+    cx: float,
+    cy: float,
+    diameter: float,
+    depth: float,
+    through: bool,
+    face_selector: str,
+) -> "cq.Workplane":
+    bb = shape.val().BoundingBox()
+    selector = str(face_selector)
+    radius = float(diameter) / 2.0
+    if selector in {">Y", "<Y"}:
+        length = bb.ylen + 2.0 if through else float(depth)
+        origin_y = bb.ymax + 1.0 if through or selector == ">Y" else bb.ymin + length
+        cutter = cq.Workplane("XZ").center(cx, cy).circle(radius).extrude(length).translate((0.0, origin_y, 0.0))
+        return shape.cut(cutter)
+    if selector in {">X", "<X"}:
+        length = bb.xlen + 2.0 if through else float(depth)
+        origin_x = bb.xmin - 1.0 if through or selector == "<X" else bb.xmax - length
+        cutter = cq.Workplane("YZ").center(cx, cy).circle(radius).extrude(length).translate((origin_x, 0.0, 0.0))
+        return shape.cut(cutter)
+    raise ValueError(f"side drill fallback does not support face selector {face_selector!r}")
 
 
 
@@ -421,7 +469,7 @@ def circular_pocket_cut(
     cx_rel, cy_rel = _to_face_coords(shape, face_selector, cx, cy)
 
     return (
-        shape.faces(face_selector).workplane()
+        _selected_face_workplane(shape, face_selector)
         .center(cx_rel, cy_rel)
         .circle(diameter / 2.0)
         .cutBlind(-depth)
@@ -445,16 +493,16 @@ def drill_hole(
 
     cx_rel, cy_rel = _to_face_coords(shape, face_selector, cx, cy)
 
-    wp = (
-        shape.faces(face_selector).workplane()
-        .center(cx_rel, cy_rel)
-        .circle(diameter / 2.0)
-    )
-
-    if through:
-        return wp.cutThruAll()
-    else:
-        return wp.cutBlind(-depth)
+    try:
+        wp = _selected_face_workplane(shape, face_selector).center(cx_rel, cy_rel).circle(diameter / 2.0)
+        if through:
+            return wp.cutThruAll()
+        else:
+            return wp.cutBlind(-depth)
+    except Exception:
+        if face_selector in {">Y", "<Y", ">X", "<X"}:
+            return _side_drill_fallback(shape, cx, cy, diameter, depth, through, face_selector)
+        raise
 
 
 def countersink_cut(
