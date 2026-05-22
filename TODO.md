@@ -87,12 +87,7 @@ Current next actions:
 - Use repeated AI-heavy failures to improve prompts, SubCAD API coverage, or
   source evidence extraction. Avoid adding more narrow row-specific deterministic
   builders unless a pattern obviously unlocks many rows.
-- Maintain an accepted-manifest summary as the source of truth for row counts,
-  latest accepted rows, comparison policy, and rejected/manual-review counts;
-  propagate that summary to README and docs after each accepted slice.
-  Regenerate it locally with `python -m src.data.build_zero_to_cad_accepted_index`;
-  count unique `source.split + source.uuid` rows where `accepted == true` and
-  `status == "matched"`.
+- Maintain `docs/zero_to_cad_status.md` as the only human-readable source of truth for live accepted counts and planner-capacity snapshots. Regenerate machine-readable summaries locally with `python -m src.data.build_zero_to_cad_accepted_index`; count unique `source.split + source.uuid` rows where `accepted == true` and `status == "matched"`.
 - Standard AI-heavy guarded pilot command:
   `python -m src.data.run_zero_to_cad_feature_benchmarks --split train --source-dir data/zero_to_cad_100k --output-dir runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD --accepted-index runs/zero_to_cad_live_pilots/accepted_index.jsonl --manifest-jsonl runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD/attempts.jsonl --execute --executor translator --translation-mode ai_heavy --attempt-unsupported --provider deepseek --model deepseek-chat --comparison-methods volume,mesh,slices --min-mesh-score 95 --target-matches 5 --max-attempts 20 --max-failures 8 --safety-cap 5`.
 - Add `--attempt-unsupported` on small guarded AI-heavy pilots when the goal is
@@ -101,9 +96,7 @@ Current next actions:
 - Start a separate STEP-only evidence-builder workstream so the eventual model
   can consume STEP/B-Rep evidence directly instead of depending on CadQuery
   source text.
-- Close the corpus-capacity gap: 79,911 plannable local rows cannot yield
-  100,000 verified pairs alone, so unsupported families must become plannable
-  or additional original-STEP source rows must be added.
+- Close the corpus-capacity gap tracked in `docs/zero_to_cad_status.md`: current plannable local rows cannot yield 100,000 verified pairs alone, so unsupported families must become plannable or additional original-STEP source rows must be added.
 
 Current baseline:
 
@@ -125,48 +118,13 @@ Status: active program goal. The TODO was missing this as a single end-to-end
 acceptance plan, so this section is the project truth for "all 100k SubCAD
 programs and STEP pairs."
 
-Latest measured dry scan:
+Latest measured status:
 
-- Command: `python -m src.data.run_zero_to_cad_feature_benchmarks --split all --no-summary-file`
-- Date: 2026-05-21
-- Rows scanned: 100,516.
-- Plannable by pure-operation planner: 79,911.
-- Unsupported by current planner: 20,605.
-- Matched original-STEP-verified pairs: 508 unique pairs recorded by guarded live pilots under the strict volume + original-STEP trusted policy.
-  - Accepted train global indexes include the long historical list below plus
-    strict AI-heavy recovery rows `21964`, `21965`, `21967`, and `21968`:
-    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 342, 415, 438, 503, 512, 561, 697, 702, 1126, 1170, 1173, 1278, 1293, 1320, 1395, 1458, 1479, 1536, 1595, 1647, 1792, 1823, 1906, 1979, 2162, 2209, 2257, 2288, 2450, 2896, 3047, 3175, 3231, 3414, 3479, 3487, 3777, 3787, 3850, 3966, 4065, 4081, 4227, 4400, 4559, 4562, 4696, 4811, 5248, 5435, 5442, 5606, 5713, 5983, 6026, 6034, 6207, 6326, 6458, 6477, 6481, 6510, 6623, 7391, 7409, 7434, 7479, 7685, 8273, 9051, 9733, 9749, 9752, 9786, 9787, 9794, 9795, 9802, 9803, 9807, 9814, 9856, 9870, 9875, 9930, 10031, 10427, 10672, 10814, 11933, 11960, 11990, 12098, 12736, 13428, 13541, 14131, 14381, 14589, 14664, 14959, 14960, 14963, 15008, 15058, 15062, 15269, 15554, 16239, 16491, 16557, 16589, 16624, 16813, 16824, 16956, 17567, 17758, 17771, 17804, 17826, 18265, 18325, 18568, 19000, 19094, 19463, 19700, 20659, 20787, 20817, 21855, 21885, 21893, 21904, 21913, 21932, 21939, 21940, 21948, 21953, 21961, 21962, 21963, 21967, 21968, 22004, 22012, 22073, 22079, 22106, 22599, 22770, 22871, 23208, 23258, 23657, 23979, 24188, 24356, 24534, 24580, 25092, 25141, 25255, 25542, 25668, 25725, 25727, 25879, 26225, 26802, 26825, 27205, 27306, 28099, 28277, 28301, 28435, 28457, 28462, 28537, 28799, 28928, 29086, 29145, 29528, 29746, 29840, 29872, 30109, 30256, 30665, 30925, 31041, 31061, 31070, 31657, 31733, 31759, 31811, 31815, 32032, 32253, 32399, 32464, 32470, 32721, 32722, 32996, 33124, 33145, 33184, 33200, 33483, 33543, 33674, 33714, 33920, 33954, 34103, 34111, 34331, 34340, 34345, 34578, 34965, 34982, 35018, 35028, 35194, 35324, 35344, 35401, 35412, 35434, 35436, 35444, 35457, 35884, 36693, 36808, 36832, 36982, 36997, 37220, 37328, 38113, 38327, 38336, 38350, 38376, 38496, 38585, 38926, 39195, 39645, 39774, 39891, 39995, 40040, 40051, 40203, 40270, 40904, 41047, 41294, 41678, 41918, 42036, 42245, 42272, 42334, 42770, 42988, 43017, 43639, 44440, 45025, 45043, 45993, 45996, 46232, 46570, 47402, 47762, 47872, 48033, 48225, 48305, 48312, 49066, 49813, 49853, 50279, 50286, 50295, 50304, 50325, 50388, 50389, 50391, 50452, 50579, 50623, 51038, 51067, 51154, 51232, 51312, 51330, 51467, 51536, 51669, 51877, 51948, 51999, 52045, 52471, 52608, 52997, 53058, 53077, 53246, 53269, 53421, 53451, 53481, 53561, 53700, 54264, 54390, 54944, 54956, 54974, 55074, 55296, 55346, 55358, 55524, 55676, 55833, 55967, 56019, 56233, 56262, 56288, 56426, 56968, 57106, 57111, 57197, 57224, 57431, 57517, 57609, 57784, 58087, 58187, 58307, 58877, 59107, 59110, 59913, 61382, 61977, 62242, 62414, 62885, 62916, 62932, 63186, 63273, 63322, 63337, 64668, 65672, 66107, 66980, 66991, 67779, 67854, 67862, 67870, 68455, 68726, 68972, 69127, 69643, 69654, 70143, 70716, 71366, 71377, 72260, 72642, 73129, 73401, 74046, 74741, 74796, 75523, 75543, 75577, 75588, 75695, 75962, 75985, 75990, 76044, 76054, 76145, 76273, 76377, 76766, 77228, 77400, 77602, 78741, 79214, 79314, 79638, 80867, 80938`.
-  - Accepted val split source indexes: `5604, 5637, 5955, 5980, 6197, 6714, 7380, 7605, 8320, 8587, 8804, 8806, 9181, 9615`.
-  - Accepted test split source indexes: `17, 25, 202, 331, 503, 833, 1161, 1166, 1187, 1629, 2239, 2390, 2401, 2735, 3231, 3709, 3734, 4249, 5218, 5387, 6285, 7420, 7782, 8130, 8223, 8360, 8379, 8562, 8563, 8739, 8805, 9225, 9241, 9283, 9394, 9631`.
-  - Strict-policy note: `build_zero_to_cad_accepted_index` now re-checks the
-    comparison artifact and requires volume error <= 5% in addition to the
-    original manifest trusted-pass flag. This deliberately reduced the
-    accepted count from 519 to 499, then the first AI-heavy guarded retry
-    repaired train row 21964 under strict policy, bringing the count to 500;
-    the tube-profile/bbox-guard loop then repaired train row 21965, bringing
-    the count to 501; row 21968 later raised it to 502; row 21967 later raised
-    it to 503; rows 22004 and 22012 later raised it to 505; row 22073 later
-    raised it to 506; row 22106 later raised it to 507; row 22079 later
-    raised it to 508.
-    Train row 21970 remains excluded until repaired.
-- Note: closed/inaccessible `shell(...)` parts are now rejected as
-  `unsupported_unmachinable` instead of being counted as plannable CNC work.
-- Note: the first accepted live pair required fixing retained rectangular
-  islands/ribs, profile-pocket islands, CadQuery `rect(x, y)` to SubCAD
-  `length=X`/`width=Y`, and all-edge chamfer scope.
-- Family membership counts overlap because one part can require multiple operation families:
-  - edge_treatment: 64,721
-  - hole: 61,216
-  - retained_material: 46,416
-  - cut: 43,039
-  - profile: 40,537
-  - primitive: 32,796
-  - pattern: 20,436
-  - boss: 18,803
-  - axisymmetric: 12,290
-  - surface: 6,690
-  - thin_wall: 3,004
-
+- Current accepted-pair and planner-capacity status is tracked only in `docs/zero_to_cad_status.md`.
+- Machine-readable accepted-row manifests live under `runs/zero_to_cad_live_pilots/` and can be regenerated with `python -m src.data.build_zero_to_cad_accepted_index`.
+- Do not paste live accepted counts or long accepted-index lists into this TODO; this file tracks work hierarchy and execution policy.
+- Note: closed/inaccessible `shell(...)` parts are rejected as `unsupported_unmachinable` instead of being counted as plannable CNC work.
+- Family membership counts overlap because one part can require multiple operation families; use generated benchmark summaries for the latest per-family numbers.
 Definition of done:
 
 - At least 100,000 accepted pairs exist across the local Zero-to-CAD train/val/test corpus.
@@ -253,7 +211,7 @@ Sub-workstreams required to reach 100k:
      with stop/escalation when three consecutive failures share the same
      missing operation class.
    - Pause or downrank families that repeatedly fail for the same missing capability.
-   - Periodically regenerate aggregate summaries and update this TODO with measured counts.
+   - Periodically regenerate aggregate summaries and update `docs/zero_to_cad_status.md` with measured counts; keep this TODO focused on work hierarchy and policy.
    - Use accepted-index guarded runs so already verified rows count toward the
      target without re-spending live translator calls.
 
@@ -318,7 +276,7 @@ Immediate next implementation targets:
 - Rework required: train global index 21970 was produced by AI-heavy mode but
   strict volume policy rejects it (`volume_ratio=0.914573`), so keep it as
   feedback for prompt/API improvement, not accepted training data.
-- Next: run accepted-index guarded AI-heavy pilots from the 508 accepted pairs,
+- Next: run accepted-index guarded AI-heavy pilots from the latest accepted index,
   preserving strict stop conditions and tracking model/provider latency,
   execution rate, match rate, and prompt failure patterns.
 - Done: run a small `--attempt-unsupported` AI-heavy pilot; it recovered row
@@ -350,7 +308,7 @@ Immediate next implementation targets:
   intuitive symmetry/rotation-loop assumptions.
 - Done: retry train row 21965 after the bbox/volume prompt guard; it converged
   in two attempts and passed strict original-STEP comparison with
-  `volume_ratio=0.9837`, raising the accepted index to 501 unique pairs.
+  `volume_ratio=0.9837`, accepted under the strict original-STEP policy.
 - Done: run a guarded AI-heavy batch from train row 21966; rows 21966 and 21967
   both failed, exposing side-face profile cutout and sloped thin-wall/V-profile
   gaps rather than a scalable batch opportunity.
@@ -390,29 +348,28 @@ Immediate next implementation targets:
   duct shell failures seen in guarded rows 21967 and 21968.
 - Done: accepted train row 21968 after arbitrary-profile `tube_profile`
   support. Strict original-STEP policy passed with `volume_ratio=0.96719`,
-  mesh score 100, and zero slice/SDF deviations, raising the accepted index to
-  502 unique pairs.
+  mesh score 100, and zero slice/SDF deviations.
 - Done: accepted train row 21967 after adding shell-offset profile duct
   guidance for `tube_profile` and a robust repeated side-drill fallback.
   Strict original-STEP policy passed on the first retry with `volume_ratio=1.0`,
-  raising the accepted index to 503 unique pairs.
+  accepted under the strict original-STEP policy.
 - Done: run a guarded clean profile/thin-wall AI-heavy harvest from row 21969.
-  It accepted train rows 22004 and 22012, raising the accepted index to 505
-  unique pairs, but stopped at guardrails after 2 matches and 4 failures. The
+  It accepted train rows 22004 and 22012 under the strict original-STEP policy,
+  but stopped at guardrails after 2 matches and 4 failures. The
   useful failure pattern is profile placement/API friction plus repeated
   missing copied source variables, so profile operations now accept fluent
   `cx`/`cy` placement kwargs.
 - Done: run a follow-up guarded clean profile harvest from row 22023. It
-  accepted train row 22073, raising the accepted index to 506 unique pairs,
+  accepted train row 22073, accepted under the strict original-STEP policy,
   then stopped after two consecutive profile/edge-treatment geometry failures.
 - Done: accept train row 22106 after strengthening the AI-heavy prompt for
   stock-centered profile coordinates. The previous failure clipped a
   positive-coordinate XY polyline outline to one quadrant of centered SubCAD
   stock; the retry passed strict original-STEP comparison with
-  `volume_ratio=1.0`, raising the accepted index to 507 unique pairs.
+  `volume_ratio=1.0`, accepted under the strict original-STEP policy.
 - Done: accept train row 22079 after the same exact point-copy/profile-centering
   prompt hardening. The retry preserved the full tab outline and passed strict
-  original-STEP comparison, raising the accepted index to 508 unique pairs.
+  original-STEP comparison, accepted under the strict original-STEP policy.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.
@@ -951,14 +908,14 @@ Still deferred: controller-certified production G-code, formal quoting/ERP integ
   - Save generated SubCAD, comparison metrics, validation, economics, and repair history.
   - Do not count self-generated SubCAD -> STEP pairs as translator success; they are auxiliary supervised/pretraining data only.
   - Use `python -m src.data.run_zero_to_cad_translations` for the corrected flow.
-  - The compatibility gate now uses a typed pure-operation planner. Current local train/val/test scan finds 79,911 plannable rows out of 100,516 after strictly rejecting closed or indirectly assigned inaccessible shells.
+  - The compatibility gate now uses a typed pure-operation planner. Current planner-capacity status is tracked in `docs/zero_to_cad_status.md`.
   - Treat planner coverage as an attempt queue, not success. Each family still needs geometry/toolpath maturation and original-STEP verification before it counts toward 100k.
   - Initial geometry-backed slice is complete for selected-edge chamfers/fillets, lightweight profile pockets/cutouts/contours, and retained profile/cylindrical bosses.
   - Active next slice: Forward Scan And Bucketization v1.
     - Run accepted-index guarded scans from the latest verified row.
     - Fix the next deterministic blocker only after it is classified.
     - Maintain per-family match metrics before scaling any live batch.
-    - Track the corpus-capacity gap: 79,911 currently plannable rows cannot produce 100k accepted pairs unless unsupported families mature or more source STEP rows are added.
+    - Track the corpus-capacity gap in `docs/zero_to_cad_status.md`; current plannable rows cannot produce 100k accepted pairs unless unsupported families mature or more source STEP rows are added.
   - Later SubCAD capability maturation targets for 100k: side-face/oriented profile machining, robust retained multi-island planning, shells/thin walls, turning/revolves, sweeps, lofts, and original-STEP verification at scale.
 - GNN feature recognition and LLM fine-tuning should wait for execution-scored data.
 - RL remains later-stage research after simulator fidelity is validated.

@@ -312,14 +312,14 @@ Current implementation:
   writes each original STEP as `original_model.step`, runs the agentic
   translator, exports generated SubCAD/process-plan artifacts, and records
   trusted match policy results.
-- `--scan-compatible` now uses the typed pure-operation planner. The local
-  train/val/test dataset currently reports 79,911 plannable rows out of
-  100,516 rows after rejecting inaccessible closed shells, but this is planner
-  coverage rather than verified translation success.
+- `--scan-compatible` now uses the typed pure-operation planner. Current
+  accepted-pair and planner-capacity status is tracked in
+  `docs/zero_to_cad_status.md`; planner coverage is not verified translation
+  success.
 - Original-STEP verification remains the success gate. Each new operation
   family must mature from "planned" to "executes and matches" before it counts
   toward the 100k dataset.
-- Guarded live pilots currently record 508 unique accepted original-STEP-verified pairs across train/val/test splits.
+- Guarded live pilot status is tracked in `docs/zero_to_cad_status.md`.
 - Use `--comparison-methods slice` for the current 2.5D collection pass; SDF is
   retained as feedback but is too noisy on sparse STEP tessellations to be the
   hard success gate today.
@@ -332,7 +332,7 @@ Active next slice:
 
 - Run guarded feature-family batches with explicit attempt, execution, match,
   failure, unsupported, and remaining-to-goal counts.
-- Preserve accepted-index manifests so the 508 verified rows count toward future
+- Preserve accepted-index manifests so verified rows count toward future
   runs without re-spending live translator calls.
 - Shift the next live collection phase to AI-heavy translation mode:
   deterministic builders become optional fast paths, planner candidates become
@@ -451,7 +451,7 @@ Roadmap success:
 5. UI exposes plans, warnings, geometry feedback, and estimate assumptions clearly.
 6. Any ML fine-tuning is evaluated against executable outcomes, not just text similarity.
 7. STEP-to-SubCAD generation uses exact STEP/B-Rep evidence as the primary input, with vision/video benchmarked as supporting context rather than treated as geometry truth.
-8. The STEP-to-SubCAD training set reaches 100,000 accepted original-STEP-verified Zero-to-CAD pairs, with current progress reported separately from planner coverage: 508 accepted pairs and 79,911 plannable rows out of 100,516 local rows as of 2026-05-22.
+8. The STEP-to-SubCAD training set reaches 100,000 accepted original-STEP-verified Zero-to-CAD pairs, with current progress reported separately from planner coverage in `docs/zero_to_cad_status.md`.
 
 ## Cost Notes
 
