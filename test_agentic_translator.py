@@ -496,6 +496,8 @@ check(".pocket" in sys_prompt, "system prompt mentions pocket")
 check(".drill" in sys_prompt, "system prompt mentions drill")
 check(".slope_cut" in sys_prompt, "system prompt mentions sloped floor cuts")
 check(".shell_wall" in sys_prompt, "system prompt mentions current-shape shell walls")
+check("non-round ducts" in sys_prompt and "tube_profile" in sys_prompt,
+      "system prompt mentions arbitrary-profile tube ducts")
 check(".chamfer" in sys_prompt, "system prompt mentions chamfer")
 check(".edge_chamfer" in sys_prompt, "system prompt mentions selected edge chamfer")
 check(".machine_around_profile" in sys_prompt, "system prompt mentions retained-material operations")

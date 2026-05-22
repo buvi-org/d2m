@@ -162,6 +162,9 @@ Stock instance (immutable/fluent pattern).
   Use `shell_wall` after `slope_cut`, `surface_mill`, or other non-flat shaping
   operations when the CadQuery source shells the current solid. Use
   `thin_wall_pocket` only for a simple flat open top cavity.
+  `tube_profile` accepts arbitrary polygon/profile dicts for non-round ducts
+  as well as circular diameter profiles. Use it for V-shaped, trapezoid, or
+  rectangular duct profiles extruded along X/Y/Z.
   Use `tube_profile` for horizontal/vertical hollow tube bosses from CadQuery
   circle extrudes on `Workplane("YZ")`, `Workplane("XZ")`, or `Workplane("XY")`.
   Example for a tube running from X=18 to X=80, centered at Y=0, Z=5:
