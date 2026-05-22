@@ -377,6 +377,11 @@ Immediate next implementation targets:
 - Done: add AI-heavy prompt guidance for CadQuery wedge sketches and one-sided
   `Workplane("XZ").extrude(...)` cutters so sloped trough rows do not use
   unused helper variables or full-width cuts when the source cutter is half-width.
+- Note: row 21966 is now plannable and executes, but still fails strict
+  original-STEP comparison. Latest retries show the bottleneck has moved from
+  shell recognition to exact sloped-shell/rib/side-hole geometry; do not keep
+  spending repeated live calls on this single row without adding better
+  post-shell retained/additive rib support or feature-specific repair evidence.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.
