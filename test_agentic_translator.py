@@ -136,6 +136,35 @@ through_hole_code = build_deterministic_subcad_code(
 check(through_hole_code is not None and ".drill(4, through=True" in through_hole_code,
       "deterministic box hole keeps implicit through hole")
 
+panel_loop_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "panel_width = 100",
+        "panel_height = 70",
+        "panel_thickness = 3",
+        "cutout_width = 60",
+        "cutout_height = 30",
+        "hole_radius = 2",
+        "hole_spacing = 12",
+        "hole_count = 5",
+        "edge_margin = 8",
+        "edge_fillet_radius = 1",
+        "result = cq.Workplane('XY').box(panel_width, panel_height, panel_thickness)",
+        "result = result.faces('>Z').workplane().center(0, 0).rect(cutout_width, cutout_height).cutThruAll()",
+        "start_x = -panel_width/2 + edge_margin",
+        "for i in range(hole_count):",
+        "    result = result.faces('>Z').workplane().center(start_x + i*hole_spacing, panel_height/2 - edge_margin).hole(hole_radius*2)",
+        "result = result.faces('>X or <X or >Y or <Y').edges().fillet(edge_fillet_radius)",
+    ]),
+    [{"op_name": "box"}, {"op_name": "cutThruAll"}, {"op_name": "hole"}, {"op_name": "fillet"}],
+)
+check(panel_loop_code is not None and ".profile_pocket(" in panel_loop_code,
+      "deterministic panel preserves rectangular through cutout")
+check(panel_loop_code is not None and panel_loop_code.count(".drill(4, through=True") == 5,
+      "deterministic panel expands loop-built hole row")
+check(panel_loop_code is not None and ".edge_fillet(\"|Z\", radius=1" in panel_loop_code,
+      "deterministic panel preserves side-edge fillet intent")
+
 
 # =========================================================================
 #  Test 2: System prompt

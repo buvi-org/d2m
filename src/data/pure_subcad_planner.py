@@ -282,6 +282,9 @@ def build_deterministic_subcad_code(
     box_counterbore_code = _deterministic_box_counterbore_code(cadquery_code)
     if box_counterbore_code:
         return box_counterbore_code
+    box_cutout_holes_code = _deterministic_box_cutout_hole_panel_code(cadquery_code)
+    if box_cutout_holes_code:
+        return box_cutout_holes_code
     box_hole_code = _deterministic_box_hole_code(cadquery_code)
     if box_hole_code:
         return box_hole_code
@@ -380,7 +383,10 @@ def _deterministic_box_hole_code(cadquery_code: str) -> str | None:
     lower = cadquery_code.lower()
     if lower.count(".box(") != 1 or ".hole(" not in lower:
         return None
-    blocked = (".union(", ".cut(", ".cutblind(", ".polyline(", ".cborehole(", ".pushpoints(", ".rarray(", ".polararray(")
+    blocked = (
+        ".union(", ".cut(", ".cutblind(", ".cutthruall(", ".polyline(",
+        ".cborehole(", ".pushpoints(", ".rarray(", ".polararray(",
+    )
     if any(token in lower for token in blocked):
         return None
     box = _box_stock_from_code(cadquery_code)
@@ -401,6 +407,39 @@ def _deterministic_box_hole_code(cadquery_code: str) -> str | None:
     chamfer = _first_call_number(cadquery_code, "chamfer", env)
     if chamfer is not None and chamfer > 0:
         sequence.append(f'.edge_chamfer("all_edges", width={chamfer:.6g})')
+    stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_box_cutout_hole_panel_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if lower.count(".box(") != 1 or ".cutthruall(" not in lower or ".hole(" not in lower:
+        return None
+    if any(token in lower for token in (".union(", ".shell(", ".loft(", ".sweep(", ".cborehole(")):
+        return None
+    box = _box_stock_from_code(cadquery_code)
+    if not box:
+        return None
+    env = _numeric_env(cadquery_code)
+    cutout = _first_rect_cutthruall_profile(cadquery_code, env)
+    if not cutout:
+        return None
+    drills = _for_loop_hole_drill_calls(cadquery_code)
+    if not drills:
+        drills = _deterministic_drill_calls(cadquery_code)
+    if not drills:
+        return None
+    profile = (
+        "{'type': 'rect', "
+        f"'length': {cutout['length']:.6g}, 'width': {cutout['width']:.6g}, "
+        f"'cx': {cutout['cx']:.6g}, 'cy': {cutout['cy']:.6g}"
+        "}"
+    )
+    sequence = [f".profile_pocket({profile}, depth={box['height']:.6g}, through=True)"]
+    sequence.extend(drills)
+    fillet = _first_call_number(cadquery_code, "fillet", env)
+    if fillet is not None and fillet > 0:
+        sequence.append(f'.edge_fillet("|Z", radius={fillet:.6g})')
     stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
     return _format_fluent_subcad_code(stock, sequence)
 
@@ -1992,6 +2031,94 @@ def _push_points_hole_drill_calls(code_text: str) -> list[str]:
         for x, y in points:
             calls.append(f".drill({diameter:.6g}, through=True, cx={x:.6g}, cy={y:.6g})")
     return calls
+
+
+def _first_rect_cutthruall_profile(code_text: str, env: dict[str, float]) -> dict[str, float] | None:
+    pattern = re.compile(
+        r"(?:\.center\((?P<center>[^)]*)\)\s*)?\.rect\((?P<rect>[^)]*)\)\s*\.cutthruall\(",
+        re.IGNORECASE | re.DOTALL,
+    )
+    match = pattern.search(code_text)
+    if not match:
+        return None
+    rect_args = _split_args(match.group("rect"))
+    if len(rect_args) < 2:
+        return None
+    length = _eval_number(rect_args[0], env)
+    width = _eval_number(rect_args[1], env)
+    if length is None or width is None or length <= 0 or width <= 0:
+        return None
+    cx = 0.0
+    cy = 0.0
+    if match.group("center"):
+        center_args = _split_args(match.group("center"))
+        if len(center_args) >= 2:
+            cx = _eval_number(center_args[0], env) or 0.0
+            cy = _eval_number(center_args[1], env) or 0.0
+    return {"length": length, "width": width, "cx": cx, "cy": cy}
+
+
+def _for_loop_hole_drill_calls(code_text: str) -> list[str]:
+    try:
+        tree = ast.parse(textwrap.dedent(code_text))
+    except SyntaxError:
+        return []
+    env = _numeric_env(code_text)
+    calls: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.For) or not isinstance(node.target, ast.Name):
+            continue
+        if not (
+            isinstance(node.iter, ast.Call)
+            and isinstance(node.iter.func, ast.Name)
+            and node.iter.func.id == "range"
+            and node.iter.args
+        ):
+            continue
+        count = _eval_ast_number(node.iter.args[0], env)
+        if count is None or count <= 0 or count > 100:
+            continue
+        loop_var = node.target.id
+        for child in node.body:
+            for call in ast.walk(child):
+                if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Attribute):
+                    continue
+                if call.func.attr.lower() != "hole" or not call.args:
+                    continue
+                diameter = _eval_ast_number(call.args[0], env)
+                if diameter is None or diameter <= 0:
+                    continue
+                depth = _eval_ast_number(call.args[1], env) if len(call.args) >= 2 else None
+                center_call = _nearest_chained_call(call.func.value, "center")
+                if center_call is None or len(center_call.args) < 2:
+                    continue
+                for index in range(int(count)):
+                    local_env = env | {loop_var: float(index)}
+                    x = _eval_ast_number(center_call.args[0], local_env)
+                    y = _eval_ast_number(center_call.args[1], local_env)
+                    if x is None or y is None:
+                        break
+                    if depth is not None and depth > 0:
+                        calls.append(
+                            f".drill({diameter:.6g}, depth={depth:.6g}, through=False, "
+                            f"cx={x:.6g}, cy={y:.6g})"
+                        )
+                    else:
+                        calls.append(f".drill({diameter:.6g}, through=True, cx={x:.6g}, cy={y:.6g})")
+    return calls
+
+
+def _nearest_chained_call(node: ast.AST, call_name: str) -> ast.Call | None:
+    current = node
+    while isinstance(current, ast.Call):
+        func = current.func
+        if isinstance(func, ast.Attribute) and func.attr.lower() == call_name.lower():
+            return current
+        if isinstance(func, ast.Attribute):
+            current = func.value
+        else:
+            break
+    return None
 
 
 def _centered_rarray_hole_calls(code_text: str) -> list[str]:
