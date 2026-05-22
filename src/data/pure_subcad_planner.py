@@ -384,7 +384,7 @@ def _deterministic_box_hole_code(cadquery_code: str) -> str | None:
     if lower.count(".box(") != 1 or ".hole(" not in lower:
         return None
     blocked = (
-        ".union(", ".cut(", ".cutblind(", ".cutthruall(", ".polyline(",
+        ".union(", ".cut(", ".cutblind(", ".cutthruall(", ".shell(", ".polyline(",
         ".cborehole(", ".pushpoints(", ".rarray(", ".polararray(",
     )
     if any(token in lower for token in blocked):
@@ -2373,8 +2373,11 @@ def _shell_has_accessible_open_face(ops_trace: list[dict], code_text: str) -> bo
     shell_index = code_text.find(".shell(")
     if shell_index < 0:
         return False
-    recent_chain = code_text[max(0, shell_index - 120):shell_index]
-    return ".faces(" in recent_chain
+    line_start = max(code_text.rfind("\n", 0, shell_index), code_text.rfind(";", 0, shell_index)) + 1
+    expression = code_text[line_start:shell_index]
+    if "=" in expression:
+        expression = expression.rsplit("=", 1)[-1]
+    return ".faces(" in expression
 
 
 _FACE_WORKPLANE_RE = re.compile(

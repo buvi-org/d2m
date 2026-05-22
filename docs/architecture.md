@@ -6,8 +6,8 @@ d2m is currently centered on a STEP -> pure SubCAD research workflow: generate
 executable subtractive SubCAD, execute it, export a generated STEP, and compare
 that generated STEP against the original source STEP before accepting a pair for
 training or evaluation. The immediate dataset target is 100,000
-original-STEP-verified Zero-to-CAD pairs. Current measured status is 159 accepted
-pairs and 86,923 plannable rows out of 100,516 local rows; plannable rows are an
+original-STEP-verified Zero-to-CAD pairs. Current measured status is 505 unique
+accepted pairs and 79,911 plannable rows out of 100,516 local rows; plannable rows are an
 attempt queue, not verified success.
 
 The architecture remains modular because manufacturing involves hard physical

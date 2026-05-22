@@ -27,9 +27,9 @@ STEP target, surface validation issues, and estimate engineering time/cost.
 
 The concrete project objective is to train and evaluate a STEP -> pure SubCAD
 model/workflow from at least 100,000 original-STEP-verified Zero-to-CAD pairs.
-The current local corpus scan has 86,923 plannable rows out of 100,516
+The current local corpus scan has 79,911 plannable rows out of 100,516
 Zero-to-CAD rows, but planner coverage is only the attempt queue. Guarded live
-pilots currently record 159 accepted original-STEP-verified pairs.
+pilots currently record 505 unique accepted original-STEP-verified pairs.
 
 A pair is accepted only when:
 
@@ -245,12 +245,12 @@ Current policy:
 
 Current scan of `data/zero_to_cad_100k` with the pure planner:
 
-- train: 70,095 plannable rows out of 81,015.
-- val: 8,397 plannable rows out of 9,734.
-- test: 8,431 plannable rows out of 9,767.
-- total: 86,923 plannable rows out of 100,516 local rows.
+- train: 64,424 plannable rows out of 81,015.
+- val: 7,704 plannable rows out of 9,734.
+- test: 7,783 plannable rows out of 9,767.
+- total: 79,911 plannable rows out of 100,516 local rows.
 
-Guarded live pilots currently record 159 accepted original-STEP-verified pairs.
+Guarded live pilots currently record 505 unique accepted original-STEP-verified pairs.
 The reduction from earlier planner counts is intentional: closed/inaccessible
 shell operations are now rejected as unsupported CNC work instead of counted as
 plannable rows.
@@ -291,7 +291,7 @@ Active next implementation slice:
   unsupported rows before scaling any bucket.
 - Maintain accepted-index manifests so previously verified rows count toward
   the 100k target without re-running paid/live translator calls.
-- Track the corpus-capacity gap explicitly: 86,923 current plannable rows cannot
+- Track the corpus-capacity gap explicitly: 79,911 current plannable rows cannot
   yield 100k accepted pairs unless unsupported families mature or more source
   STEP rows are added.
 - Release training-ready datasets only as versioned manifests that separate

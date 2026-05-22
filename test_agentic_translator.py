@@ -81,6 +81,16 @@ closed_shell = plan_pure_subcad_features(
     ".box(10, 10, 10).shell(-1)",
 )
 check(not closed_shell.compatible, "pure planner rejects closed inaccessible shells")
+assigned_closed_shell = plan_pure_subcad_features(
+    [
+        {"op_name": "hole", "function": "cq.Workplane.box.faces.hole"},
+        {"op_name": "shell", "function": "solid.shell"},
+    ],
+    "solid = cq.Workplane('XY').box(30,30,30).faces('>Z').hole(10)\n"
+    "result = solid.shell(-2)",
+)
+check(not assigned_closed_shell.compatible,
+      "pure planner rejects assigned closed shells after face-hole construction")
 check(_parse_methods("none") == [], "comparison-methods=none disables rich mesh comparison")
 
 volume_only_false_positive = {
