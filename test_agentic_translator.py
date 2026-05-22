@@ -660,6 +660,10 @@ check(".polygon(n, diameter)" in prompt and "circumdiameter" in prompt and "hex_
       "user prompt maps CadQuery polygon diameter to SubCAD circumdiameter")
 check("Copy the exact second argument" in prompt and "do not multiply it by" in prompt,
       "user prompt forbids recomputing CadQuery polygon dimensions")
+check("Copy source polyline/profile points literally" in prompt and "drop intermediate points" in prompt,
+      "user prompt preserves all polyline profile points")
+check('Workplane("XY").polyline' in prompt and "extrusion distance is SubCAD stock height" in prompt,
+      "user prompt maps XY profile extrusion axes correctly")
 check("no volume change" in prompt or "variable volume evidence" in prompt.lower(),
       "user prompt can warn about no-op CadQuery source operations")
 check("omit the corresponding" in prompt and "omit those hole operations" in prompt,

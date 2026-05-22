@@ -267,6 +267,9 @@ Stock instance (immutable/fluent pattern).
    initial SubCAD stock dimensions must include that envelope.
 9. Use profile_pocket/profile_cutout/profile_contour for polygon, polyline,
    arc-chain, slot-like, and non-rectangular profiles.
+   Copy source polyline/profile points literally. Do not simplify, reorder, or
+   drop intermediate points; tab, step, and corner points that look redundant
+   often define the final outline.
    CadQuery `.polygon(n, diameter)` maps to a profile dict like
    `{"type": "polygon", "n_sides": n, "circumdiameter": diameter}`; the
    second CadQuery argument is the polygon diameter, not the radius. This is
@@ -711,12 +714,20 @@ subtractive program. Remember:
   y_size)` maps to SubCAD `.pocket(width=y_size, length=x_size, ...)`.
   SubCAD `width` always means Y span, and SubCAD `length` always means X span.
   The same convention applies to rectangular profile dicts, ribs, and pads.
+- For `Workplane("XY").polyline(...).close().extrude(thickness)`, the polyline
+  X span is SubCAD length, the polyline Y span is SubCAD width, and the
+  extrusion distance is SubCAD stock height/depth. Do not treat the profile's
+  Y height as SubCAD Z height. For `Workplane("YZ")`, the extrude distance is
+  X length; for `Workplane("XZ")`, the extrude distance is Y width.
 - For CadQuery `.polygon(n, diameter)`, use
   `{{"type": "polygon", "n_sides": n, "circumdiameter": diameter}}`.
   The CadQuery polygon value is a diameter, not a radius, even when the source
   variable is named `hex_radius` or similar. Copy the exact second argument
   expression from `.polygon(...)` into `circumdiameter`; do not multiply it by
   2, divide it by 2, or infer a new value from volume feedback.
+  Copy source polyline/profile points literally. Do not simplify, reorder, or
+  drop intermediate points; tab, step, and corner points that look redundant
+  often define the final outline.
   For an outer outline cut through the full stock thickness, call
   `.profile_cutout(profile, through=True)` or pass a depth equal to the current
   stock height.
