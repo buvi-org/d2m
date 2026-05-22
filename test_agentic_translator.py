@@ -371,6 +371,30 @@ check(cross_slot_plate_code is not None and cross_slot_plate_code.count(".profil
 check(cross_slot_plate_code is not None and cross_slot_plate_code.count(".drill(") == 4,
       "deterministic cross slot plate preserves mounting holes")
 
+cross_slots_back_ribs_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "central_size=30.0; arm_length=30.0; arm_width=12.0; thickness=10.0",
+        "cavity_radius=8.0; slot_width=6.0; slot_length=20.0; slot_offset=5.0",
+        "chamfer_size=1.0; mounting_hole_dia=5.0; mounting_hole_offset=8.0",
+        "rib_width=8.0; rib_height=2.0; rib_offset=4.0",
+        "central = cq.Workplane('XY').rect(central_size, central_size).extrude(thickness)",
+        "vertical = cq.Workplane('XY').rect(arm_width, central_size + 2 * arm_length).extrude(thickness)",
+        "horizontal = cq.Workplane('XY').rect(central_size + 2 * arm_length, arm_width).extrude(thickness)",
+        "base = central.union(vertical).union(horizontal)",
+        "cav = base.faces('>Z').workplane().hole(cavity_radius * 2)",
+        "rib_positions = [(central_size / 2 + rib_offset, rib_offset)]",
+        "ribs = cq.Workplane('XY')",
+        "for x, y in rib_positions:",
+        "    ribs = ribs.union(cq.Workplane('XY').center(x, y).rect(rib_width, rib_width).extrude(-rib_height))",
+    ]),
+    [{"op_name": "union"}, {"op_name": "hole"}, {"op_name": "profile_pocket"}],
+)
+check(cross_slots_back_ribs_code is not None and cross_slots_back_ribs_code.count(".machine_around_profiles(") == 2,
+      "deterministic cross slots backside ribs maps layered retained profiles")
+check(cross_slots_back_ribs_code is not None and cross_slots_back_ribs_code.count(".profile_pocket(") == 4,
+      "deterministic cross slots backside ribs expands four slots")
+
 
 # =========================================================================
 #  Test 2: System prompt

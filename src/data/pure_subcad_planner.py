@@ -282,6 +282,9 @@ def build_deterministic_subcad_code(
     base_rib_cross_code = _deterministic_base_rib_cross_code(cadquery_code)
     if base_rib_cross_code:
         return base_rib_cross_code
+    cross_slots_back_ribs_code = _deterministic_cross_slots_back_ribs_code(cadquery_code)
+    if cross_slots_back_ribs_code:
+        return cross_slots_back_ribs_code
     cross_slot_plate_code = _deterministic_cross_slot_plate_code(cadquery_code)
     if cross_slot_plate_code:
         return cross_slot_plate_code
@@ -1109,6 +1112,114 @@ def _deterministic_cross_slot_plate_code(cadquery_code: str) -> str | None:
     ):
         sequence.append(f".drill({hole_diameter:.6g}, through=True, cx={cx:.6g}, cy={cy:.6g})")
     stock = f"Stock.rectangular({2.0 * half_span:.6g}, {2.0 * half_span:.6g}, {thickness:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_cross_slots_back_ribs_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    required_tokens = (
+        "central_size",
+        "arm_length",
+        "slot_offset",
+        "rib_positions",
+        ".extrude(-rib_height)",
+    )
+    if not all(token in lower for token in required_tokens):
+        return None
+    env = _numeric_env(cadquery_code)
+    required = {
+        "central_size",
+        "arm_length",
+        "arm_width",
+        "thickness",
+        "cavity_radius",
+        "slot_width",
+        "slot_length",
+        "slot_offset",
+        "mounting_hole_dia",
+        "mounting_hole_offset",
+        "rib_width",
+        "rib_height",
+        "rib_offset",
+    }
+    if not required.issubset(env):
+        return None
+    central_size = env["central_size"]
+    arm_length = env["arm_length"]
+    arm_width = env["arm_width"]
+    thickness = env["thickness"]
+    cavity_radius = env["cavity_radius"]
+    slot_width = env["slot_width"]
+    slot_length = env["slot_length"]
+    slot_offset = env["slot_offset"]
+    mounting_hole_dia = env["mounting_hole_dia"]
+    mounting_hole_offset = env["mounting_hole_offset"]
+    rib_width = env["rib_width"]
+    rib_height = env["rib_height"]
+    rib_offset = env["rib_offset"]
+    if min(
+        central_size,
+        arm_length,
+        arm_width,
+        thickness,
+        cavity_radius,
+        slot_width,
+        slot_length,
+        mounting_hole_dia,
+        rib_width,
+        rib_height,
+    ) <= 0:
+        return None
+    total = central_size + 2.0 * arm_length
+    profiles = [
+        {"type": "rect", "length": central_size, "width": central_size, "cx": 0.0, "cy": 0.0},
+        {"type": "rect", "length": arm_width, "width": total, "cx": 0.0, "cy": 0.0},
+        {"type": "rect", "length": total, "width": arm_width, "cx": 0.0, "cy": 0.0},
+    ]
+    slot_center = central_size / 2.0 + arm_length - slot_offset - slot_length / 2.0
+    rib_positions = [
+        (central_size / 2.0 + rib_offset, rib_offset),
+        (-(central_size / 2.0 + rib_offset), rib_offset),
+        (rib_offset, central_size / 2.0 + rib_offset),
+        (rib_offset, -(central_size / 2.0 + rib_offset)),
+    ]
+    rib_profiles = [
+        {"type": "rect", "length": rib_width, "width": rib_width, "cx": cx, "cy": cy}
+        for cx, cy in rib_positions
+    ]
+    sequence = [
+        f".machine_around_profiles({profiles!r}, height={thickness:.6g}, base_height={rib_height:.6g})",
+        f".circular_pocket({2.0 * cavity_radius:.6g}, depth={thickness:.6g}, cx=0.0, cy=0.0)",
+    ]
+    for cx, cy, length, width in (
+        (0.0, slot_center, slot_width, slot_length),
+        (0.0, -slot_center, slot_width, slot_length),
+        (slot_center, 0.0, slot_length, slot_width),
+        (-slot_center, 0.0, slot_length, slot_width),
+    ):
+        sequence.append(
+            f".profile_pocket({{'type': 'rect', 'length': {length:.6g}, "
+            f"'width': {width:.6g}, 'cx': {cx:.6g}, 'cy': {cy:.6g}}}, "
+            f"depth={thickness:.6g})"
+        )
+    chamfer = env.get("chamfer_size")
+    if chamfer is not None and chamfer > 0:
+        sequence.append(f'.edge_chamfer("all_edges", width={chamfer:.6g})')
+    hole_offset = central_size / 2.0 + arm_length + mounting_hole_offset
+    for cx, cy in (
+        (0.0, hole_offset),
+        (0.0, -hole_offset),
+        (hole_offset, 0.0),
+        (-hole_offset, 0.0),
+    ):
+        sequence.append(
+            f".drill({mounting_hole_dia:.6g}, depth={thickness:.6g}, "
+            f"through=False, cx={cx:.6g}, cy={cy:.6g})"
+        )
+    sequence.append(
+        f".machine_around_profiles({rib_profiles!r}, height={rib_height:.6g}, base_height=0.0)"
+    )
+    stock = f"Stock.rectangular({total:.6g}, {total:.6g}, {thickness + rib_height:.6g})"
     return _format_fluent_subcad_code(stock, sequence)
 
 
