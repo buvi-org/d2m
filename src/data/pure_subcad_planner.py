@@ -276,6 +276,9 @@ def build_deterministic_subcad_code(
     base_extension_code = _deterministic_base_extension_code(cadquery_code)
     if base_extension_code:
         return base_extension_code
+    side_extrude_hole_code = _deterministic_side_extrude_hole_code(cadquery_code)
+    if side_extrude_hole_code:
+        return side_extrude_hole_code
     rect_plate_code = _deterministic_rect_extrude_plate_code(cadquery_code)
     if rect_plate_code:
         return rect_plate_code
@@ -484,6 +487,34 @@ def _deterministic_transformed_cskhole_code(cadquery_code: str) -> str | None:
         f'cx=0.0, cy=0.0, face_selector="{face_selector}")'
     ]
     stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_side_extrude_hole_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if "workplane('yz')" not in lower and 'workplane("yz")' not in lower:
+        return None
+    if ".rect(" not in lower or ".extrude(" not in lower or ".hole(" not in lower:
+        return None
+    if any(token in lower for token in (".union(", ".cut(", ".shell(", ".loft(", ".sweep(", ".cskhole(", ".cborehole(")):
+        return None
+    env = _numeric_env(cadquery_code)
+    rect_args = _first_call_args(cadquery_code, "rect")
+    extrude_args = _first_call_args(cadquery_code, "extrude")
+    hole_args = _first_call_args(cadquery_code, "hole")
+    if len(rect_args) < 2 or not extrude_args or not hole_args:
+        return None
+    width = _eval_number(rect_args[0], env)
+    height = _eval_number(rect_args[1], env)
+    length = _eval_number(extrude_args[0], env)
+    diameter = _eval_number(hole_args[0], env)
+    if any(value is None or value <= 0 for value in (width, height, length, diameter)):
+        return None
+    face_selector = _first_faces_selector(cadquery_code) or ">X"
+    if face_selector not in {">X", "<X"}:
+        return None
+    stock = f"Stock.rectangular({length:.6g}, {width:.6g}, {height:.6g})"
+    sequence = [f'.drill({diameter:.6g}, through=True, cx=0.0, cy=0.0, face_selector="{face_selector}")']
     return _format_fluent_subcad_code(stock, sequence)
 
 
@@ -2202,6 +2233,13 @@ def _face_selector_from_transform(transform: dict[str, tuple[float, float, float
     if abs(abs(ry) - 90.0) < 1e-6 and abs(rx) < 1e-6 and abs(rz) < 1e-6:
         return ">X" if offset[0] >= 0 else "<X"
     return None
+
+
+def _first_faces_selector(code_text: str) -> str | None:
+    match = re.search(r"\.faces\(\s*['\"](?P<selector>[<>][XYZxyz])['\"]\s*\)", code_text)
+    if not match:
+        return None
+    return match.group("selector").upper()
 
 
 def _centered_rarray_hole_calls(code_text: str) -> list[str]:

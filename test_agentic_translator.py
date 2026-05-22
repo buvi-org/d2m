@@ -190,6 +190,21 @@ transformed_csk_code = build_deterministic_subcad_code(
 check(transformed_csk_code is not None and 'face_selector=">Y"' in transformed_csk_code,
       "deterministic transformed cskHole maps to side-face intent")
 
+side_extrude_hole_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "arm_length=80.0;arm_width=30.0;arm_thickness=10.0;pivot_diameter=8.0",
+        "base = cq.Workplane('YZ').rect(arm_width, arm_thickness).extrude(arm_length)",
+        "base = base.faces('>X').hole(pivot_diameter)",
+        "result = base",
+    ]),
+    [{"op_name": "rect"}, {"op_name": "extrude"}, {"op_name": "faces"}, {"op_name": "hole"}],
+)
+check(side_extrude_hole_code is not None and "Stock.rectangular(80" in side_extrude_hole_code,
+      "deterministic YZ extrude preserves X-length stock")
+check(side_extrude_hole_code is not None and 'face_selector=">X"' in side_extrude_hole_code,
+      "deterministic YZ extrude maps hole to side face")
+
 
 # =========================================================================
 #  Test 2: System prompt
