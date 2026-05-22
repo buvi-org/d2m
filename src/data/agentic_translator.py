@@ -504,9 +504,10 @@ Your job is to translate CadQuery constructive CAD into executable SubCAD.
 You MUST call the `execute_subcad` tool with raw Python code in its `code`
 argument. Do not put markdown fences, explanations, comments about your
 reasoning, JSON outside the tool call, or prose in the code string.
-The code must be concise executable construction code: no exploratory
-reasoning, no `pass`, no unfinished branches, no "let me try" commentary, and
-the final non-empty line should leave the completed Stock assigned to `part`.
+The code must be concise executable construction code: no comments, no
+exploratory reasoning, no `pass`, no unfinished branches, no "let me try"
+commentary, and the final non-empty line should leave the completed Stock
+assigned to `part`.
 
 {SUBCAD_API_REFERENCE}
 {ai_heavy_appendix}
@@ -646,10 +647,11 @@ subtractive program. Remember:
   unless you explicitly assign a local helper variable in the generated code.
 - Call the `execute_subcad` tool with raw Python code. Do not include markdown
   fences or explanation text in the tool argument.
-- Return only executable construction code. Do not include exploratory comments,
-  `pass`, unfinished sketches, multiple abandoned approaches, or comments like
-  "let me try" / "I think" / "this is complex". If a geometry is difficult,
-  choose the best available pure SubCAD approximation and finish the program.
+- Return only executable construction code. Do not include Python comments,
+  exploratory notes, `pass`, unfinished sketches, multiple abandoned approaches,
+  or comments like "let me try" / "I think" / "this is complex". If a geometry
+  is difficult, choose the best available pure SubCAD approximation and finish
+  the program.
 {planner_instruction}
 {absent_feature_instruction}
 - Use simple SubCAD operations first: face_mill, pocket, circular_pocket,
@@ -1063,6 +1065,8 @@ def _validate_generated_subcad_code(code: str) -> str | None:
     """Catch non-executable narrative code before spending geometry work."""
     if not re.search(r"(?m)^\s*part\s*=", code):
         return "Generated code must assign the final Stock to a variable named 'part'."
+    if re.search(r"(?m)^\s*#", code):
+        return "Generated code must not contain Python comment lines; return executable SubCAD code only."
     if re.search(r"(?m)^\s*pass\s*(#.*)?$", code):
         return "Generated code contains `pass`; return a complete executable SubCAD program instead."
     narrative_pattern = re.compile(

@@ -355,6 +355,10 @@ Immediate next implementation targets:
   cross-section profiles on `>Y`, `<Y`, `>X`, and `<X` faces. This removes the
   previous "Selected faces must be co-planar" failure mode for triangular side
   profile retention.
+- Done: retry train row 21966 after side-profile support; no geometry attempt
+  executed because both AI attempts still returned narrative/comment-heavy code.
+  Harden generated-code validation further: tool code now rejects all Python
+  comment lines, not only obvious exploratory comments.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.

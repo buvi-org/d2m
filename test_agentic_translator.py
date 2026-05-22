@@ -178,6 +178,8 @@ check(volume_mismatch_result["match_policy"]["status"] == "volume_mismatch",
       "runner records strict volume mismatch before mesh trust")
 check(_validate_generated_subcad_code("part = Stock.rectangular(10, 10, 5)") is None,
       "generated SubCAD validator accepts concise executable code")
+check(_validate_generated_subcad_code("# harmless-looking comment\npart = Stock.rectangular(10, 10, 5)") is not None,
+      "generated SubCAD validator rejects all comment lines")
 check(_validate_generated_subcad_code("# Let me try a few approaches\npart = Stock.rectangular(10, 10, 5)") is not None,
       "generated SubCAD validator rejects exploratory reasoning comments")
 check(_validate_generated_subcad_code("part = Stock.rectangular(10, 10, 5)\npass") is not None,
@@ -1025,7 +1027,7 @@ class _FailingFinalLLMClient:
         return {
             "id": f"best-call-{self.calls}",
             "name": "execute_subcad",
-            "arguments": {"code": f"# attempt {self.calls}\npart = Stock.rectangular(10, 10, 10)"},
+            "arguments": {"code": "part = Stock.rectangular(10, 10, 10)"},
         }
 
 

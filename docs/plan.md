@@ -157,7 +157,7 @@ Current test status:
 
 | Test | Result | Notes |
 |------|--------|-------|
-| `python test_agentic_translator.py` | PASS, 172/172 | Covers non-LLM translator components, strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt selection, generated-code discipline checks, STEP-envelope prompt guards, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
+| `python test_agentic_translator.py` | PASS, 173/173 | Covers non-LLM translator components, strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt selection, generated-code discipline checks, STEP-envelope prompt guards, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
 | `python test_subcad_tube_profile.py` | PASS, 6/6 | Covers axis-aligned `tube_profile` geometry, union/replace behavior, and process-plan records. |
 | `python test_subcad_side_profile_cutout.py` | PASS, 6/6 | Covers side-face triangular `profile_cutout(..., through=True)` for XZ/YZ cross-section retention. |
 
