@@ -429,6 +429,102 @@ def _generated_code_guard(code: str) -> str | None:
     return None
 
 
+def repair_retained_face_mill_sequences(code: str) -> tuple[str, list[str]]:
+    """Remove generated face-mill calls that would erase retained material.
+
+    This is intentionally conservative: it only strips a face-mill call when the
+    same static checks used by the REPL guard identify a retained-feature
+    sequencing error. Geometry comparison still decides whether the repaired
+    program is acceptable.
+    """
+    repaired = str(code or "")
+    reasons: list[str] = []
+
+    repaired, removed_after = _remove_face_mills_after_retained(repaired)
+    if removed_after:
+        reasons.append("removed face_mill after retained boss/rib/pad operations")
+
+    while True:
+        code_no_comments = re.sub(r"#.*", "", repaired)
+        lowered = code_no_comments.lower()
+        first_retained = _first_retained_call_position(lowered)
+        if first_retained is None:
+            break
+        height_error = _face_mill_before_retained_height_error(
+            code_no_comments, lowered, first_retained
+        )
+        if not height_error:
+            break
+        face_index = lowered.find(".face_mill(", 0, first_retained)
+        if face_index < 0:
+            break
+        repaired_next, removed = _remove_face_mill_call_at_or_after(repaired, face_index)
+        if not removed or repaired_next == repaired:
+            break
+        repaired = repaired_next
+        reasons.append("removed face_mill that lowered stock below retained feature height")
+
+    return repaired.strip(), reasons
+
+
+def _first_retained_call_position(lowered_code: str) -> int | None:
+    retained_tokens = [
+        ".machine_around_profile(",
+        ".machine_around_profiles(",
+        ".machine_around_cylinder(",
+        ".rib(",
+        ".pad(",
+    ]
+    retained_positions = [
+        lowered_code.find(token)
+        for token in retained_tokens
+        if lowered_code.find(token) >= 0
+    ]
+    return min(retained_positions) if retained_positions else None
+
+
+def _remove_face_mills_after_retained(code: str) -> tuple[str, bool]:
+    lowered = re.sub(r"#.*", "", code).lower()
+    first_retained = _first_retained_call_position(lowered)
+    if first_retained is None:
+        return code, False
+    repaired = code
+    removed_any = False
+    while True:
+        lowered_repaired = re.sub(r"#.*", "", repaired).lower()
+        first_retained = _first_retained_call_position(lowered_repaired)
+        if first_retained is None:
+            break
+        later_face = lowered_repaired.find(".face_mill(", first_retained + 1)
+        if later_face < 0:
+            break
+        repaired_next, removed = _remove_face_mill_call_at_or_after(repaired, later_face)
+        if not removed or repaired_next == repaired:
+            break
+        repaired = repaired_next
+        removed_any = True
+    return repaired, removed_any
+
+
+def _remove_face_mill_call_at_or_after(code: str, position: int) -> tuple[str, bool]:
+    match = re.search(r"\.face_mill\s*\([^)]*\)", code[position:], re.IGNORECASE)
+    if not match:
+        return code, False
+    start = position + match.start()
+    end = position + match.end()
+    line_start = code.rfind("\n", 0, start) + 1
+    line_end = code.find("\n", end)
+    if line_end < 0:
+        line_end = len(code)
+    line = code[line_start:line_end]
+    new_line = line[: start - line_start] + line[end - line_start :]
+    stripped = new_line.strip()
+    if not stripped or stripped in {"part = part", "part=part"}:
+        remove_end = line_end + (1 if line_end < len(code) and code[line_end:line_end + 1] == "\n" else 0)
+        return code[:line_start] + code[remove_end:], True
+    return code[:line_start] + new_line + code[line_end:], True
+
+
 def _face_mill_before_retained_height_error(
     code_no_comments: str,
     lowered: str,

@@ -8,10 +8,10 @@ Last refreshed: 2026-05-22
 
 ## Accepted Original-STEP-Verified Pairs
 
-- Accepted unique pairs: 517
-- Accepted records before dedupe: 522
+- Accepted unique pairs: 519
+- Accepted records before dedupe: 524
 - Duplicates excluded by dedupe key: 5
-- Split counts: train 467, val 14, test 36
+- Split counts: train 469, val 14, test 36
 - Latest source indexes by split: train 80938, val 9615, test 9631
 
 Acceptance policy:

@@ -190,6 +190,27 @@ check(_validate_generated_subcad_code("# harmless-looking comment\npart = Stock.
       "generated SubCAD validator rejects all comment lines")
 check(_normalize_generated_subcad_code("# harmless-looking comment\npart = Stock.rectangular(10, 10, 5)") == "part = Stock.rectangular(10, 10, 5)",
       "generated SubCAD normalizer strips full-line comments before execution")
+unsafe_face_code = (
+    "part = Stock.rectangular(80, 35, 20)"
+    ".face_mill(depth=12)"
+    ".machine_around_cylinder(20, 12, cx=10, cy=10, base_height=7.5)"
+)
+check(".face_mill" not in _normalize_generated_subcad_code(unsafe_face_code),
+      "generated SubCAD normalizer strips face_mill that would erase retained height")
+late_face_code = (
+    "part = Stock.rectangular(40, 20, 10)"
+    ".machine_around_profile({'length': 10, 'width': 4}, height=2)"
+    ".face_mill(5)"
+)
+check(".face_mill" not in _normalize_generated_subcad_code(late_face_code),
+      "generated SubCAD normalizer strips face_mill after retained features")
+safe_face_code = (
+    "part = Stock.rectangular(80, 35, 20)"
+    ".face_mill(depth=2)"
+    ".machine_around_cylinder(20, 12, cx=10, cy=10, base_height=6)"
+)
+check(".face_mill" in _normalize_generated_subcad_code(safe_face_code),
+      "generated SubCAD normalizer preserves safe face_mill before retained features")
 check(_validate_generated_subcad_code("# Let me try a few approaches\npart = Stock.rectangular(10, 10, 5)") is not None,
       "generated SubCAD validator rejects exploratory reasoning comments")
 check(_validate_generated_subcad_code("part = Stock.rectangular(10, 10, 5)\npass") is not None,

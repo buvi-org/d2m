@@ -25,7 +25,12 @@ from typing import Optional
 
 import trimesh
 
-from .subcad_repl import run_subcad, compare_to_reference, format_feedback
+from .subcad_repl import (
+    compare_to_reference,
+    format_feedback,
+    repair_retained_face_mill_sequences,
+    run_subcad,
+)
 from .cadquery_to_subcad import (
     reconstruct_chains,
     classify_chain,
@@ -1150,13 +1155,15 @@ def _validate_generated_subcad_code(code: str) -> str | None:
 
 
 def _normalize_generated_subcad_code(code: str) -> str:
-    """Strip full-line Python comments before validation/execution."""
+    """Strip comments and apply safe, general generated-code repairs."""
     kept = [
         line
         for line in str(code or "").splitlines()
         if not line.lstrip().startswith("#")
     ]
-    return "\n".join(kept).strip()
+    normalized = "\n".join(kept).strip()
+    repaired, _reasons = repair_retained_face_mill_sequences(normalized)
+    return repaired
 
 
 # =========================================================================
