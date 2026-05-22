@@ -113,6 +113,27 @@ check(strict_result["translator_success"], "runner preserves raw translator volu
 check(not strict_result["success"], "runner rejects volume-only false positive as trusted match")
 check(strict_result["match_policy"]["status"] == "trusted_fail", "runner records trusted failure reason")
 
+volume_mismatch_result = _apply_match_policy(
+    {
+        "success": True,
+        "comparison": {"match": True, "volume_ratio": 0.914},
+        "mesh_comparison": {
+            "score": 100.0,
+            "sdf": {"rms_error": 0.0, "max_overcut": 0.0, "max_undercut": 0.0},
+            "slice": {"problem_slices": []},
+        },
+    },
+    comparison_methods=["sdf", "slice"],
+    trusted_tolerance_mm=0.25,
+    min_mesh_score=95.0,
+    volume_only_success=False,
+    volume_tolerance=0.05,
+)
+check(not volume_mismatch_result["success"],
+      "runner rejects mesh-perfect rows outside trusted volume tolerance")
+check(volume_mismatch_result["match_policy"]["status"] == "volume_mismatch",
+      "runner records strict volume mismatch before mesh trust")
+
 trusted_result = _apply_match_policy(
     {
         "success": True,

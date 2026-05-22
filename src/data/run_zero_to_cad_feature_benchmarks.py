@@ -481,6 +481,7 @@ def make_translation_executor(
             trusted_tolerance_mm=trusted_tolerance_mm,
             min_mesh_score=min_mesh_score,
             volume_only_success=volume_only_success,
+            volume_tolerance=tolerance,
         )
         _save_result(sample_dir, row_for_run, result, provider, model)
         exec_result = result.get("exec_result") or {}

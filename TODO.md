@@ -129,91 +129,16 @@ Latest measured dry scan:
 - Rows scanned: 100,516.
 - Plannable by pure-operation planner: 79,911.
 - Unsupported by current planner: 20,605.
-- Matched original-STEP-verified pairs: 519 unique pairs recorded by guarded live pilots.
+- Matched original-STEP-verified pairs: 499 unique pairs recorded by guarded live pilots under the strict volume + original-STEP trusted policy.
   - Accepted train global indexes:
-    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 342, 381, 415, 438, 503, 512, 561, 697, 698, 702, 870, 1126, 1170, 1173, 1278, 1293, 1320, 1395, 1458, 1479, 1536, 1595, 1647, 1792, 1823, 1906, 1979, 2162, 2209, 2257, 2288, 2450, 2896, 3047, 3175, 3231, 3414, 3479, 3487, 3777, 3787, 3850, 3966, 4065, 4081, 4227, 4400, 4559, 4562, 4696, 4811, 5248, 5435, 5442, 5606, 5713, 5983, 6026, 6034, 6207, 6326, 6458, 6477, 6481, 6510, 6623, 7391, 7409, 7434, 7479, 7685, 8273, 9051, 9733, 9749, 9752, 9786, 9787, 9794, 9795, 9802, 9803, 9807, 9814, 9856, 9870, 9875, 9930, 9980, 10031, 10427, 10672, 10814, 11218, 11933, 11960, 11990, 12098, 12736, 13238, 13428, 13541, 13744, 14131, 14381, 14589, 14664, 14959, 14960, 14963, 15008, 15058, 15062, 15269, 15554, 16239, 16491, 16557, 16589, 16624, 16813, 16824, 16956, 17567, 17758, 17771, 17804, 17826, 18265, 18325, 18568, 19000, 19094, 19463, 19700, 20659, 20787, 20817, 21106, 21855, 21885, 21893, 21904, 21913, 21932, 21939, 21940, 21948, 21953, 21961, 21962, 21963, 21964, 22599, 22770, 22871, 23208, 23258, 23657, 23879, 23979, 24188, 24356, 24534, 24580, 25092, 25141, 25255, 25542, 25668, 25725, 25727, 25879, 26225, 26802, 26825, 27205, 27306, 28099, 28277, 28301, 28435, 28457, 28462, 28537, 28799, 28928, 29086, 29145, 29528, 29746, 29840, 29872, 30109, 30256, 30665, 30925, 31041, 31061, 31070, 31196, 31632, 31657, 31733, 31759, 31811, 31815, 32032, 32253, 32399, 32464, 32470, 32506, 32721, 32722, 32996, 33124, 33145, 33184, 33200, 33248, 33483, 33543, 33674, 33714, 33920, 33954, 34103, 34111, 34331, 34340, 34345, 34578, 34965, 34982, 35018, 35028, 35194, 35324, 35344, 35401, 35412, 35434, 35436, 35444, 35457, 35699, 35884, 36693, 36808, 36832, 36982, 36997, 37220, 37328, 38113, 38327, 38336, 38350, 38376, 38496, 38585, 38926, 39195, 39645, 39774, 39891, 39995, 40040, 40051, 40203, 40270, 40904, 41047, 41294, 41678, 41918, 42036, 42245, 42272, 42334, 42770, 42988, 43017, 43583, 43639, 44440, 45025, 45043, 45993, 45996, 46232, 46570, 47402, 47762, 47872, 48033, 48225, 48305, 48312, 49066, 49813, 49853, 50279, 50286, 50295, 50304, 50325, 50388, 50389, 50391, 50452, 50579, 50623, 51038, 51067, 51145, 51154, 51232, 51312, 51330, 51467, 51536, 51669, 51877, 51948, 51999, 52045, 52471, 52608, 52997, 53058, 53077, 53246, 53269, 53421, 53451, 53481, 53561, 53700, 54264, 54390, 54944, 54956, 54974, 55074, 55296, 55346, 55358, 55524, 55676, 55833, 55967, 56019, 56233, 56262, 56288, 56426, 56671, 56968, 57106, 57111, 57197, 57224, 57431, 57517, 57609, 57784, 58087, 58187, 58307, 58877, 59107, 59110, 59913, 61382, 61977, 62242, 62414, 62885, 62916, 62932, 63186, 63273, 63322, 63337, 64668, 65672, 66107, 66980, 66991, 67779, 67854, 67862, 67870, 68455, 68726, 68972, 69127, 69643, 69654, 70143, 70716, 71366, 71377, 72260, 72642, 73129, 73401, 74046, 74741, 74796, 75523, 75543, 75577, 75588, 75695, 75962, 75985, 75990, 76044, 76054, 76145, 76273, 76377, 76766, 77228, 77400, 77602, 78741, 79214, 79314, 79638, 80867, 80938`.
+    `1, 8, 14, 17, 18, 23, 25, 29, 31, 34, 42, 44, 45, 46, 47, 49, 50, 57, 58, 61, 62, 80, 83, 87, 88, 90, 107, 111, 115, 118, 132, 238, 342, 415, 438, 503, 512, 561, 697, 702, 1126, 1170, 1173, 1278, 1293, 1320, 1395, 1458, 1479, 1536, 1595, 1647, 1792, 1823, 1906, 1979, 2162, 2209, 2257, 2288, 2450, 2896, 3047, 3175, 3231, 3414, 3479, 3487, 3777, 3787, 3850, 3966, 4065, 4081, 4227, 4400, 4559, 4562, 4696, 4811, 5248, 5435, 5442, 5606, 5713, 5983, 6026, 6034, 6207, 6326, 6458, 6477, 6481, 6510, 6623, 7391, 7409, 7434, 7479, 7685, 8273, 9051, 9733, 9749, 9752, 9786, 9787, 9794, 9795, 9802, 9803, 9807, 9814, 9856, 9870, 9875, 9930, 10031, 10427, 10672, 10814, 11933, 11960, 11990, 12098, 12736, 13428, 13541, 14131, 14381, 14589, 14664, 14959, 14960, 14963, 15008, 15058, 15062, 15269, 15554, 16239, 16491, 16557, 16589, 16624, 16813, 16824, 16956, 17567, 17758, 17771, 17804, 17826, 18265, 18325, 18568, 19000, 19094, 19463, 19700, 20659, 20787, 20817, 21855, 21885, 21893, 21904, 21913, 21932, 21939, 21940, 21948, 21953, 21961, 21962, 21963, 22599, 22770, 22871, 23208, 23258, 23657, 23979, 24188, 24356, 24534, 24580, 25092, 25141, 25255, 25542, 25668, 25725, 25727, 25879, 26225, 26802, 26825, 27205, 27306, 28099, 28277, 28301, 28435, 28457, 28462, 28537, 28799, 28928, 29086, 29145, 29528, 29746, 29840, 29872, 30109, 30256, 30665, 30925, 31041, 31061, 31070, 31657, 31733, 31759, 31811, 31815, 32032, 32253, 32399, 32464, 32470, 32721, 32722, 32996, 33124, 33145, 33184, 33200, 33483, 33543, 33674, 33714, 33920, 33954, 34103, 34111, 34331, 34340, 34345, 34578, 34965, 34982, 35018, 35028, 35194, 35324, 35344, 35401, 35412, 35434, 35436, 35444, 35457, 35884, 36693, 36808, 36832, 36982, 36997, 37220, 37328, 38113, 38327, 38336, 38350, 38376, 38496, 38585, 38926, 39195, 39645, 39774, 39891, 39995, 40040, 40051, 40203, 40270, 40904, 41047, 41294, 41678, 41918, 42036, 42245, 42272, 42334, 42770, 42988, 43017, 43639, 44440, 45025, 45043, 45993, 45996, 46232, 46570, 47402, 47762, 47872, 48033, 48225, 48305, 48312, 49066, 49813, 49853, 50279, 50286, 50295, 50304, 50325, 50388, 50389, 50391, 50452, 50579, 50623, 51038, 51067, 51154, 51232, 51312, 51330, 51467, 51536, 51669, 51877, 51948, 51999, 52045, 52471, 52608, 52997, 53058, 53077, 53246, 53269, 53421, 53451, 53481, 53561, 53700, 54264, 54390, 54944, 54956, 54974, 55074, 55296, 55346, 55358, 55524, 55676, 55833, 55967, 56019, 56233, 56262, 56288, 56426, 56968, 57106, 57111, 57197, 57224, 57431, 57517, 57609, 57784, 58087, 58187, 58307, 58877, 59107, 59110, 59913, 61382, 61977, 62242, 62414, 62885, 62916, 62932, 63186, 63273, 63322, 63337, 64668, 65672, 66107, 66980, 66991, 67779, 67854, 67862, 67870, 68455, 68726, 68972, 69127, 69643, 69654, 70143, 70716, 71366, 71377, 72260, 72642, 73129, 73401, 74046, 74741, 74796, 75523, 75543, 75577, 75588, 75695, 75962, 75985, 75990, 76044, 76054, 76145, 76273, 76377, 76766, 77228, 77400, 77602, 78741, 79214, 79314, 79638, 80867, 80938`.
   - Accepted val split source indexes: `5604, 5637, 5955, 5980, 6197, 6714, 7380, 7605, 8320, 8587, 8804, 8806, 9181, 9615`.
-  - Accepted test split source indexes: `17, 25, 202, 331, 503, 833, 1161, 1166, 1187, 1629, 2239, 2390, 2401, 2735, 3231, 3238, 3709, 3734, 3842, 4249, 5218, 5387, 6285, 7420, 7782, 8130, 8223, 8360, 8379, 8562, 8563, 8739, 8805, 9225, 9241, 9283, 9394, 9631`.
-  - Latest accepted rows include train global indexes 342, 1536, 1595, 1647,
-    1823, 1906, 2162, 2209, 2257, 2288, 2450, 3047, 3175, 3231, 3487,
-    3777, 4081, 4227, 5606, 1479, 2896, 3414, 3787, 3966, 4065,
-    4559, 4562, 4811, 5248, 5435, 5442, 5713, 5983, 6026, 6034,
-    6207, 6326, 6458, 6477, 6481, 6510, 6623, 7391, 7409, 7434,
-    7479, 7685, 8273, 9733, 9749, 9752, 9786, 9787, 9794, 9795,
-    9802, 9803, 9807, 9814, 9856, 9870, 9930, 9980, 10672, 10814,
-    11218, 11960,
-    12736, 13744, 14131, 14381, 14664, 14959, 15058, 15062, 15554, 16239, 16491,
-    16557, 16589, 16624, 16813, 16824, 17567, 17758, 17804, 17826,
-    18325, 19094, 19463, 20659, 21106, 21855, 21885, 21893, 21904, 21913, 21932, 21939, 21940, 21948, 21953, 21961, 21962, 21963, 21964, 22599, 22770, 22871, 23979,
-    24356, 24534, 25542, 25668, 26825, 28928, 30665, 31041, 31061,
-    31070, 31196, 31657, 31733, 31759, 31811, 31815, 32032, 32253,
-    32399, 32464, 32470, 32506, 32721, 32722, 32996, 33124, 33145, 33184,
-    33248, 33483, 33543, 33674, 33714, 33920, 33954, 34103, 34111,
-    34331, 34340, 34345, 34578, 34965, 35018, 35194, 35324, 35344,
-    35412, 35436, 35699, 36808, 36832, 36982, 36997, 37220, 37328,
-    38113, 38327, 38336, 38350, 38376, 38496, 39195, 39774, 40051, 40203,
-    40270, 40904, 41047, 41294, 41678, 41918, 42036, 42245, 42272,
-    42334, 42770, 42988, 43017, 43583, 43639, 44440, 45025, 45993,
-    45996, 46570, 47762, 47872, 48033, 48225, 48312, 49853, 50579,
-    51038, 51067, 51154, 51232, 51312, 51330, 51999, 52045, 52608,
-    53058, 53269, 53451, 53561, 53700, 54264, 54944, 54956, 54974,
-    55296, 55346, 55358, 55524, 55967, 56233, 56288, 56426, 56671,
-    56968, 57224, 57517, 57609, 58087, 58187, 58307, 58877, 59107,
-    59913, 61382, 61977, 62414, 64668, 66107, and 67862,
-    manifests `runs/zero_to_cad_live_pilots/deterministic_flange_collar_row342_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_row1536_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row1595_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row1647_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row1823_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row1906_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_box_counterbore_row2162_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_box_hole_row2209_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row2257_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_box_row2288_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_arc_profile_row2450_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_box_hole_row3047_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_box_chamfer_row3175_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_box_chamfer_row3231_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_arc_profile_row3487_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_box_hole_row3777_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_box_hole_row4081_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_box_chamfer_row4227_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_box_chamfer_row5606_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_rect_plate_row1479_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row2896_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row3414_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row3787_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row3966_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row4065_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row4559_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row4562_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row4811_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row5248_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row5435_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row5442_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row5713_probe/attempts.jsonl`,
-    `runs/zero_to_cad_live_pilots/deterministic_profile_row5983_probe/attempts.jsonl`,
-    and per-row guarded manifests for rows 6026, 6034, 6207, 6326, 6458,
-    6477, 6481, 6510, 6623, 7391, 7409, 7434, 7479, 7685, 8273, 9733,
-    9749, 9752, 9786, 9787, 9794, 9795, 9802, 9803, 9807, 9814,
-    9856, 9870, 9930, 9980, 10672, 10814, 11218, 11960, 12736,
-    13744, 14131, 14381,
-    14664, 14959, 15554, 16239, 16491, 16557, 16589, 16624, 16813,
-    16824, 17567, 17758, 17804, 17826, 18325, 19094, 19463, 20659,
-    21106, 21855, 21885, 21893, 21904, 21913, 21932, 21939, 21940, 21948, 21953, 21961, 21962, 21963, 21964, 22599, 22770, 22871, 23979, 24356, 24534, 25542, 25668,
-    26825, 28928, 30665, 31041, 31061, and per-row guarded manifests
-    for rows 33248, 33483, 33543, 33674, 33714, 33920, 33954, 34103,
-    34111, 34331, 34340, 34345, 34578, 34965, 35018, 35194, 35324,
-    35344, 35412, 35436, 35699, 36808, 36832, 36982, 36997, 37220,
-    37328, 38113, 38327, 38336, 38350, 38376, 38496, 39195, 39774, 40051,
-    40203, 40270, 40904, 41047, 41294, 41678, 41918, 42036, 42245,
-    42272, 42334, 42770, 42988, 43017, 43583, 43639, 44440, 45025,
-    45993, 45996, 46570, 47762, 47872, 48033, 48225, 48312, 49853,
-    50579, 51038, 51067, 51154, 51232, 51312, 51330, 51999, 52045,
-    52608, 53058, 53269, 53451, 53561, 53700, 54264, 54944, 54956,
-    54974, 55296, 55346, 55358, 55524, 55967, 56233, 56288, 56426,
-    56671, 56968, 57224, 57517, 57609, 58087, 58187, 58307, 58877,
-    59107, 59913, 61382, 61977, 62414, 64668, 66107, and 67862.
+  - Accepted test split source indexes: `17, 25, 202, 331, 503, 833, 1161, 1166, 1187, 1629, 2239, 2390, 2401, 2735, 3231, 3709, 3734, 4249, 5218, 5387, 6285, 7420, 7782, 8130, 8223, 8360, 8379, 8562, 8563, 8739, 8805, 9225, 9241, 9283, 9394, 9631`.
+  - Strict-policy note: `build_zero_to_cad_accepted_index` now re-checks the
+    comparison artifact and requires volume error <= 5% in addition to the
+    original manifest trusted-pass flag. This deliberately reduced the
+    accepted count from 519 to 499 and removed older loose-volume matches
+    such as train row 21964/21970 until they are repaired.
 - Note: closed/inaccessible `shell(...)` parts are now rejected as
   `unsupported_unmachinable` instead of being counted as plannable CNC work.
 - Note: the first accepted live pair required fixing retained rectangular
@@ -377,9 +302,13 @@ Immediate next implementation targets:
 - Done: accept train global index 21963 through AI-heavy translation with
   `deepseek-chat`; `deepseek-v4-pro` timed out on the same row, so use
   `deepseek-chat` for the next AI-heavy pilots unless provider routing changes.
-- Done: accept train global index 21964 with a layered cross-slot builder that
-  preserves backside reinforcement ribs as a separate retained-material band.
-- Next: run accepted-index guarded AI-heavy pilots from the 519 accepted pairs,
+- Rework required: train global index 21964 previously matched under the older
+  loose-volume policy, but the strict accepted index now excludes it; repair or
+  rerun it before counting it again.
+- Rework required: train global index 21970 was produced by AI-heavy mode but
+  strict volume policy rejects it (`volume_ratio=0.914573`), so keep it as
+  feedback for prompt/API improvement, not accepted training data.
+- Next: run accepted-index guarded AI-heavy pilots from the 499 accepted pairs,
   preserving strict stop conditions and tracking model/provider latency,
   execution rate, match rate, and prompt failure patterns.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still

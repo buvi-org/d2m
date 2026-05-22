@@ -49,7 +49,41 @@ def _accepted_key(row: dict[str, Any]) -> tuple[str, str] | None:
 
 
 def _is_accepted(row: dict[str, Any]) -> bool:
-    return row.get("accepted") is True and row.get("status") == "matched"
+    return (
+        row.get("accepted") is True
+        and row.get("status") == "matched"
+        and _comparison_volume_is_trusted(row)
+    )
+
+
+def _comparison_volume_is_trusted(row: dict[str, Any]) -> bool:
+    """Re-check trusted manifests against the current strict volume policy."""
+    artifacts = row.get("artifacts") or {}
+    comparison_path = artifacts.get("comparison")
+    if not comparison_path:
+        return True
+    try:
+        result = json.loads(Path(str(comparison_path)).read_text(encoding="utf-8"))
+    except OSError:
+        return True
+    except json.JSONDecodeError:
+        return False
+
+    policy = result.get("match_policy") or {}
+    comparison = result.get("comparison") or {}
+    ratio = comparison.get("volume_ratio")
+    if ratio is None:
+        ratio = policy.get("volume_ratio")
+    try:
+        volume_ratio = float(ratio)
+    except (TypeError, ValueError):
+        return False
+    tolerance = policy.get("volume_tolerance", 0.05)
+    try:
+        volume_tolerance = float(tolerance)
+    except (TypeError, ValueError):
+        volume_tolerance = 0.05
+    return volume_ratio > 0.0 and abs(1.0 - volume_ratio) <= volume_tolerance
 
 
 def _record_completeness(row: dict[str, Any]) -> int:
@@ -127,8 +161,9 @@ def build_index(runs_dir: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         "by_split": dict(sorted(by_split.items())),
         "latest_by_split": dict(sorted(latest_by_split.items())),
         "comparison_policy": {
-            "accepted": "accepted == true and status == matched",
+            "accepted": "accepted == true and status == matched and strict volume policy passes",
             "dedupe_key": "source.split + source.uuid",
+            "max_volume_error": 0.05,
             "volume_only_success": False,
             "target": "original Zero-to-CAD model.step",
         },

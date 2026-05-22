@@ -188,6 +188,7 @@ def run_batch(
                 trusted_tolerance_mm=trusted_tolerance_mm,
                 min_mesh_score=min_mesh_score,
                 volume_only_success=volume_only_success,
+                volume_tolerance=tolerance,
             )
             _save_result(sample_dir, row, result, provider, model)
         except Exception as exc:
@@ -538,6 +539,7 @@ def _apply_match_policy(
     trusted_tolerance_mm: float,
     min_mesh_score: float,
     volume_only_success: bool,
+    volume_tolerance: float = 0.05,
 ) -> dict[str, Any]:
     """Count only original-STEP geometry matches as batch successes.
 
@@ -550,10 +552,15 @@ def _apply_match_policy(
     translator_success = bool(result.get("success"))
     comparison = result.get("comparison") or {}
     mesh_comparison = result.get("mesh_comparison") or {}
-    volume_match = bool(comparison.get("match"))
+    volume_ratio = float(comparison.get("volume_ratio") or 0.0)
+    volume_error = abs(1.0 - volume_ratio) if volume_ratio > 0.0 else float("inf")
+    volume_match = bool(comparison.get("match")) and volume_error <= float(volume_tolerance)
     policy = {
         "target": "original_model.step",
         "volume_match": volume_match,
+        "volume_ratio": volume_ratio,
+        "volume_error": volume_error,
+        "volume_tolerance": float(volume_tolerance),
         "requires_mesh_comparison": not volume_only_success,
         "trusted_tolerance_mm": float(trusted_tolerance_mm),
         "min_mesh_score": float(min_mesh_score),
