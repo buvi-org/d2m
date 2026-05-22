@@ -691,7 +691,7 @@ def _deterministic_box_counterbore_code(cadquery_code: str) -> str | None:
 def _deterministic_profile_extrude_code(cadquery_code: str) -> str | None:
     if ".extrude(" not in cadquery_code:
         return None
-    if any(token in cadquery_code for token in (".hole(", ".cut(", ".cutBlind(", ".shell(", ".union(")):
+    if any(token in cadquery_code for token in (".cut(", ".cutBlind(", ".shell(", ".union(")):
         return None
     env = _numeric_env(cadquery_code)
     points = _first_polyline_points(cadquery_code, env)
@@ -723,6 +723,10 @@ def _deterministic_profile_extrude_code(cadquery_code: str) -> str | None:
     if chamfer is not None:
         selector = "|Z" if '"|Z"' in cadquery_code or "'|Z'" in cadquery_code else "all_edges"
         sequence.append(f'.edge_chamfer("{selector}", width={chamfer:.6g})')
+    side_drills = _side_face_drill_calls(cadquery_code, x_shift, y_shift, height)
+    if ".hole(" in cadquery_code and not side_drills:
+        return None
+    sequence.extend(side_drills)
     sequence.extend(_side_face_counterbore_calls(cadquery_code, x_shift, y_shift, height))
     return _format_fluent_subcad_code(stock, sequence)
 
@@ -1152,6 +1156,85 @@ def _side_face_counterbore_calls(
                 f'face_selector="{subcad_face}")'
             )
     return calls
+
+
+def _side_face_drill_calls(
+    code_text: str,
+    x_shift: float,
+    y_shift: float,
+    stock_height: float,
+) -> list[str]:
+    env = _numeric_env(code_text)
+    calls: list[str] = []
+    pattern = re.compile(
+        r"\.faces\(\s*['\"](?P<face>[<>][xyz])['\"]\s*\)\s*\.workplane\(\s*\)"
+        r"\s*\.rarray\((?P<array>[^)]*)\)\s*\.hole\((?P<hole>[^)]*)\)",
+        re.IGNORECASE | re.DOTALL,
+    )
+    for match in pattern.finditer(code_text):
+        face = match.group("face").upper()
+        if face not in {">X", "<X", ">Y", "<Y"}:
+            continue
+        hole_args = _split_args(match.group("hole"))
+        if not hole_args:
+            continue
+        hole_diameter = _eval_number(hole_args[0], env)
+        if hole_diameter is None or hole_diameter <= 0:
+            continue
+        array_args = _split_args(match.group("array"))
+        points = _rarray_points(array_args, env)
+        if not points:
+            continue
+        for a, z in points:
+            if face in {">X", "<X"}:
+                cx = a - x_shift
+                subcad_face = "<X" if face == ">X" else ">X"
+            else:
+                cx = a - y_shift
+                subcad_face = "<Y" if face == ">Y" else ">Y"
+            cy = z if _rarray_is_centered(array_args) else z - stock_height / 2.0
+            calls.append(
+                f'.drill({hole_diameter:.6g}, through=True, cx={cx:.6g}, cy={cy:.6g}, '
+                f'face_selector="{subcad_face}")'
+            )
+    return calls
+
+
+def _rarray_points(args: list[str], env: dict[str, float]) -> list[tuple[float, float]]:
+    if len(args) < 4:
+        return []
+    dx = _eval_number(args[0], env)
+    dy = _eval_number(args[1], env)
+    cols_float = _eval_number(args[2], env)
+    rows_float = _eval_number(args[3], env)
+    if dx is None or dy is None or cols_float is None or rows_float is None:
+        return []
+    cols = int(round(cols_float))
+    rows = int(round(rows_float))
+    if cols <= 0 or rows <= 0:
+        return []
+    centered = _rarray_is_centered(args)
+    points: list[tuple[float, float]] = []
+    for i in range(cols):
+        for j in range(rows):
+            if centered:
+                x = (i - (cols - 1) / 2.0) * dx
+                y = (j - (rows - 1) / 2.0) * dy
+            else:
+                x = i * dx
+                y = j * dy
+            points.append((x, y))
+    return points
+
+
+def _rarray_is_centered(args: list[str]) -> bool:
+    for arg in args[4:]:
+        text = arg.strip().lower()
+        if text == "true" or text == "center=true":
+            return True
+        if text == "false" or text == "center=false":
+            return False
+    return True
 
 
 def _deterministic_top_retained_rib_code(cadquery_code: str, plan: PureSubCADPlan) -> str | None:

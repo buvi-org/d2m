@@ -216,6 +216,25 @@ check(open_shell_code is not None and ".thin_wall_pocket(" in open_shell_code,
 check(open_shell_code is not None and "depth=30" in open_shell_code,
       "deterministic open shell removes the selected-face cavity through the stock")
 
+profile_side_drill_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "pts=[(-25,-35),(-25,35),(25,35),(25,33),(-23,33),(-23,-33),(25,-33),(25,-35)]",
+        "result = (",
+        "    cq.Workplane('XY').polyline(pts).close().extrude(80)",
+        "    .edges().chamfer(0.5)",
+        "    .faces('<X').workplane()",
+        "    .rarray(0, 12, 1, 5, center=True)",
+        "    .hole(3)",
+        ")",
+    ]),
+    [{"op_name": "polyline"}, {"op_name": "extrude"}, {"op_name": "rarray"}, {"op_name": "hole"}],
+)
+check(profile_side_drill_code is not None and profile_side_drill_code.count('.drill(3, through=True') == 5,
+      "deterministic profile extrude expands side-face rarray holes")
+check(profile_side_drill_code is not None and 'face_selector=">X"' in profile_side_drill_code,
+      "deterministic profile side holes map mirrored SubCAD side face")
+
 
 # =========================================================================
 #  Test 2: System prompt
