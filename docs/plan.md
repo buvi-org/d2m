@@ -157,7 +157,7 @@ Current test status:
 
 | Test | Result | Notes |
 |------|--------|-------|
-| `python test_agentic_translator.py` | PASS, 163/163 | Covers non-LLM translator components, strict Zero-to-CAD runner policy tests, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
+| `python test_agentic_translator.py` | PASS, 166/166 | Covers non-LLM translator components, strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt selection, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
 
 Important caveat: the passing translator test is not a live LLM success metric. No live DeepSeek/Anthropic/OpenAI translation batch is documented as passing here.
 
@@ -334,7 +334,9 @@ Active next slice:
 - Shift the next live collection phase to AI-heavy translation mode:
   deterministic builders become optional fast paths, planner candidates become
   advisory evidence, and original-STEP verification remains the acceptance gate.
-  Track match rate and API spend before scaling batch size.
+  Use `--attempt-unsupported` for guarded pilots where the planner should label
+  risk but not veto the model attempt. Track match rate and API spend before
+  scaling batch size.
 - Harden retained rib/boss, bottom-face, and side-face setup fidelity while
   keeping side-face additive gussets manual-review/unsupported until oriented
   side-profile machining is implemented.

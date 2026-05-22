@@ -94,7 +94,10 @@ Current next actions:
   count unique `source.split + source.uuid` rows where `accepted == true` and
   `status == "matched"`.
 - Standard AI-heavy guarded pilot command:
-  `python -m src.data.run_zero_to_cad_feature_benchmarks --split train --source-dir data/zero_to_cad_100k --output-dir runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD --accepted-index runs/zero_to_cad_live_pilots/accepted_index.jsonl --manifest-jsonl runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD/attempts.jsonl --execute --executor translator --translation-mode ai_heavy --provider deepseek --model deepseek-v4-pro --comparison-methods volume,mesh,slices --min-mesh-score 95 --target-matches 5 --max-attempts 20 --max-failures 8 --safety-cap 5`.
+  `python -m src.data.run_zero_to_cad_feature_benchmarks --split train --source-dir data/zero_to_cad_100k --output-dir runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD --accepted-index runs/zero_to_cad_live_pilots/accepted_index.jsonl --manifest-jsonl runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD/attempts.jsonl --execute --executor translator --translation-mode ai_heavy --attempt-unsupported --provider deepseek --model deepseek-chat --comparison-methods volume,mesh,slices --min-mesh-score 95 --target-matches 5 --max-attempts 20 --max-failures 8 --safety-cap 5`.
+- Add `--attempt-unsupported` on small guarded AI-heavy pilots when the goal is
+  to let the model try rows that the planner would normally veto; those rows
+  must still execute and pass original-STEP strict comparison before they count.
 - Start a separate STEP-only evidence-builder workstream so the eventual model
   can consume STEP/B-Rep evidence directly instead of depending on CadQuery
   source text.
@@ -311,6 +314,9 @@ Immediate next implementation targets:
 - Next: run accepted-index guarded AI-heavy pilots from the 499 accepted pairs,
   preserving strict stop conditions and tracking model/provider latency,
   execution rate, match rate, and prompt failure patterns.
+- Next: run a small `--attempt-unsupported` AI-heavy pilot to measure whether
+  model reasoning can recover useful pairs outside deterministic planner
+  coverage; stop quickly if execution/match rate is poor.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.

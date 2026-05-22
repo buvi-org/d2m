@@ -270,13 +270,15 @@ In AI-heavy mode:
 - the model may infer pure SubCAD operations that are absent from the planner
   when the CadQuery source, operation trace, measures, or STEP dimensions
   support them;
+- feature-family pilots may add `--attempt-unsupported` so planner-unsupported
+  rows can still be attempted by the model under strict guardrails;
 - hybrid/imported geometry and direct CadQuery reconstruction remain forbidden;
 - accepted rows still require execution and original-STEP verification.
 
 Recommended pilot command:
 
 ```powershell
-python -m src.data.run_zero_to_cad_feature_benchmarks --split train --source-dir data/zero_to_cad_100k --output-dir runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD --accepted-index runs/zero_to_cad_live_pilots/accepted_index.jsonl --manifest-jsonl runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD/attempts.jsonl --execute --executor translator --translation-mode ai_heavy --provider deepseek --model deepseek-v4-pro --comparison-methods volume,mesh,slices --min-mesh-score 95 --target-matches 5 --max-attempts 20 --max-failures 8 --safety-cap 5
+python -m src.data.run_zero_to_cad_feature_benchmarks --split train --source-dir data/zero_to_cad_100k --output-dir runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD --accepted-index runs/zero_to_cad_live_pilots/accepted_index.jsonl --manifest-jsonl runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD/attempts.jsonl --execute --executor translator --translation-mode ai_heavy --attempt-unsupported --provider deepseek --model deepseek-chat --comparison-methods volume,mesh,slices --min-mesh-score 95 --target-matches 5 --max-attempts 20 --max-failures 8 --safety-cap 5
 ```
 The reduction from earlier planner counts is intentional: closed/inaccessible
 shell operations are now rejected as unsupported CNC work instead of counted as

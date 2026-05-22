@@ -49,6 +49,7 @@ from src.data.run_zero_to_cad_translations import (
     _parse_methods,
     compatibility_report,
 )
+import src.data.run_zero_to_cad_feature_benchmarks as feature_benchmark_mod
 from src.data.pure_subcad_planner import build_deterministic_subcad_code, plan_pure_subcad_features
 import src.data.agentic_translator as agentic_mod
 
@@ -91,6 +92,47 @@ assigned_closed_shell = plan_pure_subcad_features(
 )
 check(not assigned_closed_shell.compatible,
       "pure planner rejects assigned closed shells after face-hole construction")
+original_iter_rows = feature_benchmark_mod.iter_zero_to_cad_rows
+try:
+    unsupported_row = {
+        "global_index": 123456,
+        "uuid": "unsupported-ai-heavy-row",
+        "parquet_file": "unit.parquet",
+        "row_index": 0,
+        "ops_trace": [{"op_name": "shell", "function": "base.shell"}],
+        "cadquery_code": "base = cq.Workplane('XY').box(10, 10, 10).shell(1)",
+    }
+
+    def _single_unsupported_row(*args, **kwargs):
+        yield dict(unsupported_row)
+
+    def _mock_executor(row, context):
+        return {"executed": True, "matched": False, "failed": True, "sample_dir": ""}
+
+    feature_benchmark_mod.iter_zero_to_cad_rows = _single_unsupported_row
+    skipped_summary = feature_benchmark_mod.run_feature_family_benchmark(
+        scan_limit=1,
+        dry_run=False,
+        executor=_mock_executor,
+        write_summary=False,
+        max_attempts=1,
+    )
+    attempted_summary = feature_benchmark_mod.run_feature_family_benchmark(
+        scan_limit=1,
+        dry_run=False,
+        executor=_mock_executor,
+        write_summary=False,
+        max_attempts=1,
+        attempt_unsupported=True,
+    )
+finally:
+    feature_benchmark_mod.iter_zero_to_cad_rows = original_iter_rows
+check(skipped_summary["attempted"] == 0,
+      "feature runner skips planner-unsupported rows by default")
+check(attempted_summary["attempted"] == 1,
+      "feature runner can attempt planner-unsupported rows for AI-heavy pilots")
+check(attempted_summary["unsupported"] == 1,
+      "AI-heavy unsupported attempts keep unsupported accounting")
 check(_parse_methods("none") == [], "comparison-methods=none disables rich mesh comparison")
 
 volume_only_false_positive = {

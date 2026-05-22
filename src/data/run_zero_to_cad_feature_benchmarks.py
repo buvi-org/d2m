@@ -71,6 +71,7 @@ class BenchmarkStats:
     dry_run: bool
     scan_limit: int | None
     per_family_limit: int | None
+    attempt_unsupported: bool = False
     family_filter: list[str] = field(default_factory=list)
     family_exclude: list[str] = field(default_factory=list)
     target_successes: int = 100000
@@ -123,6 +124,7 @@ def run_feature_family_benchmark(
     write_summary: bool = True,
     manifest_jsonl: str | None = None,
     accepted_index_jsonl: list[str] | None = None,
+    attempt_unsupported: bool = False,
     _initial_attempted: int = 0,
     _initial_executed: int = 0,
     _initial_matched: int = 0,
@@ -146,6 +148,7 @@ def run_feature_family_benchmark(
         split=split,
         output_dir=str(root),
         dry_run=dry_run,
+        attempt_unsupported=attempt_unsupported,
         scan_limit=scan_limit,
         per_family_limit=per_family_limit,
         family_filter=sorted(_normalize_family_filter(family_filter)),
@@ -227,11 +230,15 @@ def run_feature_family_benchmark(
             )
             bucket.unsupported += 1
             _append_example(bucket, row_summary)
-            continue
+            if not attempt_unsupported:
+                continue
 
         families = sorted({feature.family for feature in plan.features})
         statuses = Counter(feature.planner_status for feature in plan.features)
-        stats.plannable += 1
+        if plan.compatible:
+            stats.plannable += 1
+        elif attempt_unsupported:
+            families = families or [UNSUPPORTED_FAMILY]
         if excluded_families and any(family in excluded_families for family in families):
             stats.filtered_out += 1
             continue
@@ -349,6 +356,7 @@ def run_feature_family_benchmark_splits(
     write_summary: bool = True,
     manifest_jsonl: str | None = None,
     accepted_index_jsonl: list[str] | None = None,
+    attempt_unsupported: bool = False,
 ) -> dict[str, Any]:
     """Run split-level scans and return one aggregate summary."""
     root = Path(output_dir)
@@ -381,6 +389,7 @@ def run_feature_family_benchmark_splits(
             write_summary=write_summary,
             manifest_jsonl=manifest_jsonl,
             accepted_index_jsonl=accepted_index_jsonl,
+            attempt_unsupported=attempt_unsupported,
             _initial_attempted=attempted_so_far,
             _initial_executed=executed_so_far,
             _initial_matched=matched_so_far,
@@ -405,6 +414,7 @@ def run_feature_family_benchmark_splits(
         dry_run=dry_run,
         scan_limit=scan_limit,
         per_family_limit=per_family_limit,
+        attempt_unsupported=attempt_unsupported,
     )
     if write_summary:
         _write_json(root / "feature_family_summary_all.json", aggregate)
@@ -638,6 +648,7 @@ def _aggregate_split_summaries(
     dry_run: bool,
     scan_limit: int | None,
     per_family_limit: int | None,
+    attempt_unsupported: bool,
 ) -> dict[str, Any]:
     numeric_fields = [
         "scanned",
@@ -694,6 +705,7 @@ def _aggregate_split_summaries(
         "splits": [summary.get("split") for summary in split_summaries],
         "output_dir": output_dir,
         "dry_run": dry_run,
+        "attempt_unsupported": attempt_unsupported,
         "scan_limit": scan_limit,
         "per_family_limit": per_family_limit,
         "family_filter": sorted(_normalize_family_filter(family_filter)),
@@ -875,6 +887,11 @@ def main(argv: list[str] | None = None) -> int:
         help="planner_guided uses deterministic/planner-first behavior; ai_heavy skips deterministic builders and lets the LLM infer pure SubCAD operations from evidence.",
     )
     parser.add_argument(
+        "--attempt-unsupported",
+        action="store_true",
+        help="Attempt rows even when the pure planner marks them unsupported. Intended for guarded AI-heavy pilots; planner output remains advisory evidence only.",
+    )
+    parser.add_argument(
         "--execute",
         action="store_true",
         help="Attempt selected rows. Requires --executor translator for live AI runs.",
@@ -939,6 +956,7 @@ def main(argv: list[str] | None = None) -> int:
             write_summary=not args.no_summary_file,
             manifest_jsonl=args.manifest_jsonl,
             accepted_index_jsonl=accepted_index_paths,
+            attempt_unsupported=args.attempt_unsupported,
         )
     else:
         summary = run_feature_family_benchmark(
@@ -961,6 +979,7 @@ def main(argv: list[str] | None = None) -> int:
             write_summary=not args.no_summary_file,
             manifest_jsonl=args.manifest_jsonl,
             accepted_index_jsonl=accepted_index_paths,
+            attempt_unsupported=args.attempt_unsupported,
         )
     print(json.dumps(summary, indent=2, default=str))
     return 0

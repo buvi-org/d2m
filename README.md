@@ -88,7 +88,10 @@ deterministic builders. Use `--translation-mode ai_heavy` to skip deterministic
 builder output and let the LLM infer pure SubCAD operations directly from the
 CadQuery source, operation trace, measures, and STEP dimensions. Planner
 candidates remain visible as evidence, but they are advisory rather than
-restrictive; original-STEP verification still decides whether a row is accepted.
+restrictive. Feature-family pilots can add `--attempt-unsupported` when we want
+the model, not the planner, to decide whether an unsupported row is still
+representable as pure SubCAD. Original-STEP verification still decides whether a
+row is accepted.
 
 Training readiness requires versioned accepted-pair manifests that preserve
 source split/row/UUID, original STEP hash/path, generated SubCAD and generated
@@ -148,7 +151,7 @@ Recent local test status:
 
 | Test | Status |
 |------|--------|
-| `python test_agentic_translator.py` | PASS, 163/163. Includes strict Zero-to-CAD runner policy tests; live LLM runs are separate. |
+| `python test_agentic_translator.py` | PASS, 166/166. Includes strict Zero-to-CAD runner policy tests and AI-heavy unsupported-attempt coverage; live LLM runs are separate. |
 | `python test_subcad_integration.py` | PASS, 39/39 |
 | `python test_fixturing_integration.py` | PASS, 19/19 |
 | `python test_sim_bridge.py` | PASS, 51/51 |
