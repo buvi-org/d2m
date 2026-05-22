@@ -344,6 +344,33 @@ check(base_rib_cross_code is not None and ".machine_around_profiles(" in base_ri
 check(base_rib_cross_code is not None and base_rib_cross_code.count(".drill(") == 5,
       "deterministic base plus ribs preserves central and mounting holes")
 
+cross_slot_plate_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "import math",
+        "half_span = 35.0; arm_width = 20.0; thickness = 10.0",
+        "slot_width = 5.0; slot_length = 30.0; central_cavity_radius = 12.0",
+        "edge_chamfer = 1.5; hole_diameter = 4.0",
+        "hole_offset = half_span - arm_width/2 - 5.0",
+        "pts = [( half_span, arm_width/2), ( half_span, -arm_width/2),",
+        "       ( arm_width/2, -half_span), (-arm_width/2, -half_span),",
+        "       (-half_span, -arm_width/2), (-half_span, arm_width/2),",
+        "       (-arm_width/2, half_span), (arm_width/2, half_span)]",
+        "base = cq.Workplane('XY').polyline(pts).close().extrude(thickness)",
+        "base = base.edges().chamfer(edge_chamfer)",
+        "for angle in [0, 90, 180, 270]:",
+        "    pass",
+        "result = base.faces('>Z').workplane().pushPoints([(20,0),(0,20),(-20,0),(0,-20)]).hole(hole_diameter)",
+    ]),
+    [{"op_name": "polyline"}, {"op_name": "cut"}, {"op_name": "hole"}],
+)
+check(cross_slot_plate_code is not None and ".profile_cutout(" in cross_slot_plate_code,
+      "deterministic cross slot plate maps cross profile blank")
+check(cross_slot_plate_code is not None and cross_slot_plate_code.count(".profile_pocket(") == 4,
+      "deterministic cross slot plate expands four arm slots")
+check(cross_slot_plate_code is not None and cross_slot_plate_code.count(".drill(") == 4,
+      "deterministic cross slot plate preserves mounting holes")
+
 
 # =========================================================================
 #  Test 2: System prompt

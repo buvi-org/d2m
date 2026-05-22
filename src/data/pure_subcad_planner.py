@@ -282,6 +282,9 @@ def build_deterministic_subcad_code(
     base_rib_cross_code = _deterministic_base_rib_cross_code(cadquery_code)
     if base_rib_cross_code:
         return base_rib_cross_code
+    cross_slot_plate_code = _deterministic_cross_slot_plate_code(cadquery_code)
+    if cross_slot_plate_code:
+        return cross_slot_plate_code
     cross_arm_code = _deterministic_cross_arm_side_hole_code(cadquery_code)
     if cross_arm_code:
         return cross_arm_code
@@ -1029,6 +1032,83 @@ def _deterministic_base_rib_cross_code(cadquery_code: str) -> str | None:
         for selector in (">X", "<X", ">Y", "<Y"):
             sequence.append(f'.edge_chamfer("{selector}", width={chamfer:.6g})')
     stock = f"Stock.rectangular({total:.6g}, {total:.6g}, {thickness:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_cross_slot_plate_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    required_tokens = (
+        "half_span",
+        "slot_width",
+        "slot_length",
+        "central_cavity_radius",
+        "hole_offset",
+        "for angle in [0, 90, 180, 270]",
+    )
+    if not all(token in lower for token in required_tokens):
+        return None
+    env = _numeric_env(cadquery_code)
+    required = {
+        "half_span",
+        "arm_width",
+        "thickness",
+        "slot_width",
+        "slot_length",
+        "central_cavity_radius",
+        "hole_diameter",
+        "hole_offset",
+    }
+    if not required.issubset(env):
+        return None
+    half_span = env["half_span"]
+    arm_width = env["arm_width"]
+    thickness = env["thickness"]
+    slot_width = env["slot_width"]
+    slot_length = env["slot_length"]
+    cavity_radius = env["central_cavity_radius"]
+    hole_diameter = env["hole_diameter"]
+    hole_offset = env["hole_offset"]
+    if min(half_span, arm_width, thickness, slot_width, slot_length, cavity_radius, hole_diameter, hole_offset) <= 0:
+        return None
+    points = [
+        (half_span, arm_width / 2.0),
+        (half_span, -arm_width / 2.0),
+        (arm_width / 2.0, -half_span),
+        (-arm_width / 2.0, -half_span),
+        (-half_span, -arm_width / 2.0),
+        (-half_span, arm_width / 2.0),
+        (-arm_width / 2.0, half_span),
+        (arm_width / 2.0, half_span),
+    ]
+    slot_distance = arm_width / 2.0 + slot_length / 2.0
+    sequence = [
+        f".profile_cutout({{'type': 'polygon', 'points': {_format_points(points)}}}, through=True)",
+    ]
+    edge_chamfer = env.get("edge_chamfer")
+    if edge_chamfer is not None and edge_chamfer > 0:
+        sequence.append(f'.edge_chamfer("all_edges", width={edge_chamfer:.6g})')
+    sequence.append(
+        f".circular_pocket({2.0 * cavity_radius:.6g}, depth={thickness:.6g}, cx=0.0, cy=0.0)"
+    )
+    for cx, cy, length, width in (
+        (slot_distance, 0.0, slot_width, slot_length),
+        (0.0, slot_distance, slot_length, slot_width),
+        (-slot_distance, 0.0, slot_width, slot_length),
+        (0.0, -slot_distance, slot_length, slot_width),
+    ):
+        sequence.append(
+            f".profile_pocket({{'type': 'rect', 'length': {length:.6g}, "
+            f"'width': {width:.6g}, 'cx': {cx:.6g}, 'cy': {cy:.6g}}}, "
+            f"depth={thickness:.6g})"
+        )
+    for cx, cy in (
+        (hole_offset, 0.0),
+        (0.0, hole_offset),
+        (-hole_offset, 0.0),
+        (0.0, -hole_offset),
+    ):
+        sequence.append(f".drill({hole_diameter:.6g}, through=True, cx={cx:.6g}, cy={cy:.6g})")
+    stock = f"Stock.rectangular({2.0 * half_span:.6g}, {2.0 * half_span:.6g}, {thickness:.6g})"
     return _format_fluent_subcad_code(stock, sequence)
 
 
