@@ -36,6 +36,30 @@ check(cut2.volume < stock2.volume, "X-side triangular cutout reduces volume")
 check(cut2.process_plan()["operations"][-1]["face_selector"] == ">X",
       "X-side process plan preserves face selector")
 
+side_stock = Stock.rectangular(40, 20, 20).machine_around_cylinder(
+    diameter=12, height=10, cx=0, cy=0, base_height=5
+)
+side_pocket = side_stock.circular_pocket(
+    diameter=6, depth=4, cx=0, cy=10, face_selector=">Y"
+)
+check(side_pocket.volume < side_stock.volume, "side circular pocket fallback reduces volume")
+check(side_pocket.process_plan()["operations"][-1]["face_selector"] == ">Y",
+      "side circular pocket preserves face selector")
+
+side_rect = side_stock.pocket(
+    width=5, length=8, depth=3, cx=0, cy=10, face_selector=">Y"
+)
+check(side_rect.volume < side_stock.volume, "side rectangular pocket fallback reduces volume")
+check(side_rect.process_plan()["operations"][-1]["face_selector"] == ">Y",
+      "side rectangular pocket preserves face selector")
+
+side_slot = side_stock.slot(
+    width=4, length=14, depth=3, cx=0, cy=10, face_selector=">Y"
+)
+check(side_slot.volume < side_stock.volume, "side slot fallback reduces volume")
+check(side_slot.process_plan()["operations"][-1]["face_selector"] == ">Y",
+      "side slot preserves face selector")
+
 print("\n" + "=" * 60)
 if failed:
     print(f"FAILED: {failed} failed, {passed} passed")

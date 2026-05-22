@@ -282,6 +282,84 @@ def _side_drill_fallback(
     raise ValueError(f"side drill fallback does not support face selector {face_selector!r}")
 
 
+def _side_pocket_fallback(
+    shape: "cq.Workplane",
+    cx: float,
+    cy: float,
+    depth: float,
+    face_selector: str,
+    *,
+    diameter: float | None = None,
+    width: float | None = None,
+    length: float | None = None,
+) -> "cq.Workplane":
+    """Cut a blind side-face pocket without relying on selected-face workplanes."""
+    bb = shape.val().BoundingBox()
+    selector = str(face_selector)
+    cut_depth = max(float(depth), 0.0)
+    if cut_depth <= 0.0:
+        return shape
+
+    if selector in {">Y", "<Y"}:
+        origin_y = bb.ymax - cut_depth if selector == ">Y" else bb.ymin + cut_depth
+        wp = cq.Workplane("XZ").center(cx, cy)
+        if diameter is not None:
+            cutter = wp.circle(float(diameter) / 2.0).extrude(cut_depth)
+        else:
+            cutter = wp.rect(float(length), float(width)).extrude(cut_depth)
+        return shape.cut(cutter.translate((0.0, origin_y, 0.0)))
+
+    if selector in {">X", "<X"}:
+        origin_x = bb.xmax - cut_depth if selector == ">X" else bb.xmin + cut_depth
+        wp = cq.Workplane("YZ").center(cx, cy)
+        if diameter is not None:
+            cutter = wp.circle(float(diameter) / 2.0).extrude(cut_depth)
+        else:
+            cutter = wp.rect(float(length), float(width)).extrude(cut_depth)
+        return shape.cut(cutter.translate((origin_x, 0.0, 0.0)))
+
+    raise ValueError(f"side pocket fallback does not support face selector {face_selector!r}")
+
+
+def _side_slot_fallback(
+    shape: "cq.Workplane",
+    cx: float,
+    cy: float,
+    length: float,
+    width: float,
+    depth: float,
+    through: bool,
+    face_selector: str,
+    angle: float = 0.0,
+) -> "cq.Workplane":
+    """Cut a side-face slot without relying on selected-face workplanes."""
+    bb = shape.val().BoundingBox()
+    selector = str(face_selector)
+    if selector in {">Y", "<Y"}:
+        cut_depth = bb.ylen + 2.0 if through else max(float(depth), 0.0)
+        if cut_depth <= 0.0:
+            return shape
+        origin_y = bb.ymax + 1.0 if through or selector == ">Y" else bb.ymin + cut_depth
+        wp = cq.Workplane("XZ").center(cx, cy)
+        if angle:
+            wp = wp.transformed(rotate=cq.Vector(0, 0, angle))
+        cutter = wp.slot2D(float(length), float(width), 0).extrude(cut_depth)
+        return shape.cut(cutter.translate((0.0, origin_y, 0.0)))
+
+    if selector in {">X", "<X"}:
+        cut_depth = bb.xlen + 2.0 if through else max(float(depth), 0.0)
+        if cut_depth <= 0.0:
+            return shape
+        origin_x = bb.xmin - 1.0 if through or selector == "<X" else bb.xmax - cut_depth
+        wp = cq.Workplane("YZ").center(cx, cy)
+        if angle:
+            wp = wp.transformed(rotate=cq.Vector(0, 0, angle))
+        cutter = wp.slot2D(float(length), float(width), 0).extrude(cut_depth)
+        return shape.cut(cutter.translate((origin_x, 0.0, 0.0)))
+
+    raise ValueError(f"side slot fallback does not support face selector {face_selector!r}")
+
+
 
 
 # =============================================================================
@@ -335,12 +413,19 @@ def rectangular_pocket_cut(
 
     cx_rel, cy_rel = _to_face_coords(shape, face_selector, cx, cy)
 
-    result = (
-        shape.faces(face_selector).workplane()
-        .center(cx_rel, cy_rel)
-        .rect(length, width)
-        .cutBlind(-depth)
-    )
+    try:
+        result = (
+            _selected_face_workplane(shape, face_selector)
+            .center(cx_rel, cy_rel)
+            .rect(length, width)
+            .cutBlind(-depth)
+        )
+    except Exception:
+        if face_selector in {">Y", "<Y", ">X", "<X"}:
+            return _side_pocket_fallback(
+                shape, cx, cy, depth, face_selector, width=width, length=length
+            )
+        raise
 
     if corner_radius > 0:
         try:
@@ -468,12 +553,19 @@ def circular_pocket_cut(
 
     cx_rel, cy_rel = _to_face_coords(shape, face_selector, cx, cy)
 
-    return (
-        _selected_face_workplane(shape, face_selector)
-        .center(cx_rel, cy_rel)
-        .circle(diameter / 2.0)
-        .cutBlind(-depth)
-    )
+    try:
+        return (
+            _selected_face_workplane(shape, face_selector)
+            .center(cx_rel, cy_rel)
+            .circle(diameter / 2.0)
+            .cutBlind(-depth)
+        )
+    except Exception:
+        if face_selector in {">Y", "<Y", ">X", "<X"}:
+            return _side_pocket_fallback(
+                shape, cx, cy, depth, face_selector, diameter=diameter
+            )
+        raise
 
 
 def drill_hole(
@@ -551,7 +643,14 @@ def slot_cut(
         raise RuntimeError("cadquery is not available")
 
     cx_rel, cy_rel = _to_face_coords(shape, face_selector, cx, cy)
-    wp = shape.faces(face_selector).workplane().center(cx_rel, cy_rel)
+    try:
+        wp = _selected_face_workplane(shape, face_selector).center(cx_rel, cy_rel)
+    except Exception:
+        if face_selector in {">Y", "<Y", ">X", "<X"}:
+            return _side_slot_fallback(
+                shape, cx, cy, length, width, depth, through, face_selector, angle
+            )
+        raise
 
     # Rotate the workplane if angle is non-zero
     if angle != 0.0:
