@@ -82,33 +82,41 @@ def create_tapered_cylinder(
         raise ValueError("outer diameters must be positive")
 
     z_min = z_center - height / 2.0
-    outer = cq.Workplane("XY").add(
-        cq.Solid.makeCone(
-            bottom_diameter / 2.0,
-            top_diameter / 2.0,
-            height,
-            cq.Vector(0, 0, z_min),
-            cq.Vector(0, 0, 1),
-        )
-    )
+    outer = _make_cylinder_or_cone(bottom_diameter / 2.0, top_diameter / 2.0, height, z_min)
 
     if inner_bottom_diameter > 0 or inner_top_diameter > 0:
         ib = max(inner_bottom_diameter, 0.0)
         it = max(inner_top_diameter, 0.0)
         if ib >= bottom_diameter or it >= top_diameter:
             raise ValueError("inner diameters must be smaller than outer diameters")
-        inner = cq.Workplane("XY").add(
-            cq.Solid.makeCone(
-                ib / 2.0,
-                it / 2.0,
-                height + 0.02,
-                cq.Vector(0, 0, z_min - 0.01),
-                cq.Vector(0, 0, 1),
-            )
-        )
+        inner = _make_cylinder_or_cone(ib / 2.0, it / 2.0, height + 0.02, z_min - 0.01)
         outer = outer.cut(inner)
 
     return outer
+
+
+def _make_cylinder_or_cone(
+    bottom_radius: float,
+    top_radius: float,
+    height: float,
+    z_min: float,
+) -> "cq.Workplane":
+    if abs(bottom_radius - top_radius) <= 1e-9:
+        return (
+            cq.Workplane("XY")
+            .circle(bottom_radius)
+            .extrude(height)
+            .translate((0.0, 0.0, z_min))
+        )
+    return cq.Workplane("XY").add(
+        cq.Solid.makeCone(
+            bottom_radius,
+            top_radius,
+            height,
+            cq.Vector(0, 0, z_min),
+            cq.Vector(0, 0, 1),
+        )
+    )
 
 
 def create_axis_aligned_tube(
@@ -1719,6 +1727,20 @@ if __name__ == "__main__":
         passed += 1
     except Exception as e:
         print(f"  FAIL: create_cylindrical_stock -- {e}")
+        failed += 1
+
+    # ------------------------------------------------------------------
+    # Test 16b: create_tapered_cylinder accepts equal diameters as cylinder
+    # ------------------------------------------------------------------
+    try:
+        straight = create_tapered_cylinder(50, 50, 30)
+        vol = compute_volume(straight)
+        expected_vol = math.pi * (25**2) * 30
+        assert abs(vol - expected_vol) < 1.0, f"Volume: {vol} vs expected {expected_vol}"
+        print("  PASS: create_tapered_cylinder (equal diameters)")
+        passed += 1
+    except Exception as e:
+        print(f"  FAIL: create_tapered_cylinder (equal diameters) -- {e}")
         failed += 1
 
     # ------------------------------------------------------------------
