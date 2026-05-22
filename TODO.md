@@ -329,6 +329,11 @@ Immediate next implementation targets:
   prompts now forbid exploratory generated-code comments, `pass`, unfinished
   branches, and "let me try" reasoning; the translator rejects these before
   geometry execution and feeds the error back into the repair loop.
+- Done: retry train row 21965 after the generated-code guard. The first attempt
+  was rejected for exploratory code, the repair became cleaner, and the final
+  failure moved to a geometry backend error (`Bnd_Box is void`). Treat row 21965
+  as a SubCAD/evidence capability issue around horizontal tube-like retained
+  bosses, not a simple prompt-format issue.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.
