@@ -269,6 +269,25 @@ check(rect_cross_code is not None and ".machine_around_profiles(" in rect_cross_
 check(rect_cross_code is not None and "Stock.rectangular(80, 80, 8)" in rect_cross_code,
       "deterministic two-rectangle cross union sizes stock to the combined envelope")
 
+sketch_cross_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "arm_half_length=35; bar_width=15; bar_thickness=10",
+        "pilot_diameter=12; pilot_depth=12; hole_diameter=5; hole_depth=8",
+        "hole_offset_factor=0.6; fillet_radius=2; edge_fillet_radius=0.5",
+        "cross_sketch = cq.Sketch().rect(bar_width, 2 * arm_half_length + bar_width).rect(2 * arm_half_length + bar_width, bar_width)",
+        "base = cq.Workplane('XY').placeSketch(cross_sketch).extrude(bar_thickness)",
+        "base = base.faces('+Z').workplane().pushPoints([(21,0),(-21,0),(0,21),(0,-21)]).hole(hole_diameter, depth=hole_depth)",
+        "pilot = cq.Workplane('XY').circle(pilot_diameter / 2).extrude(pilot_depth).translate((0, 0, bar_thickness))",
+        "result = base.union(pilot)",
+    ]),
+    [{"op_name": "Sketch"}, {"op_name": "rect"}, {"op_name": "circle"}, {"op_name": "union"}],
+)
+check(sketch_cross_code is not None and ".machine_around_cylinder(12" in sketch_cross_code,
+      "deterministic sketch cross preserves center pilot boss")
+check(sketch_cross_code is not None and sketch_cross_code.count(".drill(5") == 4,
+      "deterministic sketch cross preserves four blind holes")
+
 
 # =========================================================================
 #  Test 2: System prompt

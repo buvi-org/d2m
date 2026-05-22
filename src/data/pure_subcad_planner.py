@@ -276,6 +276,9 @@ def build_deterministic_subcad_code(
     rect_cross_code = _deterministic_rect_cross_union_code(cadquery_code)
     if rect_cross_code:
         return rect_cross_code
+    sketch_cross_pilot_code = _deterministic_sketch_cross_pilot_code(cadquery_code)
+    if sketch_cross_pilot_code:
+        return sketch_cross_pilot_code
     cross_arm_code = _deterministic_cross_arm_side_hole_code(cadquery_code)
     if cross_arm_code:
         return cross_arm_code
@@ -822,6 +825,63 @@ def _assigned_rect_extrusions(code_text: str) -> list[dict[str, float]]:
             continue
         rects.append({"length": length, "width": width, "height": height})
     return rects
+
+
+def _deterministic_sketch_cross_pilot_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    required_tokens = (".placesketch(", ".circle(", ".union(pilot)", ".pushpoints(")
+    if not all(token in lower for token in required_tokens):
+        return None
+    env = _numeric_env(cadquery_code)
+    required = {
+        "arm_half_length",
+        "bar_width",
+        "bar_thickness",
+        "pilot_diameter",
+        "pilot_depth",
+        "hole_diameter",
+        "hole_depth",
+    }
+    if not required.issubset(env):
+        return None
+    arm_half = env["arm_half_length"]
+    bar_width = env["bar_width"]
+    bar_thickness = env["bar_thickness"]
+    pilot_diameter = env["pilot_diameter"]
+    pilot_depth = env["pilot_depth"]
+    hole_diameter = env["hole_diameter"]
+    hole_depth = env["hole_depth"]
+    if min(arm_half, bar_width, bar_thickness, pilot_diameter, pilot_depth, hole_diameter, hole_depth) <= 0:
+        return None
+    total = 2.0 * arm_half + bar_width
+    stock_height = bar_thickness + pilot_depth
+    hole_offset = env.get("hole_offset", env.get("hole_offset_factor", 0.0) * arm_half)
+    if hole_offset <= 0:
+        return None
+    profiles = [
+        {"type": "rect", "length": bar_width, "width": total, "cx": 0.0, "cy": 0.0},
+        {"type": "rect", "length": total, "width": bar_width, "cx": 0.0, "cy": 0.0},
+    ]
+    sequence = [
+        f".machine_around_profiles({profiles!r}, height={bar_thickness:.6g}, base_height=0.0)"
+    ]
+    fillet = env.get("fillet_radius")
+    if fillet is not None and fillet > 0:
+        sequence.append(f'.edge_fillet("|Z", radius={fillet:.6g})')
+    for cx, cy in ((hole_offset, 0.0), (-hole_offset, 0.0), (0.0, hole_offset), (0.0, -hole_offset)):
+        sequence.append(
+            f".drill({hole_diameter:.6g}, depth={hole_depth:.6g}, through=False, "
+            f"cx={cx:.6g}, cy={cy:.6g})"
+        )
+    sequence.append(
+        f".machine_around_cylinder({pilot_diameter:.6g}, {pilot_depth:.6g}, "
+        f"cx=0.0, cy=0.0, base_height={bar_thickness:.6g})"
+    )
+    edge_fillet = env.get("edge_fillet_radius")
+    if edge_fillet is not None and edge_fillet > 0:
+        sequence.append(f'.edge_fillet("all_edges", radius={edge_fillet:.6g})')
+    stock = f"Stock.rectangular({total:.6g}, {total:.6g}, {stock_height:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
 
 
 def _deterministic_cross_arm_side_hole_code(cadquery_code: str) -> str | None:
