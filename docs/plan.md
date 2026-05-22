@@ -157,7 +157,7 @@ Current test status:
 
 | Test | Result | Notes |
 |------|--------|-------|
-| `python test_agentic_translator.py` | PASS, 160/160 | Covers non-LLM translator components, corrected Zero-to-CAD runner policy tests, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
+| `python test_agentic_translator.py` | PASS, 161/161 | Covers non-LLM translator components, corrected Zero-to-CAD runner policy tests, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
 
 Important caveat: the passing translator test is not a live LLM success metric. No live DeepSeek/Anthropic/OpenAI translation batch is documented as passing here.
 
@@ -316,7 +316,7 @@ Current implementation:
 - Original-STEP verification remains the success gate. Each new operation
   family must mature from "planned" to "executes and matches" before it counts
   toward the 100k dataset.
-- Guarded live pilots currently record 518 unique accepted original-STEP-verified pairs across train/val/test splits.
+- Guarded live pilots currently record 519 unique accepted original-STEP-verified pairs across train/val/test splits.
 - Use `--comparison-methods slice` for the current 2.5D collection pass; SDF is
   retained as feedback but is too noisy on sparse STEP tessellations to be the
   hard success gate today.
@@ -329,7 +329,7 @@ Active next slice:
 
 - Run guarded feature-family batches with explicit attempt, execution, match,
   failure, unsupported, and remaining-to-goal counts.
-- Preserve accepted-index manifests so the 518 verified rows count toward future
+- Preserve accepted-index manifests so the 519 verified rows count toward future
   runs without re-spending live translator calls.
 - Shift the next live collection phase to AI-heavy translation mode:
   deterministic builders become optional fast paths, planner candidates become
@@ -441,7 +441,7 @@ Roadmap success:
 5. UI exposes plans, warnings, geometry feedback, and estimate assumptions clearly.
 6. Any ML fine-tuning is evaluated against executable outcomes, not just text similarity.
 7. STEP-to-SubCAD generation uses exact STEP/B-Rep evidence as the primary input, with vision/video benchmarked as supporting context rather than treated as geometry truth.
-8. The STEP-to-SubCAD training set reaches 100,000 accepted original-STEP-verified Zero-to-CAD pairs, with current progress reported separately from planner coverage: 518 accepted pairs and 79,911 plannable rows out of 100,516 local rows as of 2026-05-22.
+8. The STEP-to-SubCAD training set reaches 100,000 accepted original-STEP-verified Zero-to-CAD pairs, with current progress reported separately from planner coverage: 519 accepted pairs and 79,911 plannable rows out of 100,516 local rows as of 2026-05-22.
 
 ## Cost Notes
 

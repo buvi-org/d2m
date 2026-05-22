@@ -255,7 +255,8 @@ Stock instance (immutable/fluent pattern).
     Allowed imports are `from types import SimpleNamespace as Measures` and
     `import math` when needed for source measures.
 13. Keep the code as a small executable SubCAD program. Do not include markdown,
-    explanation text, print statements, file writes, or plotting.
+    explanation text, Python comments, print statements, file writes, or
+    plotting. Use code structure and variable names instead of commentary.
 14. Do NOT call .face_mill(depth=0) — if the stock is already at the right
     height, just skip face_mill entirely.
 15. Use pure SubCAD operations only. Never import CadQuery, never reconstruct

@@ -423,6 +423,7 @@ check("pilot_diameter" in sys_prompt and "Never use keyword names" in sys_prompt
 check("part" in sys_prompt, "system prompt mentions 'part' variable")
 check("execute_subcad" in sys_prompt, "system prompt requires execute_subcad tool")
 check("markdown fences" in sys_prompt, "system prompt forbids markdown fences in tool code")
+check("Python comments" in sys_prompt, "system prompt forbids reasoning comments in generated code")
 check(len(sys_prompt) > 500, f"system prompt is substantial ({len(sys_prompt)} chars)")
 ai_sys_prompt = build_system_prompt("ai_heavy")
 check("AI-Heavy Translation Mode" in ai_sys_prompt,
