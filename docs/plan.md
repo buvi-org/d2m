@@ -157,7 +157,7 @@ Current test status:
 
 | Test | Result | Notes |
 |------|--------|-------|
-| `python test_agentic_translator.py` | PASS, 180/180 | Covers non-LLM translator components, strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt selection, generated-code normalization/discipline checks, STEP-envelope prompt guards, sloped-trough/shell planner and prompt coverage, row-timeout failure handling, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
+| `python test_agentic_translator.py` | PASS, 181/181 | Covers non-LLM translator components, strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt selection, generated-code normalization/discipline checks, STEP-envelope prompt guards, sloped-trough/shell planner and prompt coverage, wedge workplane extrusion guidance, row-timeout failure handling, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
 | `python test_subcad_tube_profile.py` | PASS, 6/6 | Covers axis-aligned `tube_profile` geometry, union/replace behavior, and process-plan records. |
 | `python test_subcad_side_profile_cutout.py` | PASS, 6/6 | Covers side-face triangular `profile_cutout(..., through=True)` for XZ/YZ cross-section retention. |
 | `python test_subcad_sloped_floor.py` | PASS, 14/14 | Covers `slope_cut`/`sloped_floor` wedge geometry, `shell_wall` sloped-shell geometry, process-plan records, neutral toolpaths, and pass-plan metadata. |

@@ -644,6 +644,8 @@ check(".slope_cut" in prompt and "sloped floor" in prompt,
       "user prompt exposes sloped trough machining")
 check(".shell_wall" in prompt and "sloped shell" in prompt,
       "user prompt maps CadQuery sloped shells to shell_wall")
+check("such as `slope_height`" in prompt and "Workplane(\"XZ\").extrude(width)" in prompt,
+      "user prompt preserves literal wedge sketch and one-sided extrusion evidence")
 check("extrude(..., taper=...)" in prompt and "tapered_cylinder" in prompt,
       "user prompt maps tapered extrudes to turn_profile")
 check("second `.circle(...)`" in prompt and "center bore" in prompt,

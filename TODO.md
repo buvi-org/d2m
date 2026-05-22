@@ -374,6 +374,9 @@ Immediate next implementation targets:
 - Done: update the pure planner so shell operations after wedge/sloped/surface
   shaping emit `shell_wall` evidence instead of contradicting the prompt with
   unsupported `thin_wall_pocket` guidance.
+- Done: add AI-heavy prompt guidance for CadQuery wedge sketches and one-sided
+  `Workplane("XZ").extrude(...)` cutters so sloped trough rows do not use
+  unused helper variables or full-width cuts when the source cutter is half-width.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.

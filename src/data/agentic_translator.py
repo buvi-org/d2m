@@ -262,37 +262,46 @@ Stock instance (immutable/fluent pattern).
    still true when the CadQuery variable is named `hex_radius` or similar.
    Copy the exact second argument expression into `circumdiameter`; do not
    multiply it by 2, divide it by 2, or recompute it from flat-to-flat formulas.
-10. Coordinate system: (cx=0, cy=0) is the FACE CENTER (CadQuery convention).
+10. For CadQuery wedge cuts built from an `XZ` or `YZ` workplane, read the
+    actual sketch coordinates used by `moveTo`/`lineTo`, not nearby helper
+    variables that are not used in the sketch. Example: if the triangle uses
+    `lineTo(-trough_length/2, trough_height)`, the wedge height is
+    `trough_height`, even if the code also computed an unused `slope_height`.
+    CadQuery `.extrude(distance)` is one-sided by default. A
+    `Workplane("XZ").extrude(width)` cutter intersecting centered stock often
+    affects only the +Y half of the stock (`width/2`, `cy=+width/4`), not the
+    full Y width.
+11. Coordinate system: (cx=0, cy=0) is the FACE CENTER (CadQuery convention).
    Positive cx = right (+X), positive cy = up (+Y).  Negative values go
    left/down from center.  For a 70 x 40 mm face, the bottom-left corner
    is at (cx=-35, cy=-20), the top-right at (cx=35, cy=20).
    For example: to center a pocket on a 70x40 face, use cx=0, cy=0.
    To put a hole at the face center, use cx=0, cy=0.
-11. The code MUST assign the final Stock to a variable named `part`.
-12. Do NOT import CadQuery or SubCAD. `Stock` is already imported by the REPL.
+12. The code MUST assign the final Stock to a variable named `part`.
+13. Do NOT import CadQuery or SubCAD. `Stock` is already imported by the REPL.
     Allowed imports are `from types import SimpleNamespace as Measures` and
     `import math` when needed for source measures.
-13. Keep the code as a small executable SubCAD program. Do not include markdown,
+14. Keep the code as a small executable SubCAD program. Do not include markdown,
     explanation text, Python comments, print statements, file writes, or
     plotting. Use code structure and variable names instead of commentary.
-14. Do NOT call .face_mill(depth=0) — if the stock is already at the right
+15. Do NOT call .face_mill(depth=0) — if the stock is already at the right
     height, just skip face_mill entirely.
-15. Use pure SubCAD operations only. Never import CadQuery, never reconstruct
+16. Use pure SubCAD operations only. Never import CadQuery, never reconstruct
     the original model directly with cq.Workplane/CadQuery syntax, never import
     or reuse opaque STEP/B-Rep/mesh geometry, and never emit a hybrid_feature
     placeholder.
-16. For `cboreHole`, drill the pilot hole and then call
+17. For `cboreHole`, drill the pilot hole and then call
     `counterbore(hole_diameter, counterbore_diameter, counterbore_depth, cx=..., cy=...)`.
     Never use keyword names `diameter`, `depth`, or `pilot_diameter` with
     `counterbore`.
-17. If CadQuery uses shell/revolve/sweep/loft/freeform surfaces, use the pure
+18. If CadQuery uses shell/revolve/sweep/loft/freeform surfaces, use the pure
     CNC operation family: thin_wall_pocket/hollow_bore/tube_profile,
     turn_profile, sweep_mill, loft_mill, surface_mill, or dome_mill.
-18. Prefer the pure SubCAD operation families supplied by the planner. If the
+19. Prefer the pure SubCAD operation families supplied by the planner. If the
     CadQuery trace and STEP evidence are ambiguous, choose among the planned
     operation candidates only; do not invent a hybrid/imported/direct-rebuild
     fallback.
-19. If CadQuery uses `.extrude(height, taper=angle)` or
+20. If CadQuery uses `.extrude(height, taper=angle)` or
     `.extrude(height, taper=-angle)` on a circular/profile sketch, do not use a
     straight `Stock.cylindrical(...)` approximation by itself. Add a
     `turn_profile` tapered-frustum operation. For CadQuery positive-Z
@@ -673,6 +682,10 @@ subtractive program. Remember:
 - For wedge-cut or sloped-bottom trough features, use
   `.slope_cut(width, length, start_depth, end_depth, cx=..., cy=...,
   slope_axis="X"|"Y")` to represent the sloped floor directly.
+  Read the wedge sketch coordinates literally. Do not use computed helper
+  values such as `slope_height` unless the wedge sketch actually references
+  them. For `Workplane("XZ").extrude(width)` against centered stock, the cut is
+  one-sided along Y unless the source used `both=True` or translated it.
 - If CadQuery calls `.shell(-wall_thickness)` after a sloped/wedge/surface
   shape, call `.shell_wall(wall_thickness)` after that shape. Do not replace a
   sloped shell with a flat rectangular pocket unless the source shell is a
