@@ -111,13 +111,16 @@ Stock instance (immutable/fluent pattern).
   depth along width.
 
 - `.contour(depth, *, stepdown=None)` — Profile/contour milling around outer boundary.
-- `.profile_pocket(profile, depth, *, face_selector=">Z", islands=None)` —
+- `.profile_pocket(profile, depth, *, face_selector=">Z", islands=None,
+  cx=None, cy=None)` —
   Machine arbitrary closed profile pockets. Profiles may be dicts with
   points/width/length/diameter. For rectangular profiles, use
   {"length": x_size, "width": y_size}.
-- `.profile_cutout(profile, *, depth=None, through=False, face_selector=">Z")`
+- `.profile_cutout(profile, *, depth=None, through=False, face_selector=">Z",
+  cx=None, cy=None)`
   Cut through or blind arbitrary profiles.
-- `.profile_contour(profile, depth, *, side="outside", face_selector=">Z")` — Contour arbitrary profiles.
+- `.profile_contour(profile, depth, *, side="outside", face_selector=">Z",
+  cx=None, cy=None)` — Contour arbitrary profiles.
 - `.machine_around_profile(profile, height, *, stock_envelope=None, base_height=None, face_selector=">Z")` —
   Machine around retained bosses, pads, ribs, and joined profiles.
 - `.machine_around_profiles([profile, ...], height, *, stock_envelope=None, base_height=None, face_selector=">Z")` —

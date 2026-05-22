@@ -29,6 +29,16 @@ _, circle_rect_volume = pocket_volume(circle_rect, 3.0)
 check(circle_volume < base_volume, "circle profile pocket removes material")
 check(circle_volume > circle_rect_volume, "circle profile is not degraded to its bounding rectangle")
 
+placed_polygon = Stock.rectangular(80, 60, 20).profile_pocket(
+    {"type": "polygon", "points": [(-5, -5), (5, -5), (0, 5)]},
+    2.0,
+    cx=15.0,
+    cy=-10.0,
+)
+placed_op = placed_polygon.process_plan()["operations"][-1]
+check((10.0, -15.0) in [tuple(point) for point in placed_op["profile"]["points"]],
+      "profile_pocket accepts cx/cy placement kwargs for point profiles")
+
 
 print("\n2. Slot/obround profiles keep rounded ends ...")
 slot = {"type": "slot", "length": 34.0, "width": 10.0}

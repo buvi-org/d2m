@@ -57,6 +57,31 @@ def _profiles_bounds_for_stock(profiles) -> tuple[float, float]:
     return ymax - ymin, xmax - xmin
 
 
+def _place_profile(profile, cx: Optional[float] = None, cy: Optional[float] = None):
+    """Return a profile shifted/centered by optional fluent placement kwargs."""
+    if cx is None and cy is None:
+        return profile
+    dx = float(cx or 0.0)
+    dy = float(cy or 0.0)
+    if isinstance(profile, dict):
+        placed = dict(profile)
+        point_key = next(
+            (key for key in ("points", "vertices", "polyline", "control_points") if placed.get(key)),
+            None,
+        )
+        if point_key:
+            placed[point_key] = [(float(point[0]) + dx, float(point[1]) + dy) for point in placed[point_key]]
+            return placed
+        if cx is not None:
+            placed["cx"] = dx
+        if cy is not None:
+            placed["cy"] = dy
+        return placed
+    if isinstance(profile, (list, tuple)):
+        return [(float(point[0]) + dx, float(point[1]) + dy) for point in profile]
+    return profile
+
+
 @dataclass
 class Stock:
     """An in-process workpiece with an accumulating manufacturing plan.
@@ -968,8 +993,11 @@ class Stock:
 
     def profile_pocket(self, profile, depth: float, *, face_selector: str = ">Z",
                        through: bool = False, islands=None,
+                       cx: Optional[float] = None,
+                       cy: Optional[float] = None,
                        tool: Optional[ToolSpec] = None) -> "Stock":
         from .operations import ProfilePocketOp
+        profile = _place_profile(profile, cx, cy)
         width, length = _profile_bounds_for_stock(profile)
         return self._apply_op(ProfilePocketOp(
             profile=profile, islands=islands, width=width, length=length,
@@ -979,8 +1007,11 @@ class Stock:
 
     def profile_cutout(self, profile, *, depth: Optional[float] = None,
                        through: bool = False, face_selector: str = ">Z",
+                       cx: Optional[float] = None,
+                       cy: Optional[float] = None,
                        tool: Optional[ToolSpec] = None) -> "Stock":
         from .operations import ProfileCutoutOp
+        profile = _place_profile(profile, cx, cy)
         width, length = _profile_bounds_for_stock(profile)
         cut_depth = depth if depth is not None else self._stock_dims.get("height", 1.0)
         return self._apply_op(ProfileCutoutOp(
@@ -991,8 +1022,11 @@ class Stock:
 
     def profile_contour(self, profile, depth: float, *, side: str = "outside",
                         face_selector: str = ">Z",
+                        cx: Optional[float] = None,
+                        cy: Optional[float] = None,
                         tool: Optional[ToolSpec] = None) -> "Stock":
         from .operations import ProfileContourOp
+        profile = _place_profile(profile, cx, cy)
         return self._apply_op(ProfileContourOp(
             profile=profile, depth=depth, side=side, face_selector=face_selector,
             tool=tool, material=self._material,
