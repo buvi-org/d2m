@@ -175,6 +175,21 @@ check(panel_loop_code is not None and panel_loop_code.count(".drill(4, through=T
 check(panel_loop_code is not None and ".edge_fillet(\"|Z\", radius=1" in panel_loop_code,
       "deterministic panel preserves side-edge fillet intent")
 
+transformed_csk_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "main_r=15.0",
+        "result = (",
+        "    cq.Workplane(\"XY\").box(10,10,10)",
+        "    .transformed(offset=cq.Vector(0, main_r, 0), rotate=cq.Vector(-90,0,0))",
+        "    .cskHole(4,5,90)",
+        ")",
+    ]),
+    [{"op_name": "box"}, {"op_name": "transformed"}, {"op_name": "cskHole"}],
+)
+check(transformed_csk_code is not None and 'face_selector=">Y"' in transformed_csk_code,
+      "deterministic transformed cskHole maps to side-face intent")
+
 
 # =========================================================================
 #  Test 2: System prompt

@@ -279,6 +279,9 @@ def build_deterministic_subcad_code(
     rect_plate_code = _deterministic_rect_extrude_plate_code(cadquery_code)
     if rect_plate_code:
         return rect_plate_code
+    transformed_csk_code = _deterministic_transformed_cskhole_code(cadquery_code)
+    if transformed_csk_code:
+        return transformed_csk_code
     box_counterbore_code = _deterministic_box_counterbore_code(cadquery_code)
     if box_counterbore_code:
         return box_counterbore_code
@@ -440,6 +443,46 @@ def _deterministic_box_cutout_hole_panel_code(cadquery_code: str) -> str | None:
     fillet = _first_call_number(cadquery_code, "fillet", env)
     if fillet is not None and fillet > 0:
         sequence.append(f'.edge_fillet("|Z", radius={fillet:.6g})')
+    stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_transformed_cskhole_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if lower.count(".box(") != 1 or ".transformed(" not in lower or ".cskhole(" not in lower:
+        return None
+    if any(token in lower for token in (".union(", ".cut(", ".shell(", ".loft(", ".sweep(", ".hole(")):
+        return None
+    box = _box_stock_from_code(cadquery_code)
+    if not box:
+        return None
+    env = _numeric_env(cadquery_code)
+    csk_args = _first_call_args(cadquery_code, "cskHole")
+    if len(csk_args) < 3:
+        return None
+    diameter = _eval_number(csk_args[0], env)
+    sink_diameter = _eval_number(csk_args[1], env)
+    angle = _eval_number(csk_args[2], env)
+    if diameter is None or sink_diameter is None or angle is None:
+        return None
+    transform = _first_transformed_offset_rotate(cadquery_code, env)
+    if not transform:
+        return None
+    face_selector = _face_selector_from_transform(transform)
+    if not face_selector:
+        return None
+    if face_selector.endswith("Y"):
+        axis_span = box["width"]
+    elif face_selector.endswith("X"):
+        axis_span = box["length"]
+    else:
+        axis_span = box["height"]
+    sink_depth = max((sink_diameter - diameter) / 2.0, 0.0)
+    depth = max(min(axis_span, axis_span - sink_depth - diameter / 2.0), diameter)
+    sequence = [
+        f'.drill({diameter:.6g}, depth={depth:.6g}, through=False, '
+        f'cx=0.0, cy=0.0, face_selector="{face_selector}")'
+    ]
     stock = f"Stock.rectangular({box['length']:.6g}, {box['width']:.6g}, {box['height']:.6g})"
     return _format_fluent_subcad_code(stock, sequence)
 
@@ -2118,6 +2161,46 @@ def _nearest_chained_call(node: ast.AST, call_name: str) -> ast.Call | None:
             current = func.value
         else:
             break
+    return None
+
+
+def _first_transformed_offset_rotate(code_text: str, env: dict[str, float]) -> dict[str, tuple[float, float, float]] | None:
+    args = _first_call_args(code_text, "transformed")
+    if not args:
+        return None
+    body = ", ".join(args)
+    offset = _vector_kwarg(body, "offset", env)
+    rotate = _vector_kwarg(body, "rotate", env)
+    if offset is None or rotate is None:
+        return None
+    return {"offset": offset, "rotate": rotate}
+
+
+def _vector_kwarg(text: str, name: str, env: dict[str, float]) -> tuple[float, float, float] | None:
+    pattern = re.compile(
+        rf"{re.escape(name)}\s*=\s*(?:cq\.)?Vector\((?P<args>[^)]*)\)",
+        re.IGNORECASE | re.DOTALL,
+    )
+    match = pattern.search(text)
+    if not match:
+        return None
+    args = _split_args(match.group("args"))
+    if len(args) < 3:
+        return None
+    values = [_eval_number(arg, env) for arg in args[:3]]
+    if any(value is None for value in values):
+        return None
+    return float(values[0]), float(values[1]), float(values[2])
+
+
+def _face_selector_from_transform(transform: dict[str, tuple[float, float, float]]) -> str | None:
+    offset = transform["offset"]
+    rotate = transform["rotate"]
+    rx, ry, rz = rotate
+    if abs(abs(rx) - 90.0) < 1e-6 and abs(ry) < 1e-6 and abs(rz) < 1e-6:
+        return ">Y" if offset[1] >= 0 else "<Y"
+    if abs(abs(ry) - 90.0) < 1e-6 and abs(rx) < 1e-6 and abs(rz) < 1e-6:
+        return ">X" if offset[0] >= 0 else "<X"
     return None
 
 
