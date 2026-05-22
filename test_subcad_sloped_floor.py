@@ -77,6 +77,24 @@ def run_checks():
     check(factory_op.to_dict()["operation"] == "sloped_floor",
           "operation factory accepts slope_cut alias")
 
+    shell_source = Stock.rectangular(80, 40, 30).slope_cut(
+        width=20,
+        length=80,
+        start_depth=30,
+        end_depth=0,
+        cy=10,
+        slope_axis="X",
+    )
+    shell_part = shell_source.shell_wall(2.5)
+    check(shell_part.volume < shell_source.volume, "shell_wall reduces sloped trough volume")
+    check(
+        abs(shell_part.volume - 28558.99) < 1.0,
+        f"shell_wall matches CadQuery sloped shell reference ({shell_part.volume:.1f} mm3)",
+    )
+    shell_op = shell_part.process_plan()["operations"][-1]
+    check(shell_op["operation"] == "thin_wall_shell", "process plan records thin_wall_shell")
+    check(shell_op["wall_thickness_mm"] == 2.5, "process plan records shell wall thickness")
+
     print("\n" + "=" * 60)
     if failed:
         print(f"FAILED: {failed} failed, {passed} passed")

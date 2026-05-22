@@ -42,6 +42,7 @@ from .geometry import (
     machine_around_profiles_cut,
     machine_around_cylinder_cut,
     thin_wall_pocket_cut,
+    thin_wall_shell_cut,
     create_tapered_cylinder,
     create_axis_aligned_tube,
 )
@@ -3169,6 +3170,26 @@ class ThinWallPocketOp(PureToleranceOp):
 
 
 @dataclass
+class ThinWallShellOp(PureToleranceOp):
+    operation_name: str = "thin_wall_shell"
+    process: str = "mill"
+    wall_thickness: float = 1.0
+
+    def apply(self, shape):
+        return thin_wall_shell_cut(shape, self.wall_thickness)
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "wall_thickness_mm": self.wall_thickness,
+            "coverage_family": "thin_wall",
+            "manufacturing_completeness": "pure_operation",
+            "notes": "Offset shell of current machined shape",
+        })
+        return data
+
+
+@dataclass
 class HollowBoreOp(PureToleranceOp):
     operation_name: str = "hollow_bore"
     process: str = "mill_turn"
@@ -3374,6 +3395,8 @@ _OP_REGISTRY: dict[str, type[MachiningOperation]] = {
     "turn_thread":      TurnThreadOp,
     "mill_turn_setup":  MillTurnSetupOp,
     "thin_wall_pocket": ThinWallPocketOp,
+    "thin_wall_shell":  ThinWallShellOp,
+    "shell_wall":       ThinWallShellOp,
     "hollow_bore":      HollowBoreOp,
     "tube_profile":     TubeProfileOp,
     "surface_mill":     SurfaceMillOp,

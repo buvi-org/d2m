@@ -772,6 +772,19 @@ def thin_wall_pocket_cut(
     )
 
 
+def thin_wall_shell_cut(
+    shape: "cq.Workplane",
+    wall_thickness: float,
+) -> "cq.Workplane":
+    """Offset-shell the current shape to represent a thin-wall shell operation."""
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+    wall = abs(float(wall_thickness))
+    if wall <= 0.0:
+        return shape
+    return shape.shell(-wall)
+
+
 def machine_around_profile_cut(
     shape: "cq.Workplane",
     profile,

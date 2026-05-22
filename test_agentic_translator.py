@@ -94,6 +94,13 @@ assigned_closed_shell = plan_pure_subcad_features(
 )
 check(not assigned_closed_shell.compatible,
       "pure planner rejects assigned closed shells after face-hole construction")
+sloped_shell_plan = plan_pure_subcad_features(
+    [{"op_name": "cut", "function": "base.cut"}, {"op_name": "shell", "function": "sloped.shell"}],
+    "sloped = base.cut(wedge)\nhollow = sloped.shell(-wall_thickness)",
+)
+sloped_shell_ops = {feature.operation for feature in sloped_shell_plan.features}
+check("shell_wall" in sloped_shell_ops,
+      "pure planner maps shell after wedge cut to shell_wall")
 original_iter_rows = feature_benchmark_mod.iter_zero_to_cad_rows
 try:
     unsupported_row = {
@@ -488,6 +495,7 @@ check(".face_mill" in sys_prompt, "system prompt mentions face_mill")
 check(".pocket" in sys_prompt, "system prompt mentions pocket")
 check(".drill" in sys_prompt, "system prompt mentions drill")
 check(".slope_cut" in sys_prompt, "system prompt mentions sloped floor cuts")
+check(".shell_wall" in sys_prompt, "system prompt mentions current-shape shell walls")
 check(".chamfer" in sys_prompt, "system prompt mentions chamfer")
 check(".edge_chamfer" in sys_prompt, "system prompt mentions selected edge chamfer")
 check(".machine_around_profile" in sys_prompt, "system prompt mentions retained-material operations")
@@ -634,6 +642,8 @@ check("Stock.cylindrical" in prompt and ".cylinder" in prompt,
       "user prompt maps CadQuery cylindrical blanks to cylindrical stock")
 check(".slope_cut" in prompt and "sloped floor" in prompt,
       "user prompt exposes sloped trough machining")
+check(".shell_wall" in prompt and "sloped shell" in prompt,
+      "user prompt maps CadQuery sloped shells to shell_wall")
 check("extrude(..., taper=...)" in prompt and "tapered_cylinder" in prompt,
       "user prompt maps tapered extrudes to turn_profile")
 check("second `.circle(...)`" in prompt and "center bore" in prompt,

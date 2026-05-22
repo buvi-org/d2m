@@ -204,8 +204,13 @@ def plan_pure_subcad_features(
         add("cadquery.revolve", "axisymmetric", PLANNED_MULTI_PROCESS, "turn_profile",
             "revolved profile maps to turning or mill-turn")
     if "shell" in op_names or ".shell(" in code_text:
+        shaped_shell = _shell_follows_shaped_cut(ops_trace, code_text)
         shell_accessible = _shell_has_accessible_open_face(ops_trace, code_text)
-        if shell_accessible:
+        if shaped_shell:
+            add("cadquery.shell", "thin_wall", PLANNED_MULTI_PROCESS, "shell_wall",
+                "shell after wedge/sloped/surface shaping maps to shell_wall on the current shape",
+                suggested_subcad=".shell_wall(wall_thickness)")
+        elif shell_accessible:
             add("cadquery.shell", "thin_wall", PLANNED_MULTI_PROCESS, "thin_wall_pocket",
                 "open shell maps to thin-wall pocket or hollow bore when accessible")
         else:
@@ -3145,6 +3150,24 @@ def _shell_has_accessible_open_face(ops_trace: list[dict], code_text: str) -> bo
     if "=" in expression:
         expression = expression.rsplit("=", 1)[-1]
     return ".faces(" in expression
+
+
+def _shell_follows_shaped_cut(ops_trace: list[dict], code_text: str) -> bool:
+    """Return True when a shell offsets a previously shaped/wedge-cut solid."""
+    lower = code_text.lower()
+    shell_index = lower.find(".shell(")
+    if shell_index < 0:
+        return False
+    before_shell = lower[:shell_index]
+    shaped_tokens = (
+        ".cut(wedge",
+        "base.cut(wedge",
+        ".slope_cut(",
+        ".surface_mill(",
+        ".sweep_mill(",
+        ".loft_mill(",
+    )
+    return any(token in before_shell for token in shaped_tokens)
 
 
 _FACE_WORKPLANE_RE = re.compile(

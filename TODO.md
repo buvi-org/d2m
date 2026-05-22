@@ -368,6 +368,12 @@ Immediate next implementation targets:
 - Done: normalize AI-generated SubCAD by stripping full-line Python comments
   before validation/execution. This lets the agentic loop use geometry feedback
   when a model returns comment-prefaced but otherwise executable code.
+- Done: add SubCAD `shell_wall` / `thin_wall_shell` for offset-shelling the
+  current machined shape. This specifically targets sloped shell/trough rows
+  where a flat `thin_wall_pocket` removes far too much material.
+- Done: update the pure planner so shell operations after wedge/sloped/surface
+  shaping emit `shell_wall` evidence instead of contradicting the prompt with
+  unsupported `thin_wall_pocket` guidance.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.

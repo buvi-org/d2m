@@ -1135,6 +1135,18 @@ class Stock:
             open_faces=open_faces, tool=tool, material=self._material,
         ))
 
+    def thin_wall_shell(self, wall_thickness: float, *,
+                        tool: Optional[ToolSpec] = None) -> "Stock":
+        """Offset-shell the current machined shape by wall thickness."""
+        from .operations import ThinWallShellOp
+        return self._apply_op(ThinWallShellOp(
+            wall_thickness=wall_thickness, tool=tool, material=self._material,
+        ))
+
+    def shell_wall(self, wall_thickness: float, **kwargs) -> "Stock":
+        """Alias for :meth:`thin_wall_shell`."""
+        return self.thin_wall_shell(wall_thickness, **kwargs)
+
     def hollow_bore(self, inner_profile, outer_profile, depth: float, *,
                     access_face: str = ">Z",
                     tool: Optional[ToolSpec] = None) -> "Stock":

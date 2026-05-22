@@ -156,8 +156,12 @@ Stock instance (immutable/fluent pattern).
 
 - Thin wall / shell: `.thin_wall_pocket(profile, wall_thickness, depth,
   open_faces=None)`, `.hollow_bore(inner_profile, outer_profile, depth)`,
+  `.shell_wall(wall_thickness)` / `.thin_wall_shell(wall_thickness)`,
   `.tube_profile(outer_profile, inner_profile, length, process="mill_turn",
   axis="X", cx=0, cy=0, cz=0, start=None, end=None, combine="union")`.
+  Use `shell_wall` after `slope_cut`, `surface_mill`, or other non-flat shaping
+  operations when the CadQuery source shells the current solid. Use
+  `thin_wall_pocket` only for a simple flat open top cavity.
   Use `tube_profile` for horizontal/vertical hollow tube bosses from CadQuery
   circle extrudes on `Workplane("YZ")`, `Workplane("XZ")`, or `Workplane("XY")`.
   Example for a tube running from X=18 to X=80, centered at Y=0, Z=5:
@@ -327,6 +331,7 @@ Stock.cylindrical(D, H, material="aluminum_6061")
 .pad(profile, height)
 .turn_profile(profile, axis="Z", stock_diameter=None)  # supports {"type":"tapered_cylinder", ...}
 .thin_wall_pocket(profile, wall_thickness, depth)
+.shell_wall(wall_thickness)
 .tube_profile({"diameter": outer, "axis": "X", "start": x0, "end": x1, "cy": y, "cz": z}, {"diameter": inner}, length)
 .surface_mill(surface_ref, tolerance_mm=0.10)
 .sweep_mill(profile, path, tolerance_mm=0.10)
@@ -668,6 +673,10 @@ subtractive program. Remember:
 - For wedge-cut or sloped-bottom trough features, use
   `.slope_cut(width, length, start_depth, end_depth, cx=..., cy=...,
   slope_axis="X"|"Y")` to represent the sloped floor directly.
+- If CadQuery calls `.shell(-wall_thickness)` after a sloped/wedge/surface
+  shape, call `.shell_wall(wall_thickness)` after that shape. Do not replace a
+  sloped shell with a flat rectangular pocket unless the source shell is a
+  simple flat open-top box.
 - Keep rectangular dimensions in the correct axes. CadQuery `.rect(x_size,
   y_size)` maps to SubCAD `.pocket(width=y_size, length=x_size, ...)`.
   SubCAD `width` always means Y span, and SubCAD `length` always means X span.
