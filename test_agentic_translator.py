@@ -1291,6 +1291,72 @@ finally:
 
 
 # =========================================================================
+#  Test 14: No-tool-call guard
+# =========================================================================
+
+print("\n14. No-tool-call guard ...")
+
+_orig_llm_client = agentic_mod.LLMClient
+_orig_step_to_stock_dims = agentic_mod.step_to_stock_dims
+_orig_build_deterministic = agentic_mod.build_deterministic_subcad_code
+
+
+class _NoToolLLMClient:
+    instances = []
+
+    def __init__(self, *args, **kwargs):
+        self.calls = 0
+        _NoToolLLMClient.instances.append(self)
+
+    def tool_chat(self, messages, tools, temperature=0.2, max_tokens=4096):
+        self.calls += 1
+        return None
+
+
+try:
+    agentic_mod.LLMClient = _NoToolLLMClient
+    agentic_mod.step_to_stock_dims = lambda step_bytes: {
+        "length": 10.0, "width": 10.0, "height": 10.0
+    }
+    agentic_mod.build_deterministic_subcad_code = lambda *args, **kwargs: None
+
+    with tempfile.NamedTemporaryFile(suffix=".step", delete=False) as tf:
+        tf.write(b"mock-step")
+        mock_step_path = tf.name
+
+    try:
+        translator = AgenticTranslator(
+            provider="mock",
+            verbose=False,
+            safety_cap=20,
+            max_consecutive_no_tool_calls=2,
+            comparison_methods=None,
+            translation_mode="ai_heavy",
+        )
+        no_tool_result = translator.translate(
+            {
+                "cadquery_file": "part = cq.Workplane('XY').box(10, 10, 10)",
+                "cadquery_ops_json": "[]",
+            },
+            step_path=mock_step_path,
+        )
+    finally:
+        if os.path.exists(mock_step_path):
+            os.unlink(mock_step_path)
+
+    no_tool_client = _NoToolLLMClient.instances[-1]
+    check(not no_tool_result["success"], "translator fails no-tool-call rows")
+    check(no_tool_result["stop_reason"] == "no_tool_call_limit",
+          "translator stops repeated no-tool-call responses early")
+    check(no_tool_result["attempts"] == 2 and no_tool_client.calls == 2,
+          "no-tool-call guard prevents safety-cap API waste")
+finally:
+    agentic_mod.LLMClient = _orig_llm_client
+    agentic_mod.step_to_stock_dims = _orig_step_to_stock_dims
+    agentic_mod.build_deterministic_subcad_code = _orig_build_deterministic
+
+
+# =========================================================================
 #  Summary
 # =========================================================================
 

@@ -1631,6 +1631,7 @@ class AgenticTranslator:
         mesh_tolerance_mm: float = 0.25,
         deterministic_only: bool = False,
         translation_mode: str = TRANSLATION_MODE_PLANNER_GUIDED,
+        max_consecutive_no_tool_calls: int = 2,
     ):
         """Initialize the translator.
 
@@ -1658,6 +1659,8 @@ class AgenticTranslator:
             translation_mode: "planner_guided" keeps deterministic/planner-first
                 behavior. "ai_heavy" skips deterministic code generation and
                 treats planner candidates as advisory evidence for the LLM.
+            max_consecutive_no_tool_calls: Stop after this many consecutive LLM
+                responses that do not call the required execution tool.
         """
         self.translation_mode = _normalize_translation_mode(translation_mode)
         if deterministic_only and self.translation_mode == TRANSLATION_MODE_AI_HEAVY:
@@ -1680,6 +1683,7 @@ class AgenticTranslator:
         self.min_mesh_score = min_mesh_score
         self.mesh_tolerance_mm = mesh_tolerance_mm
         self.deterministic_only = deterministic_only
+        self.max_consecutive_no_tool_calls = max(1, int(max_consecutive_no_tool_calls))
         self._system_prompt = build_system_prompt(self.translation_mode)
 
     def translate(
@@ -1815,6 +1819,7 @@ class AgenticTranslator:
         reference_mesh = None
         reference_mesh_error = None
         stop_reason = "not_started"
+        consecutive_no_tool_calls = 0
 
         attempt = 0
         while True:
@@ -1855,18 +1860,27 @@ class AgenticTranslator:
 
             # --- Handle LLM response ---
             if tool_result is None or "code" not in tool_result.get("arguments", {}):
-                # LLM returned no tool call — try text fallback
+                # LLM returned no tool call. Stop early if the model repeatedly
+                # ignores the required execution tool; otherwise row timeouts
+                # can burn many API calls without creating a candidate.
                 if self.verbose:
                     print("(no tool call)", end=" ", flush=True)
+                consecutive_no_tool_calls += 1
                 conv.record(0.0, False)
                 history.append({
                     "attempt": attempt, "code": None, "exec_result": None,
                     "comparison": None, "error": "LLM did not call tool",
                 })
+                if consecutive_no_tool_calls >= self.max_consecutive_no_tool_calls:
+                    stop_reason = "no_tool_call_limit"
+                    if self.verbose:
+                        print(f"\n  Stop: {stop_reason} ({consecutive_no_tool_calls} consecutive no-tool responses)")
+                    break
                 continue
 
             raw_code = tool_result["arguments"]["code"]
             code = _normalize_generated_subcad_code(raw_code)
+            consecutive_no_tool_calls = 0
             if self.verbose:
                 suffix = " normalized" if code != raw_code else ""
                 print(f"{len(raw_code)} chars{suffix}", end=" ", flush=True)
