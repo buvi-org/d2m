@@ -111,6 +111,58 @@ def create_tapered_cylinder(
     return outer
 
 
+def create_axis_aligned_tube(
+    outer_diameter: float,
+    inner_diameter: float,
+    length: float,
+    *,
+    axis: str = "X",
+    cx: float = 0.0,
+    cy: float = 0.0,
+    cz: float = 0.0,
+    start: float | None = None,
+    end: float | None = None,
+) -> "cq.Workplane":
+    """Create a straight tube along a principal axis from semantic dimensions."""
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+    outer_diameter = float(outer_diameter)
+    inner_diameter = float(inner_diameter or 0.0)
+    length = float(length)
+    if outer_diameter <= 0.0 or length <= 0.0:
+        raise ValueError("tube outer diameter and length must be positive")
+    if inner_diameter < 0.0 or inner_diameter >= outer_diameter:
+        raise ValueError("tube inner diameter must be non-negative and smaller than outer diameter")
+
+    axis_name = str(axis or "X").upper()
+    if start is not None and end is not None:
+        lo = min(float(start), float(end))
+        hi = max(float(start), float(end))
+        length = hi - lo
+        center_axis = (lo + hi) / 2.0
+    else:
+        center_axis = {"X": cx, "Y": cy, "Z": cz}.get(axis_name, cx)
+    if length <= 0.0:
+        raise ValueError("tube start/end must span a positive length")
+
+    if axis_name == "X":
+        wp = cq.Workplane("YZ")
+        translation = (center_axis - length / 2.0, cy, cz)
+    elif axis_name == "Y":
+        wp = cq.Workplane("XZ")
+        translation = (cx, center_axis - length / 2.0, cz)
+    elif axis_name == "Z":
+        wp = cq.Workplane("XY")
+        translation = (cx, cy, center_axis - length / 2.0)
+    else:
+        raise ValueError(f"unsupported tube axis: {axis!r}")
+
+    profile = wp.circle(outer_diameter / 2.0)
+    if inner_diameter > 0.0:
+        profile = profile.circle(inner_diameter / 2.0)
+    return profile.extrude(length).translate(translation)
+
+
 # =============================================================================
 #  Helpers
 # =============================================================================

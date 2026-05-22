@@ -149,7 +149,14 @@ Stock instance (immutable/fluent pattern).
 
 - Thin wall / shell: `.thin_wall_pocket(profile, wall_thickness, depth,
   open_faces=None)`, `.hollow_bore(inner_profile, outer_profile, depth)`,
-  `.tube_profile(outer_profile, inner_profile, length, process="turn|mill_turn")`.
+  `.tube_profile(outer_profile, inner_profile, length, process="mill_turn",
+  axis="X", cx=0, cy=0, cz=0, start=None, end=None, combine="union")`.
+  Use `tube_profile` for horizontal/vertical hollow tube bosses from CadQuery
+  circle extrudes on `Workplane("YZ")`, `Workplane("XZ")`, or `Workplane("XY")`.
+  Example for a tube running from X=18 to X=80, centered at Y=0, Z=5:
+  `.tube_profile({"diameter": 15, "axis": "X", "start": 18, "end": 80,
+  "cy": 0, "cz": 5}, {"diameter": 11}, 62)`. Do not approximate horizontal
+  tubes with vertical `machine_around_cylinder`.
 
 - Tolerance-machined 3D CNC: `.surface_mill(surface_ref, tolerance_mm=0.10,
   strategy="parallel")`, `.sweep_mill(profile, path, tolerance_mm=0.10)`,
@@ -312,6 +319,7 @@ Stock.cylindrical(D, H, material="aluminum_6061")
 .pad(profile, height)
 .turn_profile(profile, axis="Z", stock_diameter=None)  # supports {"type":"tapered_cylinder", ...}
 .thin_wall_pocket(profile, wall_thickness, depth)
+.tube_profile({"diameter": outer, "axis": "X", "start": x0, "end": x1, "cy": y, "cz": z}, {"diameter": inner}, length)
 .surface_mill(surface_ref, tolerance_mm=0.10)
 .sweep_mill(profile, path, tolerance_mm=0.10)
 .loft_mill(profiles, tolerance_mm=0.10)

@@ -42,6 +42,7 @@ from .geometry import (
     machine_around_cylinder_cut,
     thin_wall_pocket_cut,
     create_tapered_cylinder,
+    create_axis_aligned_tube,
 )
 from .profiles import profile_span_yx
 from .tool_library import ToolSpec, ToolCatalog
@@ -3039,10 +3040,68 @@ class HollowBoreOp(PureToleranceOp):
 class TubeProfileOp(HollowBoreOp):
     operation_name: str = "tube_profile"
     length: float = 10.0
+    axis: str = "X"
+    cx: float = 0.0
+    cy: float = 0.0
+    cz: float = 0.0
+    start: Optional[float] = None
+    end: Optional[float] = None
+    combine: str = "union"
+
+    def apply(self, shape):
+        if not isinstance(self.outer_profile, dict):
+            return shape
+        outer = (
+            self.outer_profile.get("diameter")
+            or self.outer_profile.get("diameter_mm")
+            or self.outer_profile.get("outer_diameter")
+            or self.outer_profile.get("outer_diameter_mm")
+        )
+        if outer is None:
+            return shape
+        inner = 0.0
+        if isinstance(self.inner_profile, dict):
+            inner = (
+                self.inner_profile.get("diameter")
+                or self.inner_profile.get("diameter_mm")
+                or self.inner_profile.get("inner_diameter")
+                or self.inner_profile.get("inner_diameter_mm")
+                or 0.0
+            )
+        axis = self.outer_profile.get("axis", self.axis)
+        start = self.outer_profile.get("start", self.outer_profile.get("start_mm", self.start))
+        end = self.outer_profile.get("end", self.outer_profile.get("end_mm", self.end))
+        tube = create_axis_aligned_tube(
+            float(outer),
+            float(inner or 0.0),
+            self.length,
+            axis=str(axis or "X"),
+            cx=float(self.outer_profile.get("cx", self.cx)),
+            cy=float(self.outer_profile.get("cy", self.cy)),
+            cz=float(self.outer_profile.get("cz", self.outer_profile.get("z", self.cz))),
+            start=start,
+            end=end,
+        )
+        mode = str(self.combine or "union").lower()
+        if mode == "replace":
+            return tube
+        if mode in {"intersect", "intersection"}:
+            return shape.intersect(tube)
+        return shape.union(tube)
 
     def to_dict(self) -> dict:
         data = super().to_dict()
-        data.update({"length_mm": self.length})
+        data.update({
+            "length_mm": self.length,
+            "axis": self.axis,
+            "position": [self.cx, self.cy, self.cz],
+            "start_mm": self.start,
+            "end_mm": self.end,
+            "combine": self.combine,
+            "process": self.process,
+            "coverage_family": "thin_wall",
+            "manufacturing_completeness": "pure_operation",
+        })
         return data
 
 

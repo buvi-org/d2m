@@ -158,6 +158,7 @@ Current test status:
 | Test | Result | Notes |
 |------|--------|-------|
 | `python test_agentic_translator.py` | PASS, 170/170 | Covers non-LLM translator components, strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt selection, generated-code discipline checks, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. |
+| `python test_subcad_tube_profile.py` | PASS, 6/6 | Covers axis-aligned `tube_profile` geometry, union/replace behavior, and process-plan records. |
 
 Important caveat: the passing translator test is not a live LLM success metric. No live DeepSeek/Anthropic/OpenAI translation batch is documented as passing here.
 
@@ -337,6 +338,9 @@ Active next slice:
   Use `--attempt-unsupported` for guarded pilots where the planner should label
   risk but not veto the model attempt. Track match rate and API spend before
   scaling batch size.
+- Add exact operation support when live AI failures expose missing primitives.
+  The first post-AI-heavy addition is axis-aligned `tube_profile` geometry for
+  horizontal/vertical hollow tube bosses from CadQuery circle extrudes.
 - Harden retained rib/boss, bottom-face, and side-face setup fidelity while
   keeping side-face additive gussets manual-review/unsupported until oriented
   side-profile machining is implemented.

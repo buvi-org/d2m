@@ -71,6 +71,7 @@ Recently fixed blocker:
 SubCAD can currently be used as a CadQuery-backed subtractive machining representation for prototype workflows:
 
 - Author machining programs with the fluent `Stock` API, including core operations, Phase 2 operations, pure STEP-coverage operation families, fixtures, setups, work offsets, and tool/material metadata.
+- Represent axis-aligned hollow tube bosses with `tube_profile`, including X/Y/Z placement, inner bore diameter, union into retained-feature chains, and standalone replace mode.
 - Export STEP/STL geometry plus JSON process plans using the `subcad.shop_floor.v1` schema.
 - Preserve neutral toolpaths for shop-floor review, estimation, validation, preview-only G-code rendering, browser playback, and simulation handoff.
 - Export Markdown/JSON setup sheets with stock, material, selected tools, tool assemblies, fixtures, operations, setup/work-offset data, validation messages, and deferred-production-G-code notes.
@@ -152,6 +153,7 @@ Recent local test status:
 | Test | Status |
 |------|--------|
 | `python test_agentic_translator.py` | PASS, 170/170. Includes strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt coverage, and generated-code discipline checks; live LLM runs are separate. |
+| `python test_subcad_tube_profile.py` | PASS, 6/6. Covers axis-aligned tube_profile geometry and process-plan records. |
 | `python test_subcad_integration.py` | PASS, 39/39 |
 | `python test_fixturing_integration.py` | PASS, 19/19 |
 | `python test_sim_bridge.py` | PASS, 51/51 |

@@ -334,6 +334,10 @@ Immediate next implementation targets:
   failure moved to a geometry backend error (`Bnd_Box is void`). Treat row 21965
   as a SubCAD/evidence capability issue around horizontal tube-like retained
   bosses, not a simple prompt-format issue.
+- Done: implement real axis-aligned `tube_profile` geometry for horizontal or
+  vertical hollow tube bosses. It supports outer/inner diameter, X/Y/Z axis,
+  start/end placement, `combine="union"` for retained tube intent after a base
+  pad, and `combine="replace"` for standalone tube parts.
 - Next: retry row 13 and the next filtered hole-family rows; if row 13 still
   fails, classify the remaining issue as union/construction-feature detection
   rather than API placement.

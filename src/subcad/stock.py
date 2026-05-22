@@ -1100,12 +1100,29 @@ class Stock:
         ))
 
     def tube_profile(self, outer_profile, inner_profile, length: float, *,
-                     process: str = "turn|mill_turn",
+                     process: str = "mill_turn",
+                     axis: str = "X",
+                     cx: float = 0.0,
+                     cy: float = 0.0,
+                     cz: float = 0.0,
+                     start: Optional[float] = None,
+                     end: Optional[float] = None,
+                     combine: str = "union",
                      tool: Optional[ToolSpec] = None) -> "Stock":
+        """Represent a straight hollow tube retained from stock.
+
+        `axis` may be X, Y, or Z. For horizontal tube bosses, pass start/end
+        along that axis plus the other two center coordinates in `cx/cy/cz` or
+        in the profile dict. The default `combine="union"` keeps this usable in
+        operation chains that first define a base pad and then add retained tube
+        intent; `combine="replace"` can be used for standalone tube parts.
+        """
         from .operations import TubeProfileOp
         return self._apply_op(TubeProfileOp(
             outer_profile=outer_profile, inner_profile=inner_profile,
-            length=length, process=process, tool=tool, material=self._material,
+            length=length, process=process, axis=axis, cx=cx, cy=cy, cz=cz,
+            start=start, end=end, combine=combine,
+            tool=tool, material=self._material,
         ))
 
     def surface_mill(self, surface_ref, *, tolerance_mm: float = 0.10,
