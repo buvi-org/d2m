@@ -273,6 +273,9 @@ def build_deterministic_subcad_code(
     box_union_profile_code = _deterministic_box_union_profile_code(cadquery_code)
     if box_union_profile_code:
         return box_union_profile_code
+    rect_cross_code = _deterministic_rect_cross_union_code(cadquery_code)
+    if rect_cross_code:
+        return rect_cross_code
     cross_arm_code = _deterministic_cross_arm_side_hole_code(cadquery_code)
     if cross_arm_code:
         return cross_arm_code
@@ -766,6 +769,59 @@ def _deterministic_box_union_profile_code(cadquery_code: str) -> str | None:
         f"Stock.rectangular({width:.6g}, {stock_width:.6g}, {plate:.6g})",
         [f".profile_cutout({{'type': 'polygon', 'points': {_format_points(points)}}}, through=True)"],
     )
+
+
+def _deterministic_rect_cross_union_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    if ".union(" not in lower or lower.count(".rect(") != 2 or lower.count(".extrude(") != 2:
+        return None
+    if any(token in lower for token in (".box(", ".cut", ".hole(", ".shell(", ".loft(", ".sweep(", ".chamfer(", ".fillet(")):
+        return None
+    rects = _assigned_rect_extrusions(cadquery_code)
+    if len(rects) != 2:
+        return None
+    a, b = rects
+    if abs(a["height"] - b["height"]) > 1e-6:
+        return None
+    if not (
+        abs(a["length"] - b["width"]) < 1e-6
+        and abs(a["width"] - b["length"]) < 1e-6
+    ):
+        return None
+    stock_length = max(a["length"], b["length"])
+    stock_width = max(a["width"], b["width"])
+    height = a["height"]
+    profiles = [
+        {"type": "rect", "length": a["length"], "width": a["width"], "cx": 0.0, "cy": 0.0},
+        {"type": "rect", "length": b["length"], "width": b["width"], "cx": 0.0, "cy": 0.0},
+    ]
+    stock = f"Stock.rectangular({stock_length:.6g}, {stock_width:.6g}, {height:.6g})"
+    sequence = [f".machine_around_profiles({profiles!r}, height={height:.6g}, base_height=0.0)"]
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _assigned_rect_extrusions(code_text: str) -> list[dict[str, float]]:
+    env = _numeric_env(code_text)
+    pattern = re.compile(
+        r"(?P<name>\w+)\s*=\s*\(?\s*cq\.Workplane\([^)]*\)\s*"
+        r"\.rect\((?P<rect>[^)]*)\)\s*\.extrude\((?P<extrude>[^)]*)\)",
+        re.IGNORECASE | re.DOTALL,
+    )
+    rects: list[dict[str, float]] = []
+    for match in pattern.finditer(code_text):
+        rect_args = _split_args(match.group("rect"))
+        extrude_args = _split_args(match.group("extrude"))
+        if len(rect_args) < 2 or not extrude_args:
+            continue
+        length = _eval_number(rect_args[0], env)
+        width = _eval_number(rect_args[1], env)
+        height = _eval_number(extrude_args[0], env)
+        if length is None or width is None or height is None:
+            continue
+        if min(length, width, height) <= 0:
+            continue
+        rects.append({"length": length, "width": width, "height": height})
+    return rects
 
 
 def _deterministic_cross_arm_side_hole_code(cadquery_code: str) -> str | None:

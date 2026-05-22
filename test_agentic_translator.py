@@ -255,6 +255,20 @@ check(cross_arm_code is not None and ".machine_around_profiles(" in cross_arm_co
 check(cross_arm_code is not None and cross_arm_code.count(".drill(8") == 4,
       "deterministic looped cross arms preserve side-face holes")
 
+rect_cross_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "vertical=cq.Workplane('XY').rect(12,80).extrude(8)",
+        "horizontal=cq.Workplane('XY').rect(80,12).extrude(8)",
+        "result=vertical.union(horizontal)",
+    ]),
+    [{"op_name": "rect"}, {"op_name": "extrude"}, {"op_name": "union"}],
+)
+check(rect_cross_code is not None and ".machine_around_profiles(" in rect_cross_code,
+      "deterministic two-rectangle cross union maps to retained profiles")
+check(rect_cross_code is not None and "Stock.rectangular(80, 80, 8)" in rect_cross_code,
+      "deterministic two-rectangle cross union sizes stock to the combined envelope")
+
 
 # =========================================================================
 #  Test 2: System prompt
