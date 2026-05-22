@@ -719,6 +719,11 @@ subtractive program. Remember:
   extrusion distance is SubCAD stock height/depth. Do not treat the profile's
   Y height as SubCAD Z height. For `Workplane("YZ")`, the extrude distance is
   X length; for `Workplane("XZ")`, the extrude distance is Y width.
+  SubCAD `Stock.rectangular(...)` is centered at X=0/Y=0. If CadQuery profile
+  points are in positive coordinates such as X=0..L and Y=0..W, shift the
+  profile to stock-centered coordinates before `profile_cutout`, or pass
+  `cx=-L/2`, `cy=-W/2` with the point profile. Otherwise the retained profile
+  will be clipped to one quadrant of the stock.
 - For CadQuery `.polygon(n, diameter)`, use
   `{{"type": "polygon", "n_sides": n, "circumdiameter": diameter}}`.
   The CadQuery polygon value is a diameter, not a radius, even when the source

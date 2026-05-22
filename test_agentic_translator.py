@@ -664,6 +664,8 @@ check("Copy source polyline/profile points literally" in prompt and "drop interm
       "user prompt preserves all polyline profile points")
 check('Workplane("XY").polyline' in prompt and "extrusion distance is SubCAD stock height" in prompt,
       "user prompt maps XY profile extrusion axes correctly")
+check("Stock.rectangular" in prompt and "cx=-L/2" in prompt and "clipped to one quadrant" in prompt,
+      "user prompt recenters positive-coordinate profiles")
 check("no volume change" in prompt or "variable volume evidence" in prompt.lower(),
       "user prompt can warn about no-op CadQuery source operations")
 check("omit the corresponding" in prompt and "omit those hole operations" in prompt,
