@@ -279,6 +279,9 @@ def build_deterministic_subcad_code(
     sketch_cross_pilot_code = _deterministic_sketch_cross_pilot_code(cadquery_code)
     if sketch_cross_pilot_code:
         return sketch_cross_pilot_code
+    base_rib_cross_code = _deterministic_base_rib_cross_code(cadquery_code)
+    if base_rib_cross_code:
+        return base_rib_cross_code
     cross_arm_code = _deterministic_cross_arm_side_hole_code(cadquery_code)
     if cross_arm_code:
         return cross_arm_code
@@ -972,6 +975,60 @@ def _deterministic_sketch_cross_pilot_code(cadquery_code: str) -> str | None:
     if edge_fillet is not None and edge_fillet > 0:
         sequence.append(f'.edge_fillet("all_edges", radius={edge_fillet:.6g})')
     stock = f"Stock.rectangular({total:.6g}, {total:.6g}, {stock_height:.6g})"
+    return _format_fluent_subcad_code(stock, sequence)
+
+
+def _deterministic_base_rib_cross_code(cadquery_code: str) -> str | None:
+    lower = cadquery_code.lower()
+    required_tokens = ("central_hole_diameter", "rib_x_pos", "rib_y_pos", "mount_hole_offset")
+    if not all(token in lower for token in required_tokens):
+        return None
+    env = _numeric_env(cadquery_code)
+    required = {
+        "base_size",
+        "thickness",
+        "rib_width",
+        "rib_length",
+        "central_hole_diameter",
+        "mount_hole_diameter",
+        "mount_hole_offset",
+    }
+    if not required.issubset(env):
+        return None
+    base_size = env["base_size"]
+    thickness = env["thickness"]
+    rib_width = env["rib_width"]
+    rib_length = env["rib_length"]
+    central_hole = env["central_hole_diameter"]
+    mount_hole = env["mount_hole_diameter"]
+    mount_offset = env["mount_hole_offset"]
+    if min(base_size, thickness, rib_width, rib_length, central_hole, mount_hole, mount_offset) <= 0:
+        return None
+    rib_pos = base_size / 2.0 + rib_length / 2.0
+    total = base_size + 2.0 * rib_length
+    profiles = [
+        {"type": "rect", "length": base_size, "width": base_size, "cx": 0.0, "cy": 0.0},
+        {"type": "rect", "length": rib_length, "width": rib_width, "cx": rib_pos, "cy": 0.0},
+        {"type": "rect", "length": rib_length, "width": rib_width, "cx": -rib_pos, "cy": 0.0},
+        {"type": "rect", "length": rib_width, "width": rib_length, "cx": 0.0, "cy": rib_pos},
+        {"type": "rect", "length": rib_width, "width": rib_length, "cx": 0.0, "cy": -rib_pos},
+    ]
+    sequence = [
+        f".machine_around_profiles({profiles!r}, height={thickness:.6g}, base_height=0.0)",
+        f".drill({central_hole:.6g}, through=True, cx=0.0, cy=0.0)",
+    ]
+    for cx, cy in (
+        (mount_offset, mount_offset),
+        (-mount_offset, mount_offset),
+        (-mount_offset, -mount_offset),
+        (mount_offset, -mount_offset),
+    ):
+        sequence.append(f".drill({mount_hole:.6g}, through=True, cx={cx:.6g}, cy={cy:.6g})")
+    chamfer = env.get("chamfer_size")
+    if chamfer is not None and chamfer > 0:
+        for selector in (">X", "<X", ">Y", "<Y"):
+            sequence.append(f'.edge_chamfer("{selector}", width={chamfer:.6g})')
+    stock = f"Stock.rectangular({total:.6g}, {total:.6g}, {thickness:.6g})"
     return _format_fluent_subcad_code(stock, sequence)
 
 

@@ -323,6 +323,27 @@ check(panel_rib_holes_code is not None and panel_rib_holes_code.count(".pocket("
 check(panel_rib_holes_code is not None and panel_rib_holes_code.count(".drill(4") == 8,
       "deterministic panel rib builder expands hole row")
 
+base_rib_cross_code = build_deterministic_subcad_code(
+    "\n".join([
+        "import cadquery as cq",
+        "base_size=50.0; thickness=8.0; rib_width=12.0; rib_length=30.0",
+        "central_hole_diameter=20.0; mount_hole_diameter=5.0; mount_hole_offset=15.0; chamfer_size=1.0",
+        "base = cq.Workplane('XY').box(base_size, base_size, thickness)",
+        "base = base.faces('+Z').workplane().hole(central_hole_diameter)",
+        "rib = cq.Workplane('XY').box(rib_length, rib_width, thickness)",
+        "rib_pos_x = (base_size/2 + rib_length/2)",
+        "rib_x_pos = rib.translate((rib_pos_x, 0, 0))",
+        "rib_y_pos = rib.rotate((0,0,0), (0,0,1), 90).translate((0, rib_pos_x, 0))",
+        "result = base.union(rib_x_pos).union(rib_y_pos)",
+        "result = result.faces('+Z').workplane().pushPoints([(15,15),(-15,15),(-15,-15),(15,-15)]).hole(mount_hole_diameter)",
+    ]),
+    [{"op_name": "box"}, {"op_name": "union"}, {"op_name": "hole"}],
+)
+check(base_rib_cross_code is not None and ".machine_around_profiles(" in base_rib_cross_code,
+      "deterministic base plus ribs maps retained rib profiles")
+check(base_rib_cross_code is not None and base_rib_cross_code.count(".drill(") == 5,
+      "deterministic base plus ribs preserves central and mounting holes")
+
 
 # =========================================================================
 #  Test 2: System prompt
