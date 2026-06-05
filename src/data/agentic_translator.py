@@ -1132,6 +1132,38 @@ def extract_code(response: str) -> Optional[str]:
     return None
 
 
+def _extract_subcad_code_from_text(response: str) -> Optional[str]:
+    """Extract executable SubCAD from local text-model responses."""
+    text = str(response or "").strip()
+    if not text:
+        return None
+    fenced = extract_code(text)
+    if fenced:
+        return fenced
+    lines = text.splitlines()
+    start = None
+    for index, line in enumerate(lines):
+        if re.match(r"^\s*part\s*=", line):
+            start = index
+            break
+    if start is None:
+        return None
+    code_lines = []
+    paren_depth = 0
+    for line in lines[start:]:
+        stripped = line.rstrip()
+        if not stripped and code_lines and paren_depth <= 0:
+            break
+        code_lines.append(stripped)
+        paren_depth += stripped.count("(") - stripped.count(")")
+        if paren_depth <= 0 and code_lines:
+            break
+    code = "\n".join(code_lines).strip()
+    if not code or not re.search(r"(?m)^\s*part\s*=", code):
+        return None
+    return code
+
+
 def _validate_generated_subcad_code(code: str) -> str | None:
     """Catch non-executable narrative code before spending geometry work."""
     if not re.search(r"(?m)^\s*part\s*=", code):
@@ -1171,7 +1203,7 @@ def _normalize_generated_subcad_code(code: str) -> str:
 # =========================================================================
 
 class LLMClient:
-    """Unified LLM client supporting DeepSeek, Anthropic, and OpenAI."""
+    """Unified LLM client supporting hosted and local OpenAI-compatible APIs."""
 
     def __init__(
         self,
@@ -1212,6 +1244,18 @@ class LLMClient:
             self._is_anthropic = False
             self._is_openai_compat = True
 
+        elif self.provider in {"lmstudio", "local"}:
+            self.model = model or "local-model"
+            from openai import OpenAI
+            self._client = OpenAI(
+                api_key=api_key or os.environ.get("LMSTUDIO_API_KEY") or "lm-studio",
+                base_url=base_url or os.environ.get("LMSTUDIO_BASE_URL") or "http://127.0.0.1:1234/v1",
+                timeout=api_timeout_s,
+            )
+            self._is_anthropic = False
+            self._is_openai_compat = True
+            self._text_tool_fallback = True
+
         elif self.provider == "anthropic":
             self.model = model or "claude-sonnet-4-6"
             resolved_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
@@ -1223,10 +1267,13 @@ class LLMClient:
             self._client = anthropic.Anthropic(api_key=resolved_key, timeout=api_timeout_s)
             self._is_anthropic = True
             self._is_openai_compat = False
+            self._text_tool_fallback = False
 
         else:
             raise ValueError(f"Unknown provider: {provider}. "
-                             "Use 'deepseek', 'openai', or 'anthropic'.")
+                             "Use 'deepseek', 'openai', 'anthropic', or 'lmstudio'.")
+        if not hasattr(self, "_text_tool_fallback"):
+            self._text_tool_fallback = False
 
     def chat(
         self,
@@ -1315,6 +1362,9 @@ class LLMClient:
             return None  # no tool call
 
         else:
+            if getattr(self, "_text_tool_fallback", False):
+                return self._text_tool_chat(messages, temperature=temperature, max_tokens=max_tokens)
+
             # OpenAI-compatible (DeepSeek, OpenAI)
             kwargs = {
                 "model": self.model,
@@ -1351,6 +1401,49 @@ class LLMClient:
                         return None
                 return {"id": tc.id, "name": tc.function.name, "arguments": args}
             return None
+
+    def _text_tool_chat(
+        self,
+        messages: list[dict],
+        temperature: float = 0.2,
+        max_tokens: int = 4096,
+    ) -> dict | None:
+        """Use text completion as a local-model substitute for tool calling."""
+        converted: list[dict] = []
+        for message in messages:
+            role = message.get("role")
+            content = str(message.get("content") or "")
+            if role == "tool":
+                converted.append({
+                    "role": "user",
+                    "content": f"Previous SubCAD execution feedback:\n{content}",
+                })
+            elif role in {"system", "user", "assistant"}:
+                converted.append({"role": role, "content": content})
+        converted.append({
+            "role": "user",
+            "content": (
+                "Return only executable SubCAD Python code. The final variable "
+                "must be named `part`. Do not use markdown, comments, prose, "
+                "or CadQuery reconstruction."
+            ),
+        })
+        resp = self._client.chat.completions.create(
+            model=self.model,
+            messages=converted,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        msg = resp.choices[0].message
+        response_text = msg.content or getattr(msg, "reasoning_content", "") or ""
+        code = _extract_subcad_code_from_text(response_text)
+        if not code:
+            return None
+        return {
+            "id": "lmstudio-text-tool",
+            "name": "execute_subcad",
+            "arguments": {"code": code},
+        }
 
 
 def _load_local_env_if_present(path: str = ".env") -> None:

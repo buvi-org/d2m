@@ -72,6 +72,7 @@ class BatchConfig:
     worker_mode: WorkerMode = "cli"
     provider: str = "deepseek"
     model: str | None = None
+    base_url: str | None = None
     api_timeout_s: float = 120.0
     row_timeout_s: float | None = None
     worker_timeout_s: float | None = None
@@ -249,6 +250,7 @@ def _run_candidate_api(candidate: CandidateRow, config: BatchConfig) -> RowWorke
     executor = feature_bench.make_translation_executor(
         provider=config.provider,
         model=config.model,
+        base_url=config.base_url,
         api_timeout_s=config.api_timeout_s,
         row_timeout_s=config.row_timeout_s,
         tolerance=config.tolerance,
@@ -403,6 +405,8 @@ def _build_worker_command(
     ]
     if config.model:
         command.extend(["--model", config.model])
+    if config.base_url:
+        command.extend(["--base-url", config.base_url])
     if config.row_timeout_s is not None:
         command.extend(["--row-timeout-s", f"{config.row_timeout_s:g}"])
     for family in candidate.selected_families:
@@ -450,6 +454,7 @@ def _batch_summary(
         "worker_timeout_s": config.worker_timeout_s,
         "provider": config.provider,
         "model": config.model,
+        "base_url": config.base_url,
         "safety_cap": config.safety_cap,
         "translation_mode": config.translation_mode,
         "family_filter": sorted(_normalize_families(config.family_filter)),
@@ -593,6 +598,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--worker-mode", choices=["cli", "api"], default="cli")
     parser.add_argument("--provider", default="deepseek")
     parser.add_argument("--model", default=None)
+    parser.add_argument("--base-url", default=None)
     parser.add_argument("--api-timeout-s", type=float, default=120.0)
     parser.add_argument("--row-timeout-s", type=float, default=None)
     parser.add_argument("--worker-timeout-s", type=float, default=None)
@@ -631,6 +637,7 @@ def main(argv: list[str] | None = None) -> int:
         worker_mode=args.worker_mode,
         provider=args.provider,
         model=args.model,
+        base_url=args.base_url,
         api_timeout_s=args.api_timeout_s,
         row_timeout_s=args.row_timeout_s,
         worker_timeout_s=args.worker_timeout_s,

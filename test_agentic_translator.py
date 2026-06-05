@@ -43,6 +43,7 @@ from src.data.agentic_translator import (
     SUBCAD_API_REFERENCE,
     _extract_measures_block,
     _normalize_generated_subcad_code,
+    _extract_subcad_code_from_text,
     _validate_generated_subcad_code,
 )
 from src.data.run_agentic_translation import build_dry_run_preview
@@ -879,6 +880,16 @@ check("[OK]" in feedback or "[FAIL]" in feedback or "MATCH" in feedback or "MISM
 print("\n10. translate_exploration_sample ...")
 check(callable(translate_exploration_sample), "translate_exploration_sample is callable")
 check(callable(translate_batch), "translate_batch is callable")
+
+local_client = LLMClient(
+    provider="lmstudio",
+    model="gemma-4-12b",
+    base_url="http://127.0.0.1:1234/v1",
+)
+check(local_client.provider == "lmstudio", "LM Studio provider is accepted")
+check(local_client.model == "gemma-4-12b", "LM Studio model name is preserved")
+check(_extract_subcad_code_from_text("part = Stock.cylindrical(10, 5)") == "part = Stock.cylindrical(10, 5)",
+      "local text fallback extracts non-rectangular SubCAD part assignment")
 
 
 # =========================================================================

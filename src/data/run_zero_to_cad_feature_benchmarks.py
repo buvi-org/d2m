@@ -446,6 +446,7 @@ def _translation_worker_entry(
     sample_dir_str: str,
     provider: str,
     model: str | None,
+    base_url: str | None,
     api_timeout_s: float,
     tolerance: float,
     safety_cap: int,
@@ -481,6 +482,7 @@ def _translation_worker_entry(
         translator = AgenticTranslator(
             provider=provider,
             model=model,
+            base_url=base_url,
             api_timeout_s=api_timeout_s,
             tolerance=tolerance,
             stagnation_limit=stagnation_limit,
@@ -536,6 +538,7 @@ def _run_translation_with_timeout(
     sample_dir: Path,
     provider: str,
     model: str | None,
+    base_url: str | None,
     api_timeout_s: float,
     tolerance: float,
     safety_cap: int,
@@ -562,6 +565,7 @@ def _run_translation_with_timeout(
             str(sample_dir),
             provider,
             model,
+            base_url,
             api_timeout_s,
             tolerance,
             safety_cap,
@@ -626,6 +630,7 @@ def make_translation_executor(
     *,
     provider: str = "deepseek",
     model: str | None = None,
+    base_url: str | None = None,
     api_timeout_s: float = 120.0,
     row_timeout_s: float | None = None,
     tolerance: float = 0.05,
@@ -664,6 +669,7 @@ def make_translation_executor(
         translator = AgenticTranslator(
             provider=provider,
             model=model,
+            base_url=base_url,
             api_timeout_s=api_timeout_s,
             tolerance=tolerance,
             stagnation_limit=stagnation_limit,
@@ -696,6 +702,7 @@ def make_translation_executor(
                 sample_dir=sample_dir,
                 provider=provider,
                 model=model,
+                base_url=base_url,
                 api_timeout_s=api_timeout_s,
                 tolerance=tolerance,
                 safety_cap=safety_cap,
@@ -1087,6 +1094,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--provider", default="deepseek")
     parser.add_argument("--model", default=None)
+    parser.add_argument("--base-url", default=None)
     parser.add_argument("--api-timeout-s", type=float, default=120.0)
     parser.add_argument(
         "--row-timeout-s",
@@ -1158,6 +1166,7 @@ def main(argv: list[str] | None = None) -> int:
         executor = make_translation_executor(
             provider=args.provider,
             model=args.model,
+            base_url=args.base_url,
             api_timeout_s=args.api_timeout_s,
             row_timeout_s=args.row_timeout_s,
             tolerance=args.tolerance,

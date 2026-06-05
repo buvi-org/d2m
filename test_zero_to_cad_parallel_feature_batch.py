@@ -121,6 +121,7 @@ def test_build_worker_command_delegates_to_feature_benchmark_cli(tmp_path):
         dry_run=False,
         provider="deepseek",
         model="deepseek-chat",
+        base_url="http://127.0.0.1:1234/v1",
         row_timeout_s=12.0,
         safety_cap=3,
         translation_mode="ai_heavy",
@@ -152,6 +153,7 @@ def test_build_worker_command_delegates_to_feature_benchmark_cli(tmp_path):
     assert command[command.index("--manifest-jsonl") + 1] == str(manifest_path)
     assert command[command.index("--row-timeout-s") + 1] == "12"
     assert command[command.index("--safety-cap") + 1] == "3"
+    assert command[command.index("--base-url") + 1] == "http://127.0.0.1:1234/v1"
     assert command[command.index("--translation-mode") + 1] == "ai_heavy"
     assert command[command.index("--comparison-methods") + 1] == "volume,mesh,slices"
     assert "--attempt-unsupported" in command
