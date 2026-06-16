@@ -324,6 +324,12 @@ class ProcessPlan:
     fixture: Optional[dict] = None           # serialized FixtureSpec
     setups: dict = field(default_factory=dict)  # setup_name -> serialized Setup
     work_offsets: dict = field(default_factory=dict)  # e.g. {"G54": [300, 200, 50, 0, 0, 0]}
+    machine: Optional[dict] = None           # serialized MachineContext
+    controller: Optional[dict] = None        # serialized controller/post capability context
+    setup_intent: Optional[dict] = None      # datum/workholding/orientation intent
+    tooling: Optional[dict] = None           # tool assemblies and magazine context
+    quality: Optional[dict] = None           # tolerances, inspection, finish requirements
+    collision_policy: Optional[dict] = None  # collision/clearance validation policy
 
     def __post_init__(self) -> None:
         """Normalize any operations supplied at construction time."""
@@ -452,6 +458,12 @@ class ProcessPlan:
                     "fixture": self.fixture,
                     "setups": self.setups,
                     "work_offsets": self.work_offsets,
+                    "machine": self.machine,
+                    "controller": self.controller,
+                    "setup_intent": self.setup_intent,
+                    "tooling": self.tooling,
+                    "quality": self.quality,
+                    "collision_policy": self.collision_policy,
                 }, self.stock_dimensions),
             )
         except Exception:
@@ -482,6 +494,12 @@ class ProcessPlan:
             "fixture": self.fixture,
             "setups": self.setups,
             "work_offsets": self.work_offsets,
+            "machine": self.machine,
+            "controller": self.controller,
+            "setup_intent": self.setup_intent,
+            "tooling": self.tooling,
+            "quality": self.quality,
+            "collision_policy": self.collision_policy,
         }
 
     def to_json(self, indent: int = 2) -> str:
@@ -546,6 +564,12 @@ class ProcessPlan:
             "fixture": self.fixture,
             "setups": self.setups,
             "work_offsets": self.work_offsets,
+            "machine": self.machine,
+            "controller": self.controller,
+            "setup_intent": self.setup_intent,
+            "tooling_context": self.tooling,
+            "quality": self.quality,
+            "collision_policy": self.collision_policy,
             "tools": self.tools_used,
             "operations": operations,
             "operations_by_setup": operations_by_setup,
@@ -586,6 +610,23 @@ class ProcessPlan:
                 f"- Total cost: {econ['currency']} {econ['cost_breakdown']['total_cost']}",
                 "- Economics: engineering estimate only; not a production quote",
             ])
+        elif sheet.get("machine"):
+            machine = sheet["machine"]
+            lines.append(f"- Machine: {machine.get('name', machine.get('machine_id', '?'))}")
+        if sheet.get("controller"):
+            controller = sheet["controller"]
+            lines.append(
+                f"- Controller: {controller.get('name', controller.get('controller_id', '?'))}"
+            )
+        if sheet.get("setup_intent"):
+            setup_intent = sheet["setup_intent"]
+            primary = setup_intent.get("primary_face") or setup_intent.get("face_selector")
+            if primary:
+                lines.append(f"- Primary setup face: {primary}")
+        if sheet.get("collision_policy"):
+            policy = sheet["collision_policy"]
+            if policy.get("required") or policy.get("enabled"):
+                lines.append("- Collision validation: required")
         lines.extend(["", "## Tools"])
         if sheet["tools"]:
             for tool in sheet["tools"]:

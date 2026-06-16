@@ -1,0 +1,33 @@
+{
+  "schema_version": "subcad.tool_magazine.v1",
+  "id": "GENERIC_3AXIS_BT40_20T",
+  "capacity": 20,
+  "interface": "BT40",
+  "slots": [
+    {
+      "slot": 1,
+      "tool_id": "T01_FACE_50",
+      "label": "50mm face mill"
+    },
+    {
+      "slot": 2,
+      "tool_id": "T02_EM_10",
+      "label": "10mm flat endmill"
+    },
+    {
+      "slot": 3,
+      "tool_id": "T03_DR_6",
+      "label": "6mm through-coolant drill"
+    },
+    {
+      "slot": 4,
+      "tool_id": "T04_CH_90",
+      "label": "90 degree chamfer mill"
+    },
+    {
+      "slot": 5,
+      "tool_id": "T05_BALL_6",
+      "label": "6mm ball endmill"
+    }
+  ]
+}

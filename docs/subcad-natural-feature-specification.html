@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SubCAD Natural Feature Specification Ideas</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18212f;
+      --muted: #5d6979;
+      --line: #d8dee8;
+      --panel: #f6f8fb;
+      --accent: #1d6f8f;
+      --accent-soft: #e5f4f7;
+      --warn: #8a5a00;
+      --warn-soft: #fff3cf;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: #ffffff;
+      line-height: 1.55;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 40px 0 56px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 24px;
+      margin-bottom: 28px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      line-height: 1.18;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      letter-spacing: 0;
+      max-width: 880px;
+    }
+
+    h2 {
+      font-size: 1.45rem;
+      margin-top: 34px;
+      padding-top: 26px;
+      border-top: 1px solid var(--line);
+    }
+
+    h3 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin: 10px 0 0;
+    }
+
+    .lead {
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 1.08rem;
+      margin-top: 14px;
+    }
+
+    .note {
+      background: var(--warn-soft);
+      border: 1px solid #f2d98f;
+      color: #4c3900;
+      padding: 14px 16px;
+      border-radius: 6px;
+      margin: 22px 0 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .idea {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 16px;
+      background: #ffffff;
+    }
+
+    .idea strong {
+      color: var(--accent);
+    }
+
+    .example {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: var(--panel);
+      color: #263342;
+      font-family: Consolas, "Liberation Mono", monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 18px;
+      font-size: 0.96rem;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--accent-soft);
+      color: #0f4f66;
+      font-weight: 700;
+    }
+
+    ul {
+      padding-left: 1.2rem;
+      margin: 10px 0 0;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>SubCAD Natural Feature Specification Ideas</h1>
+      <p class="lead">
+        SubCAD should let users describe design intent the way machinists, sheet-metal designers,
+        and mechanical drawings usually specify it: offsets from edges, symmetry, patterns,
+        constraints, references, and manufacturing intent. Raw absolute coordinates should remain
+        available, but they should not be the only practical way to place geometry.
+      </p>
+      <div class="pill-row" aria-label="Main themes">
+        <span class="pill">edge offsets</span>
+        <span class="pill">symmetry</span>
+        <span class="pill">patterns</span>
+        <span class="pill">constraints</span>
+        <span class="pill">named references</span>
+        <span class="pill">manufacturing intent</span>
+      </div>
+      <p class="note">
+        This is an idea catalog for later evaluation. It intentionally mixes near-term language
+        sugar with deeper modeling features so we can decide what belongs in the first implementation pass.
+      </p>
+    </header>
+
+    <section>
+      <h2>Motivating Example</h2>
+      <p>
+        For a rectangular metal plate with four corner holes, a designer usually says something like
+        "M6 clearance holes, 12 mm from each edge" or "four holes on the corners, inset 10 mm."
+        They rarely think in absolute XY coordinates unless the part is already fully dimensioned.
+      </p>
+      <div class="example">plate 120 x 80 x 3
+corner_holes diameter 6 inset 10
+
+// Equivalent intent:
+// holes at:
+//   left + 10, bottom + 10
+//   right - 10, bottom + 10
+//   left + 10, top - 10
+//   right - 10, top - 10</div>
+    </section>
+
+    <section>
+      <h2>Feature Placement Ideas</h2>
+      <div class="grid">
+        <article class="idea">
+          <h3>1. Edge-Based Offsets</h3>
+          <p>
+            Place features by distance from one or more named edges instead of absolute coordinates.
+          </p>
+          <div class="example">hole diameter 5 from left 12 from top 12</div>
+        </article>
+
+        <article class="idea">
+          <h3>2. Corner Insets</h3>
+          <p>
+            Treat corners as first-class anchors and allow a uniform or per-axis inset.
+          </p>
+          <div class="example">corner_holes diameter 6 inset 10</div>
+        </article>
+
+        <article class="idea">
+          <h3>3. Centerline References</h3>
+          <p>
+            Place features on horizontal, vertical, or named centerlines, then offset along the line.
+          </p>
+          <div class="example">slot on vertical_center from top 20 length 30 width 6</div>
+        </article>
+
+        <article class="idea">
+          <h3>4. Symmetric Pairs</h3>
+          <p>
+            Define one feature and mirror it across a centerline, plane, edge midpoint, or named axis.
+          </p>
+          <div class="example">hole diameter 4 from left 15 from top 18 mirror across vertical_center</div>
+        </article>
+
+        <article class="idea">
+          <h3>5. Rectangular Patterns</h3>
+          <p>
+            Create grids from count, spacing, and direction, with optional centering or boundary margins.
+          </p>
+          <div class="example">hole diameter 3 pattern rows 2 cols 4 spacing 20 centered</div>
+        </article>
+
+        <article class="idea">
+          <h3>6. Linear Patterns Between References</h3>
+          <p>
+            Distribute features evenly between two edges, points, holes, or named construction references.
+          </p>
+          <div class="example">5 holes diameter 4 between left+12 and right-12 on horizontal_center</div>
+        </article>
+
+        <article class="idea">
+          <h3>7. Equal Spacing Constraints</h3>
+          <p>
+            Let the system solve spacing from margins and count rather than requiring every location.
+          </p>
+          <div class="example">holes count 6 diameter 5 margin 15 equal_spacing along width</div>
+        </article>
+
+        <article class="idea">
+          <h3>8. Relative Feature Placement</h3>
+          <p>
+            Position a new feature relative to an existing feature, such as another hole, slot, tab, or bend.
+          </p>
+          <div class="example">hole diameter 4 right_of mounting_slot by 25 aligned_y</div>
+        </article>
+
+        <article class="idea">
+          <h3>9. Named Anchors</h3>
+          <p>
+            Allow designers to name construction points or regions and reuse them across later operations.
+          </p>
+          <div class="example">anchor motor_mount at center offset x 20
+hole diameter 6 at motor_mount</div>
+        </article>
+
+        <article class="idea">
+          <h3>10. Feature Groups</h3>
+          <p>
+            Group related geometry so transformations, mirrors, suppression, and parameter changes apply together.
+          </p>
+          <div class="example">group handle_mount:
+  2 holes diameter 5 spacing 32 centered at top inset 18</div>
+        </article>
+
+        <article class="idea">
+          <h3>11. Boundary-Aware Placement</h3>
+          <p>
+            Define features in terms of the current part boundary, not just the original rectangle.
+            This matters after chamfers, notches, flanges, tabs, and cutouts.
+          </p>
+          <div class="example">hole diameter 5 inset 10 from nearest_outer_edges</div>
+        </article>
+
+        <article class="idea">
+          <h3>12. Region-Based Placement</h3>
+          <p>
+            Attach features to logical regions such as flange face, web, tab face, front panel, or bracket leg.
+          </p>
+          <div class="example">on front_flange:
+  corner_holes diameter 4 inset 8</div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Constraint and Intent Ideas</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Idea</th>
+            <th>What the user says</th>
+            <th>What SubCAD should infer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Keep clearance</td>
+            <td>"Put the hole 2x diameter from the edge."</td>
+            <td>Compute edge distance from the chosen hole diameter and preserve it when diameter changes.</td>
+          </tr>
+          <tr>
+            <td>Maintain symmetry</td>
+            <td>"Make these holes symmetric about the center."</td>
+            <td>Store the mirror relationship, not just the copied coordinates.</td>
+          </tr>
+          <tr>
+            <td>Align features</td>
+            <td>"Align this slot with those holes."</td>
+            <td>Constrain X, Y, or centerline alignment across feature centers.</td>
+          </tr>
+          <tr>
+            <td>Tangent or flush placement</td>
+            <td>"Put the slot flush with the inside wall."</td>
+            <td>Resolve the feature boundary against another edge or face, accounting for feature size.</td>
+          </tr>
+          <tr>
+            <td>Minimum material rules</td>
+            <td>"Keep at least 8 mm of metal around all holes."</td>
+            <td>Validate edge distances and feature-to-feature distances against a rule.</td>
+          </tr>
+          <tr>
+            <td>Driven dimensions</td>
+            <td>"Hole spacing is plate width minus 24."</td>
+            <td>Maintain formulas and update placement when parent dimensions change.</td>
+          </tr>
+          <tr>
+            <td>Manufacturing standard</td>
+            <td>"Use standard M5 clearance holes."</td>
+            <td>Map the user intent to a diameter, tolerance, and optional annotation.</td>
+          </tr>
+          <tr>
+            <td>Preferred orientation</td>
+            <td>"Slot runs along the long direction."</td>
+            <td>Choose orientation from part proportions or the selected region.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Natural Operations Beyond Holes</h2>
+      <div class="grid">
+        <article class="idea">
+          <h3>Slots and Cutouts</h3>
+          <p>
+            Support edge offsets, centerline placement, symmetric pairs, and clearance rules for slots,
+            rectangular cutouts, keyholes, louvers, and vents.
+          </p>
+        </article>
+
+        <article class="idea">
+          <h3>Bends and Flanges</h3>
+          <p>
+            Specify bend lines by offset from an edge, flange height, inside radius, and whether the
+            material grows inward, outward, or about the neutral line.
+          </p>
+        </article>
+
+        <article class="idea">
+          <h3>Tabs and Notches</h3>
+          <p>
+            Attach tabs to edges with count, width, spacing, clearance, and matching notch generation
+            on mating parts.
+          </p>
+        </article>
+
+        <article class="idea">
+          <h3>Mounting Patterns</h3>
+          <p>
+            Provide named patterns such as motor mount, fan mount, DIN rail, VESA, bearing block,
+            standoff set, hinge, handle, and connector panel.
+          </p>
+        </article>
+
+        <article class="idea">
+          <h3>Corner Treatments</h3>
+          <p>
+            Apply chamfers, radii, dogbones, bend reliefs, or corner clearances using corner names
+            and manufacturing rules.
+          </p>
+        </article>
+
+        <article class="idea">
+          <h3>Fastener Stacks</h3>
+          <p>
+            Capture through-hole, counterbore, countersink, tapped hole, captive nut, insert,
+            and clearance washer intent as one semantic operation.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Reference Vocabulary</h2>
+      <p>
+        A useful natural layer needs a stable vocabulary of references that can be resolved by the
+        compiler before geometry generation.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Reference type</th>
+            <th>Examples</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Part edges</td>
+            <td>left, right, top, bottom, front, back, nearest edge</td>
+            <td>Needs a consistent coordinate convention per sketch or face.</td>
+          </tr>
+          <tr>
+            <td>Part centers</td>
+            <td>center, vertical centerline, horizontal centerline, face center</td>
+            <td>Should update when part dimensions change.</td>
+          </tr>
+          <tr>
+            <td>Corners</td>
+            <td>top-left, top-right, bottom-left, bottom-right</td>
+            <td>Can expand into paired edge offsets.</td>
+          </tr>
+          <tr>
+            <td>Faces and regions</td>
+            <td>front panel, flange, tab, web, base plate, side wall</td>
+            <td>Important for bent sheet-metal and assemblies.</td>
+          </tr>
+          <tr>
+            <td>Existing features</td>
+            <td>hole center, slot centerline, cutout edge, bend line</td>
+            <td>Enables relative placement and alignment.</td>
+          </tr>
+          <tr>
+            <td>Construction geometry</td>
+            <td>datum point, named axis, sketch line, construction rectangle</td>
+            <td>Useful when natural references are not enough.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Possible Compiler Model</h2>
+      <p>
+        The natural language or declarative layer can compile into explicit SubCAD operations in stages.
+        This keeps the final geometry deterministic while preserving design intent upstream.
+      </p>
+      <ol>
+        <li>Parse the user's feature intent into semantic operations such as <strong>corner hole pattern</strong> or <strong>slot on centerline</strong>.</li>
+        <li>Resolve references such as edges, corners, faces, centerlines, named anchors, and existing features.</li>
+        <li>Evaluate formulas and manufacturing standards, including units, hole tables, clearances, and minimum material rules.</li>
+        <li>Expand high-level operations into explicit lower-level geometry operations with computed coordinates.</li>
+        <li>Retain the source intent so later edits can change "inset 10" instead of editing four independent coordinates.</li>
+        <li>Validate the result and report conflicts such as impossible spacing, edge violations, overlaps, or ambiguous references.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Priority Candidates</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Priority</th>
+            <th>Candidate</th>
+            <th>Why it matters first</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Edge offsets and corner insets</td>
+            <td>Solves the common plate-hole case and maps cleanly to current coordinate placement.</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Symmetric pairs and four-corner patterns</td>
+            <td>Reduces repeated coordinates and captures real design intent.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Centerline and equal-spacing patterns</td>
+            <td>Useful for slots, vents, mounting rows, and scalable part dimensions.</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Named anchors and feature groups</td>
+            <td>Prepares the system for more complex assemblies and reusable design snippets.</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>Manufacturing rules and standards</td>
+            <td>Adds trust, but should come after the placement model is stable.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>First Implementation Pass</h2>
+      <p>
+        The initial SubCAD implementation now covers natural X/Y placement for rectangular stock by
+        compiling edge, corner, centerline, symmetry, and rectangular pattern intent into the existing
+        explicit coordinate-based operations.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Implemented API</th>
+            <th>Supported intent</th>
+            <th>Compiles to</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>resolve_xy(...)</code></td>
+            <td>Resolve one X reference and one Y reference from edge offsets, centerlines, or explicit coordinates.</td>
+            <td><code>(cx, cy)</code></td>
+          </tr>
+          <tr>
+            <td><code>drill_at(...)</code></td>
+            <td>Drill by saying things like <code>from_left=10, from_top=12</code>.</td>
+            <td><code>drill(..., cx=..., cy=...)</code></td>
+          </tr>
+          <tr>
+            <td><code>corner_holes(...)</code></td>
+            <td>Four-corner or selected-corner hole patterns using uniform or per-axis insets.</td>
+            <td>Repeated <code>drill(...)</code> calls</td>
+          </tr>
+          <tr>
+            <td><code>drill_symmetric(...)</code></td>
+            <td>Mirror a hole across the X centerline, Y centerline, or both.</td>
+            <td>Repeated <code>drill(...)</code> calls</td>
+          </tr>
+          <tr>
+            <td><code>drill_pattern(...)</code></td>
+            <td>Centered rectangular row/column hole grids from count and spacing.</td>
+            <td>Repeated <code>drill(...)</code> calls</td>
+          </tr>
+          <tr>
+            <td><code>pocket_at(...)</code>, <code>circular_pocket_at(...)</code>, <code>slot_at(...)</code></td>
+            <td>Use the same natural X/Y references for pockets and slots.</td>
+            <td>Existing pocket, circular pocket, and slot operations</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Machine-Aware Process Context</h2>
+      <p>
+        SubCAD operations should be validated against the actual manufacturing context, not only
+        against geometric possibility. A process plan now needs to say which machine it is intended
+        for, because a valid feature on one machine may be impossible, unsafe, or require extra
+        setups on another.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Missing context</th>
+            <th>Why it matters</th>
+            <th>How to incorporate it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Machine</td>
+            <td>Defines axes, travels, spindle limits, rotary capability, and physical envelope.</td>
+            <td>Add <code>with_machine(...)</code> / <code>on_machine(...)</code> and validate the plan against machine metadata.</td>
+          </tr>
+          <tr>
+            <td>Controller/post</td>
+            <td>Even when the machine can move, the controller may not support a cycle, macro, probing call, or rotary mode.</td>
+            <td>Keep controller capability separate from machine hardware and validate before postprocessing.</td>
+          </tr>
+          <tr>
+            <td>Setup strategy</td>
+            <td>Side-face work on a 3-axis mill is possible only if the part is re-fixtured or indexed.</td>
+            <td>Require named setups, face selectors, work offsets, and setup-specific fixture data.</td>
+          </tr>
+          <tr>
+            <td>Workholding</td>
+            <td>Clamps, vises, soft jaws, and tombstones decide whether a toolpath is safe.</td>
+            <td>Attach fixture specs, clamping zones, clearance zones, and stock fit checks to the plan.</td>
+          </tr>
+          <tr>
+            <td>Tool magazine</td>
+            <td>A theoretically suitable tool may not be in the shop, may not fit the holder, or may exceed stickout limits.</td>
+            <td>Validate tool availability, holder interface, tool reach, flute length, and magazine capacity.</td>
+          </tr>
+          <tr>
+            <td>Coolant/probing/inspection</td>
+            <td>Deep holes, hard materials, and tight datums often require coolant mode, probing, or in-process inspection.</td>
+            <td>Represent coolant requirements, probe cycles, datum verification, and inspection checkpoints.</td>
+          </tr>
+          <tr>
+            <td>Tolerance and surface finish</td>
+            <td>The same geometry can be rough-machined or tolerance-machined with very different machines and tools.</td>
+            <td>Attach tolerance, finish, datum, and verification intent to operations or feature groups.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        The machine files now carry an explicit capability schema. SubCAD should prefer these declared
+        capabilities over guesses from axis count alone.
+      </p>
+      <div class="example">{
+  "capabilities": {
+    "schema_version": "subcad.machine_capabilities.v1",
+    "processes": ["mill", "indexed_3axis", "5axis"],
+    "operation_families": ["drill", "pocket", "slot", "surface_mill"],
+    "controller_cycles": ["G81", "G83", "G84", "TCP"],
+    "coolant": ["flood", "through_spindle"],
+    "probing": true,
+    "tool_interface": "HSK-A63",
+    "tool_capacity": 30
+  }
+}</div>
+
+      <p>
+        Validation now checks operation family, controller cycle, coolant mode, probe requirement,
+        tool interface, tool capacity, setup access, controller/post support, tooling availability,
+        inspection requirements, and collision gates in addition to axes, travels, and spindle/feed limits.
+      </p>
+      <div class="example">from src.subcad.validation import validate_all
+from src.subcad import load_machine_context
+
+machine = load_machine_context("machines/generic_3axis.json").to_dict()
+
+plan = {
+    "schema_version": "subcad.shop_floor.v1",
+    "material": "aluminum_6061",
+    "stock_dimensions": {"length": 100, "width": 80, "height": 20},
+    "machine": machine,
+    "operations": [
+        {"operation": "surface_mill", "process": "mill"},
+        {"operation": "drill", "controller_cycle": "G234"},
+        {"operation": "drill", "coolant": "through_spindle"},
+        {"operation": "drill", "requires_probe": True},
+        {"operation": "drill", "tool": {"interface": "HSK-A63"}}
+    ]
+}
+
+report = validate_all(plan, {}, structured=True)
+print([issue.code for issue in report.issues])
+# machine_operation_unsupported
+# machine_controller_cycle_unsupported
+# machine_coolant_unsupported
+# machine_probe_unsupported
+# machine_tool_interface_mismatch</div>
+
+      <p>
+        Example: this 5-axis surface operation is valid on a DMG DMU 50, but should fail on a
+        generic 3-axis VMC.
+      </p>
+      <div class="example">from src.subcad import Stock
+
+part = (
+    Stock.rectangular(100, 80, 20)
+    .with_machine("machines/generic_3axis.json")
+    .surface_mill({"type": "freeform"}, tolerance_mm=0.1)
+)
+
+part.validate_shop_floor(raise_on_error=True)
+# Raises:
+# surface_mill requires 5-axis capability, but Generic 3-Axis Vertical Mill has rotary axes ['none'].
+
+valid_part = (
+    Stock.rectangular(100, 80, 20)
+    .with_machine("machines/dmg_dmu50.json")
+    .surface_mill({"type": "freeform"}, tolerance_mm=0.1)
+)
+
+valid_part.validate_shop_floor(raise_on_error=True)</div>
+
+      <p>
+        Example: side-face drilling on a 3-axis machine must be represented as an indexed setup,
+        not just as a bare <code>face_selector="&gt;X"</code> operation.
+      </p>
+      <div class="example">from src.subcad import Stock, FixtureCatalog
+
+part = (
+    Stock.rectangular(120, 80, 12)
+    .with_machine("machines/generic_3axis.json")
+    .with_fixture(FixtureCatalog.get("toe_clamps_4corner"))
+    .new_setup("side_a", face_selector="&gt;X", work_offset="G55")
+    .use_setup("side_a")
+    .drill_at(5, through=True, center_x=True, center_y=True, face_selector="&gt;X")
+)
+
+part.validate_shop_floor(raise_on_error=True)</div>
+    </section>
+
+    <section>
+      <h2>Second Implementation Pass</h2>
+      <p>
+        The process context layer now makes manufacturing assumptions explicit. A part can carry
+        machine, controller, setup intent, tooling, quality, and collision-policy information while
+        still compiling natural feature placement into the same lower-level X/Y operations.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Implemented API</th>
+            <th>Supported intent</th>
+            <th>Validation examples</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>with_controller(...)</code></td>
+            <td>Attach controller/post capabilities such as cycles, coolant codes, rotary modes, probing, macros, and work offsets.</td>
+            <td>Unsupported <code>G234</code>, unavailable probing, rigid tapping, macro, rotary mode, or work offset.</td>
+          </tr>
+          <tr>
+            <td><code>with_setup_intent(...)</code></td>
+            <td>Describe workholding, datum, orientation, primary face, accessible faces, setup count, and work offset.</td>
+            <td>Operation face is not accessible, or requires another setup/reorientation.</td>
+          </tr>
+          <tr>
+            <td><code>with_tooling(...)</code></td>
+            <td>Attach tool assemblies and magazine slots/capacity/interface.</td>
+            <td>Missing tool, wrong interface, exceeded magazine capacity, RPM/feed above tool limit, or through-tool coolant unavailable.</td>
+          </tr>
+          <tr>
+            <td><code>with_quality(...)</code></td>
+            <td>Attach tolerances, inspection methods, surface finish, critical features, and process capability.</td>
+            <td>Probe/CMM requirement without machine/controller support, missing inspection operation, or tolerance below declared process capability.</td>
+          </tr>
+          <tr>
+            <td><code>with_collision_policy(...)</code> / <code>require_collision_check(...)</code></td>
+            <td>Require toolpath and holder/fixture collision readiness before shop-floor handoff.</td>
+            <td>Missing toolpath, missing holder envelope metadata, or missing fixture context.</td>
+          </tr>
+          <tr>
+            <td><code>with_process_context(...)</code></td>
+            <td>Attach all of the above in one fluent call.</td>
+            <td>Runs the combined validation pipeline through <code>validate_shop_floor(...)</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Example: a natural edge-offset hole can carry the full process context and still match the
+        explicit coordinate version.
+      </p>
+      <div class="example">from src.subcad import Stock
+from src.subcad.tooling_context import load_tooling_context
+
+tooling = load_tooling_context(
+    "tooling/sample_tooling.json",
+    "tooling/sample_magazine.json",
+)
+
+setup_intent = {
+    "setup_id": "op1_top",
+    "workholding": {"name": "kurt_dx6_vise", "fixture_type": "vise"},
+    "part_orientation": {"primary_face": "top"},
+    "accessible_faces": ["top"],
+    "operation_side": "top",
+    "work_offset": "G54",
+    "setup_count": 1,
+}
+
+quality = {
+    "tolerances": {"default": {"linear_mm": 0.1, "methods": ["caliper"]}},
+    "inspection": {"required": False, "methods": ["caliper"]},
+    "collision_policy": {"enabled": False, "required": False},
+}
+
+natural = (
+    Stock.rectangular(120, 80, 6)
+    .with_process_context(
+        machine="generic_3axis",
+        controller="generic_3axis_debug",
+        setup_intent=setup_intent,
+        tooling=tooling,
+        quality=quality,
+    )
+    .drill_at(6, depth=5, from_left=10, from_top=12, spot_drill=False)
+)
+
+explicit = (
+    Stock.rectangular(120, 80, 6)
+    .with_process_context(
+        machine="generic_3axis",
+        controller="generic_3axis_debug",
+        setup_intent=setup_intent,
+        tooling=tooling,
+        quality=quality,
+    )
+    .drill(6, depth=5, cx=-50, cy=28, spot_drill=False)
+)
+
+assert natural.process_plan()["operations"][0]["position"] == [-50.0, 28.0]
+assert explicit.process_plan()["operations"][0]["position"] == [-50, 28]
+natural.validate_shop_floor(raise_on_error=True)</div>
+
+      <p>
+        Example: the same validation pipeline catches a plan that asks for unsupported controller,
+        setup, tooling, quality, and collision behavior.
+      </p>
+      <div class="example">from src.subcad.validation import validate_all
+
+bad_plan = {
+    "schema_version": "subcad.shop_floor.v1",
+    "material": "aluminum_6061",
+    "stock_dimensions": {"length": 120, "width": 80, "height": 6},
+    "machine": natural.process_plan()["machine"],
+    "controller": natural.process_plan()["controller"],
+    "setup_intent": setup_intent,
+    "tooling": natural.process_plan()["tooling"],
+    "quality": {
+        "inspection": {
+            "required": True,
+            "methods": ["on_machine_probe"],
+            "requires_probe": True,
+        },
+        "collision_policy": {"enabled": True, "required": True},
+    },
+    "collision_policy": {"enabled": True, "required": True},
+    "operations": [{
+        "operation": "thread_mill",
+        "tool_type": "thread_mill",
+        "tool_diameter_mm": 8.0,
+        "position": [0, 0],
+        "face_selector": "&lt;Z",
+        "controller_cycle": "G234",
+        "coolant": "through_spindle",
+    }],
+}
+
+report = validate_all(bad_plan, bad_plan["stock_dimensions"], structured=True)
+print(sorted({issue.code for issue in report.issues}))
+# collision_toolpath_missing
+# controller_coolant_unsupported
+# controller_cycle_unsupported
+# quality_probe_unsupported
+# setup_face_not_accessible
+# tooling_tool_missing</div>
+    </section>
+
+    <section>
+      <h2>Open Questions</h2>
+      <ul>
+        <li>Should this be a formal DSL, a natural-language compiler layer, or both?</li>
+        <li>How much design intent should be retained after compilation into geometry?</li>
+        <li>What is the minimum reference vocabulary needed for the first useful version?</li>
+        <li>How should ambiguous phrases like "top" or "front" be handled across 2D sketches, 3D parts, and bent sheet metal?</li>
+        <li>Should standard patterns live as built-ins, libraries, or user-defined reusable templates?</li>
+        <li>How should the UI expose these features: text, forms, handles, selectable references, or a hybrid?</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

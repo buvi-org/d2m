@@ -1,0 +1,42 @@
+{
+  "controller_id": "haas_ngc_mill",
+  "name": "Haas NGC Mill",
+  "version": "1.0",
+  "description": "Representative Haas Next Generation Control milling capability context for validation and post selection.",
+  "manufacturer": "Haas",
+  "model": "Next Generation Control",
+  "post_dialect": "haas_ngc_mill",
+  "capabilities": {
+    "schema_version": "subcad.controller_capabilities.v1",
+    "supported_cycles": ["G73", "G81", "G82", "G83", "G84", "G85", "G86", "G89"],
+    "rotary_modes": ["indexed_4axis", "indexed_5axis", "simultaneous_5axis", "tcp"],
+    "coolant_codes": {
+      "mist": "M07",
+      "flood": "M08",
+      "through_spindle": "M88",
+      "air_blast": "M83"
+    },
+    "probing": true,
+    "rigid_tapping": true,
+    "macro_support": true,
+    "coordinate_systems": [
+      "G54",
+      "G55",
+      "G56",
+      "G57",
+      "G58",
+      "G59",
+      "G110",
+      "G111",
+      "G112",
+      "G113",
+      "G114",
+      "G115",
+      "G116",
+      "G117",
+      "G118",
+      "G119"
+    ],
+    "post_dialect": "haas_ngc_mill"
+  }
+}

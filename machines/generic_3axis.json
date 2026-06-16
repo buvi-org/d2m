@@ -145,5 +145,46 @@
   "kinematic_chain": {
     "tool_chain": ["tool_mount", "spindle", "z_axis", "column", "bed"],
     "workpiece_chain": ["fixture_mount", "table", "x_axis", "y_axis", "bed"]
+  },
+
+  "capabilities": {
+    "schema_version": "subcad.machine_capabilities.v1",
+    "processes": ["mill", "indexed_3axis"],
+    "operation_families": [
+      "face_mill",
+      "pocket",
+      "circular_pocket",
+      "spot_drill",
+      "drill",
+      "peck_drill",
+      "ream",
+      "bore",
+      "tap",
+      "thread_mill",
+      "threaded_hole",
+      "chamfer",
+      "contour",
+      "slot",
+      "t_slot",
+      "dovetail",
+      "groove",
+      "deburr",
+      "spot_face",
+      "edge_chamfer",
+      "edge_fillet",
+      "profile_pocket",
+      "profile_cutout",
+      "profile_contour",
+      "machine_around_profile",
+      "machine_around_profiles",
+      "machine_around_cylinder",
+      "rib",
+      "pad"
+    ],
+    "controller_cycles": ["G81", "G83", "G84"],
+    "coolant": ["flood", "mist"],
+    "probing": false,
+    "tool_interface": "BT40",
+    "tool_capacity": 20
   }
 }

@@ -1022,6 +1022,833 @@ def _check_tool_selection(operations: list[dict]) -> list[ValidationIssue]:
     return issues
 
 
+def _machine_processes(machine: dict) -> set[str]:
+    capabilities = machine.get("capabilities") if isinstance(machine, dict) else {}
+    processes = capabilities.get("processes") if isinstance(capabilities, dict) else None
+    return {str(process).lower() for process in (processes or [])}
+
+
+def _machine_capability_set(machine: dict, key: str, *, normalize=str.lower) -> set[str]:
+    capabilities = machine.get("capabilities") if isinstance(machine, dict) else {}
+    values = capabilities.get(key) if isinstance(capabilities, dict) else None
+    if not values:
+        return set()
+    return {normalize(str(value)) for value in values}
+
+
+def _machine_rotary_axes(machine: dict) -> list[str]:
+    if not isinstance(machine, dict):
+        return []
+    axes = machine.get("rotary_axes")
+    if isinstance(axes, list):
+        return [str(axis).upper() for axis in axes]
+    rotary_limits = machine.get("rotary_limits") or {}
+    return [str(axis).upper() for axis in rotary_limits.keys()]
+
+
+def _machine_linear_limits(machine: dict) -> dict[str, tuple[float, float]]:
+    limits: dict[str, tuple[float, float]] = {}
+    if not isinstance(machine, dict):
+        return limits
+    for axis, pair in (machine.get("linear_limits") or {}).items():
+        if isinstance(pair, (list, tuple)) and len(pair) == 2:
+            lo = _as_float(pair[0])
+            hi = _as_float(pair[1])
+            if lo is not None and hi is not None:
+                limits[str(axis).upper()] = (lo, hi)
+    return limits
+
+
+def _required_process(op: dict) -> str:
+    process = str(op.get("process") or "").lower()
+    if process:
+        return process
+    name = _op_name(op)
+    if name.startswith("turn_"):
+        return "turn"
+    if name in {"mill_turn_setup", "hollow_bore", "tube_profile"}:
+        return "mill_turn"
+    if name in {"surface_mill", "sweep_mill", "loft_mill", "dome_mill"}:
+        return "5axis"
+    if name.startswith("wire_cut"):
+        return "wire"
+    return "mill"
+
+
+def _operation_feed_mm_min(op: dict) -> Optional[float]:
+    feeds = op.get("feeds_speeds") if isinstance(op.get("feeds_speeds"), dict) else {}
+    value = feeds.get("feed_rate_mm_per_min", feeds.get("feed_rate_mm_min"))
+    if value is None:
+        toolpath = op.get("toolpath") if isinstance(op.get("toolpath"), dict) else {}
+        value = toolpath.get("feed_mm_min", toolpath.get("feed_rate_mm_min"))
+    return _as_float(value)
+
+
+def _operation_spindle_rpm(op: dict) -> Optional[float]:
+    feeds = op.get("feeds_speeds") if isinstance(op.get("feeds_speeds"), dict) else {}
+    value = feeds.get("spindle_rpm", feeds.get("rpm"))
+    if value is None:
+        toolpath = op.get("toolpath") if isinstance(op.get("toolpath"), dict) else {}
+        value = toolpath.get("spindle_rpm", toolpath.get("rpm"))
+    return _as_float(value)
+
+
+def _operation_family(op: dict) -> str:
+    return str(op.get("operation_family") or _op_name(op) or "").lower()
+
+
+def _operation_controller_cycle(op: dict) -> str:
+    for key in ("controller_cycle", "gcode_cycle", "cycle"):
+        if op.get(key):
+            return str(op[key]).upper()
+    return ""
+
+
+def _operation_coolant(op: dict) -> str:
+    value = op.get("coolant")
+    if value is None and isinstance(op.get("feeds_speeds"), dict):
+        value = op["feeds_speeds"].get("coolant")
+    if value in (None, False):
+        return ""
+    coolant = str(value).lower()
+    return "" if coolant in {"", "none", "off", "false"} else coolant
+
+
+def _operation_requires_probe(op: dict) -> bool:
+    if op.get("requires_probe") or op.get("probing_required"):
+        return True
+    return _op_name(op) in {"probe", "probe_datum", "inspect_probe"}
+
+
+def _operation_tool_interface(op: dict) -> str:
+    tool = op.get("tool") if isinstance(op.get("tool"), dict) else {}
+    assembly = tool.get("assembly") if isinstance(tool.get("assembly"), dict) else {}
+    for source in (op, tool, assembly):
+        for key in ("tool_interface", "interface", "holder_interface", "spindle_interface"):
+            if source.get(key):
+                return str(source[key])
+    return ""
+
+
+def _tool_key_from_op(op: dict) -> tuple:
+    tool = op.get("tool") if isinstance(op.get("tool"), dict) else {}
+    return (
+        tool.get("catalog_id") or op.get("tool_catalog_id") or tool.get("label") or tool.get("tool_type") or op.get("tool_type"),
+        tool.get("diameter_mm") or tool.get("tool_diameter_mm") or op.get("tool_diameter_mm"),
+    )
+
+
+def _check_machine_context(process_plan_dict: dict, stock_dims: dict) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    machine = process_plan_dict.get("machine")
+    if not machine:
+        return issues
+    if not isinstance(machine, dict):
+        return [_issue(
+            "error", "machine_context_invalid",
+            "Process plan machine context must be a dictionary.",
+        )]
+
+    machine_name = machine.get("name") or machine.get("machine_id") or "machine"
+    processes = _machine_processes(machine)
+    operation_families = _machine_capability_set(machine, "operation_families")
+    controller_cycles = _machine_capability_set(machine, "controller_cycles", normalize=str.upper)
+    coolant_modes = _machine_capability_set(machine, "coolant")
+    rotary_axes = _machine_rotary_axes(machine)
+    linear_limits = _machine_linear_limits(machine)
+    capabilities = machine.get("capabilities") if isinstance(machine.get("capabilities"), dict) else {}
+
+    stock_checks = [
+        ("X", "length", "machine_travel_x"),
+        ("Y", "width", "machine_travel_y"),
+        ("Z", "height", "machine_travel_z"),
+    ]
+    for axis, dim_key, code in stock_checks:
+        if axis not in linear_limits:
+            continue
+        stock_value = _as_float(stock_dims.get(dim_key))
+        if stock_value is None:
+            continue
+        lo, hi = linear_limits[axis]
+        travel = abs(hi - lo)
+        if stock_value > travel + 1e-6:
+            issues.append(_issue(
+                "error", code,
+                f"Stock {dim_key} ({stock_value:g}mm) exceeds {machine_name} "
+                f"{axis}-axis travel ({travel:g}mm).",
+                machine=machine.get("machine_id"), axis=axis,
+                stock_dimension_mm=stock_value, travel_mm=travel,
+            ))
+
+    spindle = machine.get("spindle") if isinstance(machine.get("spindle"), dict) else {}
+    max_rpm = _as_float(spindle.get("max_rpm"))
+    max_feed = None
+    if linear_limits:
+        feed_values = []
+        for axis in linear_limits:
+            axis_info = (machine.get("axis_limits") or {}).get(axis, {})
+            feed = _as_float(axis_info.get("max_feed")) if isinstance(axis_info, dict) else None
+            if feed is not None:
+                feed_values.append(feed)
+        max_feed = min(feed_values) if feed_values else None
+
+    tool_capacity = _as_float(capabilities.get("tool_capacity"))
+    tool_count = len(process_plan_dict.get("tools_used") or [])
+    if not tool_count:
+        tool_keys = {
+            key for key in (
+                _tool_key_from_op(op)
+                for op in process_plan_dict.get("operations", [])
+            )
+            if key[0] or key[1]
+        }
+        tool_count = len(tool_keys)
+    if tool_capacity is not None and tool_count > tool_capacity:
+        issues.append(_issue(
+            "error", "machine_tool_capacity_exceeded",
+            f"Process plan uses {tool_count} tools, above {machine_name} "
+            f"tool capacity {tool_capacity:g}.",
+            machine=machine.get("machine_id"),
+            tool_count=tool_count,
+            tool_capacity=tool_capacity,
+        ))
+
+    for i, op in enumerate(process_plan_dict.get("operations", [])):
+        family = _operation_family(op)
+        if operation_families and family and family not in operation_families:
+            issues.append(_issue(
+                "error", "machine_operation_unsupported",
+                f"{_op_name(op) or 'operation'} is not listed in {machine_name} "
+                "supported operation families.",
+                i, op, operation_family=family, machine=machine.get("machine_id"),
+            ))
+
+        required = _required_process(op)
+        if required in {"turn", "mill_turn"} and required not in processes:
+            issues.append(_issue(
+                "error", "machine_process_unsupported",
+                f"{_op_name(op) or 'operation'} requires {required} capability, "
+                f"but {machine_name} supports {sorted(processes) or ['unspecified']}.",
+                i, op, required_process=required, machine=machine.get("machine_id"),
+            ))
+        elif required == "5axis" and "5axis" not in processes:
+            issues.append(_issue(
+                "error", "machine_requires_5axis",
+                f"{_op_name(op) or 'operation'} requires 5-axis capability, "
+                f"but {machine_name} has rotary axes {rotary_axes or ['none']}.",
+                i, op, rotary_axes=rotary_axes, machine=machine.get("machine_id"),
+            ))
+        elif required == "wire" and "wire" not in processes:
+            issues.append(_issue(
+                "error", "machine_process_unsupported",
+                f"{_op_name(op) or 'operation'} requires wire EDM capability, "
+                f"but {machine_name} supports {sorted(processes) or ['unspecified']}.",
+                i, op, required_process=required, machine=machine.get("machine_id"),
+            ))
+
+        face = str(op.get("face_selector") or ">Z")
+        if face not in {">Z", "<Z"} and not rotary_axes and not op.get("setup"):
+            issues.append(_issue(
+                "error", "machine_setup_required",
+                f"{_op_name(op) or 'operation'} on face {face} requires an indexed setup "
+                f"or rotary machine capability on {machine_name}.",
+                i, op, face_selector=face, machine=machine.get("machine_id"),
+            ))
+
+        cycle = _operation_controller_cycle(op)
+        if cycle and controller_cycles and cycle.upper() not in controller_cycles:
+            issues.append(_issue(
+                "error", "machine_controller_cycle_unsupported",
+                f"{_op_name(op) or 'operation'} requests controller cycle {cycle}, "
+                f"not declared for {machine_name}.",
+                i, op, controller_cycle=cycle, machine=machine.get("machine_id"),
+            ))
+
+        coolant = _operation_coolant(op)
+        if coolant and coolant_modes and coolant not in coolant_modes:
+            issues.append(_issue(
+                "error", "machine_coolant_unsupported",
+                f"{_op_name(op) or 'operation'} requests coolant '{coolant}', "
+                f"not declared for {machine_name}.",
+                i, op, coolant=coolant, machine=machine.get("machine_id"),
+            ))
+
+        if _operation_requires_probe(op) and not bool(capabilities.get("probing")):
+            issues.append(_issue(
+                "error", "machine_probe_unsupported",
+                f"{_op_name(op) or 'operation'} requires probing, but {machine_name} "
+                "does not declare probing support.",
+                i, op, machine=machine.get("machine_id"),
+            ))
+
+        required_interface = _operation_tool_interface(op)
+        machine_interface = str(capabilities.get("tool_interface") or "")
+        if required_interface and machine_interface and required_interface.upper() != machine_interface.upper():
+            issues.append(_issue(
+                "error", "machine_tool_interface_mismatch",
+                f"{_op_name(op) or 'operation'} uses {required_interface} tooling, "
+                f"but {machine_name} declares {machine_interface}.",
+                i, op,
+                required_tool_interface=required_interface,
+                machine_tool_interface=machine_interface,
+                machine=machine.get("machine_id"),
+            ))
+
+        rpm = _operation_spindle_rpm(op)
+        if max_rpm is not None and rpm is not None and rpm > max_rpm + 1e-6:
+            issues.append(_issue(
+                "error", "machine_spindle_rpm_exceeded",
+                f"{_op_name(op) or 'operation'} requests {rpm:g} RPM, "
+                f"above {machine_name} spindle limit {max_rpm:g} RPM.",
+                i, op, requested_rpm=rpm, max_rpm=max_rpm,
+                machine=machine.get("machine_id"),
+            ))
+
+        feed = _operation_feed_mm_min(op)
+        if max_feed is not None and feed is not None and feed > max_feed + 1e-6:
+            issues.append(_issue(
+                "error", "machine_feed_exceeded",
+                f"{_op_name(op) or 'operation'} requests feed {feed:g} mm/min, "
+                f"above {machine_name} axis limit {max_feed:g} mm/min.",
+                i, op, requested_feed_mm_min=feed, max_feed_mm_min=max_feed,
+                machine=machine.get("machine_id"),
+            ))
+
+    return issues
+
+
+def _controller_capability_set(controller: dict, key: str, *, normalize=str.lower) -> set[str]:
+    if not isinstance(controller, dict):
+        return set()
+    values = controller.get(key)
+    supports = controller.get("supports") if isinstance(controller.get("supports"), dict) else {}
+    capabilities = (
+        controller.get("capabilities")
+        if isinstance(controller.get("capabilities"), dict)
+        else {}
+    )
+    if not values:
+        values = supports.get(key)
+    if not values:
+        values = capabilities.get(key)
+    if key == "cycles" and not values:
+        values = controller.get("controller_cycles", capabilities.get("controller_cycles"))
+    if key == "coolant_codes" and not values:
+        values = controller.get(
+            "coolant_modes",
+            controller.get("coolant", capabilities.get("coolant")),
+        )
+    return {normalize(str(value)) for value in (values or [])}
+
+
+def _controller_bool(controller: dict, key: str) -> bool:
+    supports = controller.get("supports") if isinstance(controller.get("supports"), dict) else {}
+    capabilities = (
+        controller.get("capabilities")
+        if isinstance(controller.get("capabilities"), dict)
+        else {}
+    )
+    if key == "macros":
+        return bool(controller.get(key, supports.get(key, capabilities.get("macro_support", False))))
+    return bool(controller.get(key, supports.get(key, capabilities.get(key, False))))
+
+
+def _operation_rotary_mode(op: dict) -> str:
+    for key in ("rotary_mode", "rotary_strategy", "indexing_mode"):
+        if op.get(key):
+            return str(op[key]).lower()
+    toolpath = op.get("toolpath") if isinstance(op.get("toolpath"), dict) else {}
+    return str(toolpath.get("rotary_mode") or "").lower()
+
+
+def _operation_work_offset(op: dict) -> str:
+    return str(op.get("work_offset") or op.get("coordinate_system") or "").upper()
+
+
+def _operation_requires_macro(op: dict) -> bool:
+    if op.get("requires_macro") or op.get("uses_macro"):
+        return True
+    toolpath = op.get("toolpath") if isinstance(op.get("toolpath"), dict) else {}
+    return bool(toolpath.get("requires_macro") or toolpath.get("uses_macro"))
+
+
+def _operation_requires_rigid_tapping(op: dict) -> bool:
+    if op.get("rigid_tapping") or op.get("requires_rigid_tapping"):
+        return True
+    return _operation_controller_cycle(op) == "G84" and _op_name(op) in {"tap", "threaded_hole"}
+
+
+def _check_controller_context(process_plan_dict: dict) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    controller = process_plan_dict.get("controller")
+    if not controller:
+        return issues
+    if not isinstance(controller, dict):
+        return [_issue(
+            "error", "controller_context_invalid",
+            "Process plan controller context must be a dictionary.",
+        )]
+
+    controller_name = controller.get("name") or controller.get("controller_id") or "controller"
+    cycles = _controller_capability_set(controller, "cycles", normalize=str.upper)
+    rotary_modes = _controller_capability_set(controller, "rotary_modes")
+    coolant_codes = _controller_capability_set(controller, "coolant_codes")
+    work_offsets = _controller_capability_set(controller, "coordinate_systems", normalize=str.upper)
+
+    declared_offsets = set(process_plan_dict.get("work_offsets") or {})
+    for setup in (process_plan_dict.get("setups") or {}).values():
+        if isinstance(setup, dict) and setup.get("work_offset"):
+            declared_offsets.add(str(setup["work_offset"]).upper())
+    setup_intent = process_plan_dict.get("setup_intent")
+    if isinstance(setup_intent, dict) and setup_intent.get("work_offset"):
+        declared_offsets.add(str(setup_intent["work_offset"]).upper())
+    for offset in sorted(declared_offsets):
+        if work_offsets and offset not in work_offsets:
+            issues.append(_issue(
+                "error", "controller_work_offset_unsupported",
+                f"Work offset {offset} is not declared for {controller_name}.",
+                controller=controller.get("controller_id"), work_offset=offset,
+            ))
+
+    for i, op in enumerate(process_plan_dict.get("operations", [])):
+        cycle = _operation_controller_cycle(op)
+        if cycle and cycles and cycle not in cycles:
+            issues.append(_issue(
+                "error", "controller_cycle_unsupported",
+                f"{_op_name(op) or 'operation'} requests controller cycle {cycle}, "
+                f"not declared for {controller_name}.",
+                i, op, controller_cycle=cycle, controller=controller.get("controller_id"),
+            ))
+
+        coolant = _operation_coolant(op)
+        if coolant and coolant_codes and coolant not in coolant_codes:
+            issues.append(_issue(
+                "error", "controller_coolant_unsupported",
+                f"{_op_name(op) or 'operation'} requests coolant '{coolant}', "
+                f"not declared for {controller_name}.",
+                i, op, coolant=coolant, controller=controller.get("controller_id"),
+            ))
+
+        rotary_mode = _operation_rotary_mode(op)
+        if rotary_mode and rotary_modes and rotary_mode not in rotary_modes:
+            issues.append(_issue(
+                "error", "controller_rotary_mode_unsupported",
+                f"{_op_name(op) or 'operation'} requests rotary mode '{rotary_mode}', "
+                f"not declared for {controller_name}.",
+                i, op, rotary_mode=rotary_mode, controller=controller.get("controller_id"),
+            ))
+
+        work_offset = _operation_work_offset(op)
+        if work_offset and work_offsets and work_offset not in work_offsets:
+            issues.append(_issue(
+                "error", "controller_work_offset_unsupported",
+                f"{_op_name(op) or 'operation'} requests work offset {work_offset}, "
+                f"not declared for {controller_name}.",
+                i, op, work_offset=work_offset, controller=controller.get("controller_id"),
+            ))
+
+        if _operation_requires_probe(op) and not _controller_bool(controller, "probing"):
+            issues.append(_issue(
+                "error", "controller_probe_unsupported",
+                f"{_op_name(op) or 'operation'} requires probing, but {controller_name} "
+                "does not declare probing support.",
+                i, op, controller=controller.get("controller_id"),
+            ))
+
+        if _operation_requires_rigid_tapping(op) and not _controller_bool(controller, "rigid_tapping"):
+            issues.append(_issue(
+                "error", "controller_rigid_tapping_unsupported",
+                f"{_op_name(op) or 'operation'} requires rigid tapping, but "
+                f"{controller_name} does not declare it.",
+                i, op, controller=controller.get("controller_id"),
+            ))
+
+        if _operation_requires_macro(op) and not _controller_bool(controller, "macros"):
+            issues.append(_issue(
+                "error", "controller_macro_unsupported",
+                f"{_op_name(op) or 'operation'} requires controller macros, but "
+                f"{controller_name} does not declare macro support.",
+                i, op, controller=controller.get("controller_id"),
+            ))
+
+    return issues
+
+
+def _check_setup_intent_context(process_plan_dict: dict) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    setup_intent = process_plan_dict.get("setup_intent")
+    if not setup_intent:
+        return issues
+    if not isinstance(setup_intent, dict):
+        return [_issue(
+            "error", "setup_intent_invalid",
+            "Process plan setup intent must be a dictionary.",
+        )]
+
+    primary_face = str(setup_intent.get("primary_face") or setup_intent.get("face_selector") or ">Z")
+    accessible_faces = {
+        str(face)
+        for face in (setup_intent.get("accessible_faces") or [primary_face])
+    }
+    allow_reorientation = bool(setup_intent.get("allow_reorientation"))
+    setup_count = int(_as_float(setup_intent.get("setup_count"), 1) or 1)
+
+    for face in accessible_faces | {primary_face}:
+        if face not in {">Z", "<Z", ">X", "<X", ">Y", "<Y"}:
+            issues.append(_issue(
+                "warning", "setup_intent_unsupported_face",
+                f"Setup intent references unsupported face selector '{face}'.",
+                face_selector=face,
+            ))
+
+    if not setup_intent.get("workholding"):
+        issues.append(_issue(
+            "warning", "setup_intent_missing_workholding",
+            "Setup intent is missing workholding/fixture details.",
+        ))
+
+    for i, op in enumerate(process_plan_dict.get("operations", [])):
+        face = str(op.get("face_selector") or primary_face or ">Z")
+        if face not in accessible_faces:
+            issues.append(_issue(
+                "error", "setup_face_not_accessible",
+                f"{_op_name(op) or 'operation'} uses face {face}, not accessible "
+                "from the declared setup intent.",
+                i, op, face_selector=face, accessible_faces=sorted(accessible_faces),
+            ))
+        elif face != primary_face and not allow_reorientation and setup_count <= 1:
+            issues.append(_issue(
+                "error", "setup_reorientation_required",
+                f"{_op_name(op) or 'operation'} uses face {face}, which requires "
+                "another setup or explicit reorientation intent.",
+                i, op, face_selector=face, primary_face=primary_face,
+            ))
+
+    return issues
+
+
+def _tool_record_id(tool: dict) -> str:
+    for key in ("tool_id", "id", "catalog_id", "label", "tool_number"):
+        if tool.get(key) not in (None, ""):
+            return str(tool[key])
+    return ""
+
+
+def _tool_record_type(tool: dict) -> str:
+    return str(tool.get("tool_type") or tool.get("type") or "")
+
+
+def _tool_record_diameter(tool: dict) -> Optional[float]:
+    return _as_float(
+        tool.get("diameter_mm", tool.get("tool_diameter_mm", tool.get("cutter_diameter_mm")))
+    )
+
+
+def _tooling_tool_records(tooling: dict) -> list[dict]:
+    records = tooling.get("tools", tooling.get("assemblies", [])) if isinstance(tooling, dict) else []
+    return [record for record in records if isinstance(record, dict)]
+
+
+def _find_tool_record_for_op(op: dict, tools: list[dict]) -> Optional[dict]:
+    tool_id = _tool_id(op)
+    if tool_id:
+        for tool in tools:
+            if _tool_record_id(tool) == tool_id:
+                return tool
+
+    op_type = str(op.get("tool_type") or (op.get("tool") or {}).get("tool_type") or "")
+    op_dia = _tool_diameter_mm(op)
+    for tool in tools:
+        if op_type and _tool_record_type(tool) != op_type:
+            continue
+        tool_dia = _tool_record_diameter(tool)
+        if op_dia is None or tool_dia is None or abs(op_dia - tool_dia) < 0.001:
+            return tool
+    return None
+
+
+def _tooling_magazine(tooling: dict) -> dict:
+    return tooling.get("magazine") if isinstance(tooling.get("magazine"), dict) else {}
+
+
+def _check_tooling_context(process_plan_dict: dict) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    tooling = process_plan_dict.get("tooling")
+    if not tooling:
+        return issues
+    if not isinstance(tooling, dict):
+        return [_issue(
+            "error", "tooling_context_invalid",
+            "Process plan tooling context must be a dictionary.",
+        )]
+
+    tools = _tooling_tool_records(tooling)
+    magazine = _tooling_magazine(tooling)
+    capacity = _as_float(magazine.get("capacity", magazine.get("tool_capacity")))
+    magazine_interface = str(magazine.get("interface") or magazine.get("tool_interface") or "")
+    machine = process_plan_dict.get("machine") if isinstance(process_plan_dict.get("machine"), dict) else {}
+    machine_caps = machine.get("capabilities") if isinstance(machine.get("capabilities"), dict) else {}
+    machine_interface = str(machine_caps.get("tool_interface") or "")
+
+    if capacity is not None and len(tools) > capacity:
+        issues.append(_issue(
+            "error", "tooling_magazine_capacity_exceeded",
+            f"Tooling context defines {len(tools)} tools, above magazine capacity {capacity:g}.",
+            tool_count=len(tools), magazine_capacity=capacity,
+        ))
+
+    if machine_interface and magazine_interface and machine_interface.upper() != magazine_interface.upper():
+        issues.append(_issue(
+            "error", "tooling_machine_interface_mismatch",
+            f"Tooling magazine interface {magazine_interface} does not match "
+            f"machine interface {machine_interface}.",
+            magazine_interface=magazine_interface, machine_interface=machine_interface,
+        ))
+
+    if not tools:
+        issues.append(_issue(
+            "warning", "tooling_no_tools",
+            "Tooling context is attached but contains no tool assemblies.",
+        ))
+        return issues
+
+    used_tool_keys: set[str] = set()
+    for i, op in enumerate(process_plan_dict.get("operations", [])):
+        if not _is_cutting_operation(op):
+            continue
+        record = _find_tool_record_for_op(op, tools)
+        if record is None:
+            issues.append(_issue(
+                "error", "tooling_tool_missing",
+                f"{_op_name(op) or 'operation'} at position {i} uses a tool not "
+                "available in the tooling context.",
+                i, op, tool_id=_tool_id(op) or None, tool_type=op.get("tool_type"),
+            ))
+            continue
+
+        used_tool_keys.add(_tool_record_id(record) or _tool_record_type(record))
+        record_interface = str(record.get("interface") or record.get("tool_interface") or "")
+        if magazine_interface and record_interface and magazine_interface.upper() != record_interface.upper():
+            issues.append(_issue(
+                "error", "tooling_interface_mismatch",
+                f"Tool '{_tool_record_id(record) or _tool_record_type(record)}' uses "
+                f"{record_interface}, but the magazine declares {magazine_interface}.",
+                i, op, tool_interface=record_interface, magazine_interface=magazine_interface,
+            ))
+
+        coolant = _operation_coolant(op)
+        if coolant in {"through_spindle", "tsc", "through_tool"} and not bool(record.get("coolant_through")):
+            issues.append(_issue(
+                "error", "tooling_through_coolant_unsupported",
+                f"{_op_name(op) or 'operation'} requests through-tool coolant, but "
+                f"tool '{_tool_record_id(record) or _tool_record_type(record)}' "
+                "does not declare coolant-through support.",
+                i, op, coolant=coolant, tool_id=_tool_record_id(record) or None,
+            ))
+
+        rpm = _operation_spindle_rpm(op)
+        max_rpm = _as_float(record.get("max_rpm"))
+        if rpm is not None and max_rpm is not None and rpm > max_rpm + 1e-6:
+            issues.append(_issue(
+                "error", "tooling_tool_rpm_exceeded",
+                f"{_op_name(op) or 'operation'} requests {rpm:g} RPM, above "
+                f"tool '{_tool_record_id(record) or _tool_record_type(record)}' "
+                f"limit {max_rpm:g} RPM.",
+                i, op, requested_rpm=rpm, max_rpm=max_rpm,
+            ))
+
+        feed = _operation_feed_mm_min(op)
+        max_feed = _as_float(record.get("max_feed_mm_per_min", record.get("max_feed_rate_mm_min")))
+        if feed is not None and max_feed is not None and feed > max_feed + 1e-6:
+            issues.append(_issue(
+                "error", "tooling_tool_feed_exceeded",
+                f"{_op_name(op) or 'operation'} requests feed {feed:g} mm/min, above "
+                f"tool '{_tool_record_id(record) or _tool_record_type(record)}' "
+                f"limit {max_feed:g} mm/min.",
+                i, op, requested_feed_mm_min=feed, max_feed_mm_min=max_feed,
+            ))
+
+    if capacity is not None and len(used_tool_keys) > capacity:
+        issues.append(_issue(
+            "error", "tooling_used_tool_capacity_exceeded",
+            f"Process plan uses {len(used_tool_keys)} tools, above magazine capacity {capacity:g}.",
+            used_tool_count=len(used_tool_keys), magazine_capacity=capacity,
+        ))
+
+    return issues
+
+
+def _quality_context(process_plan_dict: dict):
+    quality = process_plan_dict.get("quality")
+    if not quality:
+        return None
+    try:
+        from .quality_context import load_quality_context
+
+        return load_quality_context(quality)
+    except Exception:
+        return None
+
+
+def _machine_supports_probe(machine: dict) -> bool:
+    capabilities = machine.get("capabilities") if isinstance(machine, dict) else {}
+    return bool(capabilities.get("probing"))
+
+
+def _controller_supports_probe(controller: dict) -> bool:
+    return bool(controller) and _controller_bool(controller, "probing")
+
+
+def _has_inspection_operation(operations: list[dict]) -> bool:
+    return any(_op_name(op) in {"inspect", "inspection", "inspect_probe", "probe", "probe_datum"} for op in operations)
+
+
+def _check_quality_context(process_plan_dict: dict) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    quality_raw = process_plan_dict.get("quality")
+    if not quality_raw:
+        return issues
+    if not isinstance(quality_raw, dict):
+        return [_issue(
+            "error", "quality_context_invalid",
+            "Process plan quality context must be a dictionary.",
+        )]
+
+    quality = _quality_context(process_plan_dict)
+    if quality is None:
+        return [_issue(
+            "error", "quality_context_invalid",
+            "Process plan quality context could not be normalized.",
+        )]
+
+    operations = process_plan_dict.get("operations", [])
+    inspection = quality_raw.get("inspection") if isinstance(quality_raw.get("inspection"), dict) else {}
+    if inspection.get("required") and not quality.required_inspection_methods():
+        issues.append(_issue(
+            "warning", "quality_inspection_methods_missing",
+            "Quality inspection is required but no inspection methods are declared.",
+        ))
+    if inspection.get("required") and not _has_inspection_operation(operations):
+        issues.append(_issue(
+            "warning", "quality_inspection_operation_missing",
+            "Quality inspection is required but the process plan has no inspection/probe operation.",
+        ))
+
+    if quality.needs_probe():
+        machine = process_plan_dict.get("machine") if isinstance(process_plan_dict.get("machine"), dict) else {}
+        controller = (
+            process_plan_dict.get("controller")
+            if isinstance(process_plan_dict.get("controller"), dict)
+            else {}
+        )
+        if machine or controller:
+            if not _machine_supports_probe(machine) and not _controller_supports_probe(controller):
+                issues.append(_issue(
+                    "error", "quality_probe_unsupported",
+                    "Quality requirements need probing/CMM-style measurement, but neither "
+                    "the machine nor controller declares probing support.",
+                ))
+        else:
+            issues.append(_issue(
+                "warning", "quality_probe_context_missing",
+                "Quality requirements need probing/CMM-style measurement, but no "
+                "machine/controller context is attached.",
+            ))
+
+    tolerances = quality.tolerance_bands()
+    default_band = tolerances.get("default") if isinstance(tolerances.get("default"), dict) else {}
+    requested_tol = _as_float(default_band.get("linear_mm", default_band.get("tolerance_mm")))
+    process_capability = quality_raw.get("process_capability") if isinstance(quality_raw.get("process_capability"), dict) else {}
+    minimum_capability = _as_float(
+        process_capability.get("minimum_tolerance_mm",
+                               process_capability.get("capability_mm"))
+    )
+    if requested_tol is not None and minimum_capability is not None and requested_tol < minimum_capability:
+        issues.append(_issue(
+            "warning", "quality_tolerance_below_process_capability",
+            f"Default tolerance ({requested_tol:g}mm) is tighter than declared "
+            f"process capability ({minimum_capability:g}mm).",
+            tolerance_mm=requested_tol, process_capability_mm=minimum_capability,
+        ))
+
+    return issues
+
+
+def _normalized_collision_policy(process_plan_dict: dict) -> dict[str, Any]:
+    policy = process_plan_dict.get("collision_policy")
+    quality = process_plan_dict.get("quality") if isinstance(process_plan_dict.get("quality"), dict) else {}
+    if not policy and isinstance(quality.get("collision_policy"), dict):
+        policy = quality.get("collision_policy")
+    if not isinstance(policy, dict):
+        return {}
+    try:
+        from .quality_context import load_collision_policy
+
+        return load_collision_policy(policy)
+    except Exception:
+        result = dict(policy)
+        result.setdefault("enabled", bool(result.get("required")))
+        result.setdefault("required", bool(result.get("enabled")))
+        result.setdefault("toolpath_required", bool(result.get("required")))
+        result.setdefault("holder_check", True)
+        result.setdefault("fixture_check", True)
+        result.setdefault("severity", "error" if result.get("required") else "warning")
+        return result
+
+
+def _collision_policy_severity(policy: dict) -> str:
+    severity = str(policy.get("severity") or ("error" if policy.get("required") else "warning")).lower()
+    return severity if severity in {"warning", "error"} else "warning"
+
+
+def _check_collision_policy(process_plan_dict: dict) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    policy = _normalized_collision_policy(process_plan_dict)
+    if not policy or not policy.get("enabled"):
+        return issues
+
+    severity = _collision_policy_severity(policy)
+    operations = process_plan_dict.get("operations", [])
+    fixture = process_plan_dict.get("fixture")
+    setups = process_plan_dict.get("setups") or {}
+
+    if policy.get("fixture_check") and not fixture and not setups:
+        issues.append(_issue(
+            "warning", "collision_fixture_context_missing",
+            "Collision policy asks for fixture checks, but no fixture/setup context is attached.",
+        ))
+
+    for i, op in enumerate(operations):
+        if not _is_cutting_operation(op):
+            continue
+        op_requires = (
+            policy.get("required")
+            or policy.get("toolpath_required")
+            or op.get("requires_collision_check")
+            or op.get("collision_check_required")
+        )
+        if op_requires and "toolpath" not in op:
+            issues.append(_issue(
+                severity, "collision_toolpath_missing",
+                f"{_op_name(op) or 'operation'} at position {i} requires collision "
+                "validation but has no authored toolpath.",
+                i, op,
+            ))
+
+        if policy.get("holder_check"):
+            envelopes = _tool_envelopes(op, include_cutter=False)
+            has_holder = any(envelope.get("component") == "holder" for envelope in envelopes)
+            if op_requires and not has_holder:
+                issues.append(_issue(
+                    severity, "collision_holder_metadata_missing",
+                    f"{_op_name(op) or 'operation'} at position {i} requires holder "
+                    "collision validation but has no holder envelope metadata.",
+                    i, op,
+                ))
+
+    return issues
+
+
 def validate_all(process_plan_dict: dict, stock_dims: dict,
                  tool_specs: Optional[list] = None,
                  structured: bool = False):
@@ -1036,6 +1863,12 @@ def validate_all(process_plan_dict: dict, stock_dims: dict,
     merged_stock.update(process_plan_dict.get("stock_dimensions") or {})
 
     report.extend(_check_plan_metadata(process_plan_dict))
+    report.extend(_check_machine_context(process_plan_dict, merged_stock))
+    report.extend(_check_controller_context(process_plan_dict))
+    report.extend(_check_setup_intent_context(process_plan_dict))
+    report.extend(_check_tooling_context(process_plan_dict))
+    report.extend(_check_quality_context(process_plan_dict))
+    report.extend(_check_collision_policy(process_plan_dict))
     report.extend(_check_operation_order(ops))
     report.extend(_check_tool_selection(ops))
     report.extend(_check_tool_reach_and_geometry(ops, merged_stock, tool_specs))
