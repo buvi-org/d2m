@@ -1,0 +1,23 @@
+{
+  "controller_id": "generic_3axis_debug",
+  "name": "Generic 3-Axis Debug Controller",
+  "version": "1.0",
+  "description": "Preview/debug controller capability context for simple 3-axis milling output. Not a production post.",
+  "manufacturer": "SubCAD",
+  "model": "Debug Mill",
+  "post_dialect": "generic_3axis_debug",
+  "capabilities": {
+    "schema_version": "subcad.controller_capabilities.v1",
+    "supported_cycles": ["G81", "G83", "G84"],
+    "rotary_modes": [],
+    "coolant_codes": {
+      "flood": "M08",
+      "mist": "M07"
+    },
+    "probing": false,
+    "rigid_tapping": true,
+    "macro_support": false,
+    "coordinate_systems": ["G54", "G55", "G56", "G57", "G58", "G59"],
+    "post_dialect": "generic_3axis_debug"
+  }
+}

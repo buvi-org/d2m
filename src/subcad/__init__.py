@@ -20,6 +20,21 @@ Usage::
 
 from .stock import Stock
 from .process_plan import ProcessPlan, OperationStep
+from .machine_context import MachineContext, load_machine_context
+from .controller_context import ControllerContext, load_controller_context
+from .setup_context import SetupContext, load_setup_context
+from .tooling_context import (
+    ToolAssembly as ToolingAssembly,
+    ToolMagazine,
+    ToolingContext,
+    load_tooling_context,
+    required_tool_types,
+)
+from .quality_context import (
+    QualityContext,
+    load_quality_context,
+    load_collision_policy,
+)
 from .tool_library import ToolSpec, ToolAssembly, ToolCatalog, to_sim_tool
 from .tool_selection import ToolRequirement, ToolSelectionResult, select_tool
 from .toolpath import Toolpath, ToolpathMove
@@ -107,6 +122,20 @@ __all__ = [
     "Stock",
     "ProcessPlan",
     "OperationStep",
+    "MachineContext",
+    "load_machine_context",
+    "ControllerContext",
+    "load_controller_context",
+    "SetupContext",
+    "load_setup_context",
+    "ToolingAssembly",
+    "ToolMagazine",
+    "ToolingContext",
+    "load_tooling_context",
+    "required_tool_types",
+    "QualityContext",
+    "load_quality_context",
+    "load_collision_policy",
     "ToolSpec",
     "ToolAssembly",
     "ToolCatalog",

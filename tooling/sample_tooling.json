@@ -1,0 +1,76 @@
+{
+  "schema_version": "subcad.tooling_context.v1",
+  "name": "Sample BT40 tooling assemblies",
+  "tools": [
+    {
+      "id": "T01_FACE_50",
+      "type": "face_mill",
+      "diameter": 50.0,
+      "flutes": 6,
+      "material": "carbide",
+      "coating": "TiAlN",
+      "stickout": 65.0,
+      "holder": "BT40-FMB22-60",
+      "interface": "BT40",
+      "coolant_through": true,
+      "max_rpm": 8000,
+      "max_feed_mm_per_min": 6000
+    },
+    {
+      "id": "T02_EM_10",
+      "type": "flat_endmill",
+      "diameter": 10.0,
+      "flutes": 4,
+      "material": "carbide",
+      "coating": "AlTiN",
+      "stickout": 38.0,
+      "holder": "BT40-ER32-70",
+      "interface": "BT40",
+      "coolant_through": false,
+      "max_rpm": 12000,
+      "max_feed_mm_per_min": 3500
+    },
+    {
+      "id": "T03_DR_6",
+      "type": "drill",
+      "diameter": 6.0,
+      "flutes": 2,
+      "material": "carbide",
+      "coating": "TiAlN",
+      "stickout": 52.0,
+      "holder": "BT40-ER20-70",
+      "interface": "BT40",
+      "coolant_through": true,
+      "max_rpm": 9000,
+      "max_feed_mm_per_min": 1200
+    },
+    {
+      "id": "T04_CH_90",
+      "type": "chamfer",
+      "diameter": 10.0,
+      "flutes": 4,
+      "material": "carbide",
+      "coating": "TiN",
+      "stickout": 35.0,
+      "holder": "BT40-ER20-70",
+      "interface": "BT40",
+      "coolant_through": false,
+      "max_rpm": 10000,
+      "max_feed_mm_per_min": 1800
+    },
+    {
+      "id": "T05_BALL_6",
+      "type": "ball_endmill",
+      "diameter": 6.0,
+      "flutes": 2,
+      "material": "carbide",
+      "coating": "AlTiN",
+      "stickout": 45.0,
+      "holder": "BT40-ER20-70",
+      "interface": "BT40",
+      "coolant_through": false,
+      "max_rpm": 16000,
+      "max_feed_mm_per_min": 2200
+    }
+  ]
+}

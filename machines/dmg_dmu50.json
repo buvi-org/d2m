@@ -170,5 +170,53 @@
   "kinematic_chain": {
     "tool_chain": ["tool_mount", "spindle", "z_axis", "column", "bed"],
     "workpiece_chain": ["fixture_mount", "c_axis", "b_axis", "x_axis", "y_axis", "bed"]
+  },
+
+  "capabilities": {
+    "schema_version": "subcad.machine_capabilities.v1",
+    "processes": ["mill", "indexed_3axis", "5axis"],
+    "operation_families": [
+      "face_mill",
+      "pocket",
+      "circular_pocket",
+      "spot_drill",
+      "drill",
+      "peck_drill",
+      "ream",
+      "bore",
+      "tap",
+      "thread_mill",
+      "threaded_hole",
+      "chamfer",
+      "contour",
+      "slot",
+      "t_slot",
+      "dovetail",
+      "groove",
+      "surface_3d",
+      "deburr",
+      "spot_face",
+      "edge_chamfer",
+      "edge_fillet",
+      "profile_pocket",
+      "profile_cutout",
+      "profile_contour",
+      "machine_around_profile",
+      "machine_around_profiles",
+      "machine_around_cylinder",
+      "rib",
+      "pad",
+      "thin_wall_pocket",
+      "thin_wall_shell",
+      "surface_mill",
+      "sweep_mill",
+      "loft_mill",
+      "dome_mill"
+    ],
+    "controller_cycles": ["G81", "G83", "G84", "TCP", "G68.2"],
+    "coolant": ["flood", "through_spindle", "air_blast"],
+    "probing": true,
+    "tool_interface": "HSK-A63",
+    "tool_capacity": 30
   }
 }

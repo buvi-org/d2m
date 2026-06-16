@@ -82,6 +82,18 @@ def _place_profile(profile, cx: Optional[float] = None, cy: Optional[float] = No
     return profile
 
 
+def _as_pair(value, *, name: str) -> tuple[float, float]:
+    """Return a numeric (x, y) pair from a scalar or two-value tuple/list."""
+    if value is None:
+        raise ValueError(f"{name} is required")
+    if isinstance(value, (int, float)):
+        scalar = float(value)
+        return scalar, scalar
+    if isinstance(value, (list, tuple)) and len(value) == 2:
+        return float(value[0]), float(value[1])
+    raise ValueError(f"{name} must be a number or a two-value (x, y) pair")
+
+
 @dataclass
 class Stock:
     """An in-process workpiece with an accumulating manufacturing plan.
@@ -164,14 +176,23 @@ class Stock:
             "shape": new_shape,
         })
 
-        # Serialize fixture and setups for the plan
-        fixture_dict = self._fixture.to_dict() if self._fixture else None
-        setups_dict = {name: s.to_dict() for name, s in self._setups.items()}
-        work_offsets_dict = {}
-        for name, s in self._setups.items():
-            wo = getattr(s, "work_offset", "G54")
-            wov = getattr(s, "work_offset_values", (0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
-            work_offsets_dict[wo] = list(wov)
+        # Serialize fixture and setups for the plan. Runtime FixtureSpec/Setup
+        # objects win, but context-only setup intent must survive operation chains.
+        fixture_dict = (
+            self._fixture.to_dict()
+            if self._fixture
+            else (dict(self._plan.fixture) if self._plan.fixture else None)
+        )
+        if self._setups:
+            setups_dict = {name: s.to_dict() for name, s in self._setups.items()}
+            work_offsets_dict = {}
+            for name, s in self._setups.items():
+                wo = getattr(s, "work_offset", "G54")
+                wov = getattr(s, "work_offset_values", (0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+                work_offsets_dict[wo] = list(wov)
+        else:
+            setups_dict = dict(self._plan.setups)
+            work_offsets_dict = dict(self._plan.work_offsets)
 
         new_plan = ProcessPlan(
             material=self._material,
@@ -181,6 +202,15 @@ class Stock:
             fixture=fixture_dict,
             setups=setups_dict,
             work_offsets=work_offsets_dict,
+            machine=dict(self._plan.machine) if self._plan.machine else None,
+            controller=dict(self._plan.controller) if self._plan.controller else None,
+            setup_intent=dict(self._plan.setup_intent) if self._plan.setup_intent else None,
+            tooling=dict(self._plan.tooling) if self._plan.tooling else None,
+            quality=dict(self._plan.quality) if self._plan.quality else None,
+            collision_policy=(
+                dict(self._plan.collision_policy)
+                if self._plan.collision_policy else None
+            ),
         )
 
         op_dict = op.to_dict()
@@ -213,6 +243,17 @@ class Stock:
         if active_setup is not None and active_setup in self._setups:
             op_dict["setup"] = active_setup
             op_dict["face_selector"] = self._setups[active_setup].face_selector
+        elif self._plan.setup_intent and len(setups_dict) == 1:
+            setup_name, setup = next(iter(setups_dict.items()))
+            op_dict.setdefault("setup", setup_name)
+            if isinstance(setup, dict):
+                op_dict.setdefault(
+                    "face_selector",
+                    setup.get(
+                        "face_selector",
+                        self._plan.setup_intent.get("primary_face", ">Z"),
+                    ),
+                )
 
         new_plan.add_operation(op_dict)
 
@@ -227,6 +268,267 @@ class Stock:
             active_setup=self._active_setup,
             state_history=state_history,
         )
+
+    def _rectangular_xy_limits(self) -> tuple[float, float, float, float]:
+        """Return left, right, bottom, top stock limits for top-face XY work."""
+        try:
+            length = float(self._stock_dims["length"])
+            width = float(self._stock_dims["width"])
+        except KeyError as exc:
+            raise ValueError("natural XY placement requires rectangular stock") from exc
+        return -length / 2.0, length / 2.0, -width / 2.0, width / 2.0
+
+    def resolve_xy(
+        self,
+        *,
+        x: Optional[float] = None,
+        y: Optional[float] = None,
+        from_left: Optional[float] = None,
+        from_right: Optional[float] = None,
+        from_bottom: Optional[float] = None,
+        from_top: Optional[float] = None,
+        center_x: bool = False,
+        center_y: bool = False,
+        dx: float = 0.0,
+        dy: float = 0.0,
+    ) -> tuple[float, float]:
+        """Resolve natural top-face placement references into explicit ``cx, cy``.
+
+        Rectangular stock is centered at the origin, so ``from_left=10`` means
+        ``cx = -length / 2 + 10`` and ``from_top=8`` means
+        ``cy = width / 2 - 8``. Use either one X reference and one Y reference,
+        or ``center_x`` / ``center_y`` for centerline placement.
+        """
+        left, right, bottom, top = self._rectangular_xy_limits()
+
+        x_refs = [
+            x is not None,
+            from_left is not None,
+            from_right is not None,
+            bool(center_x),
+        ]
+        y_refs = [
+            y is not None,
+            from_bottom is not None,
+            from_top is not None,
+            bool(center_y),
+        ]
+        if sum(x_refs) != 1:
+            raise ValueError("specify exactly one X reference")
+        if sum(y_refs) != 1:
+            raise ValueError("specify exactly one Y reference")
+
+        if x is not None:
+            cx = float(x)
+        elif from_left is not None:
+            cx = left + float(from_left)
+        elif from_right is not None:
+            cx = right - float(from_right)
+        else:
+            cx = 0.0
+
+        if y is not None:
+            cy = float(y)
+        elif from_bottom is not None:
+            cy = bottom + float(from_bottom)
+        elif from_top is not None:
+            cy = top - float(from_top)
+        else:
+            cy = 0.0
+
+        return cx + float(dx), cy + float(dy)
+
+    def _mirror_xy_points(
+        self,
+        points: list[tuple[float, float]],
+        *,
+        mirror_x: bool = False,
+        mirror_y: bool = False,
+    ) -> list[tuple[float, float]]:
+        """Mirror points across stock centerlines and remove duplicates."""
+        mirrored: list[tuple[float, float]] = []
+        for cx, cy in points:
+            x_values = [cx, -cx] if mirror_x else [cx]
+            y_values = [cy, -cy] if mirror_y else [cy]
+            for x_value in x_values:
+                for y_value in y_values:
+                    point = (float(x_value), float(y_value))
+                    if not any(
+                        abs(point[0] - old[0]) < 1e-9 and abs(point[1] - old[1]) < 1e-9
+                        for old in mirrored
+                    ):
+                        mirrored.append(point)
+        return mirrored
+
+    def _plan_with_context(self, **updates) -> ProcessPlan:
+        """Return a copy of the current plan with selected context replaced."""
+        context = {
+            "machine": dict(self._plan.machine) if self._plan.machine else None,
+            "controller": dict(self._plan.controller) if self._plan.controller else None,
+            "setup_intent": dict(self._plan.setup_intent) if self._plan.setup_intent else None,
+            "tooling": dict(self._plan.tooling) if self._plan.tooling else None,
+            "quality": dict(self._plan.quality) if self._plan.quality else None,
+            "collision_policy": (
+                dict(self._plan.collision_policy)
+                if self._plan.collision_policy else None
+            ),
+        }
+        fixture = updates.pop(
+            "fixture",
+            dict(self._plan.fixture) if self._plan.fixture else None,
+        )
+        setups = updates.pop("setups", dict(self._plan.setups))
+        work_offsets = updates.pop("work_offsets", dict(self._plan.work_offsets))
+        context.update(updates)
+        return ProcessPlan(
+            material=self._material,
+            stock_dimensions=dict(self._stock_dims),
+            operations=list(self._plan.operations),
+            tools_used=list(self._plan.tools_used),
+            schema_version=self._plan.schema_version,
+            fixture=fixture,
+            setups=setups,
+            work_offsets=work_offsets,
+            **context,
+        )
+
+    def _with_plan_context(self, **updates) -> "Stock":
+        """Return a new Stock with copied geometry and updated plan context."""
+        return Stock._from_parts(
+            self._shape,
+            self._material,
+            self._stock_dims,
+            self._plan_with_context(**updates),
+            self._next_op_number,
+            fixture=self._fixture,
+            setups=dict(self._setups),
+            active_setup=self._active_setup,
+            state_history=list(self._state_history),
+        )
+
+    def with_machine(self, machine) -> "Stock":
+        """Bind this process plan to a machine definition for validation."""
+        from .machine_context import load_machine_context
+
+        context = load_machine_context(machine).to_dict()
+        return self._with_plan_context(machine=context)
+
+    def with_controller(self, controller) -> "Stock":
+        """Bind this process plan to a controller/post definition."""
+        from .controller_context import load_controller_context
+
+        context = load_controller_context(controller).to_dict()
+        return self._with_plan_context(controller=context)
+
+    def on_controller(self, controller) -> "Stock":
+        """Alias for :meth:`with_controller`."""
+        return self.with_controller(controller)
+
+    def with_setup_intent(self, setup_intent) -> "Stock":
+        """Attach datum, orientation, workholding, and access intent."""
+        from .setup_context import load_setup_context
+
+        setup_context = load_setup_context(setup_intent)
+        context = setup_context.to_dict()
+        metadata = setup_context.to_plan_metadata()
+        setups = dict(self._plan.setups)
+        setups.update(metadata.get("setups") or {})
+        work_offsets = dict(self._plan.work_offsets)
+        work_offsets.update(metadata.get("work_offsets") or {})
+        fixture = metadata.get("fixture")
+        if fixture is None:
+            fixture = dict(self._plan.fixture) if self._plan.fixture else None
+        return self._with_plan_context(
+            setup_intent=context,
+            fixture=fixture,
+            setups=setups,
+            work_offsets=work_offsets,
+        )
+
+    def with_tooling(self, tooling) -> "Stock":
+        """Attach available tool assemblies and magazine context."""
+        from .tooling_context import load_tooling_context
+
+        context = load_tooling_context(tooling).to_dict()
+        return self._with_plan_context(tooling=context)
+
+    def with_quality(self, quality) -> "Stock":
+        """Attach tolerance, inspection, and surface-finish requirements."""
+        from .quality_context import load_quality_context
+
+        context = load_quality_context(quality).to_dict()
+        return self._with_plan_context(quality=context)
+
+    def with_inspection(self, inspection) -> "Stock":
+        """Attach inspection requirements while preserving existing quality data."""
+        quality = dict(self._plan.quality or {})
+        quality["inspection"] = inspection
+        return self.with_quality(quality)
+
+    def with_collision_policy(self, policy) -> "Stock":
+        """Attach collision and clearance validation policy."""
+        from .quality_context import load_collision_policy
+
+        context = load_collision_policy(policy)
+        return self._with_plan_context(collision_policy=context)
+
+    def require_collision_check(
+        self,
+        *,
+        clearance_mm: float = 2.0,
+        holder_check: bool = True,
+        fixture_check: bool = True,
+        toolpath_required: bool = True,
+    ) -> "Stock":
+        """Require collision validation before shop-floor handoff."""
+        policy = dict(self._plan.collision_policy or {})
+        policy.update({
+            "enabled": True,
+            "required": True,
+            "min_clearance_mm": float(clearance_mm),
+            "holder_check": bool(holder_check),
+            "fixture_check": bool(fixture_check),
+            "toolpath_required": bool(toolpath_required),
+        })
+        return self.with_collision_policy(policy)
+
+    def with_process_context(
+        self,
+        *,
+        machine=None,
+        controller=None,
+        setup_intent=None,
+        tooling=None,
+        quality=None,
+        collision_policy=None,
+    ) -> "Stock":
+        """Attach several manufacturing contexts in one fluent step."""
+        result = self
+        if machine is not None:
+            result = result.with_machine(machine)
+        if controller is not None:
+            result = result.with_controller(controller)
+        if setup_intent is not None:
+            result = result.with_setup_intent(setup_intent)
+        if tooling is not None:
+            result = result.with_tooling(tooling)
+        if quality is not None:
+            result = result.with_quality(quality)
+        if collision_policy is not None:
+            result = result.with_collision_policy(collision_policy)
+        return result
+
+    def with_process_constraints(self, **kwargs) -> "Stock":
+        """Alias for :meth:`with_process_context`."""
+        return self.with_process_context(**kwargs)
+
+    def with_manufacturing_context(self, **kwargs) -> "Stock":
+        """Alias for :meth:`with_process_context`."""
+        return self.with_process_context(**kwargs)
+
+    def on_machine(self, machine) -> "Stock":
+        """Alias for :meth:`with_machine`."""
+        return self.with_machine(machine)
 
     # -------------------------------------------------------------------
     #  Factory constructors
@@ -376,6 +678,52 @@ class Stock:
 
         return result
 
+    def pocket_at(
+        self,
+        width: float,
+        length: float,
+        depth: float,
+        *,
+        x: Optional[float] = None,
+        y: Optional[float] = None,
+        from_left: Optional[float] = None,
+        from_right: Optional[float] = None,
+        from_bottom: Optional[float] = None,
+        from_top: Optional[float] = None,
+        center_x: bool = False,
+        center_y: bool = False,
+        dx: float = 0.0,
+        dy: float = 0.0,
+        corner_radius: float = 0.0,
+        base_height: Optional[float] = None,
+        face_selector: str = ">Z",
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Cut a rectangular pocket using natural top-face XY references."""
+        cx, cy = self.resolve_xy(
+            x=x,
+            y=y,
+            from_left=from_left,
+            from_right=from_right,
+            from_bottom=from_bottom,
+            from_top=from_top,
+            center_x=center_x,
+            center_y=center_y,
+            dx=dx,
+            dy=dy,
+        )
+        return self.pocket(
+            width,
+            length,
+            depth,
+            corner_radius=corner_radius,
+            cx=cx,
+            cy=cy,
+            base_height=base_height,
+            face_selector=face_selector,
+            tool=tool,
+        )
+
     def slope_cut(
         self,
         width: float,
@@ -456,6 +804,48 @@ class Stock:
         op.sequence_number = self._next_op_number
         return self._apply_op(op)
 
+    def circular_pocket_at(
+        self,
+        diameter: float,
+        depth: float,
+        *,
+        x: Optional[float] = None,
+        y: Optional[float] = None,
+        from_left: Optional[float] = None,
+        from_right: Optional[float] = None,
+        from_bottom: Optional[float] = None,
+        from_top: Optional[float] = None,
+        center_x: bool = False,
+        center_y: bool = False,
+        dx: float = 0.0,
+        dy: float = 0.0,
+        base_height: Optional[float] = None,
+        face_selector: str = ">Z",
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Cut a circular pocket using natural top-face XY references."""
+        cx, cy = self.resolve_xy(
+            x=x,
+            y=y,
+            from_left=from_left,
+            from_right=from_right,
+            from_bottom=from_bottom,
+            from_top=from_top,
+            center_x=center_x,
+            center_y=center_y,
+            dx=dx,
+            dy=dy,
+        )
+        return self.circular_pocket(
+            diameter,
+            depth,
+            cx=cx,
+            cy=cy,
+            base_height=base_height,
+            face_selector=face_selector,
+            tool=tool,
+        )
+
     def drill(
         self,
         diameter: float,
@@ -510,6 +900,203 @@ class Stock:
         )
         op.sequence_number = result._next_op_number
         return result._apply_op(op)
+
+    def drill_at(
+        self,
+        diameter: float,
+        depth: float = 0.0,
+        *,
+        x: Optional[float] = None,
+        y: Optional[float] = None,
+        from_left: Optional[float] = None,
+        from_right: Optional[float] = None,
+        from_bottom: Optional[float] = None,
+        from_top: Optional[float] = None,
+        center_x: bool = False,
+        center_y: bool = False,
+        dx: float = 0.0,
+        dy: float = 0.0,
+        through: bool = False,
+        spot_drill: bool = True,
+        peck: bool = False,
+        face_selector: str = ">Z",
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Drill using natural top-face XY references such as edge offsets."""
+        cx, cy = self.resolve_xy(
+            x=x,
+            y=y,
+            from_left=from_left,
+            from_right=from_right,
+            from_bottom=from_bottom,
+            from_top=from_top,
+            center_x=center_x,
+            center_y=center_y,
+            dx=dx,
+            dy=dy,
+        )
+        return self.drill(
+            diameter,
+            depth,
+            cx=cx,
+            cy=cy,
+            through=through,
+            spot_drill=spot_drill,
+            peck=peck,
+            face_selector=face_selector,
+            tool=tool,
+        )
+
+    def corner_holes(
+        self,
+        diameter: float,
+        depth: float = 0.0,
+        *,
+        inset: Optional[object] = None,
+        x_inset: Optional[float] = None,
+        y_inset: Optional[float] = None,
+        corners: tuple[str, ...] = ("bottom_left", "bottom_right", "top_left", "top_right"),
+        through: bool = False,
+        spot_drill: bool = True,
+        peck: bool = False,
+        face_selector: str = ">Z",
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Drill holes at named plate corners using edge insets."""
+        if inset is not None:
+            inset_x, inset_y = _as_pair(inset, name="inset")
+            if x_inset is not None or y_inset is not None:
+                raise ValueError("use either inset or x_inset/y_inset, not both")
+        else:
+            if x_inset is None or y_inset is None:
+                raise ValueError("corner_holes requires inset or both x_inset and y_inset")
+            inset_x, inset_y = float(x_inset), float(y_inset)
+
+        corner_refs = {
+            "bottom_left": dict(from_left=inset_x, from_bottom=inset_y),
+            "bottom_right": dict(from_right=inset_x, from_bottom=inset_y),
+            "top_left": dict(from_left=inset_x, from_top=inset_y),
+            "top_right": dict(from_right=inset_x, from_top=inset_y),
+        }
+        result = self
+        for corner in corners:
+            key = str(corner).lower().replace("-", "_")
+            if key not in corner_refs:
+                raise ValueError(f"unknown corner {corner!r}")
+            cx, cy = result.resolve_xy(**corner_refs[key])
+            result = result.drill(
+                diameter,
+                depth,
+                cx=cx,
+                cy=cy,
+                through=through,
+                spot_drill=spot_drill,
+                peck=peck,
+                face_selector=face_selector,
+                tool=tool,
+            )
+        return result
+
+    def drill_symmetric(
+        self,
+        diameter: float,
+        depth: float = 0.0,
+        *,
+        mirror_x: bool = False,
+        mirror_y: bool = False,
+        x: Optional[float] = None,
+        y: Optional[float] = None,
+        from_left: Optional[float] = None,
+        from_right: Optional[float] = None,
+        from_bottom: Optional[float] = None,
+        from_top: Optional[float] = None,
+        center_x: bool = False,
+        center_y: bool = False,
+        dx: float = 0.0,
+        dy: float = 0.0,
+        through: bool = False,
+        spot_drill: bool = True,
+        peck: bool = False,
+        face_selector: str = ">Z",
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Drill one hole and its mirrors across the stock centerlines."""
+        if not mirror_x and not mirror_y:
+            raise ValueError("drill_symmetric requires mirror_x, mirror_y, or both")
+        point = self.resolve_xy(
+            x=x,
+            y=y,
+            from_left=from_left,
+            from_right=from_right,
+            from_bottom=from_bottom,
+            from_top=from_top,
+            center_x=center_x,
+            center_y=center_y,
+            dx=dx,
+            dy=dy,
+        )
+        result = self
+        for cx, cy in self._mirror_xy_points([point], mirror_x=mirror_x, mirror_y=mirror_y):
+            result = result.drill(
+                diameter,
+                depth,
+                cx=cx,
+                cy=cy,
+                through=through,
+                spot_drill=spot_drill,
+                peck=peck,
+                face_selector=face_selector,
+                tool=tool,
+            )
+        return result
+
+    def drill_pattern(
+        self,
+        diameter: float,
+        depth: float = 0.0,
+        *,
+        rows: int,
+        cols: int,
+        spacing_x: Optional[float] = None,
+        spacing_y: Optional[float] = None,
+        spacing: Optional[object] = None,
+        center_x: float = 0.0,
+        center_y: float = 0.0,
+        through: bool = False,
+        spot_drill: bool = True,
+        peck: bool = False,
+        face_selector: str = ">Z",
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Drill a centered rectangular row/column pattern."""
+        if rows <= 0 or cols <= 0:
+            raise ValueError("rows and cols must be positive")
+        if spacing is not None:
+            sx, sy = _as_pair(spacing, name="spacing")
+            if spacing_x is not None or spacing_y is not None:
+                raise ValueError("use either spacing or spacing_x/spacing_y, not both")
+        else:
+            if spacing_x is None or spacing_y is None:
+                raise ValueError("drill_pattern requires spacing or both spacing_x and spacing_y")
+            sx, sy = float(spacing_x), float(spacing_y)
+
+        result = self
+        x0 = float(center_x) - (cols - 1) * sx / 2.0
+        y0 = float(center_y) - (rows - 1) * sy / 2.0
+        for row in range(rows):
+            for col in range(cols):
+                result = result.drill(
+                    diameter,
+                    depth,
+                    cx=x0 + col * sx,
+                    cy=y0 + row * sy,
+                    through=through,
+                    spot_drill=spot_drill,
+                    peck=peck,
+                    face_selector=face_selector,
+                    tool=tool,
+                )
+        return result
 
     def tap(
         self,
@@ -643,6 +1230,52 @@ class Stock:
         )
         op.sequence_number = self._next_op_number
         return self._apply_op(op)
+
+    def slot_at(
+        self,
+        length: float,
+        width: float,
+        depth: float = 5.0,
+        *,
+        angle: float = 0.0,
+        x: Optional[float] = None,
+        y: Optional[float] = None,
+        from_left: Optional[float] = None,
+        from_right: Optional[float] = None,
+        from_bottom: Optional[float] = None,
+        from_top: Optional[float] = None,
+        center_x: bool = False,
+        center_y: bool = False,
+        dx: float = 0.0,
+        dy: float = 0.0,
+        through: bool = False,
+        face_selector: str = ">Z",
+        tool: Optional[ToolSpec] = None,
+    ) -> "Stock":
+        """Cut a slot using natural top-face XY references."""
+        cx, cy = self.resolve_xy(
+            x=x,
+            y=y,
+            from_left=from_left,
+            from_right=from_right,
+            from_bottom=from_bottom,
+            from_top=from_top,
+            center_x=center_x,
+            center_y=center_y,
+            dx=dx,
+            dy=dy,
+        )
+        return self.slot(
+            length,
+            width,
+            depth,
+            angle=angle,
+            cx=cx,
+            cy=cy,
+            through=through,
+            face_selector=face_selector,
+            tool=tool,
+        )
 
     def chamfer(
         self,
@@ -1599,15 +2232,22 @@ class Stock:
             economics=economics,
         )
 
-    def validate_shop_floor(self, structured: bool = False):
+    def validate_shop_floor(self, structured: bool = False, raise_on_error: bool = False):
         """Run shop-floor validation against the current process plan."""
         from .validation import validate_all
 
-        return validate_all(
+        report = validate_all(
             self._plan.to_dict(),
             self._stock_dims,
-            structured=structured,
+            structured=structured or raise_on_error,
         )
+        if raise_on_error and getattr(report, "errors", None):
+            raise ValueError("; ".join(report.errors))
+        return report
+
+    def assert_shop_floor_valid(self) -> None:
+        """Raise ``ValueError`` when the current machine/process plan has errors."""
+        self.validate_shop_floor(structured=True, raise_on_error=True)
 
     def plan_summary(self) -> str:
         """Return a human-readable summary of the process plan."""
