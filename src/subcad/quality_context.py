@@ -141,6 +141,8 @@ class QualityContext:
             data = data["quality"]
 
         tolerances = dict(data.get("tolerances") or {})
+        if isinstance(tolerances.get("default"), dict):
+            tolerances["default"] = _normalize_tolerance_band(tolerances["default"])
         tolerance_features = _normalize_feature_map(tolerances.get("features"))
         if tolerance_features:
             tolerances["features"] = {

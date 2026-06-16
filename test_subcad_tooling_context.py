@@ -78,6 +78,8 @@ op = {
 check("operation lookup prefers explicit id", context.tool_for_operation(op).id == "T02_EM_10")
 op_by_type = {"operation": "surface_3d", "tool_type": "ball_endmill", "tool_diameter_mm": 6.0}
 check("operation lookup can use type and diameter", context.tool_for_operation(op_by_type).id == "T05_BALL_6")
+missing_diameter = {"operation": "pocket", "tool_type": "flat_endmill", "tool_diameter_mm": 9.5}
+check("diameter mismatch does not silently choose wrong tool", context.tool_for_operation(missing_diameter) is None)
 
 print("\n4. Required tool-type helpers preserve order and report gaps ...")
 plan = {

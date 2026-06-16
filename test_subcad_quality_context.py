@@ -111,6 +111,12 @@ check(
     abs(bands["bearing_bore"]["upper_mm"] - 20.01) < 0.000001,
     bands["bearing_bore"],
 )
+normalized_default = load_quality_context({
+    "tolerances": {"default": {"nominal_mm": 10.0, "tolerance_mm": 0.05}}
+})
+default_dict = normalized_default.to_dict()["tolerances"]["default"]
+check("default tolerance serializes lower limit", abs(default_dict["lower_mm"] - 9.95) < 0.000001, default_dict)
+check("default tolerance serializes upper limit", abs(default_dict["upper_mm"] - 10.05) < 0.000001, default_dict)
 
 print("\n2. Inspection method helpers ...")
 bore_methods = context.required_inspection_methods("bearing_bore")

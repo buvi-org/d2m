@@ -76,6 +76,12 @@ check("can access declared side", ctx.can_access_face("+x"))
 check("bottom requires reorientation", ctx.requires_reorientation("<Z"))
 check("stock allowance normalized", ctx.stock_allowance == {"uniform_mm": 1.5}, ctx.stock_allowance)
 
+upper_offsets = load_setup_context({
+    "operation_side": "top",
+    "work_offset_values": {"X": 100, "Y": 200, "Z": 30, "A": 1, "B": 2, "C": 3},
+})
+check("uppercase offset dictionary keys are accepted", upper_offsets.work_offset_values == (100.0, 200.0, 30.0, 1.0, 2.0, 3.0), upper_offsets.work_offset_values)
+
 print("\n3. Object setup intent is coerced ...")
 obj = IntentObject(
     workholding=FixtureObject("soft_jaws", "soft_jaws"),

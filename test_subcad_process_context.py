@@ -151,6 +151,20 @@ for code in (
 ):
     check(f"reports {code}", code in codes, codes)
 
+print("\n3. Malformed machine context remains validation-safe ...")
+malformed_machine_plan = dict(bad_plan)
+malformed_machine_plan["machine"] = {
+    "machine_id": "bad_axis_limits",
+    "processes": ["milling"],
+    "axis_limits": "not-a-dictionary",
+}
+malformed_report = validate_all(
+    malformed_machine_plan,
+    malformed_machine_plan["stock_dimensions"],
+    structured=True,
+)
+check("non-dict axis_limits does not crash validation", hasattr(malformed_report, "issues"))
+
 print("\n" + "=" * 60)
 print(f"Passed: {passed}")
 print(f"Failed: {failed}")

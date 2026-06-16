@@ -103,6 +103,8 @@ def _coolant_codes_from(data: dict[str, Any], supports: dict[str, Any]) -> dict[
             for mode, code in raw_codes.items()
             if _normalize_name(mode)
         }
+    if isinstance(raw_codes, str):
+        raw_codes = [raw_codes]
     return {
         _normalize_name(mode): ""
         for mode in (raw_codes or [])

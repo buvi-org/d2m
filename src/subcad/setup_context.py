@@ -187,7 +187,8 @@ def _coerce_offset_values(value: Any) -> tuple[float, float, float, float, float
     if value is None:
         return (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
     if isinstance(value, dict):
-        return tuple(float(value.get(axis, 0.0)) for axis in ("x", "y", "z", "a", "b", "c"))
+        value_lower = {str(axis).lower(): axis_value for axis, axis_value in value.items()}
+        return tuple(float(value_lower.get(axis, 0.0)) for axis in ("x", "y", "z", "a", "b", "c"))
     if isinstance(value, (list, tuple)):
         if len(value) > 6:
             raise ValueError("work_offset_values must contain at most six values")

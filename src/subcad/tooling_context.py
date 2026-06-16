@@ -567,7 +567,7 @@ class ToolingContext:
         for tool in candidates:
             if abs(tool.diameter_mm - diameter) < 0.001:
                 return tool
-        return candidates[0]
+        return None
 
     def required_tool_types(self, process_plan_or_operations) -> list[str]:
         return required_tool_types(process_plan_or_operations)

@@ -67,6 +67,12 @@ check("macro support dict coerces to bool", not alias_context.supports_macros(),
 check("to_dict exposes controller_cycles", alias_dict["capabilities"]["controller_cycles"] == ["G81", "G83"], alias_dict)
 check("to_dict exposes coolant list", alias_dict["capabilities"]["coolant"] == ["flood", "through_spindle"], alias_dict)
 
+string_coolant = load_controller_context({
+    "controller_id": "string_coolant",
+    "coolant": "flood",
+})
+check("single coolant string is not split into characters", string_coolant.coolant_modes == ["flood"], string_coolant.coolant_modes)
+
 print("\n4. Existing context objects pass through the loader ...")
 manual = ControllerContext.from_dict({
     "controller_id": "manual",

@@ -1185,8 +1185,9 @@ def _check_machine_context(process_plan_dict: dict, stock_dims: dict) -> list[Va
     max_feed = None
     if linear_limits:
         feed_values = []
+        axis_limits = machine.get("axis_limits")
         for axis in linear_limits:
-            axis_info = (machine.get("axis_limits") or {}).get(axis, {})
+            axis_info = axis_limits.get(axis, {}) if isinstance(axis_limits, dict) else {}
             feed = _as_float(axis_info.get("max_feed")) if isinstance(axis_info, dict) else None
             if feed is not None:
                 feed_values.append(feed)
@@ -1692,6 +1693,8 @@ def _quality_context(process_plan_dict: dict):
 
 def _machine_supports_probe(machine: dict) -> bool:
     capabilities = machine.get("capabilities") if isinstance(machine, dict) else {}
+    if not isinstance(capabilities, dict):
+        capabilities = {}
     return bool(capabilities.get("probing"))
 
 
