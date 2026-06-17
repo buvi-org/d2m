@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from examples.sheet_metal_u_bracket import export_previews
+from examples.sheet_metal_u_bracket import _render_preview_matplotlib, _render_preview_vtk
 from src.subcad import Stock
 
 
@@ -71,6 +71,15 @@ def export_example(output_dir: Path = OUTPUT_DIR):
     part.visualization_package(output_dir / "viz")
     export_previews(part, stl_path, output_dir)
     return part
+
+
+def export_previews(part, stl_path: Path, output_dir: Path) -> None:
+    clean = output_dir / "preview_clean.png"
+    iso = output_dir / "preview_iso.png"
+    if not _render_preview_vtk(stl_path, clean, camera=(1.85, -2.20, 1.05)):
+        _render_preview_matplotlib(part, clean, azim=-58, elev=23)
+    if not _render_preview_vtk(stl_path, iso, camera=(1.85, -1.70, 1.30)):
+        _render_preview_matplotlib(part, iso, azim=-45, elev=30)
 
 
 if __name__ == "__main__":
