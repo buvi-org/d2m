@@ -1,0 +1,77 @@
+{
+  "agent_number": 35,
+  "domain": "semiconductor, PCB assembly, electronics manufacturing fixtures, test sockets, and ESD-safe handling hardware",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "ESD-Safe Wafer Cassette Transfer Cradle",
+      "product_context": "Used at a semiconductor process bench to move wafer cassettes between tools while minimizing static buildup and handling mistakes.",
+      "core_function": "Supports a cassette in a controlled orientation with grippable side shields, locating stops, and a grounded contact path.",
+      "likely_main_part": "Molded dissipative polymer cradle with integrated guide rails and contact pads.",
+      "why_it_tests_cad_representation": "Combines nested open volumes, asymmetric hand clearances, thin protective walls, and repeated rail-like features that must be represented without relying on simple box primitives."
+    },
+    {
+      "idea_title": "Fine-Pitch QFN Manual Test Socket Clamp",
+      "product_context": "Used by electronics test technicians to validate small leadless IC packages during board bring-up or incoming inspection.",
+      "core_function": "Holds a QFN package against spring probes with a hinged pressure lid, alignment nest, and latch that preserves repeatable contact force.",
+      "likely_main_part": "Machined socket body with hinged clamping lid and precision package pocket.",
+      "why_it_tests_cad_representation": "Requires expressing a shallow package nest, hinge geometry, latch undercuts, probe-field clearance, and contact-pressure surfaces in one compact object."
+    },
+    {
+      "idea_title": "PCB Edge-Connector Burn-In Fixture",
+      "product_context": "Used in electronics manufacturing to cycle assembled boards through temperature and power-on burn-in before final shipment.",
+      "core_function": "Guides a PCB into a connector plane, locks the board edge, and exposes airflow around heat-generating components.",
+      "likely_main_part": "Rigid fixture frame with card guides, connector support shelf, and locking cam features.",
+      "why_it_tests_cad_representation": "Tests long parallel guide geometry, open-frame construction, cam-lock clearances, airflow cutouts, and board-retention features without concrete board dimensions."
+    },
+    {
+      "idea_title": "Pogo-Pin Programming Fixture for Panelized PCBs",
+      "product_context": "Used on an assembly line to flash firmware into multiple boards before depanelization.",
+      "core_function": "Aligns a panel to a pin bed and applies even top pressure while leaving visual access to status LEDs and fiducials.",
+      "likely_main_part": "Two-level test fixture plate with alignment pins, relief pockets, and hinged compression bridge.",
+      "why_it_tests_cad_representation": "Challenges representation of arrays, layered plates, registration features, spring-contact keepouts, and hinged pressure structures."
+    },
+    {
+      "idea_title": "ESD-Safe Component Reel Inspection Stand",
+      "product_context": "Used at SMT receiving inspection to check tape-and-reel components without placing reels flat on a work surface.",
+      "core_function": "Holds a component reel upright, controls tape feed direction, and provides a dissipative path to the bench mat.",
+      "likely_main_part": "Adjustable reel support stand with side disks, axle cradle, and tape guide channel.",
+      "why_it_tests_cad_representation": "Includes rotational support geometry, sliding adjustment features, thin guide channels, and mixed cylindrical and planar structures."
+    },
+    {
+      "idea_title": "BGA Rework Stencil Alignment Frame",
+      "product_context": "Used during electronics repair or prototype rework to align a solder paste stencil over a BGA footprint.",
+      "core_function": "Centers a stencil relative to board fiducials and constrains it flat while keeping the rework area accessible.",
+      "likely_main_part": "Low-profile alignment frame with corner clamps, fiducial viewing windows, and stencil retention lips.",
+      "why_it_tests_cad_representation": "Tests thin frame modeling, transparent access openings, clamp clearances, edge lips, and precision alignment relationships."
+    },
+    {
+      "idea_title": "Tray-to-Socket IC Pick Placement Nest",
+      "product_context": "Used beside automated or semi-automated test equipment to transfer fragile ICs from JEDEC trays into sockets.",
+      "core_function": "Presents a single package in a repeatable orientation with bevelled lead-in surfaces and anti-rotation constraints.",
+      "likely_main_part": "Precision package nest insert with chamfered pocket, datum stops, and vacuum-tool clearance.",
+      "why_it_tests_cad_representation": "Forces careful description of chamfers, shallow pockets, orientation keys, tool access reliefs, and very small contact-sensitive support surfaces."
+    },
+    {
+      "idea_title": "Conformal Coating Masking Fixture for Connectors",
+      "product_context": "Used during PCB conformal coating to protect connectors, switches, and test pads from overspray.",
+      "core_function": "Covers selected board features with removable caps while locating from board edges and existing mounting holes.",
+      "likely_main_part": "Reusable masking frame with compliant cap islands and alignment bosses.",
+      "why_it_tests_cad_representation": "Combines distributed protective islands, bridge arms, flexible-looking caps, board-location bosses, and intentionally open areas for coating exposure."
+    },
+    {
+      "idea_title": "ESD-Safe SMT Nozzle Change Organizer",
+      "product_context": "Used at a pick-and-place machine to store and identify small vacuum nozzles during feeder setup changes.",
+      "core_function": "Keeps nozzles separated, upright, and grounded while allowing quick visual identification and finger access.",
+      "likely_main_part": "Dissipative organizer block with stepped pockets, label lands, and grounding strip channel.",
+      "why_it_tests_cad_representation": "Tests dense repeated pocket features, stepped bores, ergonomic finger scoops, label surfaces, and a contrasting conductive path."
+    },
+    {
+      "idea_title": "Thermal Interface Pad Placement Jig",
+      "product_context": "Used in electronics assembly to place soft thermal pads onto processors, power modules, or heat-spreader locations consistently.",
+      "core_function": "Indexes to a board or module and guides a pad into position without stretching, contaminating, or misaligning it.",
+      "likely_main_part": "Flat placement template with soft-pad window, anti-stick bevels, and detachable alignment ears.",
+      "why_it_tests_cad_representation": "Requires representing thin sheet geometry, large cutouts, removable alignment features, bevelled release edges, and delicate handling clearances."
+    }
+  ]
+}

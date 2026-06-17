@@ -1,0 +1,79 @@
+{
+  "agent_number": 19,
+  "agent_id": "019ecedf-d96b-7c51-8650-5a6518efcc83",
+  "domain": "renewable energy, solar mounting, wind measurement, battery storage, and electrical infrastructure hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Adjustable Solar Rail Mid-Clamp Body",
+      "product_context": "Rooftop photovoltaic panel mounting systems using aluminum rails and framed solar modules.",
+      "core_function": "Clamp adjacent solar panel frames to a mounting rail while allowing small frame-height variations.",
+      "likely_main_part": "CNC-machined aluminum mid-clamp block with stepped contact faces, bolt clearance slot, and serrated underside.",
+      "why_it_tests_cad_representation": "Requires asymmetric steps, functional serrations, bolt-slot geometry, frame-contact surfaces, and clear distinction between clamping faces and clearance regions."
+    },
+    {
+      "idea_title": "Wind Mast Anemometer Boom Bracket",
+      "product_context": "Meteorological towers used for wind-resource assessment before turbine installation.",
+      "core_function": "Hold a horizontal sensor boom at a fixed offset from a round mast while resisting rotation under wind loading.",
+      "likely_main_part": "Machined split clamp bracket with semicircular mast bore, boom socket, cross-bolt holes, and anti-rotation ribs.",
+      "why_it_tests_cad_representation": "Combines cylindrical clamping geometry, perpendicular socket features, split-line details, ribbing, and multiple fastener axes."
+    },
+    {
+      "idea_title": "Battery Rack Seismic Foot Anchor",
+      "product_context": "Grid-scale lithium battery storage cabinets mounted in seismic-rated equipment rooms.",
+      "core_function": "Anchor a battery rack frame to concrete while distributing load and allowing minor alignment adjustment.",
+      "likely_main_part": "Thick steel base foot plate with slotted anchor holes, raised rack pad, gusset interfaces, and chamfered corners.",
+      "why_it_tests_cad_representation": "Tests plate thickness, slots, raised bosses, load-bearing pads, chamfers, and orientation-specific mounting surfaces."
+    },
+    {
+      "idea_title": "Solar Tracker Torque Tube Saddle",
+      "product_context": "Single-axis solar tracker systems supporting long rows of photovoltaic modules.",
+      "core_function": "Cradle and locate a rectangular or round torque tube on a rotating support post.",
+      "likely_main_part": "Machined saddle block with concave tube seat, side keeper flanges, bolt holes, and drain relief channels.",
+      "why_it_tests_cad_representation": "Requires curved seating surfaces, flange constraints, drainage cutouts, bolt patterns, and structural mass distribution."
+    },
+    {
+      "idea_title": "Cable Tray Expansion Joint Slider",
+      "product_context": "Outdoor electrical infrastructure carrying power cables across temperature-varying solar or battery sites.",
+      "core_function": "Allow controlled longitudinal expansion between cable tray sections while maintaining lateral alignment.",
+      "likely_main_part": "Machined sliding splice plate with elongated guide slots, stop shoulders, low-friction bearing lands, and fastener bosses.",
+      "why_it_tests_cad_representation": "Tests sliding interfaces, long slots, travel stops, paired symmetry, and surfaces that must remain parallel and coplanar."
+    },
+    {
+      "idea_title": "Wind Vane Tail Hub Adapter",
+      "product_context": "Mechanical wind direction sensors mounted on remote weather stations.",
+      "core_function": "Connect a lightweight vane tail to a vertical sensor shaft with precise angular alignment.",
+      "likely_main_part": "Small machined hub with vertical shaft bore, radial vane slot, set-screw holes, and alignment datum notch.",
+      "why_it_tests_cad_representation": "Uses intersecting bores, thin slots, set-screw geometry, datum features, and rotational alignment details."
+    },
+    {
+      "idea_title": "Ground-Mount Solar Pile Cap Plate",
+      "product_context": "Utility-scale ground-mounted solar arrays installed on driven steel piles.",
+      "core_function": "Provide a bolted interface between a vertical pile and an angled racking support member.",
+      "likely_main_part": "Weldment-derived machined cap plate with pile saddle radius, angled mounting face, bolt pattern, and stiffening webs.",
+      "why_it_tests_cad_representation": "Tests angled planes, curved saddle contact, bolt-hole arrays, web-like reinforcement, and non-orthogonal part relationships."
+    },
+    {
+      "idea_title": "Battery Module Compression End Plate",
+      "product_context": "Battery storage packs where prismatic cells are mechanically compressed inside a module frame.",
+      "core_function": "Apply even compression across a cell stack while tying into side rails and tie rods.",
+      "likely_main_part": "Machined aluminum end plate with tie-rod holes, recessed cell contact field, perimeter rail pockets, and edge stiffeners.",
+      "why_it_tests_cad_representation": "Requires large flat datum surfaces, recessed fields, repeated hole patterns, rail pockets, and stiffness-driven geometry."
+    },
+    {
+      "idea_title": "Substation Busbar Support Clamp",
+      "product_context": "Electrical substations using rigid aluminum or copper busbars supported on insulators.",
+      "core_function": "Mechanically retain a rectangular busbar while allowing thermal movement and maintaining clearance.",
+      "likely_main_part": "Machined clamp saddle with rectangular busbar channel, insulated spacer pocket, cap-screw holes, and rounded corona-safe edges.",
+      "why_it_tests_cad_representation": "Tests rectangular channels, clearance gaps, spacer pockets, rounded edge requirements, and functional electrical-mechanical constraints."
+    },
+    {
+      "idea_title": "Solar Inverter Skid Lifting Lug",
+      "product_context": "Mechanical skids carrying solar inverters, transformers, or battery power conversion equipment.",
+      "core_function": "Provide a certified lifting point for moving a heavy electrical skid during installation.",
+      "likely_main_part": "Thick machined lifting lug with large shackle hole, base bolt pattern, load-spreading fillets, and orientation marking recess.",
+      "why_it_tests_cad_representation": "Requires high-load geometry, large through-hole features, generous fillets, base interface definition, and clear force-path representation."
+    }
+  ]
+}

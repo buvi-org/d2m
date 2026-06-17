@@ -1,0 +1,217 @@
+{
+  "agent_number": 42,
+  "domain": "glass handling, window manufacturing, glazing tools, mirror mounting, and fragile-sheet transport hardware",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "Pivoting Vacuum Cup Glass Carrier",
+      "product_context": "Manual handling aid for lifting and positioning fragile glass panes in window shops or installation sites.",
+      "core_function": "Allows an operator to grip a glass sheet with multiple suction pads while the handle assembly pivots to suit different carrying angles.",
+      "likely_main_part": "Articulated yoke frame holding suction cup mounts and a central hand grip.",
+      "why_it_tests_cad_representation": "Combines curved suction pads, hinge knuckles, offset handles, and repeated radial features that challenge clear parametric articulation."
+    },
+    {
+      "idea_title": "Glazing Bead Press-In Roller",
+      "product_context": "Shop-floor tool for seating flexible glazing beads or trim strips into window frame channels.",
+      "core_function": "Applies rolling pressure along a narrow bead while keeping the operator hand clear of the glass edge.",
+      "likely_main_part": "Forked roller head with a contoured wheel and ergonomic handle socket.",
+      "why_it_tests_cad_representation": "Requires modeling a small contoured wheel, fork clearance, handle transition, and contact geometry without relying on simple block forms."
+    },
+    {
+      "idea_title": "Mirror Clip With Hidden Spring Tongue",
+      "product_context": "Mounting hardware for retaining wall mirrors while concealing much of the fastener hardware.",
+      "core_function": "Captures the mirror edge with a visible lip while an internal spring tongue compensates for installation variation.",
+      "likely_main_part": "Folded metal clip body with a sprung inner tab and countersunk mounting zone.",
+      "why_it_tests_cad_representation": "Tests thin folded surfaces, nested retaining lips, elastic-looking tabs, and partially concealed fastening details."
+    },
+    {
+      "idea_title": "Glass Edge Corner Protector Clamp",
+      "product_context": "Temporary protection accessory used when moving loose panes or mirrors through a workshop.",
+      "core_function": "Clamps around a fragile sheet corner to shield both exposed edges from bumps during handling.",
+      "likely_main_part": "Soft-lined angled clamp shell with a tightening knob and internal corner cavity.",
+      "why_it_tests_cad_representation": "Challenges representation of angled sheet capture, padded inserts, knob hardware, and protective shell thickness relationships."
+    },
+    {
+      "idea_title": "Window Sash Alignment Spacer Comb",
+      "product_context": "Assembly fixture used while setting glass units into window sashes before final fastening.",
+      "core_function": "Provides multiple selectable spacer steps to hold a pane away from frame edges during glazing.",
+      "likely_main_part": "Comb-like stepped wedge with a grip tab and repeated spacing fins.",
+      "why_it_tests_cad_representation": "Uses repeated thin fins, stepped contact faces, tapered profiles, and an intentionally asymmetric hand tab."
+    },
+    {
+      "idea_title": "Fragile Sheet Dolly Edge Cradle",
+      "product_context": "Transport hardware for moving glass, acrylic, or mirror sheets across a shop floor.",
+      "core_function": "Supports a sheet edge in a cushioned channel while low rolling hardware carries the load.",
+      "likely_main_part": "Long grooved cradle body with integrated axle bosses and removable cushion liner.",
+      "why_it_tests_cad_representation": "Blends elongated channels, soft insert geometry, wheel mounting bosses, and load-bearing ribs in one part concept."
+    },
+    {
+      "idea_title": "Glazing Setting Block Inserter",
+      "product_context": "Hand tool for placing small support blocks under insulated glass units inside frames.",
+      "core_function": "Holds a setting block at the tip and releases it into a narrow frame pocket without finger access.",
+      "likely_main_part": "Slim pushrod tool body with a spring jaw nose and thumb release slider.",
+      "why_it_tests_cad_representation": "Tests slender mechanisms, sliding interfaces, small jaw features, and a tool body shaped for constrained access."
+    },
+    {
+      "idea_title": "A-Frame Glass Rack Locking Hook",
+      "product_context": "Retention hardware for transport racks carrying stacked glass sheets on angled supports.",
+      "core_function": "Hooks over a rack rail and swings into place to restrain sheets from shifting during movement.",
+      "likely_main_part": "Curved latch hook with a pivot boss, rubber contact pad, and lock tab.",
+      "why_it_tests_cad_representation": "Combines hook geometry, pivoting latch logic, replaceable pad placement, and angled rack-contact surfaces."
+    },
+    {
+      "idea_title": "Mirror Stand-Off Rosette Mount",
+      "product_context": "Visible decorative hardware for mounting mirrors slightly proud of a wall surface.",
+      "core_function": "Holds a mirror through a finished front cap while spacing the glass away from the wall substrate.",
+      "likely_main_part": "Layered circular rosette with a threaded center post and soft washer seat.",
+      "why_it_tests_cad_representation": "Requires concentric decorative profiles, layered hardware, glass-safe washer details, and front-back assembly relationships."
+    },
+    {
+      "idea_title": "Glass Pane Toe Jack Pad",
+      "product_context": "Installer accessory for gently lifting a pane edge during alignment in a frame or opening.",
+      "core_function": "Provides a protected lifting contact surface for small height adjustments without direct metal-to-glass contact.",
+      "likely_main_part": "Curved contact saddle mounted to a compact screw-lift shoe.",
+      "why_it_tests_cad_representation": "Tests screw-like adjustment cues, padded saddle geometry, compact base stability, and non-flat contact surfaces."
+    },
+    {
+      "idea_title": "Window Corner Silicone Smoothing Guide",
+      "product_context": "Finishing tool for applying and shaping sealant around glass-to-frame joints.",
+      "core_function": "Guides sealant into a consistent corner fillet while scraping excess away from adjacent glass and frame faces.",
+      "likely_main_part": "Triangular flexible scraper head with edge dams and a removable handle.",
+      "why_it_tests_cad_representation": "Features soft triangular geometry, concave fillet profiles, thin scraping lips, and handle-to-blade interface details."
+    },
+    {
+      "idea_title": "Glass Sheet Separation Wedge Pair",
+      "product_context": "Shop accessory for safely separating stacked sheets that are difficult to grip individually.",
+      "core_function": "Creates a controlled gap between adjacent sheets while minimizing edge pressure and surface scratching.",
+      "likely_main_part": "Tapered soft wedge with a flared stop shoulder and textured pull grip.",
+      "why_it_tests_cad_representation": "Uses gentle tapering, soft-contact surfaces, anti-slip texture, and stop features that need more than a generic wedge."
+    },
+    {
+      "idea_title": "Glazier Point Push Tool",
+      "product_context": "Hand tool for pressing small retaining points into wooden window frames during pane installation.",
+      "core_function": "Guides and drives a flat retaining point at a controlled angle close to the glass surface.",
+      "likely_main_part": "Angled nose guide body with a sliding plunger and palm pad.",
+      "why_it_tests_cad_representation": "Tests angled tool noses, slot-guided fastener paths, plunger travel cues, and clearance near a protected glass plane."
+    },
+    {
+      "idea_title": "Glass Lifter Pump Guard Cage",
+      "product_context": "Accessory for vacuum lifters used around fragile sheets and finished glass surfaces.",
+      "core_function": "Protects the vacuum pump knob and indicator area from impact while leaving them visible and reachable.",
+      "likely_main_part": "Open protective cage with arched ribs around a pump cylinder mount.",
+      "why_it_tests_cad_representation": "Challenges open rib structures, protected yet accessible control areas, curved guard geometry, and alignment around an implied cylinder."
+    },
+    {
+      "idea_title": "Sliding Door Glass Stop Bracket",
+      "product_context": "Hardware used in glass sliding door assemblies to limit travel and prevent hard impact at frame ends.",
+      "core_function": "Absorbs door contact through a replaceable bumper held by a rigid frame bracket.",
+      "likely_main_part": "L-shaped mounting bracket with a captured elastomer bumper and slotted fastener holes.",
+      "why_it_tests_cad_representation": "Combines bent bracket planes, captive soft part pockets, slots, and impact-facing geometry."
+    },
+    {
+      "idea_title": "Mirror Backing Pad Locator",
+      "product_context": "Installation fixture for placing adhesive backing pads or safety blocks consistently behind mirrors.",
+      "core_function": "Indexes from mirror edges and places pads at repeatable positions without marking the reflective face.",
+      "likely_main_part": "Flat indexing template with edge hooks, pad window cutouts, and finger reliefs.",
+      "why_it_tests_cad_representation": "Tests sheet-like template geometry, cutout arrays, over-edge hooks, and negative-space features."
+    },
+    {
+      "idea_title": "Window Frame Glass Clamp Foot",
+      "product_context": "Temporary clamp foot used while bonding or fastening glass into window framing systems.",
+      "core_function": "Spreads clamp pressure across a glass-safe contact pad while registering against a frame lip.",
+      "likely_main_part": "Stepped clamp foot body with a soft replaceable pad and frame-locating notch.",
+      "why_it_tests_cad_representation": "Requires stepped contact planes, pad retention, frame-registering notches, and pressure-spreading form."
+    },
+    {
+      "idea_title": "Insulated Glass Unit Edge Vent Plug Tool",
+      "product_context": "Manufacturing tool for handling small vent or breather plugs in insulated glass unit edge assemblies.",
+      "core_function": "Grips a tiny plug, aligns it to an edge spacer opening, and presses it into place.",
+      "likely_main_part": "Pencil-like handle with a collet nose and shoulder stop.",
+      "why_it_tests_cad_representation": "Tests miniature gripping geometry, coaxial tool features, stop shoulders, and small-part insertion affordances."
+    },
+    {
+      "idea_title": "Fragile Sheet Carry Strap Corner Saddle",
+      "product_context": "Accessory used with fabric carry straps for moving mirrors or glass panels by hand.",
+      "core_function": "Distributes strap load around a sheet corner so the strap does not abrade or concentrate force on the edge.",
+      "likely_main_part": "Curved corner saddle with strap slots and cushioned inner faces.",
+      "why_it_tests_cad_representation": "Combines curved corner wrapping, strap-routing slots, soft liners, and sheet-edge clearance."
+    },
+    {
+      "idea_title": "Glass Cutting Oil Reservoir Cap",
+      "product_context": "Replacement or upgrade part for oil-fed glass cutters used in window and mirror shops.",
+      "core_function": "Seals the handle reservoir while providing a controlled fill opening and grip texture.",
+      "likely_main_part": "Small threaded cap with knurled perimeter, gasket seat, and flip-fill plug.",
+      "why_it_tests_cad_representation": "Tests cap threading cues, gasket grooves, knurl-like surface detail, and a hinged or retained fill plug feature."
+    },
+    {
+      "idea_title": "Glass Shelf Pin With Clear Cushion",
+      "product_context": "Support hardware for glass shelves in cabinets, displays, or mirror-backed furniture.",
+      "core_function": "Supports a glass shelf from a side panel while a transparent cushion prevents rattling and chipping.",
+      "likely_main_part": "Peg-style shelf support with an upturned lip and snap-on cushion pad.",
+      "why_it_tests_cad_representation": "Requires small support geometry, retained pad interfaces, lip restraint, and visual distinction between rigid and soft components."
+    },
+    {
+      "idea_title": "Glazing Tape Corner Applicator",
+      "product_context": "Tool for applying adhesive glazing tape around sash corners before setting glass.",
+      "core_function": "Guides tape around an inside corner while maintaining contact pressure and peel-liner control.",
+      "likely_main_part": "Compact guide shoe with a tape channel, pressure roller, and liner deflector.",
+      "why_it_tests_cad_representation": "Tests channel paths, roller placement, curved corner guidance, and multi-material tape-handling features."
+    },
+    {
+      "idea_title": "Mirror Hanging Rail End Stop",
+      "product_context": "Safety accessory for rail-mounted mirror systems used in interiors and retail spaces.",
+      "core_function": "Prevents a mirror hanger from sliding off the end of a support rail while remaining low profile.",
+      "likely_main_part": "Clip-on rail stop with a snap latch, bumper face, and concealed screw pocket.",
+      "why_it_tests_cad_representation": "Combines rail-gripping undercuts, hidden fastening pockets, snap-fit cues, and contact bumper geometry."
+    },
+    {
+      "idea_title": "Glass Washer Rack Finger Insert",
+      "product_context": "Replaceable insert for racks that hold glass sheets upright through wash or drying stations.",
+      "core_function": "Separates adjacent sheets with compliant fingers that drain water and avoid edge marking.",
+      "likely_main_part": "Comb insert with flexible upright fingers, drainage grooves, and a base locking rib.",
+      "why_it_tests_cad_representation": "Tests repeated flexible fingers, drainage paths, base locking shapes, and thin feature consistency."
+    },
+    {
+      "idea_title": "Window Pane Removal Suction Pry Tool",
+      "product_context": "Service tool for loosening sealed glass panes from old frames during replacement.",
+      "core_function": "Combines suction grip with a protected pry edge to start separation without scraping the glass face.",
+      "likely_main_part": "Suction-cup handle assembly with an offset guarded pry blade.",
+      "why_it_tests_cad_representation": "Requires modeling two functional zones, offset leverage geometry, protective guard surfaces, and cup-to-handle integration."
+    },
+    {
+      "idea_title": "Glass Edge Inspection Light Clip",
+      "product_context": "Quality-control accessory for inspecting chips, lamination defects, or edge finish in glass fabrication.",
+      "core_function": "Clips a small light source onto a sheet edge at a controlled viewing angle without clamping too hard.",
+      "likely_main_part": "Spring clip body with a light cradle, diffuser slot, and soft edge pads.",
+      "why_it_tests_cad_representation": "Tests optical accessory placement, compliant clip geometry, pad contact surfaces, and angled feature alignment."
+    },
+    {
+      "idea_title": "Mirror Mount Anti-Twist Washer",
+      "product_context": "Small hardware part used between mirror glass and decorative mounting caps.",
+      "core_function": "Prevents rotation of a visible mounting cap while cushioning the glass around a drilled opening.",
+      "likely_main_part": "Soft washer with keyed outer profile, raised cushion ring, and recessed fastener area.",
+      "why_it_tests_cad_representation": "Challenges soft washer profiling, keyed non-circular geometry, concentric reliefs, and glass-safe contact zones."
+    },
+    {
+      "idea_title": "Glazier Horseshoe Shim Dispenser",
+      "product_context": "Shop tool for storing and presenting horseshoe shims used during glass installation.",
+      "core_function": "Feeds one shim at a time from a compact holder so installers can place it while holding the pane steady.",
+      "likely_main_part": "Spring-fed magazine body with a side thumb window and shaped shim exit.",
+      "why_it_tests_cad_representation": "Tests magazine-like internal logic, shaped output slot, thumb access cutout, and stacked thin-part representation."
+    },
+    {
+      "idea_title": "Fragile Sheet Truck Side Retainer",
+      "product_context": "Adjustable retainer for carts or trucks that move multiple glass sheets between workstations.",
+      "core_function": "Presses a padded bar against stacked sheets to reduce sway while leaving quick release access.",
+      "likely_main_part": "Swinging padded retainer arm with a cam latch and rail clamp base.",
+      "why_it_tests_cad_representation": "Combines a movable arm, cam-latch shape, padded contact bar, and rail-mounted base geometry."
+    },
+    {
+      "idea_title": "Window Spacer Frame Corner Crimper",
+      "product_context": "Manufacturing hand tool for shaping or securing spacer frame corners in insulated glass production.",
+      "core_function": "Applies localized forming pressure to a spacer corner while supporting the adjacent legs.",
+      "likely_main_part": "Pliers-style jaw head with nested corner anvils and replaceable forming inserts.",
+      "why_it_tests_cad_representation": "Tests compound jaw shapes, nested angled anvils, insert pockets, and tool-part relationships around a corner."
+    }
+  ]
+}

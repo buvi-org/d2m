@@ -1,0 +1,1064 @@
+{
+  "agent_number": 14,
+  "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+  "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+  "stage": "single_metal_part_requirements",
+  "source_raw_file": "docs/subcad_limit_test/raw_ideas/agent_014_musical_instrument_hardware.json",
+  "requirements": [
+    {
+      "requirement_id": "SMP-014-01",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 14,
+        "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+        "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+        "raw_idea_index": 1,
+        "raw_idea_title": "Locking Tremolo Saddle Micro-Adjuster"
+      },
+      "part_name": "Locking Tremolo Saddle Micro-Adjuster - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 90,
+        "width_mm": 80,
+        "height_mm": 46
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Locking Tremolo Saddle Micro-Adjuster'. The broader\nuse case is: Electric guitar floating tremolo bridge hardware The chosen deliverable is only the\nmetal body implied by: Machined saddle block with captive screw channel, string witness groove,\nclamp face, and radiused bridge contact underside All other product elements are external reference\nitems and must not be modeled. The part must perform this mechanical role: Allows fine string\nintonation adjustment while clamping the saddle against vibrational movement It is intentionally\nincluded in the SubCAD limit corpus because: Combines angled string paths, small threaded adjustment\nfeatures, asymmetric bearing surfaces, and precise contact geometry in one compact part The part is\nmade from low-carbon steel, ASTM A36 or equivalent using rectangular block stock. Start from one\nrectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets,\nholes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 90 mm x 80 mm x 46 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 9 mm on the length centerline at X=16 mm and X=74 mm, Y=40 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 30 mm long x 9 mm wide through the part, centered at X=45 mm, Y=40 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 25 mm x 26 mm x 2 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "machined angled reference face",
+          "description": "Machine one top reference face at 18 degrees over the last 18 mm of length."
+        },
+        {
+          "name": "side tapped hole",
+          "description": "Tap one side hole M8 from the right long edge into the central pocket; hole axis is parallel to Y."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'machined angled reference face' is present with the stated size and position.",
+        "The feature named 'side tapped hole' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Locking Tremolo Saddle Micro-Adjuster'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-014-02",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 14,
+        "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+        "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+        "raw_idea_index": 2,
+        "raw_idea_title": "Kick Drum Pedal Cam Hub"
+      },
+      "part_name": "Kick Drum Pedal Cam Hub - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 105,
+        "width_mm": 90,
+        "height_mm": 63
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Kick Drum Pedal Cam Hub'. The broader use case is:\nBass drum pedal drive mechanism The chosen deliverable is only the metal body implied by: Eccentric\nmachined cam hub with axle bore, chain anchor slot, set-screw flats, and variable-radius outer\nprofile All other product elements are external reference items and must not be modeled. The part\nmust perform this mechanical role: Converts footboard motion into beater rotation with a non-linear\nresponse curve It is intentionally included in the SubCAD limit corpus because: Requires\nrepresenting non-circular curves, offset bores, clamping details, and functional clearance around a\nrotating assembly The part is made from low-carbon steel, ASTM A36 or equivalent using rectangular\nblock stock. Start from one rectangular metal block or plate. Saw oversize, face all datum sides,\nthen machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same\nsolid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 105 mm x 90 mm x 63 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 9 mm on the length centerline at X=18 mm and X=87 mm, Y=45 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 35 mm long x 8 mm wide through the part, centered at X=52 mm, Y=45 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 26 mm x 30 mm x 8 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "side tapped hole",
+          "description": "Tap one side hole M7 from the right long edge into the central pocket; hole axis is parallel to Y."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'side tapped hole' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Kick Drum Pedal Cam Hub'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-014-03",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 14,
+        "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+        "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+        "raw_idea_index": 3,
+        "raw_idea_title": "Hi-Hat Clutch Lock Collar"
+      },
+      "part_name": "Hi-Hat Clutch Lock Collar - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 53,
+        "overall_length_mm": 99,
+        "axial_bore_diameter_mm": 17,
+        "wall_minimum_mm": 18
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Hi-Hat Clutch Lock Collar'. The broader use case\nis: Drum kit hi-hat cymbal stand The chosen deliverable is only the metal body implied by: Knurled\ncylindrical collar with split clamp, cross screw boss, stepped felt seat, and central rod bore All\nother product elements are external reference items and must not be modeled. The part must perform\nthis mechanical role: Locks the top cymbal to the pull rod while allowing controlled felt\ncompression It is intentionally included in the SubCAD limit corpus because: Tests concentric\nstepped geometry, split clamp gaps, knurl-like grip surfaces, and small fastener bosses The part is\nmade from low-carbon steel, ASTM A36 or equivalent using round bar stock. Start from one cut length\nof round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats,\nslots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 53 mm and length 99 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 17 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 27 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 17 mm wide over 91 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M5 holes through the top flat at X=33 mm and X=66 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 5 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Hi-Hat Clutch Lock Collar'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-014-04",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 14,
+        "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+        "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+        "raw_idea_index": 4,
+        "raw_idea_title": "Pedalboard Quick-Release Rail Clamp"
+      },
+      "part_name": "Pedalboard Quick-Release Rail Clamp - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 230,
+        "width_mm": 85,
+        "thickness_mm": 3
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Pedalboard Quick-Release Rail Clamp'. The broader\nuse case is: Modular guitar effects pedalboard mounting system The chosen deliverable is only the\nmetal body implied by: Low-profile machined clamp shoe with dovetail rail engagement, eccentric\nlocking tab, and pedal flange capture lip All other product elements are external reference items\nand must not be modeled. The part must perform this mechanical role: Secures an effects pedal to a\nslotted rail without permanent adhesive or hook-and-loop material It is intentionally included in\nthe SubCAD limit corpus because: Involves undercuts, dovetail interfaces, low-clearance sliding\nfeatures, and geometry tied to repeated user adjustment The part is made from 1045 medium-carbon\nsteel, normalized using sheet or plate stock. Start from one flat sheet or plate blank. Cut the\noutside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If\nbends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 230 mm x 85 mm x 3 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 7 mm on the length centerline at X=17 mm and X=213 mm, Y=42 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 76 mm long x 17 mm wide through the part, centered at X=115 mm, Y=42 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 57 mm x 28 mm x 1 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "dovetail slide form",
+          "description": "Machine a straight dovetail groove on the top face, length 206 mm, throat 17 mm, included angle 60 degrees."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'dovetail slide form' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Pedalboard Quick-Release Rail Clamp'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-014-05",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 14,
+        "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+        "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+        "raw_idea_index": 5,
+        "raw_idea_title": "Mic Stand Boom Angle Rosette Joint"
+      },
+      "part_name": "Mic Stand Boom Angle Rosette Joint - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 125,
+        "width_mm": 70,
+        "height_mm": 60
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Mic Stand Boom Angle Rosette Joint'. The broader\nuse case is: Adjustable microphone boom stand The chosen deliverable is only the metal body implied\nby: Toothed rosette hinge disk with central pivot bore, radial locking teeth, compression washer\nseat, and boom socket boss All other product elements are external reference items and must not be\nmodeled. The part must perform this mechanical role: Locks a boom arm at repeatable angular\npositions without slipping under microphone weight It is intentionally included in the SubCAD limit\ncorpus because: Tests radial tooth arrays, circular symmetry with localized bosses, mating friction\nsurfaces, and load-bearing hinge geometry The part is made from low-carbon steel, ASTM A36 or\nequivalent using rectangular block stock. Start from one rectangular metal block or plate. Saw\noversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and\nedge treatments into that same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 125 mm x 70 mm x 60 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 11 mm on the length centerline at X=14 mm and X=111 mm, Y=35 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 41 mm long x 10 mm wide through the part, centered at X=62 mm, Y=35 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 31 mm x 23 mm x 13 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "serrated contact edge",
+          "description": "Cut 6 equal triangular serrations across the rear edge, each 3 mm deep."
+        },
+        {
+          "name": "machined angled reference face",
+          "description": "Machine one top reference face at 25 degrees over the last 25 mm of length."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'serrated contact edge' is present with the stated size and position.",
+        "The feature named 'machined angled reference face' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Mic Stand Boom Angle Rosette Joint'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-014-06",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 14,
+        "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+        "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+        "raw_idea_index": 6,
+        "raw_idea_title": "Violin Fine Tuner Lever Body"
+      },
+      "part_name": "Violin Fine Tuner Lever Body - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 80,
+        "width_mm": 80,
+        "height_mm": 32
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Violin Fine Tuner Lever Body'. The broader use case\nis: String fine tuner mounted on a violin tailpiece The chosen deliverable is only the metal body\nimplied by: Miniature lever frame with string hook, pivot ears, screw contact pad, and tailpiece\nmounting saddle All other product elements are external reference items and must not be modeled. The\npart must perform this mechanical role: Transfers screw motion into small string tension changes for\nprecise pitch tuning It is intentionally included in the SubCAD limit corpus because: Requires tiny\nfunctional features, curved string contact paths, pivot geometry, and tight spatial relationships\nbetween interacting mechanisms The part is made from low-carbon steel, ASTM A36 or equivalent using\nrectangular block stock. Start from one rectangular metal block or plate. Saw oversize, face all\ndatum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into\nthat same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 80 mm x 80 mm x 32 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 11 mm on the length centerline at X=16 mm and X=64 mm, Y=40 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 30 mm long x 12 mm wide through the part, centered at X=40 mm, Y=40 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 25 mm x 26 mm x 6 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "integral hook lip",
+          "description": "Leave an integral hook lip on one short end, projecting 15 mm and undercut 5 mm for registration."
+        },
+        {
+          "name": "side tapped hole",
+          "description": "Tap one side hole M7 from the right long edge into the central pocket; hole axis is parallel to Y."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'integral hook lip' is present with the stated size and position.",
+        "The feature named 'side tapped hole' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Violin Fine Tuner Lever Body'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-014-07",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 14,
+        "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+        "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+        "raw_idea_index": 7,
+        "raw_idea_title": "Cymbal Stand Memory Lock"
+      },
+      "part_name": "Cymbal Stand Memory Lock - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "4140 alloy steel, prehard",
+        "reason": "strong cylindrical metal part with threaded and slotted details"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 66,
+        "overall_length_mm": 112,
+        "axial_bore_diameter_mm": 13,
+        "wall_minimum_mm": 26
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Cymbal Stand Memory Lock'. The broader use case is:\nStage drum hardware stand height positioning The chosen deliverable is only the metal body implied\nby: Split ring collar with hinged lug, indexed orientation notch, thumb-screw boss, and internal\ntube relief groove All other product elements are external reference items and must not be modeled.\nThe part must perform this mechanical role: Clamps around a stand tube to preserve repeatable height\nand orientation during setup It is intentionally included in the SubCAD limit corpus because: Tests\nsplit circular bodies, hinge-and-clamp features, ergonomic screw placement, and internal cylindrical\nfit constraints The part is made from 4140 alloy steel, prehard using round bar stock. Start from\none cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill\nsecondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the\ndeliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 66 mm and length 112 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 13 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 23 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 22 mm wide over 104 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M6 holes through the top flat at X=37 mm and X=74 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 3 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        },
+        {
+          "name": "cross relief slot",
+          "description": "Machine one transverse slot 5 mm wide across the top flat at X=56 mm, depth 6 mm."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "The feature named 'cross relief slot' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Cymbal Stand Memory Lock'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-014-08",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 14,
+        "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+        "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+        "raw_idea_index": 8,
+        "raw_idea_title": "Expression Pedal Rocker Pivot Block"
+      },
+      "part_name": "Expression Pedal Rocker Pivot Block - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 170,
+        "width_mm": 105,
+        "height_mm": 64
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Expression Pedal Rocker Pivot Block'. The broader\nuse case is: Guitar or synthesizer expression pedal enclosure The chosen deliverable is only the\nmetal body implied by: Machined pivot block with dual bearing bores, rocker stop faces, sensor\nlinkage slot, and enclosure mounting feet All other product elements are external reference items\nand must not be modeled. The part must perform this mechanical role: Supports smooth rocker motion\nand transfers position to an internal sensor linkage It is intentionally included in the SubCAD\nlimit corpus because: Combines aligned bearing geometry, motion stops, linkage clearance, and\nstructural mounting surfaces in a compact mechanism The part is made from 1045 medium-carbon steel,\nnormalized using rectangular block stock. Start from one rectangular metal block or plate. Saw\noversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and\nedge treatments into that same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 170 mm x 105 mm x 64 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 8 mm on the length centerline at X=21 mm and X=149 mm, Y=52 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 56 mm long x 9 mm wide through the part, centered at X=85 mm, Y=52 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 42 mm x 35 mm x 23 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Expression Pedal Rocker Pivot Block'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-014-09",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 14,
+        "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+        "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+        "raw_idea_index": 9,
+        "raw_idea_title": "Keyboard Stand Telescoping Tube Latch"
+      },
+      "part_name": "Keyboard Stand Telescoping Tube Latch - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 42,
+        "overall_length_mm": 75,
+        "axial_bore_diameter_mm": 10,
+        "wall_minimum_mm": 16
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Keyboard Stand Telescoping Tube Latch'. The broader\nuse case is: Collapsible stage keyboard stand The chosen deliverable is only the metal body implied\nby: Spring-loaded latch housing with plunger bore, angled thumb pad, tube saddle radius, and detent\npin guide All other product elements are external reference items and must not be modeled. The part\nmust perform this mechanical role: Locks telescoping support tubes at selectable width or height\nsettings It is intentionally included in the SubCAD limit corpus because: Requires nested\ncylindrical interfaces, spring/plunger accommodation, ergonomic external shape, and precise\nalignment with repeated adjustment holes The part is made from low-carbon steel, ASTM A36 or\nequivalent using round bar stock. Start from one cut length of round metal bar. Turn the outside,\nface both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No\nseparate inserts or fasteners are part of the deliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 42 mm and length 75 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 10 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 20 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 14 mm wide over 67 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M5 holes through the top flat at X=25 mm and X=50 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 6 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Keyboard Stand Telescoping Tube Latch'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-014-10",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 14,
+        "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+        "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+        "raw_idea_index": 10,
+        "raw_idea_title": "Guitar Tuning Machine Worm Gear Bracket"
+      },
+      "part_name": "Guitar Tuning Machine Worm Gear Bracket - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 48,
+        "overall_length_mm": 82,
+        "axial_bore_diameter_mm": 12,
+        "wall_minimum_mm": 18
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Guitar Tuning Machine Worm Gear Bracket'. The\nbroader use case is: Open-gear guitar headstock tuning machine The chosen deliverable is only the\nmetal body implied by: Machined tuner bracket with two raised bearing towers, worm shaft bores,\nstring post clearance pocket, and screw mounting ears All other product elements are external\nreference items and must not be modeled. The part must perform this mechanical role: Holds the worm\nshaft in alignment with the string post gear while mounting to the headstock It is intentionally\nincluded in the SubCAD limit corpus because: Tests multi-axis alignment, small bearing supports,\ngear clearance pockets, thin mounting tabs, and ornamental yet functional hardware geometry The part\nis made from low-carbon steel, ASTM A36 or equivalent using round bar stock. Start from one cut\nlength of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary\nflats, slots, and radial holes as needed. No separate inserts or fasteners are part of the\ndeliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 48 mm and length 82 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 12 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 22 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 16 mm wide over 74 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M6 holes through the top flat at X=27 mm and X=54 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 2 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Guitar Tuning Machine Worm Gear Bracket'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    }
+  ]
+}

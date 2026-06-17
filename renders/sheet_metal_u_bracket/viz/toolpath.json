@@ -1,0 +1,4499 @@
+{
+  "schema_version": "subcad.visualization_package.v1",
+  "units": "mm",
+  "summary": {
+    "operation_count": 9,
+    "move_count": 364,
+    "length_mm": 692.164543,
+    "estimated_time_minutes": 0.298319
+  },
+  "operations": [
+    {
+      "sequence_number": 1,
+      "operation": "laser_cut_profile",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.18,
+        "label": "FIBER_LASER D0.18mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.18,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.18,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.18,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.18,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.324,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.18,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.18,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.324,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "tool_type": "fiber_laser",
+      "tool_diameter_mm": 0.18,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Retains the supplied closed profile as the flat sheet blank.",
+          "Retains the supplied closed profile as the flat sheet blank.",
+          "Retains the supplied closed profile as the flat sheet blank.",
+          "Retains the supplied closed profile as the flat sheet blank.",
+          "Retains the supplied closed profile as the flat sheet blank.",
+          "Retains the supplied closed profile as the flat sheet blank.",
+          "Retains the supplied closed profile as the flat sheet blank.",
+          "Retains the supplied closed profile as the flat sheet blank.",
+          "Retains the supplied closed profile as the flat sheet blank."
+        ]
+      },
+      "warnings": [],
+      "summary": {
+        "point_count": 16,
+        "length_mm": 490.0,
+        "estimated_time_min": 0.205583,
+        "start": [
+          -70.0,
+          -45.0,
+          5.0
+        ],
+        "end": [
+          -70.0,
+          -45.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            -70.0,
+            -45.0,
+            0.0
+          ],
+          "max": [
+            70.0,
+            45.0,
+            5.0
+          ]
+        }
+      },
+      "moves": [
+        {
+          "type": "rapid",
+          "position": [
+            -70.0,
+            -45.0,
+            5.0
+          ],
+          "coolant": false
+        },
+        {
+          "type": "plunge",
+          "position": [
+            -70.0,
+            -45.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "dwell",
+          "position": [
+            -70.0,
+            -45.0,
+            0.0
+          ],
+          "coolant": false,
+          "dwell_seconds": 0.15
+        },
+        {
+          "type": "feed",
+          "position": [
+            70.0,
+            -45.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            70.0,
+            -30.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            65.0,
+            -30.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            65.0,
+            30.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            70.0,
+            30.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            70.0,
+            45.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -70.0,
+            45.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -70.0,
+            30.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -65.0,
+            30.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -65.0,
+            -30.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -70.0,
+            -30.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -70.0,
+            -45.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "retract",
+          "position": [
+            -70.0,
+            -45.0,
+            5.0
+          ],
+          "coolant": false
+        }
+      ]
+    },
+    {
+      "sequence_number": 2,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "tool_type": "fiber_laser",
+      "tool_diameter_mm": 0.15,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [],
+        "notes": []
+      },
+      "warnings": [],
+      "summary": {
+        "point_count": 38,
+        "length_mm": 52.819291,
+        "estimated_time_min": 0.023425,
+        "start": [
+          -36.0,
+          -3.0,
+          5.0
+        ],
+        "end": [
+          -36.0,
+          -3.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            -51.0,
+            -3.0,
+            0.0
+          ],
+          "max": [
+            -33.0,
+            3.0,
+            5.0
+          ]
+        }
+      },
+      "moves": [
+        {
+          "type": "rapid",
+          "position": [
+            -36.0,
+            -3.0,
+            5.0
+          ],
+          "coolant": false
+        },
+        {
+          "type": "plunge",
+          "position": [
+            -36.0,
+            -3.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "dwell",
+          "position": [
+            -36.0,
+            -3.0,
+            0.0
+          ],
+          "coolant": false,
+          "dwell_seconds": 0.15
+        },
+        {
+          "type": "feed",
+          "position": [
+            -35.414729,
+            -2.942356,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -34.85195,
+            -2.771639,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -34.333289,
+            -2.494409,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -33.87868,
+            -2.12132,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -33.505591,
+            -1.666711,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -33.228361,
+            -1.14805,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -33.057644,
+            -0.585271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -33.0,
+            0.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -33.057644,
+            0.585271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -33.228361,
+            1.14805,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -33.505591,
+            1.666711,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -33.87868,
+            2.12132,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -34.333289,
+            2.494409,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -34.85195,
+            2.771639,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -35.414729,
+            2.942356,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -36.0,
+            3.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -48.0,
+            3.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -48.585271,
+            2.942356,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -49.14805,
+            2.771639,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -49.666711,
+            2.494409,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -50.12132,
+            2.12132,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -50.494409,
+            1.666711,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -50.771639,
+            1.14805,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -50.942356,
+            0.585271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -51.0,
+            0.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -50.942356,
+            -0.585271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -50.771639,
+            -1.14805,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -50.494409,
+            -1.666711,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -50.12132,
+            -2.12132,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -49.666711,
+            -2.494409,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -49.14805,
+            -2.771639,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -48.585271,
+            -2.942356,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -48.0,
+            -3.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -36.0,
+            -3.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "retract",
+          "position": [
+            -36.0,
+            -3.0,
+            5.0
+          ],
+          "coolant": false
+        }
+      ]
+    },
+    {
+      "sequence_number": 3,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "tool_type": "fiber_laser",
+      "tool_diameter_mm": 0.15,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [],
+        "notes": []
+      },
+      "warnings": [],
+      "summary": {
+        "point_count": 38,
+        "length_mm": 52.819291,
+        "estimated_time_min": 0.023425,
+        "start": [
+          48.0,
+          -3.0,
+          5.0
+        ],
+        "end": [
+          48.0,
+          -3.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            33.0,
+            -3.0,
+            0.0
+          ],
+          "max": [
+            51.0,
+            3.0,
+            5.0
+          ]
+        }
+      },
+      "moves": [
+        {
+          "type": "rapid",
+          "position": [
+            48.0,
+            -3.0,
+            5.0
+          ],
+          "coolant": false
+        },
+        {
+          "type": "plunge",
+          "position": [
+            48.0,
+            -3.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "dwell",
+          "position": [
+            48.0,
+            -3.0,
+            0.0
+          ],
+          "coolant": false,
+          "dwell_seconds": 0.15
+        },
+        {
+          "type": "feed",
+          "position": [
+            48.585271,
+            -2.942356,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            49.14805,
+            -2.771639,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            49.666711,
+            -2.494409,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            50.12132,
+            -2.12132,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            50.494409,
+            -1.666711,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            50.771639,
+            -1.14805,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            50.942356,
+            -0.585271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            51.0,
+            0.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            50.942356,
+            0.585271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            50.771639,
+            1.14805,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            50.494409,
+            1.666711,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            50.12132,
+            2.12132,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            49.666711,
+            2.494409,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            49.14805,
+            2.771639,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            48.585271,
+            2.942356,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            48.0,
+            3.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            36.0,
+            3.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            35.414729,
+            2.942356,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            34.85195,
+            2.771639,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            34.333289,
+            2.494409,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            33.87868,
+            2.12132,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            33.505591,
+            1.666711,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            33.228361,
+            1.14805,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            33.057644,
+            0.585271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            33.0,
+            0.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            33.057644,
+            -0.585271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            33.228361,
+            -1.14805,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            33.505591,
+            -1.666711,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            33.87868,
+            -2.12132,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            34.333289,
+            -2.494409,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            34.85195,
+            -2.771639,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            35.414729,
+            -2.942356,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            36.0,
+            -3.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            48.0,
+            -3.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "retract",
+          "position": [
+            48.0,
+            -3.0,
+            5.0
+          ],
+          "coolant": false
+        }
+      ]
+    },
+    {
+      "sequence_number": 4,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "tool_type": "fiber_laser",
+      "tool_diameter_mm": 0.15,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [],
+        "notes": []
+      },
+      "warnings": [],
+      "summary": {
+        "point_count": 68,
+        "length_mm": 24.13149,
+        "estimated_time_min": 0.011471,
+        "start": [
+          -22.75,
+          35.0,
+          5.0
+        ],
+        "end": [
+          -22.75,
+          35.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            -27.25,
+            32.75,
+            0.0
+          ],
+          "max": [
+            -22.75,
+            37.25,
+            5.0
+          ]
+        }
+      },
+      "moves": [
+        {
+          "type": "rapid",
+          "position": [
+            -22.75,
+            35.0,
+            5.0
+          ],
+          "coolant": false
+        },
+        {
+          "type": "plunge",
+          "position": [
+            -22.75,
+            35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "dwell",
+          "position": [
+            -22.75,
+            35.0,
+            0.0
+          ],
+          "coolant": false,
+          "dwell_seconds": 0.15
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.760834,
+            35.220539,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.793233,
+            35.438953,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.846884,
+            35.653141,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.921271,
+            35.861038,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.015677,
+            36.060643,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.129193,
+            36.250033,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.260726,
+            36.427385,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.40901,
+            36.59099,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.572615,
+            36.739274,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.749967,
+            36.870807,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.939357,
+            36.984323,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.138962,
+            37.078729,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.346859,
+            37.153116,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.561047,
+            37.206767,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.779461,
+            37.239166,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.0,
+            37.25,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.220539,
+            37.239166,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.438953,
+            37.206767,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.653141,
+            37.153116,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.861038,
+            37.078729,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.060643,
+            36.984323,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.250033,
+            36.870807,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.427385,
+            36.739274,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.59099,
+            36.59099,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.739274,
+            36.427385,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.870807,
+            36.250033,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.984323,
+            36.060643,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.078729,
+            35.861038,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.153116,
+            35.653141,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.206767,
+            35.438953,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.239166,
+            35.220539,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.25,
+            35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.239166,
+            34.779461,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.206767,
+            34.561047,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.153116,
+            34.346859,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.078729,
+            34.138962,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.984323,
+            33.939357,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.870807,
+            33.749967,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.739274,
+            33.572615,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.59099,
+            33.40901,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.427385,
+            33.260726,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.250033,
+            33.129193,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.060643,
+            33.015677,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.861038,
+            32.921271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.653141,
+            32.846884,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.438953,
+            32.793233,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.220539,
+            32.760834,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.0,
+            32.75,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.779461,
+            32.760834,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.561047,
+            32.793233,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.346859,
+            32.846884,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.138962,
+            32.921271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.939357,
+            33.015677,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.749967,
+            33.129193,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.572615,
+            33.260726,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.40901,
+            33.40901,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.260726,
+            33.572615,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.129193,
+            33.749967,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.015677,
+            33.939357,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.921271,
+            34.138962,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.846884,
+            34.346859,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.793233,
+            34.561047,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.760834,
+            34.779461,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.75,
+            35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "retract",
+          "position": [
+            -22.75,
+            35.0,
+            5.0
+          ],
+          "coolant": false
+        }
+      ]
+    },
+    {
+      "sequence_number": 5,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "tool_type": "fiber_laser",
+      "tool_diameter_mm": 0.15,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [],
+        "notes": []
+      },
+      "warnings": [],
+      "summary": {
+        "point_count": 68,
+        "length_mm": 24.13149,
+        "estimated_time_min": 0.011471,
+        "start": [
+          27.25,
+          35.0,
+          5.0
+        ],
+        "end": [
+          27.25,
+          35.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            22.75,
+            32.75,
+            0.0
+          ],
+          "max": [
+            27.25,
+            37.25,
+            5.0
+          ]
+        }
+      },
+      "moves": [
+        {
+          "type": "rapid",
+          "position": [
+            27.25,
+            35.0,
+            5.0
+          ],
+          "coolant": false
+        },
+        {
+          "type": "plunge",
+          "position": [
+            27.25,
+            35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "dwell",
+          "position": [
+            27.25,
+            35.0,
+            0.0
+          ],
+          "coolant": false,
+          "dwell_seconds": 0.15
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.239166,
+            35.220539,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.206767,
+            35.438953,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.153116,
+            35.653141,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.078729,
+            35.861038,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.984323,
+            36.060643,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.870807,
+            36.250033,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.739274,
+            36.427385,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.59099,
+            36.59099,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.427385,
+            36.739274,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.250033,
+            36.870807,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.060643,
+            36.984323,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.861038,
+            37.078729,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.653141,
+            37.153116,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.438953,
+            37.206767,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.220539,
+            37.239166,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.0,
+            37.25,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.779461,
+            37.239166,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.561047,
+            37.206767,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.346859,
+            37.153116,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.138962,
+            37.078729,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.939357,
+            36.984323,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.749967,
+            36.870807,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.572615,
+            36.739274,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.40901,
+            36.59099,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.260726,
+            36.427385,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.129193,
+            36.250033,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.015677,
+            36.060643,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.921271,
+            35.861038,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.846884,
+            35.653141,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.793233,
+            35.438953,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.760834,
+            35.220539,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.75,
+            35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.760834,
+            34.779461,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.793233,
+            34.561047,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.846884,
+            34.346859,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.921271,
+            34.138962,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.015677,
+            33.939357,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.129193,
+            33.749967,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.260726,
+            33.572615,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.40901,
+            33.40901,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.572615,
+            33.260726,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.749967,
+            33.129193,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.939357,
+            33.015677,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.138962,
+            32.921271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.346859,
+            32.846884,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.561047,
+            32.793233,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.779461,
+            32.760834,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.0,
+            32.75,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.220539,
+            32.760834,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.438953,
+            32.793233,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.653141,
+            32.846884,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.861038,
+            32.921271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.060643,
+            33.015677,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.250033,
+            33.129193,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.427385,
+            33.260726,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.59099,
+            33.40901,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.739274,
+            33.572615,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.870807,
+            33.749967,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.984323,
+            33.939357,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.078729,
+            34.138962,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.153116,
+            34.346859,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.206767,
+            34.561047,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.239166,
+            34.779461,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.25,
+            35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "retract",
+          "position": [
+            27.25,
+            35.0,
+            5.0
+          ],
+          "coolant": false
+        }
+      ]
+    },
+    {
+      "sequence_number": 6,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "tool_type": "fiber_laser",
+      "tool_diameter_mm": 0.15,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [],
+        "notes": []
+      },
+      "warnings": [],
+      "summary": {
+        "point_count": 68,
+        "length_mm": 24.13149,
+        "estimated_time_min": 0.011471,
+        "start": [
+          -22.75,
+          -35.0,
+          5.0
+        ],
+        "end": [
+          -22.75,
+          -35.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            -27.25,
+            -37.25,
+            0.0
+          ],
+          "max": [
+            -22.75,
+            -32.75,
+            5.0
+          ]
+        }
+      },
+      "moves": [
+        {
+          "type": "rapid",
+          "position": [
+            -22.75,
+            -35.0,
+            5.0
+          ],
+          "coolant": false
+        },
+        {
+          "type": "plunge",
+          "position": [
+            -22.75,
+            -35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "dwell",
+          "position": [
+            -22.75,
+            -35.0,
+            0.0
+          ],
+          "coolant": false,
+          "dwell_seconds": 0.15
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.760834,
+            -34.779461,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.793233,
+            -34.561047,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.846884,
+            -34.346859,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.921271,
+            -34.138962,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.015677,
+            -33.939357,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.129193,
+            -33.749967,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.260726,
+            -33.572615,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.40901,
+            -33.40901,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.572615,
+            -33.260726,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.749967,
+            -33.129193,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.939357,
+            -33.015677,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.138962,
+            -32.921271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.346859,
+            -32.846884,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.561047,
+            -32.793233,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.779461,
+            -32.760834,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.0,
+            -32.75,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.220539,
+            -32.760834,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.438953,
+            -32.793233,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.653141,
+            -32.846884,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.861038,
+            -32.921271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.060643,
+            -33.015677,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.250033,
+            -33.129193,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.427385,
+            -33.260726,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.59099,
+            -33.40901,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.739274,
+            -33.572615,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.870807,
+            -33.749967,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.984323,
+            -33.939357,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.078729,
+            -34.138962,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.153116,
+            -34.346859,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.206767,
+            -34.561047,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.239166,
+            -34.779461,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.25,
+            -35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.239166,
+            -35.220539,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.206767,
+            -35.438953,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.153116,
+            -35.653141,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -27.078729,
+            -35.861038,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.984323,
+            -36.060643,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.870807,
+            -36.250033,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.739274,
+            -36.427385,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.59099,
+            -36.59099,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.427385,
+            -36.739274,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.250033,
+            -36.870807,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -26.060643,
+            -36.984323,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.861038,
+            -37.078729,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.653141,
+            -37.153116,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.438953,
+            -37.206767,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.220539,
+            -37.239166,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -25.0,
+            -37.25,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.779461,
+            -37.239166,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.561047,
+            -37.206767,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.346859,
+            -37.153116,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -24.138962,
+            -37.078729,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.939357,
+            -36.984323,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.749967,
+            -36.870807,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.572615,
+            -36.739274,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.40901,
+            -36.59099,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.260726,
+            -36.427385,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.129193,
+            -36.250033,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -23.015677,
+            -36.060643,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.921271,
+            -35.861038,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.846884,
+            -35.653141,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.793233,
+            -35.438953,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.760834,
+            -35.220539,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            -22.75,
+            -35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "retract",
+          "position": [
+            -22.75,
+            -35.0,
+            5.0
+          ],
+          "coolant": false
+        }
+      ]
+    },
+    {
+      "sequence_number": 7,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "tool_type": "fiber_laser",
+      "tool_diameter_mm": 0.15,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [],
+        "notes": []
+      },
+      "warnings": [],
+      "summary": {
+        "point_count": 68,
+        "length_mm": 24.13149,
+        "estimated_time_min": 0.011471,
+        "start": [
+          27.25,
+          -35.0,
+          5.0
+        ],
+        "end": [
+          27.25,
+          -35.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            22.75,
+            -37.25,
+            0.0
+          ],
+          "max": [
+            27.25,
+            -32.75,
+            5.0
+          ]
+        }
+      },
+      "moves": [
+        {
+          "type": "rapid",
+          "position": [
+            27.25,
+            -35.0,
+            5.0
+          ],
+          "coolant": false
+        },
+        {
+          "type": "plunge",
+          "position": [
+            27.25,
+            -35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "dwell",
+          "position": [
+            27.25,
+            -35.0,
+            0.0
+          ],
+          "coolant": false,
+          "dwell_seconds": 0.15
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.239166,
+            -34.779461,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.206767,
+            -34.561047,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.153116,
+            -34.346859,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.078729,
+            -34.138962,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.984323,
+            -33.939357,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.870807,
+            -33.749967,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.739274,
+            -33.572615,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.59099,
+            -33.40901,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.427385,
+            -33.260726,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.250033,
+            -33.129193,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.060643,
+            -33.015677,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.861038,
+            -32.921271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.653141,
+            -32.846884,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.438953,
+            -32.793233,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.220539,
+            -32.760834,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.0,
+            -32.75,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.779461,
+            -32.760834,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.561047,
+            -32.793233,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.346859,
+            -32.846884,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.138962,
+            -32.921271,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.939357,
+            -33.015677,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.749967,
+            -33.129193,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.572615,
+            -33.260726,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.40901,
+            -33.40901,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.260726,
+            -33.572615,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.129193,
+            -33.749967,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.015677,
+            -33.939357,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.921271,
+            -34.138962,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.846884,
+            -34.346859,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.793233,
+            -34.561047,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.760834,
+            -34.779461,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.75,
+            -35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.760834,
+            -35.220539,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.793233,
+            -35.438953,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.846884,
+            -35.653141,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            22.921271,
+            -35.861038,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.015677,
+            -36.060643,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.129193,
+            -36.250033,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.260726,
+            -36.427385,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.40901,
+            -36.59099,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.572615,
+            -36.739274,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.749967,
+            -36.870807,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            23.939357,
+            -36.984323,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.138962,
+            -37.078729,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.346859,
+            -37.153116,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.561047,
+            -37.206767,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            24.779461,
+            -37.239166,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.0,
+            -37.25,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.220539,
+            -37.239166,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.438953,
+            -37.206767,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.653141,
+            -37.153116,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            25.861038,
+            -37.078729,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.060643,
+            -36.984323,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.250033,
+            -36.870807,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.427385,
+            -36.739274,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.59099,
+            -36.59099,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.739274,
+            -36.427385,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.870807,
+            -36.250033,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            26.984323,
+            -36.060643,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.078729,
+            -35.861038,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.153116,
+            -35.653141,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.206767,
+            -35.438953,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.239166,
+            -35.220539,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "feed",
+          "position": [
+            27.25,
+            -35.0,
+            0.0
+          ],
+          "feed_mm_min": 2400.0,
+          "coolant": false
+        },
+        {
+          "type": "retract",
+          "position": [
+            27.25,
+            -35.0,
+            5.0
+          ],
+          "coolant": false
+        }
+      ]
+    },
+    {
+      "sequence_number": 8,
+      "operation": "press_brake_bend",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 4.0,
+        "label": "PRESS_BRAKE_PUNCH D4mm",
+        "catalog_id": "PRESS_BRAKE_PUNCH",
+        "tool_diameter_mm": 4.0,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 50.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "tool_steel",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 4.0,
+        "overall_length_mm": 75.0,
+        "reach_mm": 50.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "PRESS_BRAKE_PUNCH",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 4.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 4.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 7.2,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "PRESS_BRAKE_PUNCH",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 4.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 4.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 7.2,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "tool_type": "press_brake_punch",
+      "tool_diameter_mm": 4.0,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Geometry is an approximate split-and-rotate sheet bend; radius is recorded as manufacturing intent.",
+          "Geometry is an approximate split-and-rotate sheet bend; radius is recorded as manufacturing intent."
+        ]
+      },
+      "warnings": [],
+      "summary": {},
+      "moves": []
+    },
+    {
+      "sequence_number": 9,
+      "operation": "press_brake_bend",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 4.0,
+        "label": "PRESS_BRAKE_PUNCH D4mm",
+        "catalog_id": "PRESS_BRAKE_PUNCH",
+        "tool_diameter_mm": 4.0,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 50.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "tool_steel",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 4.0,
+        "overall_length_mm": 75.0,
+        "reach_mm": 50.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "PRESS_BRAKE_PUNCH",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 4.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 4.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 7.2,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "PRESS_BRAKE_PUNCH",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 4.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 4.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 7.2,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "tool_type": "press_brake_punch",
+      "tool_diameter_mm": 4.0,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Geometry is an approximate split-and-rotate sheet bend; radius is recorded as manufacturing intent."
+        ]
+      },
+      "warnings": [],
+      "summary": {},
+      "moves": []
+    }
+  ]
+}

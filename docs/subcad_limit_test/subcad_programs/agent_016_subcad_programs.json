@@ -1,0 +1,253 @@
+{
+  "agent_number": 16,
+  "source_requirements_file": "docs/subcad_limit_test/single_metal_parts/agent_016_packaging_machinery_single_metal_parts.json",
+  "stage": "subcad_program_generation",
+  "programs": [
+    {
+      "requirement_id": "SMP-016-01",
+      "part_name": "Starwheel pocket insert for round bottle indexing - single metal part",
+      "source_raw_idea_title": "Starwheel pocket insert for round bottle indexing",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(89, 33, material=\"stainless_316\")\n    .bore(diameter=29, through=True)\n    .counterbore(hole_diameter=29, counterbore_diameter=39, counterbore_depth=3, cx=0, cy=0)\n    .pocket(width=29, length=25, depth=2.429, cx=0, cy=0)\n    .threaded_hole(diameter=4, depth=89, cx=-5.5, cy=0, through=True)\n    .threaded_hole(diameter=4, depth=89, cx=5.5, cy=0, through=True)\n    .slot(length=30, width=6, depth=89, cx=0, cy=14.75, through=True)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Cylindrical stock OD 89 mm x length 33 mm with mapped material stainless_316.",
+        "Centered through bore diameter 29 mm.",
+        "One concentric counterbore diameter 39 mm x 3 mm deep.",
+        "Longitudinal top flat intent 29 mm wide over 25 mm length.",
+        "Two tapped radial clamp-hole callouts M4 at X=11 and X=22 mm represented by threaded_hole operations.",
+        "Radial split relief slit width 6 mm from OD toward bore represented by a through slot.",
+        "1.0 mm outside circular edge break represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Requirement datum says cylinder axis is X; Stock.cylindrical and top-face bore are Z-axis oriented, so axial orientation must be reviewed.",
+        "Counterbores are required on both ends; this draft only represents the accessible top/end counterbore.",
+        "Milled flat is approximated by a shallow rectangular pocket on the top of the cylindrical stock, not an exact chordal flat.",
+        "Radial tapped holes through the top flat are represented in Stock top-face coordinates; true radial orientation and thread sidewall are not exact.",
+        "Split relief slit is approximated as a top-face through slot; exact OD-to-bore radial cut on datum-B side needs review.",
+        "Internal bore-mouth chamfers are not independently selectable in this draft."
+      ],
+      "review_notes": [
+        "Round-bar programs use Stock.cylindrical(diameter, height) per the generation guide; axis convention may differ from the frozen X-axis requirement text."
+      ]
+    },
+    {
+      "requirement_id": "SMP-016-02",
+      "part_name": "Neck guide rail for trigger-spray bottle transfer - single metal part",
+      "source_raw_idea_title": "Neck guide rail for trigger-spray bottle transfer",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(160, 65, 41, material=\"steel_a36\")\n    .drill(diameter=10, cx=-67, cy=-0.5, through=True)\n    .drill(diameter=10, cx=67, cy=-0.5, through=True)\n    .slot(length=53, width=10, cx=0, cy=-0.5, through=True)\n    .pocket(width=21, length=40, depth=5, cx=0, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 160 x 65 x 41 mm with mapped material steel_a36.",
+        "Two through mounting holes dia 10 mm at X=13/147, Y=32.",
+        "Central through obround slot 53 x 10 mm at X=80, Y=32.",
+        "Top relief pocket 40 x 21 x 5 mm deep, centered between mounting holes.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-016-03",
+      "part_name": "Nozzle centering cone for multi-head liquid filler - single metal part",
+      "source_raw_idea_title": "Nozzle centering cone for multi-head liquid filler",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(125, 75, 3, material=\"steel_a36\")\n    .drill(diameter=13, cx=-47.5, cy=-0.5, through=True)\n    .drill(diameter=13, cx=47.5, cy=-0.5, through=True)\n    .slot(length=41, width=9, cx=-0.5, cy=-0.5, through=True)\n    .pocket(width=25, length=31, depth=1, cx=0, cy=0)\n    .slope_cut(width=75, length=25, start_depth=0, end_depth=3, cx=50, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 125 x 75 x 3 mm with mapped material steel_a36.",
+        "Two through mounting holes dia 13 mm at X=15/110, Y=37.",
+        "Central through obround slot 41 x 9 mm at X=62, Y=37.",
+        "Top relief pocket 31 x 25 x 1 mm deep, centered between mounting holes.",
+        "Angled top reference face over last 25 mm using slope_cut at nominal 21 degree intent.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Angled reference face is represented as a sloped rectangular cut; exact external wedge/angle verification remains for Stage 4 review.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-016-04",
+      "part_name": "Cap chute escapement finger for flip-top caps - single metal part",
+      "source_raw_idea_title": "Cap chute escapement finger for flip-top caps",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(220, 85, 58, material=\"steel_a36\")\n    .drill(diameter=9, cx=-93, cy=-0.5, through=True)\n    .drill(diameter=9, cx=93, cy=-0.5, through=True)\n    .slot(length=73, width=10, cx=0, cy=-0.5, through=True)\n    .pocket(width=28, length=55, depth=20, cx=0, cy=0)\n    .profile_cutout([(108.0, -42.5), (110.0, -34.0), (108.0, -25.5)], through=True)\n    .profile_cutout([(108.0, -25.5), (110.0, -17.0), (108.0, -8.5)], through=True)\n    .profile_cutout([(108.0, -8.5), (110.0, 0.0), (108.0, 8.5)], through=True)\n    .profile_cutout([(108.0, 8.5), (110.0, 17.0), (108.0, 25.5)], through=True)\n    .profile_cutout([(108.0, 25.5), (110.0, 34.0), (108.0, 42.5)], through=True)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 220 x 85 x 58 mm with mapped material steel_a36.",
+        "Two through mounting holes dia 9 mm at X=17/203, Y=42.",
+        "Central through obround slot 73 x 10 mm at X=110, Y=42.",
+        "Top relief pocket 55 x 28 x 20 mm deep, centered between mounting holes.",
+        "5 triangular rear-edge serrations, each 2 mm deep, represented by repeated triangular profile_cutout operations.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Serration profile_cutout placement needs execution review because the triangles lie on the rear edge boundary.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-016-05",
+      "part_name": "Label peel-plate tip for wraparound label applicator - single metal part",
+      "source_raw_idea_title": "Label peel-plate tip for wraparound label applicator",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(72, 75, material=\"stainless_316\")\n    .bore(diameter=24, through=True)\n    .counterbore(hole_diameter=24, counterbore_diameter=34, counterbore_depth=3, cx=0, cy=0)\n    .pocket(width=24, length=67, depth=2.059, cx=0, cy=0)\n    .threaded_hole(diameter=7, depth=72, cx=-12.5, cy=0, through=True)\n    .threaded_hole(diameter=7, depth=72, cx=12.5, cy=0, through=True)\n    .slot(length=24, width=2, depth=72, cx=0, cy=12, through=True)\n    .pocket(width=72, length=25, depth=4, cx=0, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Cylindrical stock OD 72 mm x length 75 mm with mapped material stainless_316.",
+        "Centered through bore diameter 24 mm.",
+        "One concentric counterbore diameter 34 mm x 3 mm deep.",
+        "Longitudinal top flat intent 24 mm wide over 67 mm length.",
+        "Two tapped radial clamp-hole callouts M7 at X=25 and X=50 mm represented by threaded_hole operations.",
+        "Radial split relief slit width 2 mm from OD toward bore represented by a through slot.",
+        "Opposed wrench flats intent leaving 64 mm across flats over the middle third.",
+        "1.0 mm outside circular edge break represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Requirement datum says cylinder axis is X; Stock.cylindrical and top-face bore are Z-axis oriented, so axial orientation must be reviewed.",
+        "Counterbores are required on both ends; this draft only represents the accessible top/end counterbore.",
+        "Milled flat is approximated by a shallow rectangular pocket on the top of the cylindrical stock, not an exact chordal flat.",
+        "Radial tapped holes through the top flat are represented in Stock top-face coordinates; true radial orientation and thread sidewall are not exact.",
+        "Split relief slit is approximated as a top-face through slot; exact OD-to-bore radial cut on datum-B side needs review.",
+        "Opposed wrench flats are approximated as a single top flat/pocket; the opposite flat and exact across-flats geometry are not represented.",
+        "Internal bore-mouth chamfers are not independently selectable in this draft."
+      ],
+      "review_notes": [
+        "Round-bar programs use Stock.cylindrical(diameter, height) per the generation guide; axis convention may differ from the frozen X-axis requirement text."
+      ]
+    },
+    {
+      "requirement_id": "SMP-016-06",
+      "part_name": "Bottle anti-rotation clamp jaw for front-back labeling - single metal part",
+      "source_raw_idea_title": "Bottle anti-rotation clamp jaw for front-back labeling",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(120, 35, 16, material=\"stainless_316\")\n    .drill(diameter=12, cx=-50, cy=-0.5, through=True)\n    .drill(diameter=12, cx=50, cy=-0.5, through=True)\n    .slot(length=40, width=13, cx=0, cy=-0.5, through=True)\n    .pocket(width=18, length=30, depth=1, cx=0, cy=0)\n    .dovetail(length=96, width=12, depth=6, angle=60, cx=0, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 120 x 35 x 16 mm with mapped material stainless_316.",
+        "Two through mounting holes dia 12 mm at X=10/110, Y=17.",
+        "Central through obround slot 40 x 13 mm at X=60, Y=17.",
+        "Top relief pocket 30 x 18 x 1 mm deep, centered between mounting holes.",
+        "Top dovetail groove length 96 mm, throat 12 mm, included angle 60 degrees.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-016-07",
+      "part_name": "Auger timing screw for pouch or bottle infeed - single metal part",
+      "source_raw_idea_title": "Auger timing screw for pouch or bottle infeed",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(90, 115, material=\"stainless_316\")\n    .bore(diameter=18, through=True)\n    .counterbore(hole_diameter=18, counterbore_diameter=28, counterbore_depth=3, cx=0, cy=0)\n    .pocket(width=30, length=107, depth=2.574, cx=0, cy=0)\n    .threaded_hole(diameter=6, depth=90, cx=-19.5, cy=0, through=True)\n    .threaded_hole(diameter=6, depth=90, cx=18.5, cy=0, through=True)\n    .slot(length=36, width=3, depth=90, cx=0, cy=13.5, through=True)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Cylindrical stock OD 90 mm x length 115 mm with mapped material stainless_316.",
+        "Centered through bore diameter 18 mm.",
+        "One concentric counterbore diameter 28 mm x 3 mm deep.",
+        "Longitudinal top flat intent 30 mm wide over 107 mm length.",
+        "Two tapped radial clamp-hole callouts M6 at X=38 and X=76 mm represented by threaded_hole operations.",
+        "Radial split relief slit width 3 mm from OD toward bore represented by a through slot.",
+        "1.0 mm outside circular edge break represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Requirement datum says cylinder axis is X; Stock.cylindrical and top-face bore are Z-axis oriented, so axial orientation must be reviewed.",
+        "Counterbores are required on both ends; this draft only represents the accessible top/end counterbore.",
+        "Milled flat is approximated by a shallow rectangular pocket on the top of the cylindrical stock, not an exact chordal flat.",
+        "Radial tapped holes through the top flat are represented in Stock top-face coordinates; true radial orientation and thread sidewall are not exact.",
+        "Split relief slit is approximated as a top-face through slot; exact OD-to-bore radial cut on datum-B side needs review.",
+        "Internal bore-mouth chamfers are not independently selectable in this draft."
+      ],
+      "review_notes": [
+        "Round-bar programs use Stock.cylindrical(diameter, height) per the generation guide; axis convention may differ from the frozen X-axis requirement text."
+      ]
+    },
+    {
+      "requirement_id": "SMP-016-08",
+      "part_name": "Capper chuck insert for ribbed screw caps - single metal part",
+      "source_raw_idea_title": "Capper chuck insert for ribbed screw caps",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(90, 43, material=\"steel_a36\")\n    .bore(diameter=30, through=True)\n    .counterbore(hole_diameter=30, counterbore_diameter=40, counterbore_depth=3, cx=0, cy=0)\n    .pocket(width=30, length=35, depth=2.574, cx=0, cy=0)\n    .threaded_hole(diameter=7, depth=90, cx=-7.5, cy=0, through=True)\n    .threaded_hole(diameter=7, depth=90, cx=6.5, cy=0, through=True)\n    .slot(length=30, width=6, depth=90, cx=0, cy=15, through=True)\n    .slot(length=90, width=8, depth=9, angle=90, cx=-0.5, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Cylindrical stock OD 90 mm x length 43 mm with mapped material steel_a36.",
+        "Centered through bore diameter 30 mm.",
+        "One concentric counterbore diameter 40 mm x 3 mm deep.",
+        "Longitudinal top flat intent 30 mm wide over 35 mm length.",
+        "Two tapped radial clamp-hole callouts M7 at X=14 and X=28 mm represented by threaded_hole operations.",
+        "Radial split relief slit width 6 mm from OD toward bore represented by a through slot.",
+        "Transverse top relief slot width 8 mm at X=21 mm, depth 9 mm.",
+        "1.0 mm outside circular edge break represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Requirement datum says cylinder axis is X; Stock.cylindrical and top-face bore are Z-axis oriented, so axial orientation must be reviewed.",
+        "Counterbores are required on both ends; this draft only represents the accessible top/end counterbore.",
+        "Milled flat is approximated by a shallow rectangular pocket on the top of the cylindrical stock, not an exact chordal flat.",
+        "Radial tapped holes through the top flat are represented in Stock top-face coordinates; true radial orientation and thread sidewall are not exact.",
+        "Split relief slit is approximated as a top-face through slot; exact OD-to-bore radial cut on datum-B side needs review.",
+        "Transverse slot on a cylindrical top flat is represented as a straight top-face slot; exact intersection with prior flat is approximate.",
+        "Internal bore-mouth chamfers are not independently selectable in this draft."
+      ],
+      "review_notes": [
+        "Round-bar programs use Stock.cylindrical(diameter, height) per the generation guide; axis convention may differ from the frozen X-axis requirement text."
+      ]
+    },
+    {
+      "requirement_id": "SMP-016-09",
+      "part_name": "Puck nest for unstable cosmetic bottle - single metal part",
+      "source_raw_idea_title": "Puck nest for unstable cosmetic bottle",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(175, 100, 67, material=\"stainless_316\")\n    .drill(diameter=6, cx=-67.5, cy=0, through=True)\n    .drill(diameter=6, cx=67.5, cy=0, through=True)\n    .slot(length=58, width=9, cx=-0.5, cy=0, through=True)\n    .pocket(width=33, length=43, depth=28, cx=0, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 175 x 100 x 67 mm with mapped material stainless_316.",
+        "Two through mounting holes dia 6 mm at X=20/155, Y=50.",
+        "Central through obround slot 58 x 9 mm at X=87, Y=50.",
+        "Top relief pocket 43 x 33 x 28 mm deep, centered between mounting holes.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-016-10",
+      "part_name": "Label roll core adapter with web tension hub - single metal part",
+      "source_raw_idea_title": "Label roll core adapter with web tension hub",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(55, 63, material=\"stainless_316\")\n    .bore(diameter=13, through=True)\n    .counterbore(hole_diameter=13, counterbore_diameter=23, counterbore_depth=3, cx=0, cy=0)\n    .pocket(width=18, length=55, depth=1.514, cx=0, cy=0)\n    .threaded_hole(diameter=7, depth=55, cx=-10.5, cy=0, through=True)\n    .threaded_hole(diameter=7, depth=55, cx=10.5, cy=0, through=True)\n    .slot(length=21, width=5, depth=55, cx=0, cy=8.5, through=True)\n    .slot(length=55, width=7, depth=5, angle=90, cx=-0.5, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Cylindrical stock OD 55 mm x length 63 mm with mapped material stainless_316.",
+        "Centered through bore diameter 13 mm.",
+        "One concentric counterbore diameter 23 mm x 3 mm deep.",
+        "Longitudinal top flat intent 18 mm wide over 55 mm length.",
+        "Two tapped radial clamp-hole callouts M7 at X=21 and X=42 mm represented by threaded_hole operations.",
+        "Radial split relief slit width 5 mm from OD toward bore represented by a through slot.",
+        "Transverse top relief slot width 7 mm at X=31 mm, depth 5 mm.",
+        "1.0 mm outside circular edge break represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Requirement datum says cylinder axis is X; Stock.cylindrical and top-face bore are Z-axis oriented, so axial orientation must be reviewed.",
+        "Counterbores are required on both ends; this draft only represents the accessible top/end counterbore.",
+        "Milled flat is approximated by a shallow rectangular pocket on the top of the cylindrical stock, not an exact chordal flat.",
+        "Radial tapped holes through the top flat are represented in Stock top-face coordinates; true radial orientation and thread sidewall are not exact.",
+        "Split relief slit is approximated as a top-face through slot; exact OD-to-bore radial cut on datum-B side needs review.",
+        "Transverse slot on a cylindrical top flat is represented as a straight top-face slot; exact intersection with prior flat is approximate.",
+        "Internal bore-mouth chamfers are not independently selectable in this draft."
+      ],
+      "review_notes": [
+        "Round-bar programs use Stock.cylindrical(diameter, height) per the generation guide; axis convention may differ from the frozen X-axis requirement text."
+      ]
+    }
+  ]
+}

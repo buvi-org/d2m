@@ -1,0 +1,345 @@
+{
+  "stage": "single_metal_part_requirements",
+  "status": "review_candidate",
+  "source_raw_agent_files": 42,
+  "total_requirements": 540,
+  "boundary_rule": "Each requirement is exactly one metal part made from sheet, rod, plate, or block.",
+  "agents": [
+    {
+      "agent_number": 1,
+      "domain": "workshop fixtures and small machine-shop accessories",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_001_workshop_fixtures.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_001_workshop_fixtures_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_001_workshop_fixtures_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 2,
+      "domain": "bicycle, scooter, and light mobility hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_002_mobility_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_002_mobility_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_002_mobility_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 3,
+      "domain": "kitchen appliances and food-processing mechanisms",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_003_kitchen_food_mechanisms.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_003_kitchen_food_mechanisms_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_003_kitchen_food_mechanisms_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 4,
+      "domain": "medical, lab, and dental non-implant mechanical hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_004_medical_lab_dental_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_004_medical_lab_dental_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_004_medical_lab_dental_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 5,
+      "domain": "robotics and automation end-effectors, mounts, adapters, and mechanisms",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_005_robotics_automation.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_005_robotics_automation_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_005_robotics_automation_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 6,
+      "domain": "automotive service tools, inspection aids, brackets, jigs, and repair hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_006_automotive_service_tools.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_006_automotive_service_tools_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_006_automotive_service_tools_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 7,
+      "domain": "consumer electronics enclosures, thermal parts, hinges, stands, and service hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_007_consumer_electronics.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_007_consumer_electronics_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_007_consumer_electronics_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 8,
+      "domain": "camera, audio, and creator-equipment rigging hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_008_creator_rigging_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_008_creator_rigging_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_008_creator_rigging_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 9,
+      "domain": "furniture hardware, adjustable fittings, architectural connectors, and door/window mechanisms",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_009_furniture_architectural_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_009_furniture_architectural_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_009_furniture_architectural_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 10,
+      "domain": "outdoor gear, camping hardware, marine accessories, and rugged field equipment",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_010_outdoor_marine_field_gear.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_010_outdoor_marine_field_gear_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_010_outdoor_marine_field_gear_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 11,
+      "domain": "industrial sensors, test instruments, measurement fixtures, and calibration hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_011_industrial_measurement_fixtures.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_011_industrial_measurement_fixtures_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_011_industrial_measurement_fixtures_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 12,
+      "domain": "agriculture, garden equipment, irrigation fittings, pruning tools, and small farm hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_012_agriculture_garden_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_012_agriculture_garden_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_012_agriculture_garden_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 13,
+      "domain": "aerospace ground-support, drone hardware, RC aircraft, and UAV payload mounting parts",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_013_aerospace_uav_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_013_aerospace_uav_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_013_aerospace_uav_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 14,
+      "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_014_musical_instrument_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_014_musical_instrument_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_014_musical_instrument_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 15,
+      "domain": "textile, sewing, leatherworking, embroidery, and craft-machine hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_015_textile_craft_machine_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_015_textile_craft_machine_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_015_textile_craft_machine_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 16,
+      "domain": "packaging machinery, labeling, bottle filling, cap handling, and production-line change parts",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_016_packaging_machinery.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_016_packaging_machinery_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_016_packaging_machinery_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 17,
+      "domain": "HVAC, plumbing, pump fittings, valve accessories, and building-service mechanical hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_017_hvac_plumbing_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_017_hvac_plumbing_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_017_hvac_plumbing_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 18,
+      "domain": "sports equipment, gym/fitness hardware, rehabilitation exercise devices, and adjustable training mechanisms",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_018_sports_fitness_rehab.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_018_sports_fitness_rehab_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_018_sports_fitness_rehab_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 19,
+      "domain": "renewable energy, solar mounting, wind measurement, battery storage, and electrical infrastructure hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_019_renewable_energy_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_019_renewable_energy_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_019_renewable_energy_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 20,
+      "domain": "rugged field cases, emergency-response equipment, non-weapon protective/service hardware, and rescue-tool accessories",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_020_rescue_service_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_020_rescue_service_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_020_rescue_service_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 21,
+      "domain": "education lab apparatus, physics demos, STEM kits, classroom mechanisms, and training fixtures",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_021_education_lab_apparatus.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_021_education_lab_apparatus_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_021_education_lab_apparatus_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 22,
+      "domain": "toys, model-making, hobby robotics, tabletop games, and mechanical hobby kits",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_022_toys_hobby_mechanisms.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_022_toys_hobby_mechanisms_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_022_toys_hobby_mechanisms_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 23,
+      "domain": "warehouse logistics, carts, conveyor accessories, pallet handling, tote systems, and material-flow hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_023_warehouse_logistics_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_023_warehouse_logistics_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_023_warehouse_logistics_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 24,
+      "domain": "rail, transit, elevator/escalator maintenance, public-infrastructure service tools, and alignment fixtures",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_024_rail_transit_service_tools.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_024_rail_transit_service_tools_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_024_rail_transit_service_tools_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 25,
+      "domain": "jewelry tools, watchmaking fixtures, clock mechanisms, small precision repair jigs, and wearable hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_025_jewelry_watchmaking_fixtures.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_025_jewelry_watchmaking_fixtures_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_025_jewelry_watchmaking_fixtures_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 26,
+      "domain": "office equipment, printer/scanner mechanisms, desk hardware, file storage, and workspace adjustment parts",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_026_office_equipment_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_026_office_equipment_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_026_office_equipment_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 27,
+      "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_027_scientific_instrument_fixtures.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_027_scientific_instrument_fixtures_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_027_scientific_instrument_fixtures_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 28,
+      "domain": "small engines, lawn equipment, generator accessories, carburetor/linkage hardware, and service fixtures",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_028_small_engine_service_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_028_small_engine_service_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_028_small_engine_service_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 29,
+      "domain": "pet care, veterinary clinic tools, animal mobility aids, grooming equipment, and non-implant animal-care hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_029_pet_veterinary_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_029_pet_veterinary_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_029_pet_veterinary_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 30,
+      "domain": "home appliance repair hardware, washing-machine/dryer fixtures, refrigerator mechanisms, dishwasher parts, and service alignment tools",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_030_appliance_repair_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_030_appliance_repair_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_030_appliance_repair_hardware_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 31,
+      "domain": "industrial pumps, seals, bearings, couplings, and rotating equipment service hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_031_pumps_rotating_equipment.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_031_pumps_rotating_equipment_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_031_pumps_rotating_equipment_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 32,
+      "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_032_fabrication_gauges.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_032_fabrication_gauges_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_032_fabrication_gauges_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 33,
+      "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_033_woodworking_machines.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_033_woodworking_machines_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_033_woodworking_machines_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 34,
+      "domain": "bakery, beverage, brewery, dairy, and sanitary food-processing line hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_034_sanitary_food_processing.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_034_sanitary_food_processing_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_034_sanitary_food_processing_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 35,
+      "domain": "semiconductor, PCB assembly, electronics manufacturing fixtures, test sockets, and ESD-safe handling hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_035_electronics_manufacturing.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_035_electronics_manufacturing_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_035_electronics_manufacturing_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 36,
+      "domain": "wearable sports safety gear, helmet mounts, protective equipment hardware, and adjustment mechanisms",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_036_sports_safety_gear.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_036_sports_safety_gear_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_036_sports_safety_gear_single_metal_parts.md",
+      "requirements": 10
+    },
+    {
+      "agent_number": 37,
+      "domain": "construction tools, concrete forming hardware, tile-setting aids, masonry layout fixtures, and jobsite measurement accessories",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_037_construction_tools.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_037_construction_tools_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_037_construction_tools_single_metal_parts.md",
+      "requirements": 30
+    },
+    {
+      "agent_number": 38,
+      "domain": "dental lab equipment, orthodontic bench fixtures, non-clinical prosthetic fabrication aids, and sterilization tray hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_038_dental_lab_fixtures.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_038_dental_lab_fixtures_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_038_dental_lab_fixtures_single_metal_parts.md",
+      "requirements": 30
+    },
+    {
+      "agent_number": 39,
+      "domain": "marine engine service, boat deck hardware, rigging tools, bilge systems, and dock equipment",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_039_marine_service_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_039_marine_service_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_039_marine_service_hardware_single_metal_parts.md",
+      "requirements": 30
+    },
+    {
+      "agent_number": 40,
+      "domain": "vending machines, kiosks, ticketing machines, coin/bill handling, and public-payment service hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_040_kiosk_payment_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_040_kiosk_payment_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_040_kiosk_payment_hardware_single_metal_parts.md",
+      "requirements": 30
+    },
+    {
+      "agent_number": 41,
+      "domain": "textile factory automation, garment handling conveyors, fabric cutting tables, and apparel production fixtures",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_041_apparel_production_fixtures.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_041_apparel_production_fixtures_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_041_apparel_production_fixtures_single_metal_parts.md",
+      "requirements": 30
+    },
+    {
+      "agent_number": 42,
+      "domain": "glass handling, window manufacturing, glazing tools, mirror mounting, and fragile-sheet transport hardware",
+      "raw_file": "docs/subcad_limit_test/raw_ideas/agent_042_glass_handling_hardware.json",
+      "json_file": "docs/subcad_limit_test/single_metal_parts/agent_042_glass_handling_hardware_single_metal_parts.json",
+      "markdown_file": "docs/subcad_limit_test/single_metal_parts/agent_042_glass_handling_hardware_single_metal_parts.md",
+      "requirements": 30
+    }
+  ]
+}

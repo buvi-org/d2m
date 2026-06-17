@@ -1,0 +1,79 @@
+{
+  "agent_number": 16,
+  "agent_id": "019ecede-ab03-70b3-833f-fe2f1137f02a",
+  "domain": "packaging machinery, labeling, bottle filling, cap handling, and production-line change parts",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Starwheel pocket insert for round bottle indexing",
+      "product_context": "Rotary bottle filling or labeling machine handling small cylindrical bottles",
+      "core_function": "Captures each bottle body in a shaped pocket and spaces bottles accurately as they pass a filler or labeler",
+      "likely_main_part": "Machined replaceable starwheel segment with concave bottle pockets, hub mounting holes, and timing-key features",
+      "why_it_tests_cad_representation": "Requires repeated radial pocket geometry, circular indexing, blended concave contact surfaces, bolt patterns, and controlled clearances around a rotating path"
+    },
+    {
+      "idea_title": "Neck guide rail for trigger-spray bottle transfer",
+      "product_context": "Packaging line change part used when transferring bottles with narrow necks and wider shoulders",
+      "core_function": "Supports and guides bottles by the neck while preventing wobble during conveyor movement",
+      "likely_main_part": "Long contoured guide rail with a bottle-neck channel, offset mounting bosses, and relieved sections for shoulder clearance",
+      "why_it_tests_cad_representation": "Combines a long swept profile, asymmetric clearance cuts, mounting geometry along a rail, and tolerance-sensitive channel dimensions"
+    },
+    {
+      "idea_title": "Nozzle centering cone for multi-head liquid filler",
+      "product_context": "Bottle filling station where fill nozzles must enter bottle mouths without striking the rim",
+      "core_function": "Funnels bottle mouths into alignment beneath a descending fill nozzle",
+      "likely_main_part": "Machined tapered centering cup with internal cone, nozzle clearance bore, drain groove, and flange mounting holes",
+      "why_it_tests_cad_representation": "Tests internal tapered surfaces, concentric bores, flange features, annular grooves, and sanitary drainage details"
+    },
+    {
+      "idea_title": "Cap chute escapement finger for flip-top caps",
+      "product_context": "Cap handling system feeding asymmetric plastic flip-top caps from a chute to a pick head",
+      "core_function": "Releases one cap at a time while holding the next cap back in the chute",
+      "likely_main_part": "Narrow machined escapement finger with stepped cap-contact nose, pivot hole, spring slot, and side reliefs",
+      "why_it_tests_cad_representation": "Requires small functional contact geometry, pivot relationships, thin sections, slots, stepped profiles, and non-generic cap-specific shape constraints"
+    },
+    {
+      "idea_title": "Label peel-plate tip for wraparound label applicator",
+      "product_context": "Pressure-sensitive labeler applying wraparound labels to bottles or jars",
+      "core_function": "Separates the label from the backing web at a precise sharp edge before application",
+      "likely_main_part": "Machined peel plate with a thin beveled nose, web guide grooves, countersunk mounting holes, and datum edge",
+      "why_it_tests_cad_representation": "Tests thin-edge modeling, bevel control, flatness-critical surfaces, small grooves, and accurately located fastener features"
+    },
+    {
+      "idea_title": "Bottle anti-rotation clamp jaw for front-back labeling",
+      "product_context": "Labeling machine that must hold oval or rectangular bottles still during label placement",
+      "core_function": "Clamps a bottle side profile lightly to prevent rotation while labels are applied",
+      "likely_main_part": "Contoured clamp jaw insert with bottle-profile contact face, dovetail mount, compression pad recesses, and locating dowel holes",
+      "why_it_tests_cad_representation": "Tests organic product-contact contours, replaceable insert features, dovetail geometry, recessed pad pockets, and mirrored functional surfaces"
+    },
+    {
+      "idea_title": "Auger timing screw for pouch or bottle infeed",
+      "product_context": "Small production line that spaces containers before filling, capping, or labeling",
+      "core_function": "Gradually separates incoming containers into equal pitch using a helical groove",
+      "likely_main_part": "Machined feed screw with variable-pitch helical channel, shaft journals, drive keyway, and end-retaining features",
+      "why_it_tests_cad_representation": "Pushes representation of helical geometry, pitch transitions, cylindrical datum features, keyways, and container-specific groove profiles"
+    },
+    {
+      "idea_title": "Capper chuck insert for ribbed screw caps",
+      "product_context": "Semi-automatic or rotary capper applying plastic screw caps to bottles",
+      "core_function": "Grips the outside ribs of a cap while transmitting torque without crushing it",
+      "likely_main_part": "Cylindrical chuck liner with internal rib-matching serrations, tapered lead-in, retaining groove, and axial split relief",
+      "why_it_tests_cad_representation": "Requires internal repeated serrations, taper transitions, grooves, split features, and torque-contact geometry inside a cylindrical part"
+    },
+    {
+      "idea_title": "Puck nest for unstable cosmetic bottle",
+      "product_context": "Conveyor puck system carrying tapered or oval cosmetic bottles through filling and labeling stations",
+      "core_function": "Holds a non-round bottle upright and repeatably oriented on a moving conveyor",
+      "likely_main_part": "Machined conveyor puck with shaped bottle cavity, orientation flat, underside conveyor engagement groove, and RFID pocket",
+      "why_it_tests_cad_representation": "Tests deep nested cavities, non-circular bottle profiles, underside features, datum orientation, and multi-sided machining assumptions"
+    },
+    {
+      "idea_title": "Label roll core adapter with web tension hub",
+      "product_context": "Label applicator using different label-roll core diameters across production runs",
+      "core_function": "Adapts a label roll to the machine spindle while maintaining concentricity and frictional tension",
+      "likely_main_part": "Stepped expanding hub adapter with tapered wedges, radial expansion slots, center bore, and knurled tension collar interface",
+      "why_it_tests_cad_representation": "Combines concentric stepped diameters, radial slots, wedge tapers, collar interfaces, and assembly-aware clearance features"
+    }
+  ]
+}

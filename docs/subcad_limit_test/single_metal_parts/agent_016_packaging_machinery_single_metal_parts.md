@@ -1,0 +1,640 @@
+# Agent 016 Single Metal Part Requirements
+
+Domain: packaging machinery, labeling, bottle filling, cap handling, and production-line change parts
+
+Each item below is one metal part only. Product assemblies and nonmetal components are explicitly out of scope.
+
+## SMP-016-01 - Starwheel pocket insert for round bottle indexing
+
+Part name: Starwheel pocket insert for round bottle indexing - single metal part
+
+Material: AISI 316 stainless steel (corrosion resistance and cleanable metal surfaces)
+
+Envelope: `{"axial_bore_diameter_mm": 29, "outer_diameter_mm": 89, "overall_length_mm": 33, "wall_minimum_mm": 30}`
+
+Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.
+
+Full description:
+
+Make the single metal part for the product idea 'Starwheel pocket insert for round bottle indexing'.
+The broader use case is: Rotary bottle filling or labeling machine handling small cylindrical
+bottles The chosen deliverable is only the metal body implied by: Machined replaceable starwheel
+segment with concave bottle pockets, hub mounting holes, and timing-key features All other product
+elements are external reference items and must not be modeled. The part must perform this mechanical
+role: Captures each bottle body in a shaped pocket and spaces bottles accurately as they pass a
+filler or labeler It is intentionally included in the SubCAD limit corpus because: Requires repeated
+radial pocket geometry, circular indexing, blended concave contact surfaces, bolt patterns, and
+controlled clearances around a rotating path The part is made from AISI 316 stainless steel using
+round bar stock. Start from one cut length of round metal bar. Turn the outside, face both ends,
+bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts
+or fasteners are part of the deliverable.
+
+Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 89 mm and length 33 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 29 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 39 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 29 mm wide over 25 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M4 holes through the top flat at X=11 mm and X=22 mm.
+- split relief slit: Cut one full-length radial slit 6 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.
+
+Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Starwheel pocket insert for round bottle indexing'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-016-02 - Neck guide rail for trigger-spray bottle transfer
+
+Part name: Neck guide rail for trigger-spray bottle transfer - single metal part
+
+Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)
+
+Envelope: `{"height_mm": 41, "length_mm": 160, "width_mm": 65}`
+
+Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.
+
+Full description:
+
+Make the single metal part for the product idea 'Neck guide rail for trigger-spray bottle transfer'.
+The broader use case is: Packaging line change part used when transferring bottles with narrow necks
+and wider shoulders The chosen deliverable is only the metal body implied by: Long contoured guide
+rail with a bottle-neck channel, offset mounting bosses, and relieved sections for shoulder
+clearance All other product elements are external reference items and must not be modeled. The part
+must perform this mechanical role: Supports and guides bottles by the neck while preventing wobble
+during conveyor movement It is intentionally included in the SubCAD limit corpus because: Combines a
+long swept profile, asymmetric clearance cuts, mounting geometry along a rail, and tolerance-
+sensitive channel dimensions The part is made from low-carbon steel, ASTM A36 or equivalent using
+rectangular block stock. Start from one rectangular metal block or plate. Saw oversize, face all
+datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into
+that same solid piece.
+
+Functional features:
+- single rectangular metal body: Machine one body with finished envelope 160 mm x 65 mm x 41 mm.
+- mounting hole pattern: Drill two through holes diameter 10 mm on the length centerline at X=13 mm and X=147 mm, Y=32 mm.
+- functional center feature: Machine a central obround slot 53 mm long x 10 mm wide through the part, centered at X=80 mm, Y=32 mm.
+- top relief pocket: Mill a rectangular relief pocket 40 mm x 21 mm x 5 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+
+Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Neck guide rail for trigger-spray bottle transfer'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-016-03 - Nozzle centering cone for multi-head liquid filler
+
+Part name: Nozzle centering cone for multi-head liquid filler - single metal part
+
+Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)
+
+Envelope: `{"length_mm": 125, "thickness_mm": 3, "width_mm": 75}`
+
+Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.
+
+Full description:
+
+Make the single metal part for the product idea 'Nozzle centering cone for multi-head liquid
+filler'. The broader use case is: Bottle filling station where fill nozzles must enter bottle mouths
+without striking the rim The chosen deliverable is only the metal body implied by: Machined tapered
+centering cup with internal cone, nozzle clearance bore, drain groove, and flange mounting holes All
+other product elements are external reference items and must not be modeled. The part must perform
+this mechanical role: Funnels bottle mouths into alignment beneath a descending fill nozzle It is
+intentionally included in the SubCAD limit corpus because: Tests internal tapered surfaces,
+concentric bores, flange features, annular grooves, and sanitary drainage details The part is made
+from low-carbon steel, ASTM A36 or equivalent using sheet or plate stock. Start from one flat sheet
+or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features
+into that same piece. If bends are called out, they are bends in the same sheet part, not separate
+welded pieces.
+
+Functional features:
+- single rectangular metal body: Machine one body with finished envelope 125 mm x 75 mm x 3 mm.
+- mounting hole pattern: Drill two through holes diameter 13 mm on the length centerline at X=15 mm and X=110 mm, Y=37 mm.
+- functional center feature: Machine a central obround slot 41 mm long x 9 mm wide through the part, centered at X=62 mm, Y=37 mm.
+- top relief pocket: Mill a rectangular relief pocket 31 mm x 25 mm x 1 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+- machined angled reference face: Machine one top reference face at 21 degrees over the last 25 mm of length.
+
+Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- The feature named 'machined angled reference face' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Nozzle centering cone for multi-head liquid filler'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-016-04 - Cap chute escapement finger for flip-top caps
+
+Part name: Cap chute escapement finger for flip-top caps - single metal part
+
+Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)
+
+Envelope: `{"height_mm": 58, "length_mm": 220, "width_mm": 85}`
+
+Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.
+
+Full description:
+
+Make the single metal part for the product idea 'Cap chute escapement finger for flip-top caps'. The
+broader use case is: Cap handling system feeding asymmetric plastic flip-top caps from a chute to a
+pick head The chosen deliverable is only the metal body implied by: Narrow machined escapement
+finger with stepped cap-contact nose, pivot hole, spring slot, and side reliefs All other product
+elements are external reference items and must not be modeled. The part must perform this mechanical
+role: Releases one cap at a time while holding the next cap back in the chute It is intentionally
+included in the SubCAD limit corpus because: Requires small functional contact geometry, pivot
+relationships, thin sections, slots, stepped profiles, and non-generic cap-specific shape
+constraints The part is made from low-carbon steel, ASTM A36 or equivalent using rectangular block
+stock. Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then
+machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid
+piece.
+
+Functional features:
+- single rectangular metal body: Machine one body with finished envelope 220 mm x 85 mm x 58 mm.
+- mounting hole pattern: Drill two through holes diameter 9 mm on the length centerline at X=17 mm and X=203 mm, Y=42 mm.
+- functional center feature: Machine a central obround slot 73 mm long x 10 mm wide through the part, centered at X=110 mm, Y=42 mm.
+- top relief pocket: Mill a rectangular relief pocket 55 mm x 28 mm x 20 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+- serrated contact edge: Cut 5 equal triangular serrations across the rear edge, each 2 mm deep.
+
+Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- The feature named 'serrated contact edge' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Cap chute escapement finger for flip-top caps'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-016-05 - Label peel-plate tip for wraparound label applicator
+
+Part name: Label peel-plate tip for wraparound label applicator - single metal part
+
+Material: AISI 316 stainless steel (corrosion resistance and cleanable metal surfaces)
+
+Envelope: `{"axial_bore_diameter_mm": 24, "outer_diameter_mm": 72, "overall_length_mm": 75, "wall_minimum_mm": 24}`
+
+Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.
+
+Full description:
+
+Make the single metal part for the product idea 'Label peel-plate tip for wraparound label
+applicator'. The broader use case is: Pressure-sensitive labeler applying wraparound labels to
+bottles or jars The chosen deliverable is only the metal body implied by: Machined peel plate with a
+thin beveled nose, web guide grooves, countersunk mounting holes, and datum edge All other product
+elements are external reference items and must not be modeled. The part must perform this mechanical
+role: Separates the label from the backing web at a precise sharp edge before application It is
+intentionally included in the SubCAD limit corpus because: Tests thin-edge modeling, bevel control,
+flatness-critical surfaces, small grooves, and accurately located fastener features The part is made
+from AISI 316 stainless steel using round bar stock. Start from one cut length of round metal bar.
+Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial
+holes as needed. No separate inserts or fasteners are part of the deliverable.
+
+Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 72 mm and length 75 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 24 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 34 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 24 mm wide over 67 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M7 holes through the top flat at X=25 mm and X=50 mm.
+- split relief slit: Cut one full-length radial slit 2 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.
+- opposed wrench flats: Mill two opposed flats across the outside, leaving 64 mm across flats over the middle third of the length.
+
+Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- The feature named 'opposed wrench flats' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Label peel-plate tip for wraparound label applicator'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-016-06 - Bottle anti-rotation clamp jaw for front-back labeling
+
+Part name: Bottle anti-rotation clamp jaw for front-back labeling - single metal part
+
+Material: AISI 316 stainless steel (corrosion resistance and cleanable metal surfaces)
+
+Envelope: `{"height_mm": 16, "length_mm": 120, "width_mm": 35}`
+
+Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.
+
+Full description:
+
+Make the single metal part for the product idea 'Bottle anti-rotation clamp jaw for front-back
+labeling'. The broader use case is: Labeling machine that must hold oval or rectangular bottles
+still during label placement The chosen deliverable is only the metal body implied by: Contoured
+clamp jaw insert with bottle-profile contact face, dovetail mount, compression pad recesses, and
+locating dowel holes All other product elements are external reference items and must not be
+modeled. The part must perform this mechanical role: Clamps a bottle side profile lightly to prevent
+rotation while labels are applied It is intentionally included in the SubCAD limit corpus because:
+Tests organic product-contact contours, replaceable insert features, dovetail geometry, recessed pad
+pockets, and mirrored functional surfaces The part is made from AISI 316 stainless steel using
+rectangular block stock. Start from one rectangular metal block or plate. Saw oversize, face all
+datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into
+that same solid piece.
+
+Functional features:
+- single rectangular metal body: Machine one body with finished envelope 120 mm x 35 mm x 16 mm.
+- mounting hole pattern: Drill two through holes diameter 12 mm on the length centerline at X=10 mm and X=110 mm, Y=17 mm.
+- functional center feature: Machine a central obround slot 40 mm long x 13 mm wide through the part, centered at X=60 mm, Y=17 mm.
+- top relief pocket: Mill a rectangular relief pocket 30 mm x 18 mm x 1 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+- dovetail slide form: Machine a straight dovetail groove on the top face, length 96 mm, throat 12 mm, included angle 60 degrees.
+
+Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- The feature named 'dovetail slide form' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Bottle anti-rotation clamp jaw for front-back labeling'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-016-07 - Auger timing screw for pouch or bottle infeed
+
+Part name: Auger timing screw for pouch or bottle infeed - single metal part
+
+Material: AISI 316 stainless steel (corrosion resistance and cleanable metal surfaces)
+
+Envelope: `{"axial_bore_diameter_mm": 18, "outer_diameter_mm": 90, "overall_length_mm": 115, "wall_minimum_mm": 36}`
+
+Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.
+
+Full description:
+
+Make the single metal part for the product idea 'Auger timing screw for pouch or bottle infeed'. The
+broader use case is: Small production line that spaces containers before filling, capping, or
+labeling The chosen deliverable is only the metal body implied by: Machined feed screw with
+variable-pitch helical channel, shaft journals, drive keyway, and end-retaining features All other
+product elements are external reference items and must not be modeled. The part must perform this
+mechanical role: Gradually separates incoming containers into equal pitch using a helical groove It
+is intentionally included in the SubCAD limit corpus because: Pushes representation of helical
+geometry, pitch transitions, cylindrical datum features, keyways, and container-specific groove
+profiles The part is made from AISI 316 stainless steel using round bar stock. Start from one cut
+length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary
+flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the
+deliverable.
+
+Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 90 mm and length 115 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 18 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 28 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 30 mm wide over 107 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M6 holes through the top flat at X=38 mm and X=76 mm.
+- split relief slit: Cut one full-length radial slit 3 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.
+
+Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Auger timing screw for pouch or bottle infeed'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-016-08 - Capper chuck insert for ribbed screw caps
+
+Part name: Capper chuck insert for ribbed screw caps - single metal part
+
+Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)
+
+Envelope: `{"axial_bore_diameter_mm": 30, "outer_diameter_mm": 90, "overall_length_mm": 43, "wall_minimum_mm": 30}`
+
+Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.
+
+Full description:
+
+Make the single metal part for the product idea 'Capper chuck insert for ribbed screw caps'. The
+broader use case is: Semi-automatic or rotary capper applying plastic screw caps to bottles The
+chosen deliverable is only the metal body implied by: Cylindrical chuck liner with internal rib-
+matching serrations, tapered lead-in, retaining groove, and axial split relief All other product
+elements are external reference items and must not be modeled. The part must perform this mechanical
+role: Grips the outside ribs of a cap while transmitting torque without crushing it It is
+intentionally included in the SubCAD limit corpus because: Requires internal repeated serrations,
+taper transitions, grooves, split features, and torque-contact geometry inside a cylindrical part
+The part is made from low-carbon steel, ASTM A36 or equivalent using round bar stock. Start from one
+cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill
+secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the
+deliverable.
+
+Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 90 mm and length 43 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 30 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 40 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 30 mm wide over 35 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M7 holes through the top flat at X=14 mm and X=28 mm.
+- split relief slit: Cut one full-length radial slit 6 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.
+- cross relief slot: Machine one transverse slot 8 mm wide across the top flat at X=21 mm, depth 9 mm.
+
+Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- The feature named 'cross relief slot' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Capper chuck insert for ribbed screw caps'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-016-09 - Puck nest for unstable cosmetic bottle
+
+Part name: Puck nest for unstable cosmetic bottle - single metal part
+
+Material: AISI 316 stainless steel (corrosion resistance and cleanable metal surfaces)
+
+Envelope: `{"height_mm": 67, "length_mm": 175, "width_mm": 100}`
+
+Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.
+
+Full description:
+
+Make the single metal part for the product idea 'Puck nest for unstable cosmetic bottle'. The
+broader use case is: Conveyor puck system carrying tapered or oval cosmetic bottles through filling
+and labeling stations The chosen deliverable is only the metal body implied by: Machined conveyor
+puck with shaped bottle cavity, orientation flat, underside conveyor engagement groove, and RFID
+pocket All other product elements are external reference items and must not be modeled. The part
+must perform this mechanical role: Holds a non-round bottle upright and repeatably oriented on a
+moving conveyor It is intentionally included in the SubCAD limit corpus because: Tests deep nested
+cavities, non-circular bottle profiles, underside features, datum orientation, and multi-sided
+machining assumptions The part is made from AISI 316 stainless steel using rectangular block stock.
+Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine
+the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.
+
+Functional features:
+- single rectangular metal body: Machine one body with finished envelope 175 mm x 100 mm x 67 mm.
+- mounting hole pattern: Drill two through holes diameter 6 mm on the length centerline at X=20 mm and X=155 mm, Y=50 mm.
+- functional center feature: Machine a central obround slot 58 mm long x 9 mm wide through the part, centered at X=87 mm, Y=50 mm.
+- top relief pocket: Mill a rectangular relief pocket 43 mm x 33 mm x 28 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+
+Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Puck nest for unstable cosmetic bottle'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-016-10 - Label roll core adapter with web tension hub
+
+Part name: Label roll core adapter with web tension hub - single metal part
+
+Material: AISI 316 stainless steel (corrosion resistance and cleanable metal surfaces)
+
+Envelope: `{"axial_bore_diameter_mm": 13, "outer_diameter_mm": 55, "overall_length_mm": 63, "wall_minimum_mm": 21}`
+
+Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.
+
+Full description:
+
+Make the single metal part for the product idea 'Label roll core adapter with web tension hub'. The
+broader use case is: Label applicator using different label-roll core diameters across production
+runs The chosen deliverable is only the metal body implied by: Stepped expanding hub adapter with
+tapered wedges, radial expansion slots, center bore, and knurled tension collar interface All other
+product elements are external reference items and must not be modeled. The part must perform this
+mechanical role: Adapts a label roll to the machine spindle while maintaining concentricity and
+frictional tension It is intentionally included in the SubCAD limit corpus because: Combines
+concentric stepped diameters, radial slots, wedge tapers, collar interfaces, and assembly-aware
+clearance features The part is made from AISI 316 stainless steel using round bar stock. Start from
+one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill
+secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the
+deliverable.
+
+Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 55 mm and length 63 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 13 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 23 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 18 mm wide over 55 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M7 holes through the top flat at X=21 mm and X=42 mm.
+- split relief slit: Cut one full-length radial slit 5 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.
+- cross relief slot: Machine one transverse slot 7 mm wide across the top flat at X=31 mm, depth 5 mm.
+
+Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- The feature named 'cross relief slot' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Label roll core adapter with web tension hub'; this requirement is only for its chosen metal part.
+
+---

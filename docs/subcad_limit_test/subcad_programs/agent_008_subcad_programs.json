@@ -1,0 +1,250 @@
+{
+  "agent_number": 8,
+  "source_requirements_file": "docs/subcad_limit_test/single_metal_parts/agent_008_creator_rigging_hardware_single_metal_parts.json",
+  "stage": "subcad_program_generation",
+  "programs": [
+    {
+      "requirement_id": "SMP-008-01",
+      "part_name": "Cage-Mounted HDMI Cable Clamp With Captive Wedge - single metal part",
+      "source_raw_idea_title": "Cage-Mounted HDMI Cable Clamp With Captive Wedge",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(180, 35, 63, material=\"aluminum_6061\")\n    .drill_at(diameter=8, through=True, from_left=10, from_bottom=17, spot_drill=False)\n    .drill_at(diameter=8, through=True, from_left=170, from_bottom=17, spot_drill=False)\n    .slot_at(length=60, width=14, through=True, from_left=90, from_bottom=17)\n    .pocket(width=18, length=45, depth=27, cx=0, cy=0)\n    .counterbore(hole_diameter=14, counterbore_diameter=22, counterbore_depth=6, cx=0, cy=-0.5, through=True)\n    .slope_cut(width=35, length=36, start_depth=0, end_depth=11.697, cx=72, cy=0, slope_axis=\"X\")\n    .groove(length=5, width=3.25, depth=5, cx=-87.5, cy=-15, angle=90)\n    .groove(length=5, width=3.25, depth=5, cx=-87.5, cy=-10, angle=90)\n    .groove(length=5, width=3.25, depth=5, cx=-87.5, cy=-5, angle=90)\n    .groove(length=5, width=3.25, depth=5, cx=-87.5, cy=0, angle=90)\n    .groove(length=5, width=3.25, depth=5, cx=-87.5, cy=5, angle=90)\n    .groove(length=5, width=3.25, depth=5, cx=-87.5, cy=10, angle=90)\n    .groove(length=5, width=3.25, depth=5, cx=-87.5, cy=15, angle=90)\n    .threaded_hole(diameter=10, depth=17.5, cx=0, cy=8.75)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 180 x 35 x 63 mm using aluminum_6061",
+        "two through mounting holes diameter 8 mm at X=10/170, Y=17",
+        "central obround through slot 60 x 14 mm at X=90, Y=17",
+        "centered top rectangular relief pocket 45 x 18 x 27 mm deep",
+        "central counterbore diameter 22 mm x 6 mm deep around center feature",
+        "angled top reference face over last 36 mm using sloped-floor cut for 18 degree intent",
+        "7 rear-edge serration positions with 5 mm depth intent",
+        "M10 side tapped hole intent included as threaded hole proxy",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "counterbore around an obround slot is represented with a circular counterbore operation",
+        "angled reference face is represented as a sloped rectangular floor cut rather than a full exterior face reprofile",
+        "triangular serration tooth form is approximated by repeated rectangular groove cuts",
+        "side tapped hole axis parallel to Y is approximated by a top-face threaded hole because side-axis drilling is not directly expressed",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted"
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet."
+      ]
+    },
+    {
+      "requirement_id": "SMP-008-02",
+      "part_name": "Dual Cold-Shoe Audio Receiver Bridge - single metal part",
+      "source_raw_idea_title": "Dual Cold-Shoe Audio Receiver Bridge",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(195, 115, 38, material=\"aluminum_6061\")\n    .drill_at(diameter=5, through=True, from_left=23, from_bottom=57, spot_drill=False)\n    .drill_at(diameter=5, through=True, from_left=172, from_bottom=57, spot_drill=False)\n    .slot_at(length=65, width=11, through=True, from_left=97, from_bottom=57)\n    .pocket(width=38, length=48, depth=1, cx=0, cy=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 195 x 115 x 38 mm using aluminum_6061",
+        "two through mounting holes diameter 5 mm at X=23/172, Y=57",
+        "central obround through slot 65 x 11 mm at X=97, Y=57",
+        "centered top rectangular relief pocket 48 x 38 x 1 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted"
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet."
+      ]
+    },
+    {
+      "requirement_id": "SMP-008-03",
+      "part_name": "Low-Profile NATO Rail Microphone Shock Mount Base - single metal part",
+      "source_raw_idea_title": "Low-Profile NATO Rail Microphone Shock Mount Base",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(140, 70, 70, material=\"aluminum_6061\")\n    .drill_at(diameter=13, through=True, from_left=14, from_bottom=35, spot_drill=False)\n    .drill_at(diameter=13, through=True, from_left=126, from_bottom=35, spot_drill=False)\n    .slot_at(length=46, width=16, through=True, from_left=70, from_bottom=35)\n    .pocket(width=23, length=35, depth=17, cx=0, cy=0)\n    .dovetail(length=116, width=14, depth=15.4, angle=60, cx=0, cy=0)\n    .slope_cut(width=70, length=28, start_depth=0, end_depth=8.56, cx=56, cy=0, slope_axis=\"X\")\n    .threaded_hole(diameter=6, depth=35, cx=0, cy=17.5)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 140 x 70 x 70 mm using aluminum_6061",
+        "two through mounting holes diameter 13 mm at X=14/126, Y=35",
+        "central obround through slot 46 x 16 mm at X=70, Y=35",
+        "centered top rectangular relief pocket 35 x 23 x 17 mm deep",
+        "dovetail groove length 116 mm, throat 14 mm, included angle 60 degrees",
+        "angled top reference face over last 28 mm using sloped-floor cut for 17 degree intent",
+        "M6 side tapped hole intent included as threaded hole proxy",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "angled reference face is represented as a sloped rectangular floor cut rather than a full exterior face reprofile",
+        "side tapped hole axis parallel to Y is approximated by a top-face threaded hole because side-axis drilling is not directly expressed",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted"
+      ],
+      "review_notes": [
+        "Dovetail depth was inferred because the requirement gives throat and angle but not groove depth.",
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet."
+      ]
+    },
+    {
+      "requirement_id": "SMP-008-04",
+      "part_name": "Articulating Monitor Rosette Knuckle - single metal part",
+      "source_raw_idea_title": "Articulating Monitor Rosette Knuckle",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(205, 65, 65, material=\"aluminum_6061\")\n    .drill_at(diameter=13, through=True, from_left=13, from_bottom=32, spot_drill=False)\n    .drill_at(diameter=13, through=True, from_left=192, from_bottom=32, spot_drill=False)\n    .slot_at(length=68, width=12, through=True, from_left=102, from_bottom=32)\n    .pocket(width=21, length=51, depth=29, cx=0, cy=0)\n    .groove(length=3, width=6.036, depth=3, cx=-101, cy=-27.857, angle=90)\n    .groove(length=3, width=6.036, depth=3, cx=-101, cy=-18.571, angle=90)\n    .groove(length=3, width=6.036, depth=3, cx=-101, cy=-9.286, angle=90)\n    .groove(length=3, width=6.036, depth=3, cx=-101, cy=0, angle=90)\n    .groove(length=3, width=6.036, depth=3, cx=-101, cy=9.286, angle=90)\n    .groove(length=3, width=6.036, depth=3, cx=-101, cy=18.571, angle=90)\n    .groove(length=3, width=6.036, depth=3, cx=-101, cy=27.857, angle=90)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 205 x 65 x 65 mm using aluminum_6061",
+        "two through mounting holes diameter 13 mm at X=13/192, Y=32",
+        "central obround through slot 68 x 12 mm at X=102, Y=32",
+        "centered top rectangular relief pocket 51 x 21 x 29 mm deep",
+        "7 rear-edge serration positions with 3 mm depth intent",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "triangular serration tooth form is approximated by repeated rectangular groove cuts",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted"
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet."
+      ]
+    },
+    {
+      "requirement_id": "SMP-008-05",
+      "part_name": "Boom Pole Quick-Release Recorder Cradle - single metal part",
+      "source_raw_idea_title": "Boom Pole Quick-Release Recorder Cradle",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(71, 105, material=\"steel_1045\")\n    .mill_turn_setup(axis=\"Z\")\n    .turn_id(diameter=14, depth=105)\n    .counterbore(hole_diameter=14, counterbore_diameter=24, counterbore_depth=3, cx=0, cy=0, through=True)\n    .pocket(width=23, length=97, depth=1.914, cx=0, cy=0)\n    .threaded_hole(diameter=8, depth=35.5, cx=-17.5, cy=0)\n    .threaded_hole(diameter=8, depth=35.5, cx=17.5, cy=0)\n    .slot(length=105, width=6, depth=71, cx=0, cy=0, through=True)\n    .slot(length=71, width=8, depth=7, angle=90, cx=-0.5, cy=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "cylindrical round-bar stock OD 71 mm x length 105 mm using steel_1045",
+        "centered axial through bore diameter 14 mm",
+        "concentric end counterbore diameter 24 mm x 3 mm deep",
+        "longitudinal milled flat 23 mm wide over 97 mm length",
+        "two M8 radial tapped clamp holes at axial X=35 and X=70",
+        "full-length split relief slit width 6 mm",
+        "transverse cross relief slot width 8 mm at axial X=52, depth 7 mm",
+        "1.0 mm outside edge chamfer pass"
+      ],
+      "known_gaps": [
+        "requirement datum says cylinder axis is X; Stock.cylindrical is used with its native cylinder axis for this draft",
+        "counterbores called from one accessible face; opposite-end counterbore remains an approximation",
+        "milled cylindrical flat is approximated by a rectangular top pocket/chord cut",
+        "radial tapped holes through a top flat are represented as top-face threaded holes at matching axial offsets",
+        "slit from outside to axial bore is approximated by a full top-face through slot",
+        "internal bore mouth chamfers are noted but not separately modeled with targeted bore-edge selections"
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet."
+      ]
+    },
+    {
+      "requirement_id": "SMP-008-06",
+      "part_name": "Camera Cage Side Handle ARRI-Locating Mount Block - single metal part",
+      "source_raw_idea_title": "Camera Cage Side Handle ARRI-Locating Mount Block",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(39, 98, material=\"aluminum_6061\")\n    .mill_turn_setup(axis=\"Z\")\n    .turn_id(diameter=8, depth=98)\n    .counterbore(hole_diameter=8, counterbore_diameter=18, counterbore_depth=3, cx=0, cy=0, through=True)\n    .pocket(width=13, length=90, depth=1.115, cx=0, cy=0)\n    .threaded_hole(diameter=5, depth=19.5, cx=-17, cy=0)\n    .threaded_hole(diameter=5, depth=19.5, cx=16, cy=0)\n    .slot(length=98, width=4, depth=39, cx=0, cy=0, through=True)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "cylindrical round-bar stock OD 39 mm x length 98 mm using aluminum_6061",
+        "centered axial through bore diameter 8 mm",
+        "concentric end counterbore diameter 18 mm x 3 mm deep",
+        "longitudinal milled flat 13 mm wide over 90 mm length",
+        "two M5 radial tapped clamp holes at axial X=32 and X=65",
+        "full-length split relief slit width 4 mm",
+        "1.0 mm outside edge chamfer pass"
+      ],
+      "known_gaps": [
+        "requirement datum says cylinder axis is X; Stock.cylindrical is used with its native cylinder axis for this draft",
+        "counterbores called from one accessible face; opposite-end counterbore remains an approximation",
+        "milled cylindrical flat is approximated by a rectangular top pocket/chord cut",
+        "radial tapped holes through a top flat are represented as top-face threaded holes at matching axial offsets",
+        "slit from outside to axial bore is approximated by a full top-face through slot",
+        "internal bore mouth chamfers are noted but not separately modeled with targeted bore-edge selections"
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet."
+      ]
+    },
+    {
+      "requirement_id": "SMP-008-07",
+      "part_name": "V-Mount Battery Plate Offset Spacer With Cable Tunnel - single metal part",
+      "source_raw_idea_title": "V-Mount Battery Plate Offset Spacer With Cable Tunnel",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(215, 65, 10, material=\"aluminum_6061\")\n    .drill_at(diameter=13, through=True, from_left=13, from_bottom=32, spot_drill=False)\n    .drill_at(diameter=13, through=True, from_left=202, from_bottom=32, spot_drill=False)\n    .slot_at(length=71, width=17, through=True, from_left=107, from_bottom=32)\n    .pocket(width=21, length=53, depth=3, cx=0, cy=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 215 x 65 x 10 mm using aluminum_6061",
+        "two through mounting holes diameter 13 mm at X=13/202, Y=32",
+        "central obround through slot 71 x 17 mm at X=107, Y=32",
+        "centered top rectangular relief pocket 53 x 21 x 3 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted"
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet."
+      ]
+    },
+    {
+      "requirement_id": "SMP-008-08",
+      "part_name": "Overhead Desk Camera Arm Clamp Head - single metal part",
+      "source_raw_idea_title": "Overhead Desk Camera Arm Clamp Head",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(61, 40, material=\"aluminum_6061\")\n    .mill_turn_setup(axis=\"Z\")\n    .turn_id(diameter=20, depth=40)\n    .counterbore(hole_diameter=20, counterbore_diameter=30, counterbore_depth=3, cx=0, cy=0, through=True)\n    .pocket(width=20, length=32, depth=1.686, cx=0, cy=0)\n    .threaded_hole(diameter=5, depth=30.5, cx=-7, cy=0)\n    .threaded_hole(diameter=5, depth=30.5, cx=6, cy=0)\n    .slot(length=40, width=6, depth=61, cx=0, cy=0, through=True)\n    .slot(length=61, width=8, depth=6, angle=90, cx=0, cy=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "cylindrical round-bar stock OD 61 mm x length 40 mm using aluminum_6061",
+        "centered axial through bore diameter 20 mm",
+        "concentric end counterbore diameter 30 mm x 3 mm deep",
+        "longitudinal milled flat 20 mm wide over 32 mm length",
+        "two M5 radial tapped clamp holes at axial X=13 and X=26",
+        "full-length split relief slit width 6 mm",
+        "transverse cross relief slot width 8 mm at axial X=20, depth 6 mm",
+        "1.0 mm outside edge chamfer pass"
+      ],
+      "known_gaps": [
+        "requirement datum says cylinder axis is X; Stock.cylindrical is used with its native cylinder axis for this draft",
+        "counterbores called from one accessible face; opposite-end counterbore remains an approximation",
+        "milled cylindrical flat is approximated by a rectangular top pocket/chord cut",
+        "radial tapped holes through a top flat are represented as top-face threaded holes at matching axial offsets",
+        "slit from outside to axial bore is approximated by a full top-face through slot",
+        "internal bore mouth chamfers are noted but not separately modeled with targeted bore-edge selections"
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet."
+      ]
+    },
+    {
+      "requirement_id": "SMP-008-09",
+      "part_name": "Lens Support Yoke for 15mm Rod Rig - single metal part",
+      "source_raw_idea_title": "Lens Support Yoke for 15mm Rod Rig",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(80, 60, 68, material=\"steel_a36\")\n    .drill_at(diameter=12, through=True, from_left=12, from_bottom=30, spot_drill=False)\n    .drill_at(diameter=12, through=True, from_left=68, from_bottom=30, spot_drill=False)\n    .slot_at(length=30, width=16, through=True, from_left=40, from_bottom=30)\n    .pocket(width=20, length=25, depth=11, cx=0, cy=0)\n    .threaded_hole(diameter=9, depth=30, cx=0, cy=15)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 80 x 60 x 68 mm using steel_a36",
+        "two through mounting holes diameter 12 mm at X=12/68, Y=30",
+        "central obround through slot 30 x 16 mm at X=40, Y=30",
+        "centered top rectangular relief pocket 25 x 20 x 11 mm deep",
+        "M9 side tapped hole intent included as threaded hole proxy",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "side tapped hole axis parallel to Y is approximated by a top-face threaded hole because side-axis drilling is not directly expressed",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted"
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet."
+      ]
+    },
+    {
+      "requirement_id": "SMP-008-10",
+      "part_name": "Creator Light Stand Cable-Managed Ball Head Adapter - single metal part",
+      "source_raw_idea_title": "Creator Light Stand Cable-Managed Ball Head Adapter",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(85, 80, 67, material=\"steel_a36\")\n    .drill_at(diameter=5, through=True, from_left=16, from_bottom=40, spot_drill=False)\n    .drill_at(diameter=5, through=True, from_left=69, from_bottom=40, spot_drill=False)\n    .slot_at(length=30, width=13, through=True, from_left=42, from_bottom=40)\n    .pocket(width=26, length=25, depth=19, cx=0, cy=0)\n    .threaded_hole(diameter=9, depth=40, cx=0, cy=20)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 85 x 80 x 67 mm using steel_a36",
+        "two through mounting holes diameter 5 mm at X=16/69, Y=40",
+        "central obround through slot 30 x 13 mm at X=42, Y=40",
+        "centered top rectangular relief pocket 25 x 26 x 19 mm deep",
+        "M9 side tapped hole intent included as threaded hole proxy",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "side tapped hole axis parallel to Y is approximated by a top-face threaded hole because side-axis drilling is not directly expressed",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted"
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1231 @@
+{
+  "title": "SubCAD Visualization Session",
+  "schema_version": "subcad.visualization_package.v1",
+  "units": "mm",
+  "material": "steel_a36",
+  "stock_dimensions": {
+    "length": 140,
+    "width": 90,
+    "height": 1.6,
+    "thickness": 1.6,
+    "stock_form": "sheet",
+    "process_family": "sheet_metal"
+  },
+  "bounding_box": {
+    "x_min": -70.0,
+    "x_max": 70.0,
+    "y_min": -26.600699,
+    "y_max": 26.600699,
+    "z_min": -0.8,
+    "z_max": 20.8,
+    "length": 140.0,
+    "width": 53.201399,
+    "height": 21.6
+  },
+  "volume_mm3": 18777.914778,
+  "operations": [
+    {
+      "sequence_number": 1,
+      "operation": "laser_cut_profile",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.18,
+        "label": "FIBER_LASER D0.18mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.18,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.18,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.18,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.18,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.324,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.18,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.18,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.324,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "toolpath_summary": {
+        "point_count": 16,
+        "length_mm": 490.0,
+        "estimated_time_min": 0.205583,
+        "start": [
+          -70.0,
+          -45.0,
+          5.0
+        ],
+        "end": [
+          -70.0,
+          -45.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            -70.0,
+            -45.0,
+            0.0
+          ],
+          "max": [
+            70.0,
+            45.0,
+            5.0
+          ]
+        }
+      },
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [
+          {
+            "severity": "warning",
+            "code": "toolpath_above_requested_depth",
+            "message": "laser_cut_profile at position 0 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+            "operation_index": 0,
+            "sequence_number": 1,
+            "operation": "laser_cut_profile",
+            "context": {
+              "reached_z_mm": 0.0,
+              "requested_depth_mm": 1.6
+            }
+          }
+        ]
+      },
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "toolpath_above_requested_depth",
+          "message": "laser_cut_profile at position 0 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+          "operation_index": 0,
+          "sequence_number": 1,
+          "operation": "laser_cut_profile",
+          "context": {
+            "reached_z_mm": 0.0,
+            "requested_depth_mm": 1.6
+          }
+        }
+      ]
+    },
+    {
+      "sequence_number": 2,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "toolpath_summary": {
+        "point_count": 38,
+        "length_mm": 52.819291,
+        "estimated_time_min": 0.023425,
+        "start": [
+          -36.0,
+          -3.0,
+          5.0
+        ],
+        "end": [
+          -36.0,
+          -3.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            -51.0,
+            -3.0,
+            0.0
+          ],
+          "max": [
+            -33.0,
+            3.0,
+            5.0
+          ]
+        }
+      },
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [
+          {
+            "severity": "warning",
+            "code": "toolpath_above_requested_depth",
+            "message": "laser_cut_internal at position 1 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+            "operation_index": 1,
+            "sequence_number": 2,
+            "operation": "laser_cut_internal",
+            "context": {
+              "reached_z_mm": 0.0,
+              "requested_depth_mm": 1.6
+            }
+          }
+        ]
+      },
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "toolpath_above_requested_depth",
+          "message": "laser_cut_internal at position 1 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+          "operation_index": 1,
+          "sequence_number": 2,
+          "operation": "laser_cut_internal",
+          "context": {
+            "reached_z_mm": 0.0,
+            "requested_depth_mm": 1.6
+          }
+        }
+      ]
+    },
+    {
+      "sequence_number": 3,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "toolpath_summary": {
+        "point_count": 38,
+        "length_mm": 52.819291,
+        "estimated_time_min": 0.023425,
+        "start": [
+          48.0,
+          -3.0,
+          5.0
+        ],
+        "end": [
+          48.0,
+          -3.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            33.0,
+            -3.0,
+            0.0
+          ],
+          "max": [
+            51.0,
+            3.0,
+            5.0
+          ]
+        }
+      },
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [
+          {
+            "severity": "warning",
+            "code": "toolpath_above_requested_depth",
+            "message": "laser_cut_internal at position 2 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+            "operation_index": 2,
+            "sequence_number": 3,
+            "operation": "laser_cut_internal",
+            "context": {
+              "reached_z_mm": 0.0,
+              "requested_depth_mm": 1.6
+            }
+          }
+        ]
+      },
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "toolpath_above_requested_depth",
+          "message": "laser_cut_internal at position 2 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+          "operation_index": 2,
+          "sequence_number": 3,
+          "operation": "laser_cut_internal",
+          "context": {
+            "reached_z_mm": 0.0,
+            "requested_depth_mm": 1.6
+          }
+        }
+      ]
+    },
+    {
+      "sequence_number": 4,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "toolpath_summary": {
+        "point_count": 68,
+        "length_mm": 24.13149,
+        "estimated_time_min": 0.011471,
+        "start": [
+          -22.75,
+          35.0,
+          5.0
+        ],
+        "end": [
+          -22.75,
+          35.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            -27.25,
+            32.75,
+            0.0
+          ],
+          "max": [
+            -22.75,
+            37.25,
+            5.0
+          ]
+        }
+      },
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [
+          {
+            "severity": "warning",
+            "code": "toolpath_above_requested_depth",
+            "message": "laser_cut_internal at position 3 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+            "operation_index": 3,
+            "sequence_number": 4,
+            "operation": "laser_cut_internal",
+            "context": {
+              "reached_z_mm": 0.0,
+              "requested_depth_mm": 1.6
+            }
+          }
+        ]
+      },
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "toolpath_above_requested_depth",
+          "message": "laser_cut_internal at position 3 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+          "operation_index": 3,
+          "sequence_number": 4,
+          "operation": "laser_cut_internal",
+          "context": {
+            "reached_z_mm": 0.0,
+            "requested_depth_mm": 1.6
+          }
+        }
+      ]
+    },
+    {
+      "sequence_number": 5,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "toolpath_summary": {
+        "point_count": 68,
+        "length_mm": 24.13149,
+        "estimated_time_min": 0.011471,
+        "start": [
+          27.25,
+          35.0,
+          5.0
+        ],
+        "end": [
+          27.25,
+          35.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            22.75,
+            32.75,
+            0.0
+          ],
+          "max": [
+            27.25,
+            37.25,
+            5.0
+          ]
+        }
+      },
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [
+          {
+            "severity": "warning",
+            "code": "toolpath_above_requested_depth",
+            "message": "laser_cut_internal at position 4 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+            "operation_index": 4,
+            "sequence_number": 5,
+            "operation": "laser_cut_internal",
+            "context": {
+              "reached_z_mm": 0.0,
+              "requested_depth_mm": 1.6
+            }
+          }
+        ]
+      },
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "toolpath_above_requested_depth",
+          "message": "laser_cut_internal at position 4 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+          "operation_index": 4,
+          "sequence_number": 5,
+          "operation": "laser_cut_internal",
+          "context": {
+            "reached_z_mm": 0.0,
+            "requested_depth_mm": 1.6
+          }
+        }
+      ]
+    },
+    {
+      "sequence_number": 6,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "toolpath_summary": {
+        "point_count": 68,
+        "length_mm": 24.13149,
+        "estimated_time_min": 0.011471,
+        "start": [
+          -22.75,
+          -35.0,
+          5.0
+        ],
+        "end": [
+          -22.75,
+          -35.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            -27.25,
+            -37.25,
+            0.0
+          ],
+          "max": [
+            -22.75,
+            -32.75,
+            5.0
+          ]
+        }
+      },
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [
+          {
+            "severity": "warning",
+            "code": "toolpath_above_requested_depth",
+            "message": "laser_cut_internal at position 5 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+            "operation_index": 5,
+            "sequence_number": 6,
+            "operation": "laser_cut_internal",
+            "context": {
+              "reached_z_mm": 0.0,
+              "requested_depth_mm": 1.6
+            }
+          }
+        ]
+      },
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "toolpath_above_requested_depth",
+          "message": "laser_cut_internal at position 5 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+          "operation_index": 5,
+          "sequence_number": 6,
+          "operation": "laser_cut_internal",
+          "context": {
+            "reached_z_mm": 0.0,
+            "requested_depth_mm": 1.6
+          }
+        }
+      ]
+    },
+    {
+      "sequence_number": 7,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": ">Z",
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.15,
+        "label": "FIBER_LASER D0.15mm",
+        "catalog_id": "FIBER_LASER",
+        "tool_diameter_mm": 0.15,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 100.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "laser",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 0.15,
+        "overall_length_mm": 75.0,
+        "reach_mm": 100.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "FIBER_LASER",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.15,
+          "flute_length_mm": 100.0,
+          "shank_diameter_mm": 0.15,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 0.27,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "FIBER_LASER",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.15,
+        "flute_length_mm": 100.0,
+        "shank_diameter_mm": 0.15,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 0.27,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "toolpath_summary": {
+        "point_count": 68,
+        "length_mm": 24.13149,
+        "estimated_time_min": 0.011471,
+        "start": [
+          27.25,
+          -35.0,
+          5.0
+        ],
+        "end": [
+          27.25,
+          -35.0,
+          5.0
+        ],
+        "bounds": {
+          "min": [
+            22.75,
+            -37.25,
+            0.0
+          ],
+          "max": [
+            27.25,
+            -32.75,
+            5.0
+          ]
+        }
+      },
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": [
+          {
+            "severity": "warning",
+            "code": "toolpath_above_requested_depth",
+            "message": "laser_cut_internal at position 6 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+            "operation_index": 6,
+            "sequence_number": 7,
+            "operation": "laser_cut_internal",
+            "context": {
+              "reached_z_mm": 0.0,
+              "requested_depth_mm": 1.6
+            }
+          }
+        ]
+      },
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "toolpath_above_requested_depth",
+          "message": "laser_cut_internal at position 6 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+          "operation_index": 6,
+          "sequence_number": 7,
+          "operation": "laser_cut_internal",
+          "context": {
+            "reached_z_mm": 0.0,
+            "requested_depth_mm": 1.6
+          }
+        }
+      ]
+    },
+    {
+      "sequence_number": 8,
+      "operation": "press_brake_bend",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 4.0,
+        "label": "PRESS_BRAKE_PUNCH D4mm",
+        "catalog_id": "PRESS_BRAKE_PUNCH",
+        "tool_diameter_mm": 4.0,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 50.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "tool_steel",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 4.0,
+        "overall_length_mm": 75.0,
+        "reach_mm": 50.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "PRESS_BRAKE_PUNCH",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 4.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 4.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 7.2,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "PRESS_BRAKE_PUNCH",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 4.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 4.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 7.2,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "sequence_number": 9,
+      "operation": "press_brake_bend",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 4.0,
+        "label": "PRESS_BRAKE_PUNCH D4mm",
+        "catalog_id": "PRESS_BRAKE_PUNCH",
+        "tool_diameter_mm": 4.0,
+        "corner_radius_mm": 0.0,
+        "flute_length_mm": 50.0,
+        "num_flutes": 2,
+        "coating": "uncoated",
+        "material": "tool_steel",
+        "tip_angle_deg": 0.0,
+        "tip_diameter_mm": 0.0,
+        "tool_number": null,
+        "holder_id": "",
+        "stickout_mm": 35.0,
+        "shank_diameter_mm": 4.0,
+        "overall_length_mm": 75.0,
+        "reach_mm": 50.0,
+        "inventory_count": 1,
+        "preferred_feeds_speeds": {},
+        "safe_limits": {},
+        "replacement_cost": 0.0,
+        "expected_life_minutes": 0.0,
+        "cost_per_cutting_min": 0.0,
+        "assembly": {
+          "tool_id": "PRESS_BRAKE_PUNCH",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 4.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 4.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 7.2,
+          "holder_length_mm": 40.0,
+          "tool_number": null,
+          "pocket": null,
+          "machine": ""
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "PRESS_BRAKE_PUNCH",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 4.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 4.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 7.2,
+        "holder_length_mm": 40.0,
+        "tool_number": null,
+        "pocket": null,
+        "machine": ""
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    }
+  ],
+  "clearance_markers": [],
+  "validation_issues": [
+    {
+      "severity": "warning",
+      "code": "toolpath_above_requested_depth",
+      "message": "laser_cut_profile at position 0 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+      "operation_index": 0,
+      "sequence_number": 1,
+      "operation": "laser_cut_profile",
+      "context": {
+        "reached_z_mm": 0.0,
+        "requested_depth_mm": 1.6
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "toolpath_above_requested_depth",
+      "message": "laser_cut_internal at position 1 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+      "operation_index": 1,
+      "sequence_number": 2,
+      "operation": "laser_cut_internal",
+      "context": {
+        "reached_z_mm": 0.0,
+        "requested_depth_mm": 1.6
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "toolpath_above_requested_depth",
+      "message": "laser_cut_internal at position 2 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+      "operation_index": 2,
+      "sequence_number": 3,
+      "operation": "laser_cut_internal",
+      "context": {
+        "reached_z_mm": 0.0,
+        "requested_depth_mm": 1.6
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "toolpath_above_requested_depth",
+      "message": "laser_cut_internal at position 3 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+      "operation_index": 3,
+      "sequence_number": 4,
+      "operation": "laser_cut_internal",
+      "context": {
+        "reached_z_mm": 0.0,
+        "requested_depth_mm": 1.6
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "toolpath_above_requested_depth",
+      "message": "laser_cut_internal at position 4 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+      "operation_index": 4,
+      "sequence_number": 5,
+      "operation": "laser_cut_internal",
+      "context": {
+        "reached_z_mm": 0.0,
+        "requested_depth_mm": 1.6
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "toolpath_above_requested_depth",
+      "message": "laser_cut_internal at position 5 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+      "operation_index": 5,
+      "sequence_number": 6,
+      "operation": "laser_cut_internal",
+      "context": {
+        "reached_z_mm": 0.0,
+        "requested_depth_mm": 1.6
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "toolpath_above_requested_depth",
+      "message": "laser_cut_internal at position 6 toolpath reaches z=0mm, above requested depth z=-1.6mm.",
+      "operation_index": 6,
+      "sequence_number": 7,
+      "operation": "laser_cut_internal",
+      "context": {
+        "reached_z_mm": 0.0,
+        "requested_depth_mm": 1.6
+      }
+    }
+  ],
+  "economics": null,
+  "fixtures": [],
+  "setups": {},
+  "assets": {
+    "stock_mesh": {
+      "path": "stock.stl",
+      "format": "stl",
+      "role": "stock",
+      "color": "#8ca0b4"
+    },
+    "toolpath": {
+      "path": "toolpath.json",
+      "format": "json",
+      "operation_count": 9,
+      "move_count": 364
+    },
+    "stock_states": [
+      {
+        "index": 0,
+        "sequence_number": 0,
+        "operation": "initial_stock",
+        "label": "Initial stock",
+        "path": "states/stock_state_000.stl",
+        "format": "stl",
+        "role": "stock_state"
+      },
+      {
+        "index": 1,
+        "sequence_number": 1,
+        "operation": "laser_cut_profile",
+        "label": "After OP 1",
+        "path": "states/stock_state_001.stl",
+        "format": "stl",
+        "role": "stock_state"
+      },
+      {
+        "index": 2,
+        "sequence_number": 2,
+        "operation": "laser_cut_internal",
+        "label": "After OP 2",
+        "path": "states/stock_state_002.stl",
+        "format": "stl",
+        "role": "stock_state"
+      },
+      {
+        "index": 3,
+        "sequence_number": 3,
+        "operation": "laser_cut_internal",
+        "label": "After OP 3",
+        "path": "states/stock_state_003.stl",
+        "format": "stl",
+        "role": "stock_state"
+      },
+      {
+        "index": 4,
+        "sequence_number": 4,
+        "operation": "laser_cut_internal",
+        "label": "After OP 4",
+        "path": "states/stock_state_004.stl",
+        "format": "stl",
+        "role": "stock_state"
+      },
+      {
+        "index": 5,
+        "sequence_number": 5,
+        "operation": "laser_cut_internal",
+        "label": "After OP 5",
+        "path": "states/stock_state_005.stl",
+        "format": "stl",
+        "role": "stock_state"
+      },
+      {
+        "index": 6,
+        "sequence_number": 6,
+        "operation": "laser_cut_internal",
+        "label": "After OP 6",
+        "path": "states/stock_state_006.stl",
+        "format": "stl",
+        "role": "stock_state"
+      },
+      {
+        "index": 7,
+        "sequence_number": 7,
+        "operation": "laser_cut_internal",
+        "label": "After OP 7",
+        "path": "states/stock_state_007.stl",
+        "format": "stl",
+        "role": "stock_state"
+      },
+      {
+        "index": 8,
+        "sequence_number": 8,
+        "operation": "press_brake_bend",
+        "label": "After OP 8",
+        "path": "states/stock_state_008.stl",
+        "format": "stl",
+        "role": "stock_state"
+      },
+      {
+        "index": 9,
+        "sequence_number": 9,
+        "operation": "press_brake_bend",
+        "label": "After OP 9",
+        "path": "states/stock_state_009.stl",
+        "format": "stl",
+        "role": "stock_state"
+      }
+    ]
+  },
+  "compare_status": null,
+  "view": {
+    "target": [
+      0.0,
+      -0.0,
+      10.0
+    ],
+    "camera_position": [
+      210.0,
+      -252.0,
+      178.0
+    ],
+    "up": [
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "viewer": {
+    "entrypoint": "web/visualization.html",
+    "recommended_url": "visualization.html?session=sessions/latest/scene.json"
+  }
+}

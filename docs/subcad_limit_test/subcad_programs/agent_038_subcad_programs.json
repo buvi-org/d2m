@@ -1,0 +1,632 @@
+{
+  "agent_number": 38,
+  "source_requirements_file": "docs/subcad_limit_test/single_metal_parts/agent_038_dental_lab_fixtures_single_metal_parts.json",
+  "stage": "subcad_program_generation",
+  "programs": [
+    {
+      "requirement_id": "SMP-038-01",
+      "part_name": "Articulator Calibration Stand - single metal part",
+      "source_raw_idea_title": "Articulator Calibration Stand",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(115, 100, 70, material=\"stainless_316\")\n    .drill(diameter=8, depth=70, cx=-37.5, cy=0, through=True, spot_drill=False)\n    .drill(diameter=8, depth=70, cx=37.5, cy=0, through=True, spot_drill=False)\n    .slot(length=38, width=9, depth=70, cx=-0.5, cy=0, through=True)\n    .pocket(width=33, length=28, depth=19, cx=0, cy=0, corner_radius=0)\n    .slope_cut(width=100, length=23, start_depth=0, end_depth=10.725, cx=46, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 115 x 100 x 70 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 8 mm at requirement X=20 and X=95, Y=50 mm.",
+        "Machined central obround through slot 38 x 9 mm at requirement X=57, Y=50 mm.",
+        "Milled centered top relief pocket 28 x 33 x 19 mm deep.",
+        "Approximated top angled reference face using slope_cut over last 23 mm with derived depth 10.725 mm from 25 degrees.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Verify angled-face orientation and depth because the requirement specifies angle while SubCAD uses start/end depths."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-02",
+      "part_name": "Wax Rim Forming Block - single metal part",
+      "source_raw_idea_title": "Wax Rim Forming Block",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(85, 85, 67, material=\"steel_a36\")\n    .drill(diameter=9, depth=67, cx=-25.5, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=9, depth=67, cx=25.5, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=30, width=10, depth=67, cx=-0.5, cy=-0.5, through=True)\n    .pocket(width=28, length=25, depth=8, cx=0, cy=0, corner_radius=0)\n    .slope_cut(width=85, length=18, start_depth=0, end_depth=9.978, cx=33.5, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 85 x 85 x 67 mm in steel_a36.",
+        "Drilled two through mounting holes diameter 9 mm at requirement X=17 and X=68, Y=42 mm.",
+        "Machined central obround through slot 30 x 10 mm at requirement X=42, Y=42 mm.",
+        "Milled centered top relief pocket 25 x 28 x 8 mm deep.",
+        "Approximated top angled reference face using slope_cut over last 18 mm with derived depth 9.978 mm from 29 degrees.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Verify angled-face orientation and depth because the requirement specifies angle while SubCAD uses start/end depths."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-03",
+      "part_name": "Orthodontic Wire Bending Fixture - single metal part",
+      "source_raw_idea_title": "Orthodontic Wire Bending Fixture",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(235, 145, 4, material=\"stainless_316\")\n    .drill(diameter=8, depth=4, cx=-88.5, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=8, depth=4, cx=88.5, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=78, width=9, depth=4, cx=-0.5, cy=-0.5, through=True)\n    .pocket(width=48, length=58, depth=2, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 235 x 145 x 4 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 8 mm at requirement X=29 and X=206, Y=72 mm.",
+        "Machined central obround through slot 78 x 9 mm at requirement X=117, Y=72 mm.",
+        "Milled centered top relief pocket 58 x 48 x 2 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-04",
+      "part_name": "Retainer Acrylic Trim Support - single metal part",
+      "source_raw_idea_title": "Retainer Acrylic Trim Support",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(155, 55, 27, material=\"steel_a36\")\n    .drill(diameter=7, depth=27, cx=-66.5, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=7, depth=27, cx=66.5, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=51, width=18, depth=27, cx=-0.5, cy=-0.5, through=True)\n    .pocket(width=18, length=38, depth=6, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 155 x 55 x 27 mm in steel_a36.",
+        "Drilled two through mounting holes diameter 7 mm at requirement X=11 and X=144, Y=27 mm.",
+        "Machined central obround through slot 51 x 18 mm at requirement X=77, Y=27 mm.",
+        "Milled centered top relief pocket 38 x 18 x 6 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-05",
+      "part_name": "Denture Tooth Sorting Tray - single metal part",
+      "source_raw_idea_title": "Denture Tooth Sorting Tray",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(155, 70, 8, material=\"stainless_316\")\n    .drill(diameter=11, depth=8, cx=-63.5, cy=0, through=True, spot_drill=False)\n    .drill(diameter=11, depth=8, cx=63.5, cy=0, through=True, spot_drill=False)\n    .slot(length=51, width=15, depth=8, cx=-0.5, cy=0, through=True)\n    .pocket(width=23, length=38, depth=1, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 155 x 70 x 8 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 11 mm at requirement X=14 and X=141, Y=35 mm.",
+        "Machined central obround through slot 51 x 15 mm at requirement X=77, Y=35 mm.",
+        "Milled centered top relief pocket 38 x 23 x 1 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-06",
+      "part_name": "Ceramic Crown Glaze Rack - single metal part",
+      "source_raw_idea_title": "Ceramic Crown Glaze Rack",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(175, 50, 6, material=\"stainless_316\")\n    .drill(diameter=10, depth=6, cx=-77.5, cy=0, through=True, spot_drill=False)\n    .drill(diameter=10, depth=6, cx=77.5, cy=0, through=True, spot_drill=False)\n    .slot(length=58, width=10, depth=6, cx=-0.5, cy=0, through=True)\n    .pocket(width=18, length=43, depth=3, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 175 x 50 x 6 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 10 mm at requirement X=10 and X=165, Y=25 mm.",
+        "Machined central obround through slot 58 x 10 mm at requirement X=87, Y=25 mm.",
+        "Milled centered top relief pocket 43 x 18 x 3 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-07",
+      "part_name": "Implant Model Analog Organizer - single metal part",
+      "source_raw_idea_title": "Implant Model Analog Organizer",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(120, 95, 40, material=\"stainless_316\")\n    .drill(diameter=8, depth=40, cx=-41, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=8, depth=40, cx=41, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=40, width=16, depth=40, cx=0, cy=-0.5, through=True)\n    .pocket(width=31, length=30, depth=2, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 120 x 95 x 40 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 8 mm at requirement X=19 and X=101, Y=47 mm.",
+        "Machined central obround through slot 40 x 16 mm at requirement X=60, Y=47 mm.",
+        "Milled centered top relief pocket 30 x 31 x 2 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included.",
+        "Triangular rear-edge serrations are not represented exactly; current draft does not add repeated triangular edge cutouts."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-08",
+      "part_name": "Sterilization Cassette Latch Plate - single metal part",
+      "source_raw_idea_title": "Sterilization Cassette Latch Plate",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(110, 75, 5, material=\"aluminum_6061\")\n    .drill(diameter=6, depth=5, cx=-40, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=6, depth=5, cx=40, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=36, width=7, depth=5, cx=0, cy=-0.5, through=True)\n    .pocket(width=25, length=27, depth=1, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 110 x 75 x 5 mm in aluminum_6061.",
+        "Drilled two through mounting holes diameter 6 mm at requirement X=15 and X=95, Y=37 mm.",
+        "Machined central obround through slot 36 x 7 mm at requirement X=55, Y=37 mm.",
+        "Milled centered top relief pocket 27 x 25 x 1 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included.",
+        "Integral hook lip with projection and undercut is not represented because the current fluent program starts from the finished rectangular envelope and has no explicit bend/undercut lip operation."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-09",
+      "part_name": "Bur Block Cleaning Insert - single metal part",
+      "source_raw_idea_title": "Bur Block Cleaning Insert",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(120, 110, 35, material=\"stainless_316\")\n    .drill(diameter=5, depth=35, cx=-38, cy=0, through=True, spot_drill=False)\n    .drill(diameter=5, depth=35, cx=38, cy=0, through=True, spot_drill=False)\n    .slot(length=40, width=10, depth=35, cx=0, cy=0, through=True)\n    .pocket(width=36, length=30, depth=7, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 120 x 110 x 35 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 5 mm at requirement X=22 and X=98, Y=55 mm.",
+        "Machined central obround through slot 40 x 10 mm at requirement X=60, Y=55 mm.",
+        "Milled centered top relief pocket 30 x 36 x 7 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-10",
+      "part_name": "Orthodontic Bracket Placement Board - single metal part",
+      "source_raw_idea_title": "Orthodontic Bracket Placement Board",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(190, 135, 12, material=\"steel_a36\")\n    .drill(diameter=5, depth=12, cx=-68, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=5, depth=12, cx=68, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=63, width=11, depth=12, cx=0, cy=-0.5, through=True)\n    .pocket(width=45, length=47, depth=1, cx=0, cy=0, corner_radius=0)\n    .slope_cut(width=135, length=38, start_depth=0, end_depth=6.7, cx=76, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 190 x 135 x 12 mm in steel_a36.",
+        "Drilled two through mounting holes diameter 5 mm at requirement X=27 and X=163, Y=67 mm.",
+        "Machined central obround through slot 63 x 11 mm at requirement X=95, Y=67 mm.",
+        "Milled centered top relief pocket 47 x 45 x 1 mm deep.",
+        "Approximated top angled reference face using slope_cut over last 38 mm with derived depth 6.7 mm from 10 degrees.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Verify angled-face orientation and depth because the requirement specifies angle while SubCAD uses start/end depths."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-11",
+      "part_name": "Model Pin Drilling Guide - single metal part",
+      "source_raw_idea_title": "Model Pin Drilling Guide",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(58, 97, material=\"stainless_316\")\n    .turn_id(diameter=14, depth=97)\n    .counterbore(hole_diameter=14, counterbore_diameter=24, counterbore_depth=3, cx=0, cy=0)\n    .groove(length=58, width=8, depth=5, cx=0, cy=-0.5)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created cylindrical stock OD 58 x length 97 mm in stainless_316.",
+        "Machined centered axial through bore diameter 14 mm along the full length using turn_id.",
+        "Modeled one concentric end counterbore diameter 24 mm x 3 mm deep.",
+        "Added an approximate transverse groove for the cross relief slot width 8 mm and depth 5 mm.",
+        "Applied 1.0 mm general chamfer operation to outside circular edges where supported."
+      ],
+      "known_gaps": [
+        "Bore-mouth 1.0 mm x 45 degree chamfers are not individually represented; only a general chamfer operation is included.",
+        "Requirement calls for counterbores on both ends; current SubCAD chain models only one accessible end counterbore.",
+        "Cross relief slot placement on a milled longitudinal flat is approximate because this cylindrical draft does not establish that side flat as a machinable setup plane.",
+        "Longitudinal milled reference flat on the cylinder side is not represented exactly by current top/end-face fluent operations.",
+        "Radial tapped M4 holes at axial X=32 and X=64 mm through the top flat are not represented; top-face threaded_hole does not express radial side drilling on the cylindrical surface.",
+        "Full-length radial split relief slit from OD to bore is not represented exactly."
+      ],
+      "review_notes": [
+        "Draft cylindrical program is not executed; check whether Stock.cylindrical axis/orientation matches the requirement datum during Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-12",
+      "part_name": "Vacuum Forming Sheet Clamp Frame - single metal part",
+      "source_raw_idea_title": "Vacuum Forming Sheet Clamp Frame",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(185, 140, 12, material=\"stainless_316\")\n    .drill(diameter=7, depth=12, cx=-64.5, cy=0, through=True, spot_drill=False)\n    .drill(diameter=7, depth=12, cx=64.5, cy=0, through=True, spot_drill=False)\n    .slot(length=61, width=12, depth=12, cx=-0.5, cy=0, through=True)\n    .pocket(width=46, length=46, depth=2, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 185 x 140 x 12 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 7 mm at requirement X=28 and X=157, Y=70 mm.",
+        "Machined central obround through slot 61 x 12 mm at requirement X=92, Y=70 mm.",
+        "Milled centered top relief pocket 46 x 46 x 2 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-13",
+      "part_name": "Plaster Model Drying Rack - single metal part",
+      "source_raw_idea_title": "Plaster Model Drying Rack",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(135, 100, 41, material=\"stainless_316\")\n    .drill(diameter=10, depth=41, cx=-47.5, cy=0, through=True, spot_drill=False)\n    .drill(diameter=10, depth=41, cx=47.5, cy=0, through=True, spot_drill=False)\n    .slot(length=45, width=12, depth=41, cx=-0.5, cy=0, through=True)\n    .pocket(width=33, length=33, depth=18, cx=0, cy=0, corner_radius=0)\n    .slope_cut(width=100, length=27, start_depth=0, end_depth=15.588, cx=54, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 135 x 100 x 41 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 10 mm at requirement X=20 and X=115, Y=50 mm.",
+        "Machined central obround through slot 45 x 12 mm at requirement X=67, Y=50 mm.",
+        "Milled centered top relief pocket 33 x 33 x 18 mm deep.",
+        "Approximated top angled reference face using slope_cut over last 27 mm with derived depth 15.588 mm from 30 degrees.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Verify angled-face orientation and depth because the requirement specifies angle while SubCAD uses start/end depths."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-14",
+      "part_name": "Denture Flask Spacer Cradle - single metal part",
+      "source_raw_idea_title": "Denture Flask Spacer Cradle",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(125, 100, 39, material=\"steel_a36\")\n    .drill(diameter=10, depth=39, cx=-42.5, cy=0, through=True, spot_drill=False)\n    .drill(diameter=10, depth=39, cx=42.5, cy=0, through=True, spot_drill=False)\n    .slot(length=41, width=16, depth=39, cx=-0.5, cy=0, through=True)\n    .pocket(width=33, length=31, depth=14, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 125 x 100 x 39 mm in steel_a36.",
+        "Drilled two through mounting holes diameter 10 mm at requirement X=20 and X=105, Y=50 mm.",
+        "Machined central obround through slot 41 x 16 mm at requirement X=62, Y=50 mm.",
+        "Milled centered top relief pocket 31 x 33 x 14 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-15",
+      "part_name": "Inlay Wax Sprue Tree Holder - single metal part",
+      "source_raw_idea_title": "Inlay Wax Sprue Tree Holder",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(75, 55, 55, material=\"stainless_316\")\n    .drill(diameter=9, depth=55, cx=-26.5, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=9, depth=55, cx=26.5, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=30, width=12, depth=55, cx=-0.5, cy=-0.5, through=True)\n    .pocket(width=18, length=25, depth=23, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 75 x 55 x 55 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 9 mm at requirement X=11 and X=64, Y=27 mm.",
+        "Machined central obround through slot 30 x 12 mm at requirement X=37, Y=27 mm.",
+        "Milled centered top relief pocket 25 x 18 x 23 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-16",
+      "part_name": "Sterilization Tray Corner Protector - single metal part",
+      "source_raw_idea_title": "Sterilization Tray Corner Protector",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(105, 100, 10, material=\"steel_a36\")\n    .drill(diameter=7, depth=10, cx=-32.5, cy=0, through=True, spot_drill=False)\n    .drill(diameter=7, depth=10, cx=32.5, cy=0, through=True, spot_drill=False)\n    .slot(length=35, width=17, depth=10, cx=-0.5, cy=0, through=True)\n    .pocket(width=33, length=26, depth=1, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 105 x 100 x 10 mm in steel_a36.",
+        "Drilled two through mounting holes diameter 7 mm at requirement X=20 and X=85, Y=50 mm.",
+        "Machined central obround through slot 35 x 17 mm at requirement X=52, Y=50 mm.",
+        "Milled centered top relief pocket 26 x 33 x 1 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included.",
+        "Integral hook lip with projection and undercut is not represented because the current fluent program starts from the finished rectangular envelope and has no explicit bend/undercut lip operation."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-17",
+      "part_name": "Lab Handpiece Rest - single metal part",
+      "source_raw_idea_title": "Lab Handpiece Rest",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(145, 110, 43, material=\"stainless_316\")\n    .drill(diameter=9, depth=43, cx=-50.5, cy=0, through=True, spot_drill=False)\n    .drill(diameter=9, depth=43, cx=50.5, cy=0, through=True, spot_drill=False)\n    .slot(length=48, width=14, depth=43, cx=-0.5, cy=0, through=True)\n    .pocket(width=36, length=36, depth=1, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 145 x 110 x 43 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 9 mm at requirement X=22 and X=123, Y=55 mm.",
+        "Machined central obround through slot 48 x 14 mm at requirement X=72, Y=55 mm.",
+        "Milled centered top relief pocket 36 x 36 x 1 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-18",
+      "part_name": "Orthodontic Elastic Sorting Carousel - single metal part",
+      "source_raw_idea_title": "Orthodontic Elastic Sorting Carousel",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(135, 65, 8, material=\"stainless_316\")\n    .drill(diameter=6, depth=8, cx=-54.5, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=6, depth=8, cx=54.5, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=45, width=17, depth=8, cx=-0.5, cy=-0.5, through=True)\n    .pocket(width=21, length=33, depth=3, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 135 x 65 x 8 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 6 mm at requirement X=13 and X=122, Y=32 mm.",
+        "Machined central obround through slot 45 x 17 mm at requirement X=67, Y=32 mm.",
+        "Milled centered top relief pocket 33 x 21 x 3 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-19",
+      "part_name": "Temporary Crown Shell Holder - single metal part",
+      "source_raw_idea_title": "Temporary Crown Shell Holder",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(95, 40, 67, material=\"stainless_316\")\n    .drill(diameter=9, depth=67, cx=-37.5, cy=0, through=True, spot_drill=False)\n    .drill(diameter=9, depth=67, cx=37.5, cy=0, through=True, spot_drill=False)\n    .slot(length=31, width=18, depth=67, cx=-0.5, cy=0, through=True)\n    .pocket(width=18, length=25, depth=24, cx=0, cy=0, corner_radius=0)\n    .slope_cut(width=40, length=19, start_depth=0, end_depth=14.318, cx=38, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 95 x 40 x 67 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 9 mm at requirement X=10 and X=85, Y=20 mm.",
+        "Machined central obround through slot 31 x 18 mm at requirement X=47, Y=20 mm.",
+        "Milled centered top relief pocket 25 x 18 x 24 mm deep.",
+        "Approximated top angled reference face using slope_cut over last 19 mm with derived depth 14.318 mm from 37 degrees.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Verify angled-face orientation and depth because the requirement specifies angle while SubCAD uses start/end depths."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-20",
+      "part_name": "Sintering Bead Containment Dish - single metal part",
+      "source_raw_idea_title": "Sintering Bead Containment Dish",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(200, 70, 21, material=\"stainless_316\")\n    .drill(diameter=10, depth=21, cx=-86, cy=0, through=True, spot_drill=False)\n    .drill(diameter=10, depth=21, cx=86, cy=0, through=True, spot_drill=False)\n    .slot(length=66, width=10, depth=21, cx=0, cy=0, through=True)\n    .pocket(width=23, length=50, depth=3, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 200 x 70 x 21 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 10 mm at requirement X=14 and X=186, Y=35 mm.",
+        "Machined central obround through slot 66 x 10 mm at requirement X=100, Y=35 mm.",
+        "Milled centered top relief pocket 50 x 23 x 3 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-21",
+      "part_name": "Impression Tray Repair Clamp - single metal part",
+      "source_raw_idea_title": "Impression Tray Repair Clamp",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(250, 120, 12, material=\"stainless_316\")\n    .drill(diameter=8, depth=12, cx=-101, cy=0, through=True, spot_drill=False)\n    .drill(diameter=8, depth=12, cx=101, cy=0, through=True, spot_drill=False)\n    .slot(length=83, width=9, depth=12, cx=0, cy=0, through=True)\n    .pocket(width=40, length=62, depth=1, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 250 x 120 x 12 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 8 mm at requirement X=24 and X=226, Y=60 mm.",
+        "Machined central obround through slot 83 x 9 mm at requirement X=125, Y=60 mm.",
+        "Milled centered top relief pocket 62 x 40 x 1 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included.",
+        "Side tapped hole with axis parallel to Y is not represented because Stock tap/threaded_hole operations are top-face axial operations in this draft."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-22",
+      "part_name": "Sterile Pack Divider Rail - single metal part",
+      "source_raw_idea_title": "Sterile Pack Divider Rail",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(150, 90, 20, material=\"stainless_316\")\n    .drill(diameter=8, depth=20, cx=-57, cy=0, through=True, spot_drill=False)\n    .drill(diameter=8, depth=20, cx=57, cy=0, through=True, spot_drill=False)\n    .slot(length=50, width=17, depth=20, cx=0, cy=0, through=True)\n    .pocket(width=30, length=37, depth=3, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 150 x 90 x 20 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 8 mm at requirement X=18 and X=132, Y=45 mm.",
+        "Machined central obround through slot 50 x 17 mm at requirement X=75, Y=45 mm.",
+        "Milled centered top relief pocket 37 x 30 x 3 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included.",
+        "Integral hook lip with projection and undercut is not represented because the current fluent program starts from the finished rectangular envelope and has no explicit bend/undercut lip operation."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-23",
+      "part_name": "Occlusal Plane Reference Platform - single metal part",
+      "source_raw_idea_title": "Occlusal Plane Reference Platform",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(110, 85, 10, material=\"stainless_316\")\n    .drill(diameter=13, depth=10, cx=-38, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=13, depth=10, cx=38, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=36, width=10, depth=10, cx=0, cy=-0.5, through=True)\n    .pocket(width=28, length=27, depth=4, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 110 x 85 x 10 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 13 mm at requirement X=17 and X=93, Y=42 mm.",
+        "Machined central obround through slot 36 x 10 mm at requirement X=55, Y=42 mm.",
+        "Milled centered top relief pocket 27 x 28 x 4 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-24",
+      "part_name": "Orthodontic Appliance Soldering Jig - single metal part",
+      "source_raw_idea_title": "Orthodontic Appliance Soldering Jig",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(89, 51, material=\"steel_a36\")\n    .turn_id(diameter=17, depth=51)\n    .counterbore(hole_diameter=17, counterbore_diameter=27, counterbore_depth=3, cx=0, cy=0)\n    .groove(length=89, width=5, depth=8, cx=0, cy=-0.5)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created cylindrical stock OD 89 x length 51 mm in steel_a36.",
+        "Machined centered axial through bore diameter 17 mm along the full length using turn_id.",
+        "Modeled one concentric end counterbore diameter 27 mm x 3 mm deep.",
+        "Added an approximate transverse groove for the cross relief slot width 5 mm and depth 8 mm.",
+        "Applied 1.0 mm general chamfer operation to outside circular edges where supported."
+      ],
+      "known_gaps": [
+        "Bore-mouth 1.0 mm x 45 degree chamfers are not individually represented; only a general chamfer operation is included.",
+        "Requirement calls for counterbores on both ends; current SubCAD chain models only one accessible end counterbore.",
+        "Cross relief slot placement on a milled longitudinal flat is approximate because this cylindrical draft does not establish that side flat as a machinable setup plane.",
+        "Longitudinal milled reference flat on the cylinder side is not represented exactly by current top/end-face fluent operations.",
+        "Radial tapped M8 holes at axial X=17 and X=34 mm through the top flat are not represented; top-face threaded_hole does not express radial side drilling on the cylindrical surface.",
+        "Full-length radial split relief slit from OD to bore is not represented exactly."
+      ],
+      "review_notes": [
+        "Draft cylindrical program is not executed; check whether Stock.cylindrical axis/orientation matches the requirement datum during Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-25",
+      "part_name": "Denture Base Polishing Support - single metal part",
+      "source_raw_idea_title": "Denture Base Polishing Support",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(140, 90, 27, material=\"steel_a36\")\n    .drill(diameter=11, depth=27, cx=-52, cy=0, through=True, spot_drill=False)\n    .drill(diameter=11, depth=27, cx=52, cy=0, through=True, spot_drill=False)\n    .slot(length=46, width=15, depth=27, cx=0, cy=0, through=True)\n    .pocket(width=30, length=35, depth=8, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 140 x 90 x 27 mm in steel_a36.",
+        "Drilled two through mounting holes diameter 11 mm at requirement X=18 and X=122, Y=45 mm.",
+        "Machined central obround through slot 46 x 15 mm at requirement X=70, Y=45 mm.",
+        "Milled centered top relief pocket 35 x 30 x 8 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-26",
+      "part_name": "Autoclave Tray Handle Adapter - single metal part",
+      "source_raw_idea_title": "Autoclave Tray Handle Adapter",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(30, 56, material=\"steel_1045\")\n    .turn_id(diameter=8, depth=56)\n    .counterbore(hole_diameter=8, counterbore_diameter=18, counterbore_depth=3, cx=0, cy=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created cylindrical stock OD 30 x length 56 mm in steel_1045.",
+        "Machined centered axial through bore diameter 8 mm along the full length using turn_id.",
+        "Modeled one concentric end counterbore diameter 18 mm x 3 mm deep.",
+        "Applied 1.0 mm general chamfer operation to outside circular edges where supported."
+      ],
+      "known_gaps": [
+        "Bore-mouth 1.0 mm x 45 degree chamfers are not individually represented; only a general chamfer operation is included.",
+        "Requirement calls for counterbores on both ends; current SubCAD chain models only one accessible end counterbore.",
+        "Longitudinal milled reference flat on the cylinder side is not represented exactly by current top/end-face fluent operations.",
+        "Radial tapped M4 holes at axial X=18 and X=37 mm through the top flat are not represented; top-face threaded_hole does not express radial side drilling on the cylindrical surface.",
+        "Full-length radial split relief slit from OD to bore is not represented exactly."
+      ],
+      "review_notes": [
+        "Draft cylindrical program is not executed; check whether Stock.cylindrical axis/orientation matches the requirement datum during Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-27",
+      "part_name": "Crown Margin Inspection Turntable - single metal part",
+      "source_raw_idea_title": "Crown Margin Inspection Turntable",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(150, 75, 48, material=\"stainless_316\")\n    .drill(diameter=10, depth=48, cx=-60, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=10, depth=48, cx=60, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=50, width=12, depth=48, cx=0, cy=-0.5, through=True)\n    .pocket(width=25, length=37, depth=7, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 150 x 75 x 48 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 10 mm at requirement X=15 and X=135, Y=37 mm.",
+        "Machined central obround through slot 50 x 12 mm at requirement X=75, Y=37 mm.",
+        "Milled centered top relief pocket 37 x 25 x 7 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-28",
+      "part_name": "Alginate Mixing Bowl Stabilizer - single metal part",
+      "source_raw_idea_title": "Alginate Mixing Bowl Stabilizer",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(155, 55, 50, material=\"stainless_316\")\n    .drill(diameter=13, depth=50, cx=-66.5, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=13, depth=50, cx=66.5, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=51, width=16, depth=50, cx=-0.5, cy=-0.5, through=True)\n    .pocket(width=18, length=38, depth=7, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 155 x 55 x 50 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 13 mm at requirement X=11 and X=144, Y=27 mm.",
+        "Machined central obround through slot 51 x 16 mm at requirement X=77, Y=27 mm.",
+        "Milled centered top relief pocket 38 x 18 x 7 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-29",
+      "part_name": "Sterilization Mesh Lid Retainer - single metal part",
+      "source_raw_idea_title": "Sterilization Mesh Lid Retainer",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(255, 90, 3, material=\"steel_a36\")\n    .drill(diameter=6, depth=3, cx=-109.5, cy=0, through=True, spot_drill=False)\n    .drill(diameter=6, depth=3, cx=109.5, cy=0, through=True, spot_drill=False)\n    .slot(length=85, width=14, depth=3, cx=-0.5, cy=0, through=True)\n    .pocket(width=30, length=63, depth=2, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 255 x 90 x 3 mm in steel_a36.",
+        "Drilled two through mounting holes diameter 6 mm at requirement X=18 and X=237, Y=45 mm.",
+        "Machined central obround through slot 85 x 14 mm at requirement X=127, Y=45 mm.",
+        "Milled centered top relief pocket 63 x 30 x 2 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included.",
+        "Integral hook lip with projection and undercut is not represented because the current fluent program starts from the finished rectangular envelope and has no explicit bend/undercut lip operation."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    },
+    {
+      "requirement_id": "SMP-038-30",
+      "part_name": "Orthodontic Expansion Screw Assembly Block - single metal part",
+      "source_raw_idea_title": "Orthodontic Expansion Screw Assembly Block",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(110, 85, 65, material=\"stainless_316\")\n    .drill(diameter=13, depth=65, cx=-38, cy=-0.5, through=True, spot_drill=False)\n    .drill(diameter=13, depth=65, cx=38, cy=-0.5, through=True, spot_drill=False)\n    .slot(length=36, width=15, depth=65, cx=0, cy=-0.5, through=True)\n    .pocket(width=28, length=27, depth=19, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "Created rectangular stock 110 x 85 x 65 mm in stainless_316.",
+        "Drilled two through mounting holes diameter 13 mm at requirement X=17 and X=93, Y=42 mm.",
+        "Machined central obround through slot 36 x 15 mm at requirement X=55, Y=42 mm.",
+        "Milled centered top relief pocket 27 x 28 x 19 mm deep.",
+        "Applied 1.0 mm outside chamfer operation."
+      ],
+      "known_gaps": [
+        "Separate 0.5 mm chamfers on hole and slot mouths are not individually represented; only the general chamfer operation is included.",
+        "Side tapped hole with axis parallel to Y is not represented because Stock tap/threaded_hole operations are top-face axial operations in this draft."
+      ],
+      "review_notes": [
+        "Draft is syntactically generated but not executed; verify geometry against the frozen requirement in Stage 4."
+      ]
+    }
+  ]
+}

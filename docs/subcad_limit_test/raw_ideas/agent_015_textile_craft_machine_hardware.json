@@ -1,0 +1,79 @@
+{
+  "agent_number": 15,
+  "agent_id": "019ecede-970c-7411-ae69-ed061092687d",
+  "domain": "textile, sewing, leatherworking, embroidery, and craft-machine hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Walking-Foot Sewing Machine Feed Dog",
+      "product_context": "Industrial sewing machine for thick canvas, denim, and layered upholstery fabric",
+      "core_function": "Grip and advance fabric layers in sync with the presser foot without slippage",
+      "likely_main_part": "Serrated feed dog block with staggered tooth rows, mounting slots, and needle clearance channel",
+      "why_it_tests_cad_representation": "Requires repeated fine teeth on an irregular top surface, precise slot placement, asymmetric clearances, and functional contact geometry"
+    },
+    {
+      "idea_title": "Leather Strap Edge Beveler Guide Shoe",
+      "product_context": "Bench-mounted leatherworking edge beveling tool for belts, straps, and harness components",
+      "core_function": "Hold a leather strap at a consistent offset and angle while guiding it past a cutting blade",
+      "likely_main_part": "Contoured guide shoe with V-groove, blade window, radiused entry lip, and clamp screw bosses",
+      "why_it_tests_cad_representation": "Combines angled grooves, flowing guide surfaces, sharp blade clearances, small bosses, and ergonomic contact transitions"
+    },
+    {
+      "idea_title": "Embroidery Hoop Quick-Lock Cam Clamp",
+      "product_context": "Commercial embroidery machine hooping fixture for fast fabric tensioning",
+      "core_function": "Lock the outer hoop against the inner hoop with repeatable fabric tension using a rotating cam",
+      "likely_main_part": "Eccentric cam lever with curved bearing face, hinge bore, detent notch, and finger tab",
+      "why_it_tests_cad_representation": "Tests eccentric profiles, smooth cam contact surfaces, detents, hinge alignment, and nonuniform lever geometry"
+    },
+    {
+      "idea_title": "Rotary Cutter Blade Depth Collar",
+      "product_context": "Craft cutting tool used for quilting fabric, felt, and pattern paper",
+      "core_function": "Limit exposed blade depth while allowing fine adjustment for material thickness",
+      "likely_main_part": "Threaded depth-control collar with scalloped grip rim, blade guard flange, and index marks",
+      "why_it_tests_cad_representation": "Requires circular threading context, knurled or scalloped perimeter detail, thin guard features, and rotational adjustment semantics"
+    },
+    {
+      "idea_title": "Serger Looper Carrier Arm",
+      "product_context": "Overlock sewing machine mechanism for forming interlocked edge stitches",
+      "core_function": "Carry the looper tip through a timed arc around the needle path",
+      "likely_main_part": "Offset looper carrier arm with split clamp bore, tapered neck, timing slot, and replaceable looper mount",
+      "why_it_tests_cad_representation": "Challenges CAD with compound offsets, thin curved arms, split clamping geometry, slot-and-bore relationships, and collision-critical clearances"
+    },
+    {
+      "idea_title": "Weaving Loom Shuttle Race Insert",
+      "product_context": "Small handloom or sample loom that throws a shuttle across warp threads",
+      "core_function": "Provide a low-friction track that keeps the shuttle aligned during travel",
+      "likely_main_part": "Curved shuttle race insert with concave running channel, countersunk mounts, and raised end stops",
+      "why_it_tests_cad_representation": "Tests long shallow curves, concave tracks, end-stop transitions, countersinks, and parts whose function depends on continuous surface shape"
+    },
+    {
+      "idea_title": "Buttonhole Attachment Template Cam",
+      "product_context": "Mechanical buttonhole attachment for domestic sewing machines",
+      "core_function": "Drive needle swing and fabric movement pattern to form a consistent buttonhole shape",
+      "likely_main_part": "Profile cam disk with asymmetric lobed groove, central drive bore, timing notch, and retaining groove",
+      "why_it_tests_cad_representation": "Requires representing noncircular cam paths, internal grooves, rotational registration, and shape-driven motion intent"
+    },
+    {
+      "idea_title": "Leather Skiving Machine Presser Foot",
+      "product_context": "Leather skiving machine used to thin edges before folding or stitching",
+      "core_function": "Press leather against the feed roller and blade while controlling skive width",
+      "likely_main_part": "Narrow presser foot with curved sole, blade relief crescent, height-adjustment boss, and side guide face",
+      "why_it_tests_cad_representation": "Combines thin functional lips, curved pressure surfaces, tight blade relief geometry, and small adjustment interfaces"
+    },
+    {
+      "idea_title": "Embroidery Thread Tension Disc Hub",
+      "product_context": "Multi-needle embroidery machine upper thread tension assembly",
+      "core_function": "Center and preload paired tension discs while routing thread through a controlled path",
+      "likely_main_part": "Stepped hub with spring seat, thread guide notch, retaining groove, and anti-rotation flat",
+      "why_it_tests_cad_representation": "Tests concentric stepped geometry, small thread-path features, spring seating surfaces, grooves, flats, and assembly-oriented constraints"
+    },
+    {
+      "idea_title": "Bias Tape Maker Folding Funnel",
+      "product_context": "Sewing and quilting attachment that folds fabric strips before stitching",
+      "core_function": "Guide flat fabric tape into symmetrical folded edges at a fixed finished width",
+      "likely_main_part": "Formed folding funnel body with tapered inlet, curled side channels, exit throat, and mounting tab",
+      "why_it_tests_cad_representation": "Stresses CAD representation with sheet-like curved guide surfaces, tapered transitions, mirrored but nontrivial channels, and thin-wall manufacturing intent"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "agent_number": 31,
+  "domain": "industrial pumps, seals, bearings, couplings, and rotating equipment service hardware",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "Split Pump Bearing Housing With Sight Glass Bosses",
+      "product_context": "Serviceable bearing support for horizontal industrial pump shafts in process plants.",
+      "core_function": "Supports rotating shaft bearings while providing inspection, lubrication access, and removable maintenance covers.",
+      "likely_main_part": "Two-piece cast bearing housing body",
+      "why_it_tests_cad_representation": "Combines split-line geometry, bearing seats, cover flanges, drain bosses, inspection windows, and asymmetric service features that stress feature hierarchy without relying on simple prismatic forms."
+    },
+    {
+      "idea_title": "Cartridge Mechanical Seal Gland Assembly",
+      "product_context": "Preassembled seal module for centrifugal pump shaft sealing during plant maintenance.",
+      "core_function": "Holds seal faces, flush ports, sleeve interface, and gland bolting in a replaceable cartridge package.",
+      "likely_main_part": "Ported seal gland plate",
+      "why_it_tests_cad_representation": "Requires coaxial shaft openings, distributed fastener pads, radial port bosses, stepped faces, and nested ring-like regions that challenge annular part modeling."
+    },
+    {
+      "idea_title": "Flexible Spacer Coupling Guard With Inspection Windows",
+      "product_context": "Safety enclosure around spacer couplings between motors and rotating pumps.",
+      "core_function": "Prevents contact with rotating coupling components while allowing visual checks and partial access for service.",
+      "likely_main_part": "Curved perforated coupling guard shell",
+      "why_it_tests_cad_representation": "Tests curved sheet-like shells, removable end bands, repeated ventilation openings, cutout windows, and bracket interfaces in a single protective part."
+    },
+    {
+      "idea_title": "Pump Impeller Puller Yoke",
+      "product_context": "Workshop tool used to remove stuck impellers from pump shafts without damaging the casing interface.",
+      "core_function": "Applies axial extraction force through a central forcing screw while gripping behind the impeller hub.",
+      "likely_main_part": "Forked puller yoke",
+      "why_it_tests_cad_representation": "Introduces forked load paths, thick ribs, threaded center boss representation, relief clearances, and ergonomic wrench flats that push beyond ordinary bracket geometry."
+    },
+    {
+      "idea_title": "Bearing Heater Support Cradle",
+      "product_context": "Maintenance fixture for safely holding pump bearings during controlled installation heating.",
+      "core_function": "Supports circular bearings above a heater base while accommodating multiple bearing outside profiles.",
+      "likely_main_part": "Adjustable V-cradle support frame",
+      "why_it_tests_cad_representation": "Includes angled contact faces, sliding supports, locking features, heat-clearance openings, and repeated but nonidentical cradle elements that test parametric intent."
+    },
+    {
+      "idea_title": "Stuffing Box Lantern Ring Extraction Tool",
+      "product_context": "Field service hardware for removing lantern rings and packing remnants from packed pump glands.",
+      "core_function": "Hooks or expands inside a gland cavity to pull worn sealing components out from around a shaft.",
+      "likely_main_part": "Segmented hook extraction head",
+      "why_it_tests_cad_representation": "Challenges CAD representation with slender curved hooks, expandable segmented geometry, shaft-clearance voids, pin joints, and compact service-tool proportions."
+    },
+    {
+      "idea_title": "Rotating Equipment Shaft Alignment Target Bracket",
+      "product_context": "Temporary bracket for mounting dial indicators or laser targets during pump and motor alignment.",
+      "core_function": "Clamps onto a shaft or coupling hub and holds measurement targets rigidly at adjustable offsets.",
+      "likely_main_part": "Clamp-on alignment bracket body",
+      "why_it_tests_cad_representation": "Combines split clamp geometry, hinge or fastener lugs, radial arms, accessory mounting faces, and multiple datum-like surfaces that stress assembly-oriented modeling."
+    },
+    {
+      "idea_title": "API Pump Seal Flush Manifold Block",
+      "product_context": "Compact service manifold for routing flush, quench, and drain lines around mechanical seals.",
+      "core_function": "Routes process support fluids through labeled ports, valves, and instrument connections near the seal gland.",
+      "likely_main_part": "Multi-port manifold block",
+      "why_it_tests_cad_representation": "Tests intersecting internal passage intent, external port bosses, plug pads, mounting ears, and face labeling zones without needing actual fluid passage dimensions."
+    },
+    {
+      "idea_title": "Vertical Pump Lineshaft Bearing Spider",
+      "product_context": "Support component used inside vertical pump columns to center and stabilize a rotating lineshaft.",
+      "core_function": "Holds a central bearing carrier in position through radial arms connected to the column wall.",
+      "likely_main_part": "Radial spider bearing carrier",
+      "why_it_tests_cad_representation": "Requires circular hub geometry, multiple radial arms, open flow windows, bearing-retainer features, and symmetric relationships with service-specific interruptions."
+    },
+    {
+      "idea_title": "Coupling Hub Keyway Inspection Gauge",
+      "product_context": "Shop-floor gauge for checking wear and burrs around coupling hub bores and keyways.",
+      "core_function": "Registers against hub bore and keyway surfaces to reveal service damage before reassembly.",
+      "likely_main_part": "Stepped bore-and-keyway gauge body",
+      "why_it_tests_cad_representation": "Exercises negative-space representation, stepped cylindrical references, keyway-like protrusions, handle integration, and inspection contact surfaces that are difficult to capture as simple solids."
+    }
+  ]
+}

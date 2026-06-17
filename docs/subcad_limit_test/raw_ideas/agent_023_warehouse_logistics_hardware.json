@@ -1,0 +1,79 @@
+{
+  "agent_number": 23,
+  "agent_id": "019ecee0-1b0d-76b1-b2f4-bd4b49b55fef",
+  "domain": "warehouse logistics, carts, conveyor accessories, pallet handling, tote systems, and material-flow hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Adjustable Conveyor Side Guide Bracket",
+      "product_context": "Used along roller or belt conveyors in warehouses to keep cartons, totes, and trays aligned during transport.",
+      "core_function": "Provides a rigid mounting point for a side guide rail with slotted adjustment for product width changes.",
+      "likely_main_part": "Machined L-shaped bracket with elongated slots, clamp face, gusset ribs, and rail-mount holes.",
+      "why_it_tests_cad_representation": "Tests slots, orthogonal mounting faces, rib-like reinforcements, clearance offsets, and repeated hole patterns in a functional industrial bracket."
+    },
+    {
+      "idea_title": "Pallet Stop Gate Pivot Arm",
+      "product_context": "Installed at conveyor transfer points to stop or release pallets in controlled sequence.",
+      "core_function": "Rotates into the pallet path to block movement, then retracts when actuated by a cylinder or motor.",
+      "likely_main_part": "Machined pivot arm with a boss, through-bore, stop pad face, actuator linkage hole, and relieved edges.",
+      "why_it_tests_cad_representation": "Tests rotational geometry, concentric bores, offset linkage features, contact faces, and asymmetric load-bearing shape."
+    },
+    {
+      "idea_title": "Tote Nesting Locator Plate",
+      "product_context": "Mounted on workstations or carts to position plastic totes repeatably for scanning, picking, or robotic handling.",
+      "core_function": "Locates the tote base using raised edges, corner reliefs, and chamfered lead-in surfaces.",
+      "likely_main_part": "Flat machined plate with shallow pockets, raised locating pads, corner cutouts, countersunk mounting holes, and chamfers.",
+      "why_it_tests_cad_representation": "Tests shallow pocketing, multiple height levels, chamfers, countersinks, and geometry that must match a container footprint."
+    },
+    {
+      "idea_title": "Heavy-Duty Cart Caster Mounting Yoke",
+      "product_context": "Used on warehouse carts, picking trolleys, and material handling dollies for reinforced caster attachment.",
+      "core_function": "Holds a caster wheel or swivel assembly while transferring cart load into the frame.",
+      "likely_main_part": "Machined fork-style yoke with two parallel lugs, axle holes, top mounting flange, and internal wheel clearance.",
+      "why_it_tests_cad_representation": "Tests forked geometry, mirrored lug features, coaxial holes, internal clearances, fillets, and load-path proportions."
+    },
+    {
+      "idea_title": "Conveyor Roller End Bearing Housing",
+      "product_context": "Supports the end of a conveyor roller in a frame rail for carton or tote transport systems.",
+      "core_function": "Holds a bearing or bushing concentric to the roller shaft while fastening into the conveyor side frame.",
+      "likely_main_part": "Machined bearing block with circular bearing pocket, shaft clearance bore, side mounting holes, and locating shoulder.",
+      "why_it_tests_cad_representation": "Tests nested cylindrical features, bearing seats, concentric holes, rectangular-to-round transitions, and precision mounting geometry."
+    },
+    {
+      "idea_title": "Pallet Fork Entry Guide Shoe",
+      "product_context": "Attached to pallet handling fixtures or automated pallet dispensers to guide forklift tines into position.",
+      "core_function": "Funnels fork tips into the correct channel while protecting pallet edges and fixture structure.",
+      "likely_main_part": "Machined tapered guide shoe with flared entry ramps, bolt holes, wear face, and underside relief.",
+      "why_it_tests_cad_representation": "Tests tapered solids, angled lead-in faces, wear surfaces, countersunk fasteners, and robust industrial proportions."
+    },
+    {
+      "idea_title": "Modular Flow Rack Lane Divider Clamp",
+      "product_context": "Used on carton flow racks to create adjustable lanes for bins, totes, or small cartons.",
+      "core_function": "Clamps onto a cross tube or extrusion and supports a vertical lane divider rail.",
+      "likely_main_part": "Machined split clamp block with semicircular tube bore, pinch bolt holes, divider slot, and mounting boss.",
+      "why_it_tests_cad_representation": "Tests split clamp geometry, partial cylindrical cuts, slot-and-boss relationships, fastener clearances, and adjustable hardware logic."
+    },
+    {
+      "idea_title": "Tote Transfer Corner Deflector",
+      "product_context": "Mounted at conveyor intersections where totes change direction or pass near frame corners.",
+      "core_function": "Deflects tote edges smoothly around a corner to prevent snagging and impact damage.",
+      "likely_main_part": "Machined curved deflector block with radiused outer face, mounting flange, countersunk holes, and relieved backside.",
+      "why_it_tests_cad_representation": "Tests curved contact surfaces, blended radii, flange integration, asymmetric mounting, and collision-avoidance geometry."
+    },
+    {
+      "idea_title": "Pallet Lift Table Scissor Link Plate",
+      "product_context": "Part of a warehouse lift table or pallet positioner used to raise loads for ergonomic picking.",
+      "core_function": "Connects scissor lift pivots while maintaining spacing and carrying compressive and bending loads.",
+      "likely_main_part": "Machined flat link plate with large pivot bores, spacer bosses, lightening pockets, and rounded ends.",
+      "why_it_tests_cad_representation": "Tests long structural plates, repeated pivot features, large-radius ends, pocketing, and symmetry around a load-bearing centerline."
+    },
+    {
+      "idea_title": "Cart Handle Height Adjustment Index Plate",
+      "product_context": "Used on warehouse picking carts or mobile workstations with adjustable push handles.",
+      "core_function": "Provides indexed locking positions for a handle bracket at multiple ergonomic heights.",
+      "likely_main_part": "Machined sector plate with arc-pattern locking holes, central pivot bore, stop tab, and frame mounting holes.",
+      "why_it_tests_cad_representation": "Tests radial hole arrays, angular constraints, pivot-centered geometry, tabs, and real adjustment mechanics."
+    }
+  ]
+}

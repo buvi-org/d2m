@@ -1,0 +1,79 @@
+{
+  "agent_number": 14,
+  "agent_id": "019ecede-831d-78b2-889e-7eee69a0941c",
+  "domain": "musical instrument hardware, stage equipment, pedals, stands, and tuning mechanisms",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Locking Tremolo Saddle Micro-Adjuster",
+      "product_context": "Electric guitar floating tremolo bridge hardware",
+      "core_function": "Allows fine string intonation adjustment while clamping the saddle against vibrational movement",
+      "likely_main_part": "Machined saddle block with captive screw channel, string witness groove, clamp face, and radiused bridge contact underside",
+      "why_it_tests_cad_representation": "Combines angled string paths, small threaded adjustment features, asymmetric bearing surfaces, and precise contact geometry in one compact part"
+    },
+    {
+      "idea_title": "Kick Drum Pedal Cam Hub",
+      "product_context": "Bass drum pedal drive mechanism",
+      "core_function": "Converts footboard motion into beater rotation with a non-linear response curve",
+      "likely_main_part": "Eccentric machined cam hub with axle bore, chain anchor slot, set-screw flats, and variable-radius outer profile",
+      "why_it_tests_cad_representation": "Requires representing non-circular curves, offset bores, clamping details, and functional clearance around a rotating assembly"
+    },
+    {
+      "idea_title": "Hi-Hat Clutch Lock Collar",
+      "product_context": "Drum kit hi-hat cymbal stand",
+      "core_function": "Locks the top cymbal to the pull rod while allowing controlled felt compression",
+      "likely_main_part": "Knurled cylindrical collar with split clamp, cross screw boss, stepped felt seat, and central rod bore",
+      "why_it_tests_cad_representation": "Tests concentric stepped geometry, split clamp gaps, knurl-like grip surfaces, and small fastener bosses"
+    },
+    {
+      "idea_title": "Pedalboard Quick-Release Rail Clamp",
+      "product_context": "Modular guitar effects pedalboard mounting system",
+      "core_function": "Secures an effects pedal to a slotted rail without permanent adhesive or hook-and-loop material",
+      "likely_main_part": "Low-profile machined clamp shoe with dovetail rail engagement, eccentric locking tab, and pedal flange capture lip",
+      "why_it_tests_cad_representation": "Involves undercuts, dovetail interfaces, low-clearance sliding features, and geometry tied to repeated user adjustment"
+    },
+    {
+      "idea_title": "Mic Stand Boom Angle Rosette Joint",
+      "product_context": "Adjustable microphone boom stand",
+      "core_function": "Locks a boom arm at repeatable angular positions without slipping under microphone weight",
+      "likely_main_part": "Toothed rosette hinge disk with central pivot bore, radial locking teeth, compression washer seat, and boom socket boss",
+      "why_it_tests_cad_representation": "Tests radial tooth arrays, circular symmetry with localized bosses, mating friction surfaces, and load-bearing hinge geometry"
+    },
+    {
+      "idea_title": "Violin Fine Tuner Lever Body",
+      "product_context": "String fine tuner mounted on a violin tailpiece",
+      "core_function": "Transfers screw motion into small string tension changes for precise pitch tuning",
+      "likely_main_part": "Miniature lever frame with string hook, pivot ears, screw contact pad, and tailpiece mounting saddle",
+      "why_it_tests_cad_representation": "Requires tiny functional features, curved string contact paths, pivot geometry, and tight spatial relationships between interacting mechanisms"
+    },
+    {
+      "idea_title": "Cymbal Stand Memory Lock",
+      "product_context": "Stage drum hardware stand height positioning",
+      "core_function": "Clamps around a stand tube to preserve repeatable height and orientation during setup",
+      "likely_main_part": "Split ring collar with hinged lug, indexed orientation notch, thumb-screw boss, and internal tube relief groove",
+      "why_it_tests_cad_representation": "Tests split circular bodies, hinge-and-clamp features, ergonomic screw placement, and internal cylindrical fit constraints"
+    },
+    {
+      "idea_title": "Expression Pedal Rocker Pivot Block",
+      "product_context": "Guitar or synthesizer expression pedal enclosure",
+      "core_function": "Supports smooth rocker motion and transfers position to an internal sensor linkage",
+      "likely_main_part": "Machined pivot block with dual bearing bores, rocker stop faces, sensor linkage slot, and enclosure mounting feet",
+      "why_it_tests_cad_representation": "Combines aligned bearing geometry, motion stops, linkage clearance, and structural mounting surfaces in a compact mechanism"
+    },
+    {
+      "idea_title": "Keyboard Stand Telescoping Tube Latch",
+      "product_context": "Collapsible stage keyboard stand",
+      "core_function": "Locks telescoping support tubes at selectable width or height settings",
+      "likely_main_part": "Spring-loaded latch housing with plunger bore, angled thumb pad, tube saddle radius, and detent pin guide",
+      "why_it_tests_cad_representation": "Requires nested cylindrical interfaces, spring/plunger accommodation, ergonomic external shape, and precise alignment with repeated adjustment holes"
+    },
+    {
+      "idea_title": "Guitar Tuning Machine Worm Gear Bracket",
+      "product_context": "Open-gear guitar headstock tuning machine",
+      "core_function": "Holds the worm shaft in alignment with the string post gear while mounting to the headstock",
+      "likely_main_part": "Machined tuner bracket with two raised bearing towers, worm shaft bores, string post clearance pocket, and screw mounting ears",
+      "why_it_tests_cad_representation": "Tests multi-axis alignment, small bearing supports, gear clearance pockets, thin mounting tabs, and ornamental yet functional hardware geometry"
+    }
+  ]
+}

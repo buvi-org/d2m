@@ -1,0 +1,79 @@
+{
+  "agent_number": 3,
+  "agent_id": "019ecedb-43dc-7c11-8e37-432bb5425dc5",
+  "domain": "kitchen appliances and food-processing mechanisms",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Conical Burr Coffee Grinder Adjustment Collar",
+      "product_context": "Manual or electric burr coffee grinder used for espresso-to-French-press grind adjustment.",
+      "core_function": "Holds and indexes the upper conical burr while allowing fine axial position changes.",
+      "likely_main_part": "Threaded stepped adjustment collar with detent pockets and burr mounting lands.",
+      "why_it_tests_cad_representation": "Combines internal threads, concentric stepped bores, radial detent features, tight coaxial references, and small repeated pockets around a circular body."
+    },
+    {
+      "idea_title": "Meat Grinder Feed Auger",
+      "product_context": "Countertop meat grinder or mixer attachment for sausage and ground meat preparation.",
+      "core_function": "Draws meat from the hopper and compresses it toward the cutting knife and extrusion plate.",
+      "likely_main_part": "Tapered helical auger screw with drive coupling and front knife pilot.",
+      "why_it_tests_cad_representation": "Requires continuous helical flights, changing pitch or diameter, blended root fillets, keyed drive geometry, and a functional transition from screw body to shaft."
+    },
+    {
+      "idea_title": "Citrus Juicer Reamer Cone",
+      "product_context": "Lever or motorized citrus juicer for oranges, lemons, and grapefruit.",
+      "core_function": "Ruptures citrus segments while guiding juice downward and retaining pulp.",
+      "likely_main_part": "Ribbed tapered reamer cone with central hub and drainage channels.",
+      "why_it_tests_cad_representation": "Tests radial rib repetition on a curved tapered surface, alternating grooves, smooth lofted cone geometry, and blended drain paths."
+    },
+    {
+      "idea_title": "Stand Mixer Planetary Gear Carrier",
+      "product_context": "Kitchen stand mixer head that drives beaters in a planetary mixing motion.",
+      "core_function": "Supports rotating gear elements so the beater shaft orbits while spinning.",
+      "likely_main_part": "Planet carrier hub with offset shaft bosses, bearing seats, and gear clearance pockets.",
+      "why_it_tests_cad_representation": "Includes eccentric axes, precise bearing bores, multiple concentric and nonconcentric features, gear relief cutouts, and load-bearing filleted bosses."
+    },
+    {
+      "idea_title": "Pasta Roller Thickness Cam",
+      "product_context": "Hand-cranked or motorized pasta roller used to progressively thin dough sheets.",
+      "core_function": "Shifts roller spacing through indexed thickness settings.",
+      "likely_main_part": "Multi-lobed eccentric cam disk with selector notches and shaft bore.",
+      "why_it_tests_cad_representation": "Tests noncircular cam profiles, angular indexing, asymmetric lobes, shaft flats, and dimensionally meaningful offset geometry."
+    },
+    {
+      "idea_title": "Mandoline Slicer Thickness Ramp Carriage",
+      "product_context": "Adjustable mandoline slicer for vegetables such as potatoes, cucumbers, and carrots.",
+      "core_function": "Raises or lowers the food deck relative to the blade to set slice thickness.",
+      "likely_main_part": "Sliding ramp carriage with angled guide rails, blade clearance slot, and locking teeth.",
+      "why_it_tests_cad_representation": "Combines angled reference planes, long slots, rack-like teeth, shallow ramps, and clearance geometry tied to a cutting edge."
+    },
+    {
+      "idea_title": "Dough Sheeter Roller End Journal",
+      "product_context": "Small bakery dough sheeter or countertop laminator for pastry dough.",
+      "core_function": "Supports a heavy roller while transmitting torque and maintaining alignment.",
+      "likely_main_part": "Stepped roller end journal with bearing seats, keyway, retaining groove, and taper transition.",
+      "why_it_tests_cad_representation": "Tests precision stepped shafts, grooves, keyways, chamfers, bearing shoulders, and transitions between cylindrical sections with different tolerance roles."
+    },
+    {
+      "idea_title": "Food Processor Bowl Bayonet Lock Ring",
+      "product_context": "Food processor bowl interface that twists onto the motor base before operation.",
+      "core_function": "Locks the bowl mechanically and aligns safety interlock features.",
+      "likely_main_part": "Circular bayonet lock ring with ramped lugs, stop blocks, and interlock actuator tab.",
+      "why_it_tests_cad_representation": "Requires circumferential locking ramps, interrupted ring geometry, repeated but directional lugs, undercut-like stops, and functional angular travel constraints."
+    },
+    {
+      "idea_title": "Grain Mill Fluted Feed Roller",
+      "product_context": "Home grain mill or oat flaker feeding kernels into crushing or milling rollers.",
+      "core_function": "Grips and meters grain into the milling gap.",
+      "likely_main_part": "Cylindrical feed roller with axial flutes, knurled grip zones, and keyed shaft ends.",
+      "why_it_tests_cad_representation": "Tests repeated flutes around a cylinder, shallow concave groove profiles, shaft-to-roller transitions, rotational symmetry, and manufacturable texture-like geometry."
+    },
+    {
+      "idea_title": "Rotary Cheese Grater Drum",
+      "product_context": "Handheld rotary grater for hard cheese, chocolate, or nuts.",
+      "core_function": "Cuts food against a fixed pressure plate as the drum rotates.",
+      "likely_main_part": "Perforated cylindrical grater drum with raised cutting lips and end drive socket.",
+      "why_it_tests_cad_representation": "Challenges CAD representation with patterned holes on a curved surface, directional cutting protrusions, thin-wall cylinder constraints, rolled-edge rims, and a nonround drive interface."
+    }
+  ]
+}

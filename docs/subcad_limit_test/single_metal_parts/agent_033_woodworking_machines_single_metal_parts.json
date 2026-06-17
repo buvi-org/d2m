@@ -1,0 +1,1054 @@
+{
+  "agent_number": 33,
+  "agent_id": null,
+  "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+  "stage": "single_metal_part_requirements",
+  "source_raw_file": "docs/subcad_limit_test/raw_ideas/agent_033_woodworking_machines.json",
+  "requirements": [
+    {
+      "requirement_id": "SMP-033-01",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 33,
+        "agent_id": null,
+        "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+        "raw_idea_index": 1,
+        "raw_idea_title": "Gantry CNC router spindle carriage with dust shoe"
+      },
+      "part_name": "Gantry CNC router spindle carriage with dust shoe - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 29,
+        "overall_length_mm": 93,
+        "axial_bore_diameter_mm": 8,
+        "wall_minimum_mm": 10
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Gantry CNC router spindle carriage with dust shoe'.\nThe broader use case is: A moving spindle assembly used on a gantry-style CNC router for sheet\ngoods, cabinet panels, and nested woodworking operations. The chosen deliverable is only the metal\nbody implied by: Layered carriage plate carrying linear blocks, spindle clamp, Z-axis slide, and\ndust-shoe mount. All other product elements are external reference items and must not be modeled.\nThe part must perform this mechanical role: Holds the router spindle, guides vertical travel, and\nsurrounds the cutting area with a brush-backed dust shoe. It is intentionally included in the SubCAD\nlimit corpus because: Combines flat plates, rail interfaces, clamp geometry, nested openings, and a\npartially transparent accessory region without needing exact machine dimensions. The part is made\nfrom low-carbon steel, ASTM A36 or equivalent using round bar stock. Start from one cut length of\nround metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats,\nslots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 29 mm and length 93 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 8 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 18 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 9 mm wide over 85 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M8 holes through the top flat at X=31 mm and X=62 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 3 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        },
+        {
+          "name": "opposed wrench flats",
+          "description": "Mill two opposed flats across the outside, leaving 22 mm across flats over the middle third of the length."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "The feature named 'opposed wrench flats' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Gantry CNC router spindle carriage with dust shoe'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-033-02",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 33,
+        "agent_id": null,
+        "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+        "raw_idea_index": 2,
+        "raw_idea_title": "Tilting table saw blade guard and riving knife bracket"
+      },
+      "part_name": "Tilting table saw blade guard and riving knife bracket - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 140,
+        "width_mm": 105,
+        "thickness_mm": 6
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Tilting table saw blade guard and riving knife\nbracket'. The broader use case is: A safety hardware assembly mounted behind the blade area of a\nwoodworking table saw. The chosen deliverable is only the metal body implied by: Curved bracket with\nslotted adjustment holes, hinge ears, and a narrow knife-like plate. All other product elements are\nexternal reference items and must not be modeled. The part must perform this mechanical role:\nSupports a riving knife, holds a pivoting blade guard, and keeps alignment with the blade path\nduring cutting adjustments. It is intentionally included in the SubCAD limit corpus because: Tests\nthin safety plates, curved guards, pivot lugs, clearance slots, and feature placement around an\nimplied rotating blade envelope. The part is made from low-carbon steel, ASTM A36 or equivalent\nusing sheet or plate stock. Start from one flat sheet or plate blank. Cut the outside profile,\nmachine holes, slots, pockets, lips, and relief features into that same piece. If bends are called\nout, they are bends in the same sheet part, not separate welded pieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 140 mm x 105 mm x 6 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 8 mm on the length centerline at X=21 mm and X=119 mm, Y=52 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 46 mm long x 8 mm wide through the part, centered at X=70 mm, Y=52 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 35 mm x 35 mm x 1 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Tilting table saw blade guard and riving knife bracket'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-033-03",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 33,
+        "agent_id": null,
+        "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+        "raw_idea_index": 3,
+        "raw_idea_title": "Planer cutterhead chip hood with hose outlet"
+      },
+      "part_name": "Planer cutterhead chip hood with hose outlet - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "4140 alloy steel, prehard",
+        "reason": "strong cylindrical metal part with threaded and slotted details"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 36,
+        "overall_length_mm": 64,
+        "axial_bore_diameter_mm": 12,
+        "wall_minimum_mm": 12
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Planer cutterhead chip hood with hose outlet'. The\nbroader use case is: A dust and chip extraction hood fitted over the cutterhead area of a thickness\nplaner. The chosen deliverable is only the metal body implied by: Swept hood shell with rectangular\nintake mouth, rounded transition, and cylindrical outlet collar. All other product elements are\nexternal reference items and must not be modeled. The part must perform this mechanical role:\nCaptures high-volume shavings from the cutterhead and routes them toward a dust-collection hose. It\nis intentionally included in the SubCAD limit corpus because: Challenges representation of smooth\ntransitions between rectangular and round openings, hollow shell intent, flange details, and\ndirectional flow geometry. The part is made from 4140 alloy steel, prehard using round bar stock.\nStart from one cut length of round metal bar. Turn the outside, face both ends, bore the center,\nthen mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are\npart of the deliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 36 mm and length 64 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 12 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 22 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 12 mm wide over 56 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M5 holes through the top flat at X=21 mm and X=42 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 5 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Planer cutterhead chip hood with hose outlet'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-033-04",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 33,
+        "agent_id": null,
+        "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+        "raw_idea_index": 4,
+        "raw_idea_title": "CNC router vacuum hold-down zone manifold"
+      },
+      "part_name": "CNC router vacuum hold-down zone manifold - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 55,
+        "overall_length_mm": 108,
+        "axial_bore_diameter_mm": 18,
+        "wall_minimum_mm": 18
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'CNC router vacuum hold-down zone manifold'. The\nbroader use case is: A manifold plate used under a CNC router spoilboard to distribute vacuum to\nselectable cutting zones. The chosen deliverable is only the metal body implied by: Flat manifold\nbody with branching channels, gasket grooves, valve pockets, and port collars. All other product\nelements are external reference items and must not be modeled. The part must perform this mechanical\nrole: Routes vacuum from a main inlet to multiple gated channels so wood sheets stay fixed during\nmachining. It is intentionally included in the SubCAD limit corpus because: Tests internal routing,\nrepeated sealed zones, shallow grooves, planar layouts, and the distinction between visible surface\nfeatures and hidden flow paths. The part is made from low-carbon steel, ASTM A36 or equivalent using\nround bar stock. Start from one cut length of round metal bar. Turn the outside, face both ends,\nbore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts\nor fasteners are part of the deliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 55 mm and length 108 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 18 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 28 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 18 mm wide over 100 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M5 holes through the top flat at X=36 mm and X=72 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 6 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        },
+        {
+          "name": "opposed wrench flats",
+          "description": "Mill two opposed flats across the outside, leaving 47 mm across flats over the middle third of the length."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "The feature named 'opposed wrench flats' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'CNC router vacuum hold-down zone manifold'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-033-05",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 33,
+        "agent_id": null,
+        "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+        "raw_idea_index": 5,
+        "raw_idea_title": "Sliding compound miter saw fence extension stop"
+      },
+      "part_name": "Sliding compound miter saw fence extension stop - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 42,
+        "overall_length_mm": 102,
+        "axial_bore_diameter_mm": 10,
+        "wall_minimum_mm": 16
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Sliding compound miter saw fence extension stop'.\nThe broader use case is: An adjustable stop and fence extension accessory for repeat cuts on a\nsliding compound miter saw station. The chosen deliverable is only the metal body implied by:\nExtruded rail-like fence body with sliding stop block, pivoting flag, and clamp knob boss. All other\nproduct elements are external reference items and must not be modeled. The part must perform this\nmechanical role: Extends the saw fence and provides a flip-down stop for repeatable woodworking\ncuts. It is intentionally included in the SubCAD limit corpus because: Exercises long prismatic\nrails, movable accessory blocks, hinge-like stop features, knobs, and repeatable profile details\nwithout fixed length requirements. The part is made from low-carbon steel, ASTM A36 or equivalent\nusing round bar stock. Start from one cut length of round metal bar. Turn the outside, face both\nends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate\ninserts or fasteners are part of the deliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 42 mm and length 102 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 10 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 20 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 14 mm wide over 94 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M6 holes through the top flat at X=34 mm and X=68 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 2 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Sliding compound miter saw fence extension stop'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-033-06",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 33,
+        "agent_id": null,
+        "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+        "raw_idea_index": 6,
+        "raw_idea_title": "Cyclone dust separator inlet and cone body"
+      },
+      "part_name": "Cyclone dust separator inlet and cone body - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 79,
+        "overall_length_mm": 99,
+        "axial_bore_diameter_mm": 15,
+        "wall_minimum_mm": 32
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Cyclone dust separator inlet and cone body'. The\nbroader use case is: A compact cyclone separator mounted between woodworking machines and a shop\ndust collector. The chosen deliverable is only the metal body implied by: Tapered cyclone cone with\ntangential inlet, top outlet tube, and bin-mounting flange. All other product elements are external\nreference items and must not be modeled. The part must perform this mechanical role: Spins dust-\nladen air so chips fall into a collection bin before air continues to the vacuum system. It is\nintentionally included in the SubCAD limit corpus because: Tests conical bodies, tangential\ncylindrical intersections, hollow airflow features, flange bolt patterns, and non-orthogonal\nrelationships. The part is made from low-carbon steel, ASTM A36 or equivalent using round bar stock.\nStart from one cut length of round metal bar. Turn the outside, face both ends, bore the center,\nthen mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are\npart of the deliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 79 mm and length 99 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 15 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 25 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 26 mm wide over 91 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M5 holes through the top flat at X=33 mm and X=66 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 4 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Cyclone dust separator inlet and cone body'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-033-07",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 33,
+        "agent_id": null,
+        "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+        "raw_idea_index": 7,
+        "raw_idea_title": "Jointer planer adjustable outfeed table hinge support"
+      },
+      "part_name": "Jointer planer adjustable outfeed table hinge support - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 95,
+        "width_mm": 85,
+        "height_mm": 42
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Jointer planer adjustable outfeed table hinge\nsupport'. The broader use case is: A support bracket for fine alignment of a jointer or planer\noutfeed table relative to the cutterhead. The chosen deliverable is only the metal body implied by:\nHeavy side casting with hinge barrel, locking boss, ribbing, and adjustment screw pads. All other\nproduct elements are external reference items and must not be modeled. The part must perform this\nmechanical role: Allows the table to pivot and lock while maintaining a stable coplanar reference\nsurface for boards. It is intentionally included in the SubCAD limit corpus because: Combines cast-\nlooking ribs, hinge cylinders, flat reference faces, threaded adjuster locations, and load-bearing\nasymmetry. The part is made from low-carbon steel, ASTM A36 or equivalent using rectangular block\nstock. Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then\nmachine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid\npiece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 95 mm x 85 mm x 42 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 5 mm on the length centerline at X=17 mm and X=78 mm, Y=42 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 31 mm long x 18 mm wide through the part, centered at X=47 mm, Y=42 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 25 mm x 28 mm x 12 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "side tapped hole",
+          "description": "Tap one side hole M8 from the right long edge into the central pocket; hole axis is parallel to Y."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'side tapped hole' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Jointer planer adjustable outfeed table hinge support'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-033-08",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 33,
+        "agent_id": null,
+        "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+        "raw_idea_index": 8,
+        "raw_idea_title": "Band saw lower wheel cover with dust port"
+      },
+      "part_name": "Band saw lower wheel cover with dust port - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 145,
+        "width_mm": 105,
+        "thickness_mm": 5
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Band saw lower wheel cover with dust port'. The\nbroader use case is: A removable lower enclosure panel for a woodworking band saw. The chosen\ndeliverable is only the metal body implied by: Curved cover panel with recessed wheel bulge, latch\nbosses, hinge tabs, and angled dust port. All other product elements are external reference items\nand must not be modeled. The part must perform this mechanical role: Covers the lower wheel area,\nprovides access for blade changes, and connects to dust extraction near the lower guide path. It is\nintentionally included in the SubCAD limit corpus because: Tests shallow domed surfaces, door-like\nhardware, wheel clearance volumes, asymmetric ports, and cover-panel thickness. The part is made\nfrom low-carbon steel, ASTM A36 or equivalent using sheet or plate stock. Start from one flat sheet\nor plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features\ninto that same piece. If bends are called out, they are bends in the same sheet part, not separate\nwelded pieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 145 mm x 105 mm x 5 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 12 mm on the length centerline at X=21 mm and X=124 mm, Y=52 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 48 mm long x 7 mm wide through the part, centered at X=72 mm, Y=52 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 36 mm x 35 mm x 1 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "machined angled reference face",
+          "description": "Machine one top reference face at 40 degrees over the last 29 mm of length."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'machined angled reference face' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Band saw lower wheel cover with dust port'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-033-09",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 33,
+        "agent_id": null,
+        "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+        "raw_idea_index": 9,
+        "raw_idea_title": "CNC router automatic tool setter puck mount"
+      },
+      "part_name": "CNC router automatic tool setter puck mount - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 100,
+        "width_mm": 90,
+        "height_mm": 22
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'CNC router automatic tool setter puck mount'. The\nbroader use case is: A fixed probing accessory installed on a CNC router bed for measuring tool\nlength during woodworking jobs. The chosen deliverable is only the metal body implied by: Low-\nprofile puck holder with circular contact recess, cable strain relief, mounting ears, and protective\nlip. All other product elements are external reference items and must not be modeled. The part must\nperform this mechanical role: Presents a repeatable contact surface for the router bit and protects\nprobe wiring from chips and dust. It is intentionally included in the SubCAD limit corpus because:\nExercises small fixture geometry, concentric circular features, cable-routing detail, protected\ncontact zones, and mixed rounded and flat forms. The part is made from low-carbon steel, ASTM A36 or\nequivalent using rectangular block stock. Start from one rectangular metal block or plate. Saw\noversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and\nedge treatments into that same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 100 mm x 90 mm x 22 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 7 mm on the length centerline at X=18 mm and X=82 mm, Y=45 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 33 mm long x 15 mm wide through the part, centered at X=50 mm, Y=45 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 25 mm x 30 mm x 6 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'CNC router automatic tool setter puck mount'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-033-10",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 33,
+        "agent_id": null,
+        "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+        "raw_idea_index": 10,
+        "raw_idea_title": "Router table lift crank plate and motor clamp"
+      },
+      "part_name": "Router table lift crank plate and motor clamp - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 175,
+        "width_mm": 120,
+        "thickness_mm": 3
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Router table lift crank plate and motor clamp'. The\nbroader use case is: A lift mechanism installed under a router table to raise and lower a\nwoodworking router motor. The chosen deliverable is only the metal body implied by: Motor clamp ring\ncarried by a lift plate with guide posts, crank socket, and lead-screw support boss. All other\nproduct elements are external reference items and must not be modeled. The part must perform this\nmechanical role: Clamps the router motor and converts crank adjustment into controlled vertical\nmovement. It is intentionally included in the SubCAD limit corpus because: Tests split-ring clamp\nintent, aligned guide structures, screw-driven motion features, circular motor clearance, and\nlayered mechanical packaging. The part is made from 1045 medium-carbon steel, normalized using sheet\nor plate stock. Start from one flat sheet or plate blank. Cut the outside profile, machine holes,\nslots, pockets, lips, and relief features into that same piece. If bends are called out, they are\nbends in the same sheet part, not separate welded pieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 175 mm x 120 mm x 3 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 7 mm on the length centerline at X=24 mm and X=151 mm, Y=60 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 58 mm long x 17 mm wide through the part, centered at X=87 mm, Y=60 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 43 mm x 40 mm x 1 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "side tapped hole",
+          "description": "Tap one side hole M4 from the right long edge into the central pocket; hole axis is parallel to Y."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'side tapped hole' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Router table lift crank plate and motor clamp'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    }
+  ]
+}

@@ -1,0 +1,248 @@
+{
+  "agent_number": 26,
+  "source_requirements_file": "docs/subcad_limit_test/single_metal_parts/agent_026_office_equipment_hardware_single_metal_parts.json",
+  "stage": "subcad_program_generation",
+  "programs": [
+    {
+      "requirement_id": "SMP-026-01",
+      "part_name": "Printer Paper Tray Lift Cam - single metal part",
+      "source_raw_idea_title": "Printer Paper Tray Lift Cam",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(61, 87, material=\"steel_1045\")\n    .turn_id(diameter=12, depth=87)\n    .counterbore(hole_diameter=12, counterbore_diameter=22, counterbore_depth=3, through=True)\n    .pocket(length=79, width=20, depth=7.32, cx=0, cy=0, corner_radius=0)\n    .threaded_hole(diameter=8, depth=30.5, cx=-14.5, cy=0)\n    .threaded_hole(diameter=8, depth=30.5, cx=14.5, cy=0)\n    .slot(length=87, width=5, depth=61, through=True, cx=0, cy=-15.25)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Base cylindrical stock OD 61 mm x length 87 mm.",
+        "Centered axial through bore diameter 12 mm through full length.",
+        "One concentric end counterbore diameter 22 mm x 3 mm deep represented.",
+        "Longitudinal top reference flat 20 mm wide over 79 mm represented as a top milled flat relief.",
+        "Two tapped M8 clamp holes at axial X=29 and X=58 represented on the top flat.",
+        "Full-length split relief slit 5 mm wide approximated as a through slot offset toward datum-B side.",
+        "Outside circular edge break represented with 1.0 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "Requirement specifies 4140 alloy steel; mapped to allowed SubCAD material key steel_1045.",
+        "Bore-mouth 1.0 mm chamfers on both ends are noted but not separately selectable on the internal bore edges in this draft.",
+        "Requirement calls for counterbores on both ends; this draft models the accessible top/end counterbore only.",
+        "True longitudinal flat on a round bar side is approximated with a top-face pocket/flat operation.",
+        "Radial hole axis and intersection with cylindrical bore are approximated using top-face threaded_hole placement.",
+        "Exact radial slit from OD to axial bore on the cylindrical side is approximated as a top-face through slot.",
+        "Internal bore-edge chamfers are not separately modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-026-02",
+      "part_name": "Scanner Lid Counterbalance Hinge Arm - single metal part",
+      "source_raw_idea_title": "Scanner Lid Counterbalance Hinge Arm",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(160, 95, 25, material=\"steel_a36\")\n    .drill(diameter=12, through=True, cx=-61, cy=-0.5, spot_drill=False)\n    .drill(diameter=12, through=True, cx=61, cy=-0.5, spot_drill=False)\n    .slot(length=53, width=14, through=True, cx=0, cy=-0.5)\n    .pocket(length=40, width=31, depth=6, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 160 x 95 x 25 mm.",
+        "Two through mounting holes diameter 12 mm at X=19 and X=141, Y=47.",
+        "Central through obround slot 53 x 14 mm at X=80, Y=47.",
+        "Top relief pocket 40 x 31 x 6 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-026-03",
+      "part_name": "Adjustable Monitor Arm Tilt Knuckle - single metal part",
+      "source_raw_idea_title": "Adjustable Monitor Arm Tilt Knuckle",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(145, 115, 35, material=\"steel_a36\")\n    .drill(diameter=8, through=True, cx=-49.5, cy=-0.5, spot_drill=False)\n    .drill(diameter=8, through=True, cx=49.5, cy=-0.5, spot_drill=False)\n    .slot(length=48, width=14, through=True, cx=-0.5, cy=-0.5)\n    .pocket(length=36, width=38, depth=6, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n    .groove(length=7.25, width=4, depth=4, cx=-64.444, cy=55.5)\n    .groove(length=7.25, width=4, depth=4, cx=-48.333, cy=55.5)\n    .groove(length=7.25, width=4, depth=4, cx=-32.222, cy=55.5)\n    .groove(length=7.25, width=4, depth=4, cx=-16.111, cy=55.5)\n    .groove(length=7.25, width=4, depth=4, cx=0, cy=55.5)\n    .groove(length=7.25, width=4, depth=4, cx=16.111, cy=55.5)\n    .groove(length=7.25, width=4, depth=4, cx=32.222, cy=55.5)\n    .groove(length=7.25, width=4, depth=4, cx=48.333, cy=55.5)\n    .groove(length=7.25, width=4, depth=4, cx=64.444, cy=55.5)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 145 x 115 x 35 mm.",
+        "Two through mounting holes diameter 8 mm at X=23 and X=122, Y=57.",
+        "Central through obround slot 48 x 14 mm at X=72, Y=57.",
+        "Top relief pocket 36 x 38 x 6 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation.",
+        "Rear serration positions represented as 9 repeated edge grooves 4 mm deep."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled.",
+        "Triangular serration tooth form is approximated with rectangular grooves because current fluent operations do not define triangular edge teeth."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-026-04",
+      "part_name": "Office Chair Height Lever Bracket - single metal part",
+      "source_raw_idea_title": "Office Chair Height Lever Bracket",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(145, 125, 4, material=\"steel_a36\")\n    .drill(diameter=13, through=True, cx=-47.5, cy=-0.5, spot_drill=False)\n    .drill(diameter=13, through=True, cx=47.5, cy=-0.5, spot_drill=False)\n    .slot(length=48, width=11, through=True, cx=-0.5, cy=-0.5)\n    .pocket(length=36, width=41, depth=2, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 145 x 125 x 4 mm.",
+        "Two through mounting holes diameter 13 mm at X=25 and X=120, Y=62.",
+        "Central through obround slot 48 x 11 mm at X=72, Y=62.",
+        "Top relief pocket 36 x 41 x 2 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-026-05",
+      "part_name": "Filing Cabinet Anti-Tip Interlock Slider - single metal part",
+      "source_raw_idea_title": "Filing Cabinet Anti-Tip Interlock Slider",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(140, 75, 23, material=\"steel_a36\")\n    .drill(diameter=11, through=True, cx=-55, cy=-0.5, spot_drill=False)\n    .drill(diameter=11, through=True, cx=55, cy=-0.5, spot_drill=False)\n    .slot(length=46, width=18, through=True, cx=0, cy=-0.5)\n    .pocket(length=35, width=25, depth=3, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n    .groove(length=7.875, width=4, depth=2.76, cx=-61.25, cy=35.5)\n    .groove(length=7.875, width=4, depth=2.76, cx=-43.75, cy=35.5)\n    .groove(length=7.875, width=4, depth=2.76, cx=-26.25, cy=35.5)\n    .groove(length=7.875, width=4, depth=2.76, cx=-8.75, cy=35.5)\n    .groove(length=7.875, width=4, depth=2.76, cx=8.75, cy=35.5)\n    .groove(length=7.875, width=4, depth=2.76, cx=26.25, cy=35.5)\n    .groove(length=7.875, width=4, depth=2.76, cx=43.75, cy=35.5)\n    .groove(length=7.875, width=4, depth=2.76, cx=61.25, cy=35.5)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 140 x 75 x 23 mm.",
+        "Two through mounting holes diameter 11 mm at X=15 and X=125, Y=37.",
+        "Central through obround slot 46 x 18 mm at X=70, Y=37.",
+        "Top relief pocket 35 x 25 x 3 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation.",
+        "Rear serration positions represented as 8 repeated edge grooves 4 mm deep."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled.",
+        "Triangular serration tooth form is approximated with rectangular grooves because current fluent operations do not define triangular edge teeth."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-026-06",
+      "part_name": "Printer Duplexer Sheet Diverter Gate - single metal part",
+      "source_raw_idea_title": "Printer Duplexer Sheet Diverter Gate",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(115, 80, 5, material=\"steel_a36\")\n    .drill(diameter=10, through=True, cx=-41.5, cy=0, spot_drill=False)\n    .drill(diameter=10, through=True, cx=41.5, cy=0, spot_drill=False)\n    .slot(length=38, width=17, through=True, cx=-0.5, cy=0)\n    .pocket(length=28, width=26, depth=1, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 115 x 80 x 5 mm.",
+        "Two through mounting holes diameter 10 mm at X=16 and X=99, Y=40.",
+        "Central through obround slot 38 x 17 mm at X=57, Y=40.",
+        "Top relief pocket 28 x 26 x 1 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-026-07",
+      "part_name": "Keyboard Tray Slide Lock Pawl - single metal part",
+      "source_raw_idea_title": "Keyboard Tray Slide Lock Pawl",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(210, 135, 7, material=\"steel_a36\")\n    .drill(diameter=13, through=True, cx=-78, cy=-0.5, spot_drill=False)\n    .drill(diameter=13, through=True, cx=78, cy=-0.5, spot_drill=False)\n    .slot(length=70, width=18, through=True, cx=0, cy=-0.5)\n    .pocket(length=52, width=45, depth=3, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n    .groove(length=13.5, width=3, depth=0.84, cx=-90, cy=66)\n    .groove(length=13.5, width=3, depth=0.84, cx=-60, cy=66)\n    .groove(length=13.5, width=3, depth=0.84, cx=-30, cy=66)\n    .groove(length=13.5, width=3, depth=0.84, cx=0, cy=66)\n    .groove(length=13.5, width=3, depth=0.84, cx=30, cy=66)\n    .groove(length=13.5, width=3, depth=0.84, cx=60, cy=66)\n    .groove(length=13.5, width=3, depth=0.84, cx=90, cy=66)\n    .slope_cut(width=135, length=42, start_depth=0.5, end_depth=5.95, cx=84, cy=0, slope_axis=\"X\")\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 210 x 135 x 7 mm.",
+        "Two through mounting holes diameter 13 mm at X=27 and X=183, Y=67.",
+        "Central through obround slot 70 x 18 mm at X=105, Y=67.",
+        "Top relief pocket 52 x 45 x 3 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation.",
+        "Rear serration positions represented as 7 repeated edge grooves 3 mm deep.",
+        "Angled reference region over the last 42 mm represented as a sloped top-face cut at the right end."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled.",
+        "Triangular serration tooth form is approximated with rectangular grooves because current fluent operations do not define triangular edge teeth.",
+        "Exact external face angle of 35 degrees is approximated by a sloped pocket depth transition, not a full side-face reprofile."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-026-08",
+      "part_name": "Document Feeder Separator Roller Hub - single metal part",
+      "source_raw_idea_title": "Document Feeder Separator Roller Hub",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(61, 89, material=\"steel_a36\")\n    .turn_id(diameter=12, depth=89)\n    .counterbore(hole_diameter=12, counterbore_diameter=22, counterbore_depth=3, through=True)\n    .pocket(length=81, width=20, depth=7.32, cx=0, cy=0, corner_radius=0)\n    .threaded_hole(diameter=7, depth=30.5, cx=-15.5, cy=0)\n    .threaded_hole(diameter=7, depth=30.5, cx=14.5, cy=0)\n    .slot(length=89, width=6, depth=61, through=True, cx=0, cy=-15.25)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Base cylindrical stock OD 61 mm x length 89 mm.",
+        "Centered axial through bore diameter 12 mm through full length.",
+        "One concentric end counterbore diameter 22 mm x 3 mm deep represented.",
+        "Longitudinal top reference flat 20 mm wide over 81 mm represented as a top milled flat relief.",
+        "Two tapped M7 clamp holes at axial X=29 and X=59 represented on the top flat.",
+        "Full-length split relief slit 6 mm wide approximated as a through slot offset toward datum-B side.",
+        "Outside circular edge break represented with 1.0 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "Bore-mouth 1.0 mm chamfers on both ends are noted but not separately selectable on the internal bore edges in this draft.",
+        "Requirement calls for counterbores on both ends; this draft models the accessible top/end counterbore only.",
+        "True longitudinal flat on a round bar side is approximated with a top-face pocket/flat operation.",
+        "Radial hole axis and intersection with cylindrical bore are approximated using top-face threaded_hole placement.",
+        "Exact radial slit from OD to axial bore on the cylindrical side is approximated as a top-face through slot.",
+        "Internal bore-edge chamfers are not separately modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-026-09",
+      "part_name": "Standing Desk Crossbar Clamp Block - single metal part",
+      "source_raw_idea_title": "Standing Desk Crossbar Clamp Block",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(220, 50, 23, material=\"steel_1045\")\n    .drill(diameter=9, through=True, cx=-100, cy=0, spot_drill=False)\n    .drill(diameter=9, through=True, cx=100, cy=0, spot_drill=False)\n    .slot(length=73, width=15, through=True, cx=0, cy=0)\n    .pocket(length=55, width=18, depth=7, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 220 x 50 x 23 mm.",
+        "Two through mounting holes diameter 9 mm at X=10 and X=210, Y=25.",
+        "Central through obround slot 73 x 15 mm at X=110, Y=25.",
+        "Top relief pocket 55 x 18 x 7 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-026-10",
+      "part_name": "Modular Desk Cable Grommet Iris Ring - single metal part",
+      "source_raw_idea_title": "Modular Desk Cable Grommet Iris Ring",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(45, 59, material=\"steel_a36\")\n    .turn_id(diameter=9, depth=59)\n    .counterbore(hole_diameter=9, counterbore_diameter=19, counterbore_depth=3, through=True)\n    .pocket(length=51, width=15, depth=5.4, cx=0, cy=0, corner_radius=0)\n    .threaded_hole(diameter=4, depth=22.5, cx=-10.5, cy=0)\n    .threaded_hole(diameter=4, depth=22.5, cx=9.5, cy=0)\n    .slot(length=59, width=6, depth=45, through=True, cx=0, cy=-11.25)\n    .chamfer(width=1.0)\n    .slot(length=33.75, width=8, depth=4, angle=90, cx=-0.5, cy=0)\n)\n",
+      "coverage_notes": [
+        "Base cylindrical stock OD 45 mm x length 59 mm.",
+        "Centered axial through bore diameter 9 mm through full length.",
+        "One concentric end counterbore diameter 19 mm x 3 mm deep represented.",
+        "Longitudinal top reference flat 15 mm wide over 51 mm represented as a top milled flat relief.",
+        "Two tapped M4 clamp holes at axial X=19 and X=39 represented on the top flat.",
+        "Full-length split relief slit 6 mm wide approximated as a through slot offset toward datum-B side.",
+        "Outside circular edge break represented with 1.0 mm chamfer operation.",
+        "Transverse relief slot 8 mm wide at X=29, depth 4 mm represented on top flat."
+      ],
+      "known_gaps": [
+        "Bore-mouth 1.0 mm chamfers on both ends are noted but not separately selectable on the internal bore edges in this draft.",
+        "Requirement calls for counterbores on both ends; this draft models the accessible top/end counterbore only.",
+        "True longitudinal flat on a round bar side is approximated with a top-face pocket/flat operation.",
+        "Radial hole axis and intersection with cylindrical bore are approximated using top-face threaded_hole placement.",
+        "Exact radial slit from OD to axial bore on the cylindrical side is approximated as a top-face through slot.",
+        "Internal bore-edge chamfers are not separately modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    }
+  ]
+}

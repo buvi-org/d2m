@@ -1,0 +1,77 @@
+{
+  "agent_number": 32,
+  "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "Adjustable Fillet Weld Profile Comparator",
+      "product_context": "A handheld inspection gauge used by welders and quality technicians to compare fillet weld shape, throat feel, toe blend, and convexity across varied joint styles without needing a dedicated gauge for each weld family.",
+      "core_function": "Presents multiple sliding and pivoting reference faces that can be brought against a weld bead to visually and tactilely compare profile regularity.",
+      "likely_main_part": "A flat gauge body with pivoting profile leaves, sliding reference noses, and finger grip cutouts.",
+      "why_it_tests_cad_representation": "Requires representing nested moving gauge leaves, curved comparison edges, thin reference surfaces, and readable shop-floor affordances without relying on exact numeric sizing."
+    },
+    {
+      "idea_title": "Magnetic Tack Weld Corner Holding Fixture",
+      "product_context": "A compact fabrication bench fixture for holding two metal workpieces in a repeatable corner relationship while tack welds are placed before final welding.",
+      "core_function": "Uses magnetic contact pads and relieved welding access windows to hold parts while leaving torch clearance around the corner.",
+      "likely_main_part": "A triangular fixture frame with embedded magnet pockets, heat relief slots, and open torch access cutouts.",
+      "why_it_tests_cad_representation": "Challenges CAD generation with mixed solid and void regions, magnet insert recesses, weld-access geometry, and functional symmetry that must be visually legible."
+    },
+    {
+      "idea_title": "Sheet Metal Edge Burr Detection Comb",
+      "product_context": "A deburring station aid used after shearing, punching, or laser cutting to quickly detect sharp raised burrs along sheet edges before parts move downstream.",
+      "core_function": "Draws a row of flexible feeler teeth along an edge so snagging or deflection reveals burr presence and direction.",
+      "likely_main_part": "A handle-backed comb with graduated flexible tines, a protective nose, and replaceable wear strip features.",
+      "why_it_tests_cad_representation": "Tests the ability to model many thin repeated compliant features, a comfortable handle, protective guards, and a serviceable insert concept."
+    },
+    {
+      "idea_title": "Pipe Saddle Layout Wrap Gauge",
+      "product_context": "A fabrication layout tool for marking saddle cuts and intersection curves on pipe before cutting or fit-up in welded pipe assemblies.",
+      "core_function": "Wraps around round stock and exposes traceable curve slots for common branch intersection layouts while maintaining alignment around the circumference.",
+      "likely_main_part": "A flexible wrap band with curved stencil slots, alignment tabs, indexing marks, and locking overlap features.",
+      "why_it_tests_cad_representation": "Requires capturing a flexible band concept, curved layout apertures, repeatable registration features, and a part whose function depends on wrapping around cylindrical work."
+    },
+    {
+      "idea_title": "Tabbed Plate Fit-Up Gap Gauge",
+      "product_context": "A simple inspection and setup tool used during welded plate assembly to check whether root openings, lap gaps, or spacer clearances are consistent before tacking.",
+      "core_function": "Offers a fan of stepped tabs that can be inserted between plates to compare gap ranges and highlight uneven fit-up.",
+      "likely_main_part": "A pivoted stack of flat gauge tabs mounted to a thumb plate with a stop arc and retaining fastener boss.",
+      "why_it_tests_cad_representation": "Exercises representation of stacked thin components, stepped feeler geometry, pivot hardware, stop limits, and inspection-oriented human interaction."
+    },
+    {
+      "idea_title": "Deburring Wheel Angle Rest",
+      "product_context": "A bench-mounted shop aid that helps operators hold small parts at consistent presentation angles against a deburring wheel or abrasive belt.",
+      "core_function": "Provides adjustable angled support faces and sacrificial edge rails that guide parts while keeping hands away from the abrasive contact zone.",
+      "likely_main_part": "A slotted base with tilting rest plate, replaceable edge rails, clamp knobs, and chip clearance pockets.",
+      "why_it_tests_cad_representation": "Tests assemblies with adjustable planes, slotted travel, replaceable wear elements, guarded operator zones, and debris-management cutouts."
+    },
+    {
+      "idea_title": "Weld Coupon Bend Fixture Locator",
+      "product_context": "A quality-control fixture used to position small welded test coupons consistently before bending, marking, or visual inspection.",
+      "core_function": "Cradles coupons against stops and centering ribs so the weld zone aligns to a reference window or press contact region.",
+      "likely_main_part": "A compact locator block with coupon channels, raised centering ribs, open inspection window, and stop shoulders.",
+      "why_it_tests_cad_representation": "Requires clear depiction of datum surfaces, channels, visual inspection access, raised ribs, and asymmetrical features tied to workpiece orientation."
+    },
+    {
+      "idea_title": "Scribe Line Offset Bridge",
+      "product_context": "A fabrication layout hand tool for marking parallel offset lines along plate edges, flanges, or cut profiles when preparing weld seams and bend lines.",
+      "core_function": "Bridges over an edge while guiding a scribe point at a selectable offset from the workpiece boundary.",
+      "likely_main_part": "A U-shaped sliding bridge with edge follower feet, locking offset carriage, and protected scribe holder.",
+      "why_it_tests_cad_representation": "Challenges CAD with bridging geometry, sliding offset mechanisms, small tool-holding details, and surfaces that reference an external workpiece edge."
+    },
+    {
+      "idea_title": "Torch Nozzle Standoff Gauge Ring",
+      "product_context": "A welding and cutting setup aid used to verify consistent torch nozzle standoff from a work surface before starting a pass or cut.",
+      "core_function": "Clips around a nozzle or rests against it and presents reference fingers that indicate whether the torch is held at the intended clearance and angle.",
+      "likely_main_part": "A split ring body with spring latch detail, radial reference fingers, and heat-relief openings.",
+      "why_it_tests_cad_representation": "Tests circular clamp forms, split-body retention, radial protrusions, heat-aware voids, and functional interaction with a cylindrical tool."
+    },
+    {
+      "idea_title": "Flange Squareness Shadow Gauge",
+      "product_context": "An inspection gauge for checking whether welded tabs, small flanges, or brackets stand square to a base plate during fabrication.",
+      "core_function": "Seats on the base plate and frames the upright part with contrasting side references so light gaps reveal angular error.",
+      "likely_main_part": "An L-shaped gauge frame with relieved inside corner, sight windows, reference rails, and knurled grip pads.",
+      "why_it_tests_cad_representation": "Requires modeling precision reference faces, relief clearances, viewing apertures, grip texture cues, and inspection logic based on light-gap visibility."
+    }
+  ]
+}

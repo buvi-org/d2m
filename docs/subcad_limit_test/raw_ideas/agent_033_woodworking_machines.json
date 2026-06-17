@@ -1,0 +1,77 @@
+{
+  "agent_number": 33,
+  "domain": "CNC router, woodworking machine, saw, planer, and dust-collection hardware",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "Gantry CNC router spindle carriage with dust shoe",
+      "product_context": "A moving spindle assembly used on a gantry-style CNC router for sheet goods, cabinet panels, and nested woodworking operations.",
+      "core_function": "Holds the router spindle, guides vertical travel, and surrounds the cutting area with a brush-backed dust shoe.",
+      "likely_main_part": "Layered carriage plate carrying linear blocks, spindle clamp, Z-axis slide, and dust-shoe mount.",
+      "why_it_tests_cad_representation": "Combines flat plates, rail interfaces, clamp geometry, nested openings, and a partially transparent accessory region without needing exact machine dimensions."
+    },
+    {
+      "idea_title": "Tilting table saw blade guard and riving knife bracket",
+      "product_context": "A safety hardware assembly mounted behind the blade area of a woodworking table saw.",
+      "core_function": "Supports a riving knife, holds a pivoting blade guard, and keeps alignment with the blade path during cutting adjustments.",
+      "likely_main_part": "Curved bracket with slotted adjustment holes, hinge ears, and a narrow knife-like plate.",
+      "why_it_tests_cad_representation": "Tests thin safety plates, curved guards, pivot lugs, clearance slots, and feature placement around an implied rotating blade envelope."
+    },
+    {
+      "idea_title": "Planer cutterhead chip hood with hose outlet",
+      "product_context": "A dust and chip extraction hood fitted over the cutterhead area of a thickness planer.",
+      "core_function": "Captures high-volume shavings from the cutterhead and routes them toward a dust-collection hose.",
+      "likely_main_part": "Swept hood shell with rectangular intake mouth, rounded transition, and cylindrical outlet collar.",
+      "why_it_tests_cad_representation": "Challenges representation of smooth transitions between rectangular and round openings, hollow shell intent, flange details, and directional flow geometry."
+    },
+    {
+      "idea_title": "CNC router vacuum hold-down zone manifold",
+      "product_context": "A manifold plate used under a CNC router spoilboard to distribute vacuum to selectable cutting zones.",
+      "core_function": "Routes vacuum from a main inlet to multiple gated channels so wood sheets stay fixed during machining.",
+      "likely_main_part": "Flat manifold body with branching channels, gasket grooves, valve pockets, and port collars.",
+      "why_it_tests_cad_representation": "Tests internal routing, repeated sealed zones, shallow grooves, planar layouts, and the distinction between visible surface features and hidden flow paths."
+    },
+    {
+      "idea_title": "Sliding compound miter saw fence extension stop",
+      "product_context": "An adjustable stop and fence extension accessory for repeat cuts on a sliding compound miter saw station.",
+      "core_function": "Extends the saw fence and provides a flip-down stop for repeatable woodworking cuts.",
+      "likely_main_part": "Extruded rail-like fence body with sliding stop block, pivoting flag, and clamp knob boss.",
+      "why_it_tests_cad_representation": "Exercises long prismatic rails, movable accessory blocks, hinge-like stop features, knobs, and repeatable profile details without fixed length requirements."
+    },
+    {
+      "idea_title": "Cyclone dust separator inlet and cone body",
+      "product_context": "A compact cyclone separator mounted between woodworking machines and a shop dust collector.",
+      "core_function": "Spins dust-laden air so chips fall into a collection bin before air continues to the vacuum system.",
+      "likely_main_part": "Tapered cyclone cone with tangential inlet, top outlet tube, and bin-mounting flange.",
+      "why_it_tests_cad_representation": "Tests conical bodies, tangential cylindrical intersections, hollow airflow features, flange bolt patterns, and non-orthogonal relationships."
+    },
+    {
+      "idea_title": "Jointer planer adjustable outfeed table hinge support",
+      "product_context": "A support bracket for fine alignment of a jointer or planer outfeed table relative to the cutterhead.",
+      "core_function": "Allows the table to pivot and lock while maintaining a stable coplanar reference surface for boards.",
+      "likely_main_part": "Heavy side casting with hinge barrel, locking boss, ribbing, and adjustment screw pads.",
+      "why_it_tests_cad_representation": "Combines cast-looking ribs, hinge cylinders, flat reference faces, threaded adjuster locations, and load-bearing asymmetry."
+    },
+    {
+      "idea_title": "Band saw lower wheel cover with dust port",
+      "product_context": "A removable lower enclosure panel for a woodworking band saw.",
+      "core_function": "Covers the lower wheel area, provides access for blade changes, and connects to dust extraction near the lower guide path.",
+      "likely_main_part": "Curved cover panel with recessed wheel bulge, latch bosses, hinge tabs, and angled dust port.",
+      "why_it_tests_cad_representation": "Tests shallow domed surfaces, door-like hardware, wheel clearance volumes, asymmetric ports, and cover-panel thickness."
+    },
+    {
+      "idea_title": "CNC router automatic tool setter puck mount",
+      "product_context": "A fixed probing accessory installed on a CNC router bed for measuring tool length during woodworking jobs.",
+      "core_function": "Presents a repeatable contact surface for the router bit and protects probe wiring from chips and dust.",
+      "likely_main_part": "Low-profile puck holder with circular contact recess, cable strain relief, mounting ears, and protective lip.",
+      "why_it_tests_cad_representation": "Exercises small fixture geometry, concentric circular features, cable-routing detail, protected contact zones, and mixed rounded and flat forms."
+    },
+    {
+      "idea_title": "Router table lift crank plate and motor clamp",
+      "product_context": "A lift mechanism installed under a router table to raise and lower a woodworking router motor.",
+      "core_function": "Clamps the router motor and converts crank adjustment into controlled vertical movement.",
+      "likely_main_part": "Motor clamp ring carried by a lift plate with guide posts, crank socket, and lead-screw support boss.",
+      "why_it_tests_cad_representation": "Tests split-ring clamp intent, aligned guide structures, screw-driven motion features, circular motor clearance, and layered mechanical packaging."
+    }
+  ]
+}

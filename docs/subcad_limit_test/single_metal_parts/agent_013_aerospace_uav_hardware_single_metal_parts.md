@@ -1,0 +1,644 @@
+# Agent 013 Single Metal Part Requirements
+
+Domain: aerospace ground-support, drone hardware, RC aircraft, and UAV payload mounting parts
+
+Each item below is one metal part only. Product assemblies and nonmetal components are explicitly out of scope.
+
+## SMP-013-01 - UAV Gimbal Vibration-Isolator Yoke
+
+Part name: UAV Gimbal Vibration-Isolator Yoke - single metal part
+
+Material: 6061-T6 aluminum (low mass with good machinability and stable flat features)
+
+Envelope: `{"axial_bore_diameter_mm": 16, "outer_diameter_mm": 84, "overall_length_mm": 64, "wall_minimum_mm": 34}`
+
+Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.
+
+Full description:
+
+Make the single metal part for the product idea 'UAV Gimbal Vibration-Isolator Yoke'. The broader
+use case is: Multirotor inspection drone carrying a stabilized optical payload under the fuselage.
+The chosen deliverable is only the metal body implied by: Machined forked yoke with elastomer
+bushing pockets, cable pass-throughs, and asymmetric mounting ears. All other product elements are
+external reference items and must not be modeled. The part must perform this mechanical role:
+Supports a two-axis camera gimbal while mechanically filtering high-frequency motor vibration. It is
+intentionally included in the SubCAD limit corpus because: Combines nested cylindrical bushing
+seats, fork geometry, thin clearance gaps, filleted load paths, and non-symmetric payload offsets.
+The part is made from 6061-T6 aluminum using round bar stock. Start from one cut length of round
+metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and
+radial holes as needed. No separate inserts or fasteners are part of the deliverable.
+
+Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 84 mm and length 64 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 16 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 26 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 28 mm wide over 56 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M6 holes through the top flat at X=21 mm and X=42 mm.
+- split relief slit: Cut one full-length radial slit 2 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.
+
+Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'UAV Gimbal Vibration-Isolator Yoke'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-013-02 - Wingtip Navigation-Light Pod Housing
+
+Part name: Wingtip Navigation-Light Pod Housing - single metal part
+
+Material: 6061-T6 aluminum (low mass with good machinability and stable flat features)
+
+Envelope: `{"length_mm": 110, "thickness_mm": 6, "width_mm": 90}`
+
+Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.
+
+Full description:
+
+Make the single metal part for the product idea 'Wingtip Navigation-Light Pod Housing'. The broader
+use case is: Composite RC aircraft or fixed-wing UAV requiring replaceable LED navigation lights at
+the wingtip. The chosen deliverable is only the metal body implied by: Contoured aluminum pod shell
+with internal board ledges, lens-retaining lip, and curved wing-interface flange. All other product
+elements are external reference items and must not be modeled. The part must perform this mechanical
+role: Holds LED boards, lens hardware, and wiring while conforming to an aerodynamic wingtip
+profile. It is intentionally included in the SubCAD limit corpus because: Requires smooth
+aerodynamic exterior surfaces, thin-wall shell features, internal shelves, small screw bosses, and a
+compound curved mating face. The part is made from 6061-T6 aluminum using sheet or plate stock.
+Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets,
+lips, and relief features into that same piece. If bends are called out, they are bends in the same
+sheet part, not separate welded pieces.
+
+Functional features:
+- single rectangular metal body: Machine one body with finished envelope 110 mm x 90 mm x 6 mm.
+- mounting hole pattern: Drill two through holes diameter 9 mm on the length centerline at X=18 mm and X=92 mm, Y=45 mm.
+- functional center feature: Machine a central obround slot 36 mm long x 18 mm wide through the part, centered at X=55 mm, Y=45 mm.
+- top relief pocket: Mill a rectangular relief pocket 27 mm x 30 mm x 3 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+- side tapped hole: Tap one side hole M8 from the right long edge into the central pocket; hole axis is parallel to Y.
+
+Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- The feature named 'side tapped hole' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Wingtip Navigation-Light Pod Housing'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-013-03 - Drone Battery Quick-Release Rail Saddle
+
+Part name: Drone Battery Quick-Release Rail Saddle - single metal part
+
+Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)
+
+Envelope: `{"height_mm": 40, "length_mm": 150, "width_mm": 110}`
+
+Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.
+
+Full description:
+
+Make the single metal part for the product idea 'Drone Battery Quick-Release Rail Saddle'. The
+broader use case is: Industrial quadcopter using slide-in smart batteries that must be swapped
+rapidly in field operations. The chosen deliverable is only the metal body implied by: Machined rail
+saddle with dovetail grooves, latch notch, connector alignment pocket, and tapered lead-in ramps.
+All other product elements are external reference items and must not be modeled. The part must
+perform this mechanical role: Guides and locks a battery pack into a repeatable position while
+resisting vibration and crash loads. It is intentionally included in the SubCAD limit corpus
+because: Tests dovetail geometry, ramp transitions, precise datum surfaces, undercut-like retention
+profiles, and connector-clearance cutouts. The part is made from low-carbon steel, ASTM A36 or
+equivalent using rectangular block stock. Start from one rectangular metal block or plate. Saw
+oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and
+edge treatments into that same solid piece.
+
+Functional features:
+- single rectangular metal body: Machine one body with finished envelope 150 mm x 110 mm x 40 mm.
+- mounting hole pattern: Drill two through holes diameter 7 mm on the length centerline at X=22 mm and X=128 mm, Y=55 mm.
+- functional center feature: Machine a central obround slot 50 mm long x 7 mm wide through the part, centered at X=75 mm, Y=55 mm.
+- top relief pocket: Mill a rectangular relief pocket 37 mm x 36 mm x 3 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+- dovetail slide form: Machine a straight dovetail groove on the top face, length 126 mm, throat 22 mm, included angle 60 degrees.
+- machined angled reference face: Machine one top reference face at 36 degrees over the last 30 mm of length.
+
+Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- The feature named 'dovetail slide form' is present with the stated size and position.
+- The feature named 'machined angled reference face' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Drone Battery Quick-Release Rail Saddle'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-013-04 - Pitot Tube Heated Mount Block
+
+Part name: Pitot Tube Heated Mount Block - single metal part
+
+Material: 6061-T6 aluminum (low mass with good machinability and stable flat features)
+
+Envelope: `{"axial_bore_diameter_mm": 15, "outer_diameter_mm": 76, "overall_length_mm": 56, "wall_minimum_mm": 30}`
+
+Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.
+
+Full description:
+
+Make the single metal part for the product idea 'Pitot Tube Heated Mount Block'. The broader use
+case is: Fixed-wing UAV air-data system mounted on a nose boom or wing strut. The chosen deliverable
+is only the metal body implied by: Small machined clamp block with split bore, wire channel, set-
+screw flats, and angled airframe mounting face. All other product elements are external reference
+items and must not be modeled. The part must perform this mechanical role: Clamps and aligns a pitot
+tube while routing heater wires and maintaining aerodynamic exposure. It is intentionally included
+in the SubCAD limit corpus because: Includes coaxial bores, split-clamp reliefs, angled datum
+planes, tiny fastener features, and hidden cable-routing passages. The part is made from 6061-T6
+aluminum using round bar stock. Start from one cut length of round metal bar. Turn the outside, face
+both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No
+separate inserts or fasteners are part of the deliverable.
+
+Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 76 mm and length 56 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 15 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 25 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 25 mm wide over 48 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M8 holes through the top flat at X=18 mm and X=37 mm.
+- split relief slit: Cut one full-length radial slit 2 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.
+- opposed wrench flats: Mill two opposed flats across the outside, leaving 68 mm across flats over the middle third of the length.
+- cross relief slot: Machine one transverse slot 4 mm wide across the top flat at X=28 mm, depth 7 mm.
+
+Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- The feature named 'opposed wrench flats' is present with the stated size and position.
+- The feature named 'cross relief slot' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Pitot Tube Heated Mount Block'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-013-05 - Ground-Support Propeller Torque Fixture Jaw
+
+Part name: Ground-Support Propeller Torque Fixture Jaw - single metal part
+
+Material: 6061-T6 aluminum (low mass with good machinability and stable flat features)
+
+Envelope: `{"axial_bore_diameter_mm": 15, "outer_diameter_mm": 61, "overall_length_mm": 27, "wall_minimum_mm": 23}`
+
+Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.
+
+Full description:
+
+Make the single metal part for the product idea 'Ground-Support Propeller Torque Fixture Jaw'. The
+broader use case is: Maintenance bench tool for holding UAV propeller hubs during torque checks and
+blade replacement. The chosen deliverable is only the metal body implied by: Replaceable contoured
+fixture jaw with hub-radius pocket, soft-insert recesses, anti-rotation keys, and clearance
+scallops. All other product elements are external reference items and must not be modeled. The part
+must perform this mechanical role: Captures a propeller hub without damaging it while allowing
+access to central fasteners. It is intentionally included in the SubCAD limit corpus because: Tests
+organic contact pockets, removable insert cavities, repeated symmetry broken by tool-access cutouts,
+and datum-key alignment. The part is made from 6061-T6 aluminum using round bar stock. Start from
+one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill
+secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the
+deliverable.
+
+Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 61 mm and length 27 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 15 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 25 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 20 mm wide over 19 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M8 holes through the top flat at X=9 mm and X=18 mm.
+- split relief slit: Cut one full-length radial slit 2 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.
+
+Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Ground-Support Propeller Torque Fixture Jaw'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-013-06 - UAV Payload Bay Blind-Mate Connector Carrier
+
+Part name: UAV Payload Bay Blind-Mate Connector Carrier - single metal part
+
+Material: 6061-T6 aluminum (low mass with good machinability and stable flat features)
+
+Envelope: `{"height_mm": 41, "length_mm": 115, "width_mm": 90}`
+
+Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.
+
+Full description:
+
+Make the single metal part for the product idea 'UAV Payload Bay Blind-Mate Connector Carrier'. The
+broader use case is: Modular payload bay where cameras, radios, or sensors are swapped without
+manually connecting cables. The chosen deliverable is only the metal body implied by: Machined
+connector carrier with floating mount pockets, spring clearance wells, alignment dowel holes, and
+chamfered docking funnels. All other product elements are external reference items and must not be
+modeled. The part must perform this mechanical role: Positions electrical connectors so payload
+modules engage reliably during slide-in installation. It is intentionally included in the SubCAD
+limit corpus because: Requires precise connector datum control, floating tolerance features,
+repeated small pockets, alignment features, and funnel-like lead-in geometry. The part is made from
+6061-T6 aluminum using rectangular block stock. Start from one rectangular metal block or plate. Saw
+oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and
+edge treatments into that same solid piece.
+
+Functional features:
+- single rectangular metal body: Machine one body with finished envelope 115 mm x 90 mm x 41 mm.
+- mounting hole pattern: Drill two through holes diameter 7 mm on the length centerline at X=18 mm and X=97 mm, Y=45 mm.
+- functional center feature: Machine a central obround slot 38 mm long x 9 mm wide through the part, centered at X=57 mm, Y=45 mm.
+- top relief pocket: Mill a rectangular relief pocket 28 mm x 30 mm x 3 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+
+Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'UAV Payload Bay Blind-Mate Connector Carrier'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-013-07 - RC Aircraft Retractable Landing-Gear Trunnion
+
+Part name: RC Aircraft Retractable Landing-Gear Trunnion - single metal part
+
+Material: 6061-T6 aluminum (low mass with good machinability and stable flat features)
+
+Envelope: `{"height_mm": 64, "length_mm": 180, "width_mm": 100}`
+
+Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.
+
+Full description:
+
+Make the single metal part for the product idea 'RC Aircraft Retractable Landing-Gear Trunnion'. The
+broader use case is: Large-scale RC aircraft or small UAV with servo-actuated retractable landing
+gear. The chosen deliverable is only the metal body implied by: CNC-machined trunnion block with
+cross-bore pivot, strut socket, stop faces, servo-link tab, and weight-relief pockets. All other
+product elements are external reference items and must not be modeled. The part must perform this
+mechanical role: Acts as the rotating structural hinge between landing strut and retract mechanism.
+It is intentionally included in the SubCAD limit corpus because: Combines perpendicular bores, high-
+load fillets, hard mechanical stops, pockets near curved sockets, and compact multi-axis feature
+relationships. The part is made from 6061-T6 aluminum using rectangular block stock. Start from one
+rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets,
+holes, slots, angled faces, grooves, and edge treatments into that same solid piece.
+
+Functional features:
+- single rectangular metal body: Machine one body with finished envelope 180 mm x 100 mm x 64 mm.
+- mounting hole pattern: Drill two through holes diameter 8 mm on the length centerline at X=20 mm and X=160 mm, Y=50 mm.
+- functional center feature: Machine a central obround slot 60 mm long x 8 mm wide through the part, centered at X=90 mm, Y=50 mm.
+- top relief pocket: Mill a rectangular relief pocket 45 mm x 33 mm x 11 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+
+Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'RC Aircraft Retractable Landing-Gear Trunnion'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-013-08 - Drone Lidar Isolation Deck Insert
+
+Part name: Drone Lidar Isolation Deck Insert - single metal part
+
+Material: 6061-T6 aluminum (low mass with good machinability and stable flat features)
+
+Envelope: `{"axial_bore_diameter_mm": 23, "outer_diameter_mm": 93, "overall_length_mm": 55, "wall_minimum_mm": 35}`
+
+Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.
+
+Full description:
+
+Make the single metal part for the product idea 'Drone Lidar Isolation Deck Insert'. The broader use
+case is: Mapping UAV carrying a lidar unit that must remain level and isolated from frame vibration.
+The chosen deliverable is only the metal body implied by: Machined deck insert with three-point
+leveling pads, isolation bushing cups, sensor datum pins, and recessed cable exits. All other
+product elements are external reference items and must not be modeled. The part must perform this
+mechanical role: Provides a precision mounting interface between the airframe and a vibration-
+isolated lidar deck. It is intentionally included in the SubCAD limit corpus because: Tests coplanar
+precision pads, circular cup arrays, local datum features, cable egress cutouts, and stiffness-
+focused pocketing. The part is made from 6061-T6 aluminum using round bar stock. Start from one cut
+length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary
+flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the
+deliverable.
+
+Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 93 mm and length 55 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 23 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 33 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 31 mm wide over 47 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M5 holes through the top flat at X=18 mm and X=36 mm.
+- split relief slit: Cut one full-length radial slit 2 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.
+
+Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Drone Lidar Isolation Deck Insert'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-013-09 - Ground Charging Dock Alignment Cone
+
+Part name: Ground Charging Dock Alignment Cone - single metal part
+
+Material: 4140 alloy steel, prehard (strong cylindrical metal part with threaded and slotted details)
+
+Envelope: `{"axial_bore_diameter_mm": 20, "outer_diameter_mm": 60, "overall_length_mm": 41, "wall_minimum_mm": 20}`
+
+Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.
+
+Full description:
+
+Make the single metal part for the product idea 'Ground Charging Dock Alignment Cone'. The broader
+use case is: Autonomous drone docking station where the aircraft lands onto a charging cradle. The
+chosen deliverable is only the metal body implied by: Machined funnel-shaped alignment cone with
+replaceable wear-strip slots, drain grooves, contact clearance window, and base fastener pattern.
+All other product elements are external reference items and must not be modeled. The part must
+perform this mechanical role: Guides the drone skid or landing foot into position for reliable
+charge-contact engagement. It is intentionally included in the SubCAD limit corpus because: Requires
+conical guide geometry, slots on sloped surfaces, drainage channels, asymmetric windows, and durable
+mounting-base transitions. The part is made from 4140 alloy steel, prehard using round bar stock.
+Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center,
+then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are
+part of the deliverable.
+
+Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 60 mm and length 41 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 20 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 30 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 20 mm wide over 33 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M4 holes through the top flat at X=13 mm and X=27 mm.
+- split relief slit: Cut one full-length radial slit 5 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.
+- cross relief slot: Machine one transverse slot 7 mm wide across the top flat at X=20 mm, depth 6 mm.
+
+Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- The feature named 'cross relief slot' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Ground Charging Dock Alignment Cone'; this requirement is only for its chosen metal part.
+
+---
+
+## SMP-013-10 - UAV Antenna Mast Folding Hinge Knuckle
+
+Part name: UAV Antenna Mast Folding Hinge Knuckle - single metal part
+
+Material: 6061-T6 aluminum (low mass with good machinability and stable flat features)
+
+Envelope: `{"axial_bore_diameter_mm": 14, "outer_diameter_mm": 56, "overall_length_mm": 30, "wall_minimum_mm": 21}`
+
+Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.
+
+Full description:
+
+Make the single metal part for the product idea 'UAV Antenna Mast Folding Hinge Knuckle'. The
+broader use case is: Long-range UAV with a folding telemetry antenna mast for transport and launch
+handling. The chosen deliverable is only the metal body implied by: Machined hinge knuckle with
+interleaved lugs, coaxial pin bore, detent-ball pocket, hard-stop shoulder, and cable groove. All
+other product elements are external reference items and must not be modeled. The part must perform
+this mechanical role: Allows the antenna mast to fold while locking rigidly in the deployed
+position. It is intentionally included in the SubCAD limit corpus because: Tests interlocking hinge
+lug geometry, coaxial tolerance-critical holes, detent features, stop surfaces, and routed cable
+relief in a compact part. The part is made from 6061-T6 aluminum using round bar stock. Start from
+one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill
+secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the
+deliverable.
+
+Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 56 mm and length 30 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 14 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 24 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 18 mm wide over 22 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M7 holes through the top flat at X=10 mm and X=20 mm.
+- split relief slit: Cut one full-length radial slit 2 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.
+- cross relief slot: Machine one transverse slot 4 mm wide across the top flat at X=15 mm, depth 5 mm.
+
+Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.
+
+Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- The feature named 'cross relief slot' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.
+
+Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'UAV Antenna Mast Folding Hinge Knuckle'; this requirement is only for its chosen metal part.
+
+---

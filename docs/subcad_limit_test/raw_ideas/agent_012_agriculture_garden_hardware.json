@@ -1,0 +1,79 @@
+{
+  "agent_number": 12,
+  "agent_id": "019ecedd-0914-7740-a2b6-579bcf8a0473",
+  "domain": "agriculture, garden equipment, irrigation fittings, pruning tools, and small farm hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Adjustable Drip-Line End Clamp",
+      "product_context": "Field irrigation systems that use flexible polyethylene drip tubing in vegetable beds or orchards.",
+      "core_function": "Pinches and locks the open end of a drip line so the tube can be flushed, resealed, or reopened without cutting.",
+      "likely_main_part": "Cam-lock clamp body with a curved tube channel, hinge boss, latch hook, and thumb cam surface.",
+      "why_it_tests_cad_representation": "Requires blended cylindrical tube seating, asymmetric hinge geometry, latch clearances, cam contact surfaces, and realistic wall thickness transitions."
+    },
+    {
+      "idea_title": "Pruning Shear Blade Pivot Carrier",
+      "product_context": "Bypass pruning shears used for cutting stems, vines, and small branches.",
+      "core_function": "Holds the pivot screw, supports the moving blade, and maintains blade alignment under cutting load.",
+      "likely_main_part": "Forged or machined pivot carrier half with blade pocket, pivot boss, spring seat, and handle transition.",
+      "why_it_tests_cad_representation": "Combines organic ergonomic contours with precise coaxial pivot features, recessed pockets, tapered ribs, and high-load filleted transitions."
+    },
+    {
+      "idea_title": "Micro-Sprinkler Stake Head Adapter",
+      "product_context": "Low-pressure garden and greenhouse irrigation using small sprinkler heads mounted on stakes.",
+      "core_function": "Connects a vertical support stake, feed tube, and threaded sprinkler nozzle into one adjustable junction.",
+      "likely_main_part": "Compact adapter body with barb inlet, stake socket, nozzle thread, and angled flow passage.",
+      "why_it_tests_cad_representation": "Tests intersecting internal passages, hose barb profiles, molded-looking external ribs, threaded cylindrical features, and angled connector geometry."
+    },
+    {
+      "idea_title": "Seed Drill Metering Roller",
+      "product_context": "Small manual or walk-behind seed drills for sowing vegetable seeds in rows.",
+      "core_function": "Meters seeds by carrying them in repeated pockets from a hopper into the drop chute.",
+      "likely_main_part": "Cylindrical metering roller with radial seed cells, shaft bore, indexing groove, and end retention shoulder.",
+      "why_it_tests_cad_representation": "Needs repeated patterned cavities on a curved surface, precise angular spacing, pocket edge radii, shaft alignment, and manufacturable undercut-aware details."
+    },
+    {
+      "idea_title": "Garden Hose Quick-Coupler Lock Sleeve",
+      "product_context": "Reusable hose fittings for garden irrigation, washdown stations, and small farm water lines.",
+      "core_function": "Slides over a coupler body to retain locking balls or latch tabs around a mating plug.",
+      "likely_main_part": "Cylindrical sliding sleeve with grip knurling, internal retention groove, chamfered lead-in, and stop shoulder.",
+      "why_it_tests_cad_representation": "Tests concentric internal and external features, fine grip texture, hidden groove representation, chamfer consistency, and functional sliding clearances."
+    },
+    {
+      "idea_title": "Trellis Wire Tensioner Ratchet Wheel",
+      "product_context": "Vineyard, orchard, and garden trellis systems where support wires need periodic tensioning.",
+      "core_function": "Winds trellis wire and locks against reverse rotation using a pawl.",
+      "likely_main_part": "Ratchet spool wheel with wire slot, central square drive, toothed perimeter, and side flanges.",
+      "why_it_tests_cad_representation": "Requires accurately repeated ratchet teeth, spool-like geometry, drive socket detail, wire capture slots, and robust flange-to-hub transitions."
+    },
+    {
+      "idea_title": "Irrigation Filter Bowl Clamp Ring",
+      "product_context": "Inline mesh filters used before drip irrigation zones to protect emitters from sediment.",
+      "core_function": "Compresses and secures a removable filter bowl against the filter head seal.",
+      "likely_main_part": "Split clamp ring with hinge lug, over-center latch lug, seal compression face, and ribbed outer grip.",
+      "why_it_tests_cad_representation": "Tests split circular forms, hinge and latch alignment, gasket compression surfaces, ribbed grip details, and nontrivial assembly clearance."
+    },
+    {
+      "idea_title": "Cultivator Tine Mounting Socket",
+      "product_context": "Small walk-behind cultivators or hand-pushed weeders with replaceable spring tines.",
+      "core_function": "Receives and locks a curved tine while transferring soil resistance loads into the frame.",
+      "likely_main_part": "Angled socket block with tapered tine bore, cross-pin hole, frame mounting bosses, and reinforcing web.",
+      "why_it_tests_cad_representation": "Combines angled bores, load-bearing gussets, intersecting fastener holes, tapered retention geometry, and heavy fillets around stress paths."
+    },
+    {
+      "idea_title": "Grafting Knife Folding Lock Bar",
+      "product_context": "Folding grafting knives used by nursery workers and orchard growers.",
+      "core_function": "Locks the blade open while allowing controlled release for folding.",
+      "likely_main_part": "Thin spring lock bar with pivot hole, blade tang contact face, thumb relief, and formed spring profile.",
+      "why_it_tests_cad_representation": "Challenges CAD representation with thin spring geometry, precise contact faces, small relief cutouts, bend-like profiles, and tolerance-sensitive pivot spacing."
+    },
+    {
+      "idea_title": "Rain Barrel Spigot Bulkhead Nut",
+      "product_context": "Garden rainwater harvesting barrels fitted with low-pressure spigots and hose outlets.",
+      "core_function": "Clamps a spigot fitting through a curved plastic barrel wall while compressing a gasket.",
+      "likely_main_part": "Large internally threaded bulkhead nut with scalloped grip perimeter, gasket seat, barrel-wall relief face, and lead-in chamfer.",
+      "why_it_tests_cad_representation": "Tests large thread-like cylindrical detail, ergonomic scalloped edges, sealing faces, curvature-aware mounting context, and realistic compression hardware geometry."
+    }
+  ]
+}

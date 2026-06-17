@@ -1,0 +1,1004 @@
+{
+  "agent_number": 32,
+  "agent_id": null,
+  "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+  "stage": "single_metal_part_requirements",
+  "source_raw_file": "docs/subcad_limit_test/raw_ideas/agent_032_fabrication_gauges.json",
+  "requirements": [
+    {
+      "requirement_id": "SMP-032-01",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 32,
+        "agent_id": null,
+        "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+        "raw_idea_index": 1,
+        "raw_idea_title": "Adjustable Fillet Weld Profile Comparator"
+      },
+      "part_name": "Adjustable Fillet Weld Profile Comparator - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 90,
+        "width_mm": 65,
+        "height_mm": 68
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Adjustable Fillet Weld Profile Comparator'. The\nbroader use case is: A handheld inspection gauge used by welders and quality technicians to compare\nfillet weld shape, throat feel, toe blend, and convexity across varied joint styles without needing\na dedicated gauge for each weld family. The chosen deliverable is only the metal body implied by: A\nflat gauge body with pivoting profile leaves, sliding reference noses, and finger grip cutouts. All\nother product elements are external reference items and must not be modeled. The part must perform\nthis mechanical role: Presents multiple sliding and pivoting reference faces that can be brought\nagainst a weld bead to visually and tactilely compare profile regularity. It is intentionally\nincluded in the SubCAD limit corpus because: Requires representing nested moving gauge leaves,\ncurved comparison edges, thin reference surfaces, and readable shop-floor affordances without\nrelying on exact numeric sizing. The part is made from 1045 medium-carbon steel, normalized using\nrectangular block stock. Start from one rectangular metal block or plate. Saw oversize, face all\ndatum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into\nthat same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 90 mm x 65 mm x 68 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 11 mm on the length centerline at X=13 mm and X=77 mm, Y=32 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 30 mm long x 18 mm wide through the part, centered at X=45 mm, Y=32 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 25 mm x 21 mm x 12 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Adjustable Fillet Weld Profile Comparator'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-032-02",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 32,
+        "agent_id": null,
+        "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+        "raw_idea_index": 2,
+        "raw_idea_title": "Magnetic Tack Weld Corner Holding Fixture"
+      },
+      "part_name": "Magnetic Tack Weld Corner Holding Fixture - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 165,
+        "width_mm": 120,
+        "height_mm": 33
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Magnetic Tack Weld Corner Holding Fixture'. The\nbroader use case is: A compact fabrication bench fixture for holding two metal workpieces in a\nrepeatable corner relationship while tack welds are placed before final welding. The chosen\ndeliverable is only the metal body implied by: A triangular fixture frame with embedded magnet\npockets, heat relief slots, and open torch access cutouts. All other product elements are external\nreference items and must not be modeled. The part must perform this mechanical role: Uses magnetic\ncontact pads and relieved welding access windows to hold parts while leaving torch clearance around\nthe corner. It is intentionally included in the SubCAD limit corpus because: Challenges CAD\ngeneration with mixed solid and void regions, magnet insert recesses, weld-access geometry, and\nfunctional symmetry that must be visually legible. The part is made from 1045 medium-carbon steel,\nnormalized using rectangular block stock. Start from one rectangular metal block or plate. Saw\noversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and\nedge treatments into that same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 165 mm x 120 mm x 33 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 8 mm on the length centerline at X=24 mm and X=141 mm, Y=60 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 55 mm long x 16 mm wide through the part, centered at X=82 mm, Y=60 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 41 mm x 40 mm x 5 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Magnetic Tack Weld Corner Holding Fixture'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-032-03",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 32,
+        "agent_id": null,
+        "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+        "raw_idea_index": 3,
+        "raw_idea_title": "Sheet Metal Edge Burr Detection Comb"
+      },
+      "part_name": "Sheet Metal Edge Burr Detection Comb - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 205,
+        "width_mm": 120,
+        "thickness_mm": 10
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Sheet Metal Edge Burr Detection Comb'. The broader\nuse case is: A deburring station aid used after shearing, punching, or laser cutting to quickly\ndetect sharp raised burrs along sheet edges before parts move downstream. The chosen deliverable is\nonly the metal body implied by: A handle-backed comb with graduated flexible tines, a protective\nnose, and replaceable wear strip features. All other product elements are external reference items\nand must not be modeled. The part must perform this mechanical role: Draws a row of flexible feeler\nteeth along an edge so snagging or deflection reveals burr presence and direction. It is\nintentionally included in the SubCAD limit corpus because: Tests the ability to model many thin\nrepeated compliant features, a comfortable handle, protective guards, and a serviceable insert\nconcept. The part is made from low-carbon steel, ASTM A36 or equivalent using sheet or plate stock.\nStart from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets,\nlips, and relief features into that same piece. If bends are called out, they are bends in the same\nsheet part, not separate welded pieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 205 mm x 120 mm x 10 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 5 mm on the length centerline at X=24 mm and X=181 mm, Y=60 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 68 mm long x 9 mm wide through the part, centered at X=102 mm, Y=60 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 51 mm x 40 mm x 5 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Sheet Metal Edge Burr Detection Comb'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-032-04",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 32,
+        "agent_id": null,
+        "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+        "raw_idea_index": 4,
+        "raw_idea_title": "Pipe Saddle Layout Wrap Gauge"
+      },
+      "part_name": "Pipe Saddle Layout Wrap Gauge - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 160,
+        "width_mm": 85,
+        "height_mm": 49
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Pipe Saddle Layout Wrap Gauge'. The broader use\ncase is: A fabrication layout tool for marking saddle cuts and intersection curves on pipe before\ncutting or fit-up in welded pipe assemblies. The chosen deliverable is only the metal body implied\nby: A flexible wrap band with curved stencil slots, alignment tabs, indexing marks, and locking\noverlap features. All other product elements are external reference items and must not be modeled.\nThe part must perform this mechanical role: Wraps around round stock and exposes traceable curve\nslots for common branch intersection layouts while maintaining alignment around the circumference.\nIt is intentionally included in the SubCAD limit corpus because: Requires capturing a flexible band\nconcept, curved layout apertures, repeatable registration features, and a part whose function\ndepends on wrapping around cylindrical work. The part is made from 1045 medium-carbon steel,\nnormalized using rectangular block stock. Start from one rectangular metal block or plate. Saw\noversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and\nedge treatments into that same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 160 mm x 85 mm x 49 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 13 mm on the length centerline at X=17 mm and X=143 mm, Y=42 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 53 mm long x 8 mm wide through the part, centered at X=80 mm, Y=42 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 40 mm x 28 mm x 14 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "centered V-groove",
+          "description": "Cut a 90 degree V-groove along the full X length on the top face, groove mouth 42 mm wide and depth 16 mm."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'centered V-groove' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Pipe Saddle Layout Wrap Gauge'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-032-05",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 32,
+        "agent_id": null,
+        "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+        "raw_idea_index": 5,
+        "raw_idea_title": "Tabbed Plate Fit-Up Gap Gauge"
+      },
+      "part_name": "Tabbed Plate Fit-Up Gap Gauge - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 180,
+        "width_mm": 110,
+        "thickness_mm": 4
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Tabbed Plate Fit-Up Gap Gauge'. The broader use\ncase is: A simple inspection and setup tool used during welded plate assembly to check whether root\nopenings, lap gaps, or spacer clearances are consistent before tacking. The chosen deliverable is\nonly the metal body implied by: A pivoted stack of flat gauge tabs mounted to a thumb plate with a\nstop arc and retaining fastener boss. All other product elements are external reference items and\nmust not be modeled. The part must perform this mechanical role: Offers a fan of stepped tabs that\ncan be inserted between plates to compare gap ranges and highlight uneven fit-up. It is\nintentionally included in the SubCAD limit corpus because: Exercises representation of stacked thin\ncomponents, stepped feeler geometry, pivot hardware, stop limits, and inspection-oriented human\ninteraction. The part is made from 1045 medium-carbon steel, normalized using sheet or plate stock.\nStart from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets,\nlips, and relief features into that same piece. If bends are called out, they are bends in the same\nsheet part, not separate welded pieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 180 mm x 110 mm x 4 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 12 mm on the length centerline at X=22 mm and X=158 mm, Y=55 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 60 mm long x 7 mm wide through the part, centered at X=90 mm, Y=55 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 45 mm x 36 mm x 1 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "serrated contact edge",
+          "description": "Cut 9 equal triangular serrations across the rear edge, each 5 mm deep."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'serrated contact edge' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Tabbed Plate Fit-Up Gap Gauge'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-032-06",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 32,
+        "agent_id": null,
+        "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+        "raw_idea_index": 6,
+        "raw_idea_title": "Deburring Wheel Angle Rest"
+      },
+      "part_name": "Deburring Wheel Angle Rest - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 51,
+        "overall_length_mm": 64,
+        "axial_bore_diameter_mm": 17,
+        "wall_minimum_mm": 17
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Deburring Wheel Angle Rest'. The broader use case\nis: A bench-mounted shop aid that helps operators hold small parts at consistent presentation angles\nagainst a deburring wheel or abrasive belt. The chosen deliverable is only the metal body implied\nby: A slotted base with tilting rest plate, replaceable edge rails, clamp knobs, and chip clearance\npockets. All other product elements are external reference items and must not be modeled. The part\nmust perform this mechanical role: Provides adjustable angled support faces and sacrificial edge\nrails that guide parts while keeping hands away from the abrasive contact zone. It is intentionally\nincluded in the SubCAD limit corpus because: Tests assemblies with adjustable planes, slotted\ntravel, replaceable wear elements, guarded operator zones, and debris-management cutouts. The part\nis made from low-carbon steel, ASTM A36 or equivalent using round bar stock. Start from one cut\nlength of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary\nflats, slots, and radial holes as needed. No separate inserts or fasteners are part of the\ndeliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 51 mm and length 64 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 17 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 27 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 17 mm wide over 56 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M6 holes through the top flat at X=21 mm and X=42 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 6 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        },
+        {
+          "name": "cross relief slot",
+          "description": "Machine one transverse slot 8 mm wide across the top flat at X=32 mm, depth 5 mm."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "The feature named 'cross relief slot' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Deburring Wheel Angle Rest'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-032-07",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 32,
+        "agent_id": null,
+        "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+        "raw_idea_index": 7,
+        "raw_idea_title": "Weld Coupon Bend Fixture Locator"
+      },
+      "part_name": "Weld Coupon Bend Fixture Locator - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 125,
+        "width_mm": 100,
+        "height_mm": 39
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Weld Coupon Bend Fixture Locator'. The broader use\ncase is: A quality-control fixture used to position small welded test coupons consistently before\nbending, marking, or visual inspection. The chosen deliverable is only the metal body implied by: A\ncompact locator block with coupon channels, raised centering ribs, open inspection window, and stop\nshoulders. All other product elements are external reference items and must not be modeled. The part\nmust perform this mechanical role: Cradles coupons against stops and centering ribs so the weld zone\naligns to a reference window or press contact region. It is intentionally included in the SubCAD\nlimit corpus because: Requires clear depiction of datum surfaces, channels, visual inspection\naccess, raised ribs, and asymmetrical features tied to workpiece orientation. The part is made from\n1045 medium-carbon steel, normalized using rectangular block stock. Start from one rectangular metal\nblock or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled\nfaces, grooves, and edge treatments into that same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 125 mm x 100 mm x 39 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 9 mm on the length centerline at X=20 mm and X=105 mm, Y=50 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 41 mm long x 17 mm wide through the part, centered at X=62 mm, Y=50 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 31 mm x 33 mm x 10 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Weld Coupon Bend Fixture Locator'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-032-08",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 32,
+        "agent_id": null,
+        "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+        "raw_idea_index": 8,
+        "raw_idea_title": "Scribe Line Offset Bridge"
+      },
+      "part_name": "Scribe Line Offset Bridge - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 140,
+        "width_mm": 55,
+        "height_mm": 52
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Scribe Line Offset Bridge'. The broader use case\nis: A fabrication layout hand tool for marking parallel offset lines along plate edges, flanges, or\ncut profiles when preparing weld seams and bend lines. The chosen deliverable is only the metal body\nimplied by: A U-shaped sliding bridge with edge follower feet, locking offset carriage, and\nprotected scribe holder. All other product elements are external reference items and must not be\nmodeled. The part must perform this mechanical role: Bridges over an edge while guiding a scribe\npoint at a selectable offset from the workpiece boundary. It is intentionally included in the SubCAD\nlimit corpus because: Challenges CAD with bridging geometry, sliding offset mechanisms, small tool-\nholding details, and surfaces that reference an external workpiece edge. The part is made from 1045\nmedium-carbon steel, normalized using rectangular block stock. Start from one rectangular metal\nblock or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled\nfaces, grooves, and edge treatments into that same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 140 mm x 55 mm x 52 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 6 mm on the length centerline at X=11 mm and X=129 mm, Y=27 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 46 mm long x 10 mm wide through the part, centered at X=70 mm, Y=27 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 35 mm x 18 mm x 2 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Scribe Line Offset Bridge'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-032-09",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 32,
+        "agent_id": null,
+        "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+        "raw_idea_index": 9,
+        "raw_idea_title": "Torch Nozzle Standoff Gauge Ring"
+      },
+      "part_name": "Torch Nozzle Standoff Gauge Ring - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 125,
+        "width_mm": 45,
+        "height_mm": 48
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Torch Nozzle Standoff Gauge Ring'. The broader use\ncase is: A welding and cutting setup aid used to verify consistent torch nozzle standoff from a work\nsurface before starting a pass or cut. The chosen deliverable is only the metal body implied by: A\nsplit ring body with spring latch detail, radial reference fingers, and heat-relief openings. All\nother product elements are external reference items and must not be modeled. The part must perform\nthis mechanical role: Clips around a nozzle or rests against it and presents reference fingers that\nindicate whether the torch is held at the intended clearance and angle. It is intentionally included\nin the SubCAD limit corpus because: Tests circular clamp forms, split-body retention, radial\nprotrusions, heat-aware voids, and functional interaction with a cylindrical tool. The part is made\nfrom 1045 medium-carbon steel, normalized using rectangular block stock. Start from one rectangular\nmetal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots,\nangled faces, grooves, and edge treatments into that same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 125 mm x 45 mm x 48 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 7 mm on the length centerline at X=10 mm and X=115 mm, Y=22 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 41 mm long x 11 mm wide through the part, centered at X=62 mm, Y=22 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 31 mm x 18 mm x 2 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Torch Nozzle Standoff Gauge Ring'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-032-10",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 32,
+        "agent_id": null,
+        "domain": "metalworking inspection gauges, welding fixtures, fabrication layout tools, and deburring shop aids",
+        "raw_idea_index": 10,
+        "raw_idea_title": "Flange Squareness Shadow Gauge"
+      },
+      "part_name": "Flange Squareness Shadow Gauge - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 145,
+        "width_mm": 130,
+        "thickness_mm": 4
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Flange Squareness Shadow Gauge'. The broader use\ncase is: An inspection gauge for checking whether welded tabs, small flanges, or brackets stand\nsquare to a base plate during fabrication. The chosen deliverable is only the metal body implied by:\nAn L-shaped gauge frame with relieved inside corner, sight windows, reference rails, and knurled\ngrip pads. All other product elements are external reference items and must not be modeled. The part\nmust perform this mechanical role: Seats on the base plate and frames the upright part with\ncontrasting side references so light gaps reveal angular error. It is intentionally included in the\nSubCAD limit corpus because: Requires modeling precision reference faces, relief clearances, viewing\napertures, grip texture cues, and inspection logic based on light-gap visibility. The part is made\nfrom 1045 medium-carbon steel, normalized using sheet or plate stock. Start from one flat sheet or\nplate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into\nthat same piece. If bends are called out, they are bends in the same sheet part, not separate welded\npieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 145 mm x 130 mm x 4 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 11 mm on the length centerline at X=26 mm and X=119 mm, Y=65 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 48 mm long x 10 mm wide through the part, centered at X=72 mm, Y=65 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 36 mm x 43 mm x 2 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Flange Squareness Shadow Gauge'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    }
+  ]
+}

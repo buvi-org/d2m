@@ -1,0 +1,79 @@
+{
+  "agent_number": 29,
+  "agent_id": "019ecee1-848c-73a2-8510-3a743032c499",
+  "domain": "pet care, veterinary clinic tools, animal mobility aids, grooming equipment, and non-implant animal-care hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Adjustable Canine Rehabilitation Harness Frame",
+      "product_context": "A veterinary physical therapy aid used to support dogs recovering from leg injuries during treadmill or walking exercises.",
+      "core_function": "Provides adjustable torso support points so a therapist can partially unload weight from the animal's limbs.",
+      "likely_main_part": "Machined aluminum sliding side rail with indexed height holes and clamp slots",
+      "why_it_tests_cad_representation": "Requires long extrusions, repeated hole patterns, elongated slots, rounded safety edges, and precise alignment between adjustable clamp features."
+    },
+    {
+      "idea_title": "Folding Pet Grooming Arm Clamp",
+      "product_context": "A grooming-table attachment that holds a leash loop above the table while allowing the arm to fold flat for storage.",
+      "core_function": "Locks a vertical grooming arm securely to a table edge and releases it into a folded transport position.",
+      "likely_main_part": "CNC-machined hinge clamp block with table jaw, pivot bore, and locking pin channel",
+      "why_it_tests_cad_representation": "Combines jaw geometry, hinge bosses, coaxial bores, pin clearances, chamfers, and load-bearing wall thickness constraints."
+    },
+    {
+      "idea_title": "Veterinary Exam Table Paw Positioning Fixture",
+      "product_context": "A clinic tool used to gently position an animal's paw during wound checks, nail work, or imaging prep.",
+      "core_function": "Cradles and indexes a paw at repeatable angles without compressing soft tissue.",
+      "likely_main_part": "Machined contoured paw cradle plate with radial angle slots and mounting holes",
+      "why_it_tests_cad_representation": "Tests organic-adjacent concave surfaces, radial slot layouts, filleted edges, countersunk fasteners, and ergonomic clearance zones."
+    },
+    {
+      "idea_title": "Small Animal Oxygen Mask Manifold",
+      "product_context": "A non-invasive veterinary respiratory accessory for directing oxygen into interchangeable masks for cats, rabbits, or small dogs.",
+      "core_function": "Splits and regulates airflow from a hose connection into a mask interface with leak-resistant mounting.",
+      "likely_main_part": "Machined polymer manifold body with hose barb port, gasket groove, and fastener bosses",
+      "why_it_tests_cad_representation": "Requires internal flow passages, sealing grooves, threaded or barbed connectors, boss reinforcement, and smooth transitions between cylindrical and rectangular features."
+    },
+    {
+      "idea_title": "Canine Wheelchair Rear Axle Mount",
+      "product_context": "A mobility aid component for dogs with rear-leg weakness, connecting the frame tubes to the rear wheels.",
+      "core_function": "Holds wheel axle position while allowing height and stance-width adjustment for different dog sizes.",
+      "likely_main_part": "Machined billet axle bracket with tube sockets, axle bore, and stepped adjustment holes",
+      "why_it_tests_cad_representation": "Tests intersecting cylindrical sockets, offset bores, mirrored bracket geometry, structural ribs, and parametric hole spacing."
+    },
+    {
+      "idea_title": "Quiet Nail Grinder Depth Guard",
+      "product_context": "A grooming accessory fitted around a rotary nail grinder to control how much claw reaches the abrasive wheel.",
+      "core_function": "Limits grinding depth and provides different openings for small, medium, and large pet nails.",
+      "likely_main_part": "Machined guard ring with stepped nail ports and grinder collar interface",
+      "why_it_tests_cad_representation": "Includes concentric ring geometry, asymmetric access ports, thin protective walls, bevels, snap-fit features, and size-indexed cutouts."
+    },
+    {
+      "idea_title": "Veterinary Syringe Loading Stand",
+      "product_context": "A clinic bench tool that holds syringes upright and stable while staff prepare oral medications or flush solutions.",
+      "core_function": "Keeps multiple syringe barrels organized by size and prevents rolling or contamination.",
+      "likely_main_part": "Machined tray block with graduated cylindrical wells, label recesses, and drain grooves",
+      "why_it_tests_cad_representation": "Tests arrays of varied-diameter pockets, shallow engraving zones, rounded rectangular trays, drainage channels, and manufacturable pocket depths."
+    },
+    {
+      "idea_title": "Pet Bath Spray Nozzle Wall Dock",
+      "product_context": "A grooming-room fixture for holding a handheld spray nozzle and routing hose strain relief near a wash tub.",
+      "core_function": "Secures the nozzle between uses and prevents hose kinking or dropping into the tub.",
+      "likely_main_part": "Machined wall-mounted saddle bracket with curved nozzle cradle and hose guide channel",
+      "why_it_tests_cad_representation": "Requires curved cradles, wall fastener countersinks, undercut-like retention lips, blended hose channels, and water-shedding surfaces."
+    },
+    {
+      "idea_title": "Animal Recovery Cone Quick-Release Hinge",
+      "product_context": "A reusable e-collar hardware upgrade for clinics that need fast removal and reattachment during wound inspection.",
+      "core_function": "Lets a protective cone open and close around an animal's neck without threading tabs each time.",
+      "likely_main_part": "Machined hinge latch plate with living-clearance knuckle bores and spring latch pocket",
+      "why_it_tests_cad_representation": "Tests small hinge knuckles, alternating bore alignment, latch detents, thin plate features, rounded corners, and assembly clearances."
+    },
+    {
+      "idea_title": "Clinic Kennel Door Bowl Lock",
+      "product_context": "A veterinary boarding accessory that locks a removable food or water bowl to the inside of a kennel door.",
+      "core_function": "Prevents animals from tipping the bowl while allowing staff to remove it quickly for cleaning.",
+      "likely_main_part": "Machined stainless locking bracket with bowl rim capture groove and quarter-turn latch boss",
+      "why_it_tests_cad_representation": "Combines sheet-like bracket geometry, circular rim channels, latch rotation stops, sanitary radii, and corrosion-resistant fastener detailing."
+    }
+  ]
+}

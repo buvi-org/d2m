@@ -1,0 +1,79 @@
+{
+  "agent_number": 24,
+  "agent_id": "019ecee0-2f05-7a12-8daf-aa9a197eeccf",
+  "domain": "rail, transit, elevator/escalator maintenance, public-infrastructure service tools, and alignment fixtures",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Rail Clip Tension Verification Gauge",
+      "product_context": "Railway track maintenance crews checking elastic rail fastening clips during inspection rounds.",
+      "core_function": "Slides over a rail clip and provides a mechanical reference surface for measuring whether clip deflection remains within service limits.",
+      "likely_main_part": "Stepped bridge gauge body with rail-foot locating pads, clip clearance slot, and probe reference boss.",
+      "why_it_tests_cad_representation": "Requires nested cutouts, asymmetric stepped surfaces, datum pads, rail-profile clearances, and functional gauge features that must relate precisely to one another."
+    },
+    {
+      "idea_title": "Transit Door Roller Alignment Jig",
+      "product_context": "Metro and light-rail maintenance depots servicing sliding passenger door mechanisms.",
+      "core_function": "Temporarily mounts to the door track and positions a roller carriage at the correct height and lateral offset during replacement.",
+      "likely_main_part": "Machined clamp block with V-track seat, offset roller cradle, locking screw bosses, and calibration faces.",
+      "why_it_tests_cad_representation": "Combines track-following geometry, offset reference planes, cylindrical roller nests, clamp screw clearances, and inspection datums."
+    },
+    {
+      "idea_title": "Escalator Step Chain Pitch Wear Gauge",
+      "product_context": "Escalator maintenance teams checking step chain elongation without removing the full chain assembly.",
+      "core_function": "Indexes across several chain pins and shows whether accumulated pitch wear exceeds the allowed limit.",
+      "likely_main_part": "Long gauge bar with precision pin pockets, tapered lead-in slots, relief channels, and engraved limit reference zones.",
+      "why_it_tests_cad_representation": "Tests repeated feature spacing, elongated slots, tolerance-critical pocket placement, thin ribs, and long-part proportional accuracy."
+    },
+    {
+      "idea_title": "Elevator Guide Rail Fishplate Drilling Template",
+      "product_context": "Elevator installation and modernization crews replacing or adding guide rail splice plates.",
+      "core_function": "Locates on the elevator guide rail profile and guides drilling for accurately positioned fishplate bolt holes.",
+      "likely_main_part": "Profiled rail saddle template with drill bush pockets, side clamp ears, and relieved central web clearance.",
+      "why_it_tests_cad_representation": "Requires a recognizable rail-profile negative, multiple coaxial hole features, bushing counterbores, clamp tabs, and nonuniform wall thickness."
+    },
+    {
+      "idea_title": "Platform Screen Door Threshold Height Gauge",
+      "product_context": "Transit station service teams verifying the height relationship between platform coping, train floor, and platform screen door threshold.",
+      "core_function": "Spans from platform datum surfaces to the screen door sill and provides fixed reference steps for allowable vertical offsets.",
+      "likely_main_part": "Folded-profile gauge block with wide base foot, raised sill contact ledge, stepped limit faces, and handle slot.",
+      "why_it_tests_cad_representation": "Exercises stepped datum geometry, large flat contact faces, ergonomic through-slots, chamfered edges, and clearly separated measurement levels."
+    },
+    {
+      "idea_title": "Rail Switch Point Gap Setting Wedge",
+      "product_context": "Railway turnout maintenance crews setting and confirming the gap between switch point and stock rail.",
+      "core_function": "Fits between rail surfaces to hold or verify a precise switch-point opening during adjustment.",
+      "likely_main_part": "Tapered wedge gauge with contoured rail-contact faces, stop shoulder, extraction hole, and marked thickness bands.",
+      "why_it_tests_cad_representation": "Tests tapered solids, curved contact faces, engraved reference bands, through-holes normal to sloped surfaces, and robust end-stop geometry."
+    },
+    {
+      "idea_title": "Escalator Comb Plate Tooth Inspection Fixture",
+      "product_context": "Escalator service technicians checking comb plate tooth spacing, straightness, and broken-tooth replacement fit.",
+      "core_function": "Indexes against multiple comb teeth and provides reference slots for evaluating pitch and tooth alignment.",
+      "likely_main_part": "Comb-matching gauge plate with repeated narrow slots, front datum lip, offset handle boss, and clearance scallops.",
+      "why_it_tests_cad_representation": "Requires dense repeated thin features, pitch consistency, shallow datum lips, local reliefs, and a mix of plate and raised boss geometry."
+    },
+    {
+      "idea_title": "Catenary Bracket Angle Setting Fixture",
+      "product_context": "Overhead electrification crews aligning support brackets for tram, metro, or rail catenary hardware.",
+      "core_function": "Temporarily bolts to a mast bracket and presents angled reference faces for setting the cantilever arm orientation.",
+      "likely_main_part": "Angular fixture block with bolt slots, inclined reference plane, gusset-like ribs, and locating dowel holes.",
+      "why_it_tests_cad_representation": "Combines angled planes, slotted fastener holes, ribbed reinforcement, datum hole patterns, and multi-axis feature relationships."
+    },
+    {
+      "idea_title": "Manhole Cover Lifter Hook Wear Gauge",
+      "product_context": "Municipal infrastructure maintenance crews inspecting lifting hooks used for heavy road and utility covers.",
+      "core_function": "Checks hook throat opening, tip wear, and shank deformation against fixed go/no-go profiles.",
+      "likely_main_part": "Thick go/no-go gauge plate with hook-profile cutouts, stepped throat references, grip slot, and hanging hole.",
+      "why_it_tests_cad_representation": "Tests complex internal profiles, multiple functional cutouts, thick plate modeling, rounded stress-relief corners, and labeled reference geometry."
+    },
+    {
+      "idea_title": "Elevator Brake Pad Centering Fixture",
+      "product_context": "Elevator machine-room maintenance crews replacing or adjusting brake pads on traction machines.",
+      "core_function": "Centers the brake pad relative to the drum or disc face while maintaining a defined service clearance.",
+      "likely_main_part": "C-shaped centering fixture with curved drum reference face, pad pocket, spacer lands, and thumb-screw bosses.",
+      "why_it_tests_cad_representation": "Requires curved reference geometry, open C-frame topology, pocketed locating surfaces, opposing clearance lands, and threaded-boss placement."
+    }
+  ]
+}

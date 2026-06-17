@@ -1,0 +1,230 @@
+{
+  "agent_number": 20,
+  "source_requirements_file": "docs/subcad_limit_test/single_metal_parts/agent_020_rescue_service_hardware_single_metal_parts.json",
+  "stage": "subcad_program_generation",
+  "programs": [
+    {
+      "requirement_id": "SMP-020-01",
+      "part_name": "Rugged Waterproof Drone Battery Transit Case - single metal part",
+      "source_raw_idea_title": "Rugged Waterproof Drone Battery Transit Case",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(175, 110, 7, material=\"aluminum_6061\")\n    .drill(diameter=7, through=True, cx=-65.5, cy=0, spot_drill=False)\n    .drill(diameter=7, through=True, cx=65.5, cy=0, spot_drill=False)\n    .slot(length=58, width=11, through=True, cx=-0.5, cy=0)\n    .pocket(length=43, width=36, depth=3, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 175 x 110 x 7 mm.",
+        "Two through mounting holes diameter 7 mm at X=22 and X=153, Y=55.",
+        "Central through obround slot 58 x 11 mm at X=87, Y=55.",
+        "Top relief pocket 43 x 36 x 3 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-020-02",
+      "part_name": "Ambulance Rail-Mount Oxygen Regulator Guard - single metal part",
+      "source_raw_idea_title": "Ambulance Rail-Mount Oxygen Regulator Guard",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(250, 75, 6, material=\"stainless_316\")\n    .drill(diameter=13, through=True, cx=-110, cy=-0.5, spot_drill=False)\n    .drill(diameter=13, through=True, cx=110, cy=-0.5, spot_drill=False)\n    .slot(length=83, width=13, through=True, cx=0, cy=-0.5)\n    .pocket(length=62, width=25, depth=1, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 250 x 75 x 6 mm.",
+        "Two through mounting holes diameter 13 mm at X=15 and X=235, Y=37.",
+        "Central through obround slot 83 x 13 mm at X=125, Y=37.",
+        "Top relief pocket 62 x 25 x 1 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-020-03",
+      "part_name": "Flood-Rescue Throw Bag Belt Dock - single metal part",
+      "source_raw_idea_title": "Flood-Rescue Throw Bag Belt Dock",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(150, 85, 24, material=\"steel_a36\")\n    .drill(diameter=11, through=True, cx=-58, cy=-0.5, spot_drill=False)\n    .drill(diameter=11, through=True, cx=58, cy=-0.5, spot_drill=False)\n    .slot(length=50, width=17, through=True, cx=0, cy=-0.5)\n    .pocket(length=37, width=28, depth=1, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 150 x 85 x 24 mm.",
+        "Two through mounting holes diameter 11 mm at X=17 and X=133, Y=42.",
+        "Central through obround slot 50 x 17 mm at X=75, Y=42.",
+        "Top relief pocket 37 x 28 x 1 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-020-04",
+      "part_name": "Field Radio Shock-Isolation Corner Frame - single metal part",
+      "source_raw_idea_title": "Field Radio Shock-Isolation Corner Frame",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(200, 95, 26, material=\"steel_a36\")\n    .drill(diameter=13, through=True, cx=-81, cy=-0.5, spot_drill=False)\n    .drill(diameter=13, through=True, cx=81, cy=-0.5, spot_drill=False)\n    .slot(length=66, width=16, through=True, cx=0, cy=-0.5)\n    .pocket(length=50, width=31, depth=7, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 200 x 95 x 26 mm.",
+        "Two through mounting holes diameter 13 mm at X=19 and X=181, Y=47.",
+        "Central through obround slot 66 x 16 mm at X=100, Y=47.",
+        "Top relief pocket 50 x 31 x 7 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-020-05",
+      "part_name": "Collapsible Stretcher Hinge Reinforcement Block - single metal part",
+      "source_raw_idea_title": "Collapsible Stretcher Hinge Reinforcement Block",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(67, 119, material=\"steel_a36\")\n    .turn_id(diameter=13, depth=119)\n    .counterbore(hole_diameter=13, counterbore_diameter=23, counterbore_depth=3, through=True)\n    .pocket(length=111, width=22, depth=8.04, cx=0, cy=0, corner_radius=0)\n    .threaded_hole(diameter=6, depth=33.5, cx=-20.5, cy=0)\n    .threaded_hole(diameter=6, depth=33.5, cx=19.5, cy=0)\n    .slot(length=119, width=4, depth=67, through=True, cx=0, cy=-16.75)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Base cylindrical stock OD 67 mm x length 119 mm.",
+        "Centered axial through bore diameter 13 mm through full length.",
+        "One concentric end counterbore diameter 23 mm x 3 mm deep represented.",
+        "Longitudinal top reference flat 22 mm wide over 111 mm represented as a top milled flat relief.",
+        "Two tapped M6 clamp holes at axial X=39 and X=79 represented on the top flat.",
+        "Full-length split relief slit 4 mm wide approximated as a through slot offset toward datum-B side.",
+        "Outside circular edge break represented with 1.0 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "Bore-mouth 1.0 mm chamfers on both ends are noted but not separately selectable on the internal bore edges in this draft.",
+        "Requirement calls for counterbores on both ends; this draft models the accessible top/end counterbore only.",
+        "True longitudinal flat on a round bar side is approximated with a top-face pocket/flat operation.",
+        "Radial hole axis and intersection with cylindrical bore are approximated using top-face threaded_hole placement.",
+        "Exact radial slit from OD to axial bore on the cylindrical side is approximated as a top-face through slot.",
+        "Internal bore-edge chamfers are not separately modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-020-06",
+      "part_name": "Portable Decontamination Shower Hose Manifold Bracket - single metal part",
+      "source_raw_idea_title": "Portable Decontamination Shower Hose Manifold Bracket",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(170, 80, 6, material=\"steel_a36\")\n    .drill(diameter=6, through=True, cx=-69, cy=0, spot_drill=False)\n    .drill(diameter=6, through=True, cx=69, cy=0, spot_drill=False)\n    .slot(length=56, width=15, through=True, cx=0, cy=0)\n    .pocket(length=42, width=26, depth=3, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n    .slope_cut(width=80, length=34, start_depth=0.5, end_depth=5.1, cx=68, cy=0, slope_axis=\"X\")\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 170 x 80 x 6 mm.",
+        "Two through mounting holes diameter 6 mm at X=16 and X=154, Y=40.",
+        "Central through obround slot 56 x 15 mm at X=85, Y=40.",
+        "Top relief pocket 42 x 26 x 3 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation.",
+        "Angled reference region over the last 34 mm represented as a sloped top-face cut at the right end."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled.",
+        "Exact external face angle of 39 degrees is approximated by a sloped pocket depth transition, not a full side-face reprofile."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-020-07",
+      "part_name": "Hard Case Insert for Thermal Imaging Camera Kit - single metal part",
+      "source_raw_idea_title": "Hard Case Insert for Thermal Imaging Camera Kit",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(150, 100, 25, material=\"aluminum_6061\")\n    .drill(diameter=6, through=True, cx=-55, cy=0, spot_drill=False)\n    .drill(diameter=6, through=True, cx=55, cy=0, spot_drill=False)\n    .slot(length=50, width=10, through=True, cx=0, cy=0)\n    .pocket(length=37, width=33, depth=6, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 150 x 100 x 25 mm.",
+        "Two through mounting holes diameter 6 mm at X=20 and X=130, Y=50.",
+        "Central through obround slot 50 x 10 mm at X=75, Y=50.",
+        "Top relief pocket 37 x 33 x 6 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-020-08",
+      "part_name": "Rescue Saw Blade Transport Shield - single metal part",
+      "source_raw_idea_title": "Rescue Saw Blade Transport Shield",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(135, 135, 12, material=\"steel_a36\")\n    .drill(diameter=13, through=True, cx=-40.5, cy=-0.5, spot_drill=False)\n    .drill(diameter=13, through=True, cx=40.5, cy=-0.5, spot_drill=False)\n    .slot(length=45, width=18, through=True, cx=-0.5, cy=-0.5)\n    .pocket(length=33, width=45, depth=4, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n    .groove(length=6.075, width=4, depth=1.44, cx=-60.75, cy=65.5)\n    .groove(length=6.075, width=4, depth=1.44, cx=-47.25, cy=65.5)\n    .groove(length=6.075, width=4, depth=1.44, cx=-33.75, cy=65.5)\n    .groove(length=6.075, width=4, depth=1.44, cx=-20.25, cy=65.5)\n    .groove(length=6.075, width=4, depth=1.44, cx=-6.75, cy=65.5)\n    .groove(length=6.075, width=4, depth=1.44, cx=6.75, cy=65.5)\n    .groove(length=6.075, width=4, depth=1.44, cx=20.25, cy=65.5)\n    .groove(length=6.075, width=4, depth=1.44, cx=33.75, cy=65.5)\n    .groove(length=6.075, width=4, depth=1.44, cx=47.25, cy=65.5)\n    .groove(length=6.075, width=4, depth=1.44, cx=60.75, cy=65.5)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 135 x 135 x 12 mm.",
+        "Two through mounting holes diameter 13 mm at X=27 and X=108, Y=67.",
+        "Central through obround slot 45 x 18 mm at X=67, Y=67.",
+        "Top relief pocket 33 x 45 x 4 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation.",
+        "Rear serration positions represented as 10 repeated edge grooves 4 mm deep."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled.",
+        "Triangular serration tooth form is approximated with rectangular grooves because current fluent operations do not define triangular edge teeth."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-020-09",
+      "part_name": "Temporary Command Post Cable Crossover Protector - single metal part",
+      "source_raw_idea_title": "Temporary Command Post Cable Crossover Protector",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(90, 55, 22, material=\"steel_a36\")\n    .drill(diameter=5, through=True, cx=-34, cy=-0.5, spot_drill=False)\n    .drill(diameter=5, through=True, cx=34, cy=-0.5, spot_drill=False)\n    .slot(length=30, width=17, through=True, cx=0, cy=-0.5)\n    .pocket(length=25, width=18, depth=2, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 90 x 55 x 22 mm.",
+        "Two through mounting holes diameter 5 mm at X=11 and X=79, Y=27.",
+        "Central through obround slot 30 x 17 mm at X=45, Y=27.",
+        "Top relief pocket 25 x 18 x 2 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    },
+    {
+      "requirement_id": "SMP-020-10",
+      "part_name": "Search-and-Rescue Headlamp Helmet Adapter - single metal part",
+      "source_raw_idea_title": "Search-and-Rescue Headlamp Helmet Adapter",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(160, 80, 3, material=\"steel_a36\")\n    .drill(diameter=12, through=True, cx=-64, cy=0, spot_drill=False)\n    .drill(diameter=12, through=True, cx=64, cy=0, spot_drill=False)\n    .slot(length=53, width=17, through=True, cx=0, cy=0)\n    .pocket(length=40, width=26, depth=1, cx=0, cy=0, corner_radius=0)\n    .chamfer(width=1)\n    .groove(length=7, width=80, depth=2, cx=-76.5, cy=0)\n)\n",
+      "coverage_notes": [
+        "Base rectangular stock envelope 160 x 80 x 3 mm.",
+        "Two through mounting holes diameter 12 mm at X=16 and X=144, Y=40.",
+        "Central through obround slot 53 x 17 mm at X=80, Y=40.",
+        "Top relief pocket 40 x 26 x 1 mm centered between mounting holes.",
+        "Top outside chamfers represented with 1 mm chamfer operation.",
+        "Hook lip undercut region approximated with a 2 mm deep end groove."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft; only the general top chamfer is modeled.",
+        "Integral projecting hook lip cannot be grown beyond the rectangular stock envelope; only the undercut relief is represented."
+      ],
+      "review_notes": [
+        "Draft generated directly from frozen Stage 2 requirement text; not executed or visually reviewed yet.",
+        "Coordinate conversion uses SubCAD centered stock coordinates while requirement text uses lower-left-near datum coordinates."
+      ]
+    }
+  ]
+}

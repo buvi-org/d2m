@@ -1,0 +1,217 @@
+{
+  "agent_number": 38,
+  "domain": "dental lab equipment, orthodontic bench fixtures, non-clinical prosthetic fabrication aids, and sterilization tray hardware",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "Articulator Calibration Stand",
+      "product_context": "Dental lab bench setup for holding articulator frames during setup and inspection.",
+      "core_function": "Stabilizes an articulator while allowing repeatable viewing and adjustment access.",
+      "likely_main_part": "Angled support cradle with indexed locating features",
+      "why_it_tests_cad_representation": "Combines sloped rests, asymmetric stops, shallow pockets, and clearance cutouts that challenge feature hierarchy without needing exact dimensions."
+    },
+    {
+      "idea_title": "Wax Rim Forming Block",
+      "product_context": "Non-clinical prosthetic fabrication aid for shaping occlusal wax rims on the bench.",
+      "core_function": "Guides wax into consistent curved profiles while keeping excess material contained.",
+      "likely_main_part": "Contoured forming block with channel and overflow lip",
+      "why_it_tests_cad_representation": "Tests representation of smooth troughs, raised lips, tapered entry zones, and transitions between flat handling areas and organic guide surfaces."
+    },
+    {
+      "idea_title": "Orthodontic Wire Bending Fixture",
+      "product_context": "Orthodontic lab bench fixture used to organize and guide manual forming of appliance wires.",
+      "core_function": "Provides repeatable bend reference paths and grip points for wire shaping.",
+      "likely_main_part": "Curved guide plate with removable peg locations",
+      "why_it_tests_cad_representation": "Stresses arrays of small locating holes, curved guide rails, relief notches, and a surface layout that is functional but not purely rectangular."
+    },
+    {
+      "idea_title": "Retainer Acrylic Trim Support",
+      "product_context": "Bench aid for trimming and finishing removable orthodontic retainers away from patient contact.",
+      "core_function": "Holds acrylic appliances securely while exposing edge regions for rotary finishing.",
+      "likely_main_part": "Soft-contour nest with clamp bridge",
+      "why_it_tests_cad_representation": "Requires nested cavities, protective rounded contact regions, bridge clearance, and ergonomic access openings around an irregular workpiece."
+    },
+    {
+      "idea_title": "Denture Tooth Sorting Tray",
+      "product_context": "Dental prosthetic fabrication bench organizer for arranging artificial teeth during setup.",
+      "core_function": "Separates tooth components by position while keeping labels and picks visible.",
+      "likely_main_part": "Compartment tray with curved labeled recesses",
+      "why_it_tests_cad_representation": "Tests shallow pocket repetition, nonuniform compartment shapes, label panels, and scoopable edges within one molded tray concept."
+    },
+    {
+      "idea_title": "Ceramic Crown Glaze Rack",
+      "product_context": "Dental lab equipment accessory for supporting restorations before furnace handling.",
+      "core_function": "Keeps small crown forms elevated and spaced for coating or drying workflows.",
+      "likely_main_part": "Perforated rack plate with raised support bosses",
+      "why_it_tests_cad_representation": "Challenges CAD with dense perforations, low-height standoffs, filleted boss bases, and the need to distinguish structural plate from delicate supports."
+    },
+    {
+      "idea_title": "Implant Model Analog Organizer",
+      "product_context": "Non-clinical dental model fabrication station for managing model analog components.",
+      "core_function": "Stores small analog parts upright and groups them by case during bench work.",
+      "likely_main_part": "Stepped organizer block with varied socket profiles",
+      "why_it_tests_cad_representation": "Mixes circular, keyed, and slotted receptacles on stepped terraces, testing semantic recognition of part-specific sockets."
+    },
+    {
+      "idea_title": "Sterilization Cassette Latch Plate",
+      "product_context": "Sterilization tray hardware for securing instrument cassette lids during handling.",
+      "core_function": "Provides a spring-compatible latch surface and visual locked orientation.",
+      "likely_main_part": "Flat latch plate with hook nose and thumb tab",
+      "why_it_tests_cad_representation": "Includes thin sheet geometry, folded-like hooks, embossed direction cues, and contact clearances that are subtle but functionally important."
+    },
+    {
+      "idea_title": "Bur Block Cleaning Insert",
+      "product_context": "Dental lab sterilization tray insert for holding rotary burs through cleaning cycles.",
+      "core_function": "Keeps bur shanks separated and accessible while allowing fluid drainage.",
+      "likely_main_part": "Perforated insert block with drainage underside",
+      "why_it_tests_cad_representation": "Tests repeated small bores, countersunk approach features, underside channels, and the distinction between storage holes and fluid paths."
+    },
+    {
+      "idea_title": "Orthodontic Bracket Placement Board",
+      "product_context": "Orthodontic bench fixture for staging bracket sets during appliance preparation.",
+      "core_function": "Presents bracket groups in a stable layout with pickup access for tweezers.",
+      "likely_main_part": "Low profile board with angled wells and pickup grooves",
+      "why_it_tests_cad_representation": "Requires many tiny tilted recesses, fine access grooves, side labels, and a board geometry that must remain readable at small feature scale."
+    },
+    {
+      "idea_title": "Model Pin Drilling Guide",
+      "product_context": "Dental model fabrication aid for preparing removable die bases on the lab bench.",
+      "core_function": "Aligns drill approach positions relative to a plaster model base.",
+      "likely_main_part": "Adjustable guide rail with sliding drill bushings",
+      "why_it_tests_cad_representation": "Combines rail slots, sliding collars, bushing holes, clamp pads, and positional logic that tests assembly-like interpretation in a single concept."
+    },
+    {
+      "idea_title": "Vacuum Forming Sheet Clamp Frame",
+      "product_context": "Orthodontic lab equipment accessory for thermoforming retainer sheets over models.",
+      "core_function": "Holds thermoplastic sheet edges evenly before forming.",
+      "likely_main_part": "Open clamp frame with hinged edge bars",
+      "why_it_tests_cad_representation": "Tests thin frame loops, hinge knuckles, latch tabs, compression surfaces, and a large central void that must be preserved."
+    },
+    {
+      "idea_title": "Plaster Model Drying Rack",
+      "product_context": "Dental lab bench storage for air drying cast models after trimming or washing.",
+      "core_function": "Supports models at a slight incline while allowing airflow and drip clearance.",
+      "likely_main_part": "Slotted angled shelf with raised stops",
+      "why_it_tests_cad_representation": "Involves repeated angled slots, drainage gaps, raised end stops, and load-bearing ribs that create a layered functional surface."
+    },
+    {
+      "idea_title": "Denture Flask Spacer Cradle",
+      "product_context": "Prosthetic fabrication aid for positioning denture flasks during packing preparation.",
+      "core_function": "Keeps flask halves aligned and separated during staging.",
+      "likely_main_part": "Heavy cradle base with opposing contour blocks",
+      "why_it_tests_cad_representation": "Challenges modeling of opposing curved supports, broad stability feet, relief pockets, and robust contact regions for a heavy lab item."
+    },
+    {
+      "idea_title": "Inlay Wax Sprue Tree Holder",
+      "product_context": "Dental lab casting prep accessory used before investment workflows.",
+      "core_function": "Holds wax sprue assemblies upright without deforming delicate branches.",
+      "likely_main_part": "Upright post stand with radial clamp arms",
+      "why_it_tests_cad_representation": "Tests radial organization, slender supports, gentle clamp jaws, and clearance envelopes around fragile tree-like workpieces."
+    },
+    {
+      "idea_title": "Sterilization Tray Corner Protector",
+      "product_context": "Sterilization tray hardware added to reduce denting and improve stacking behavior.",
+      "core_function": "Protects tray corners while creating a stable nesting interface.",
+      "likely_main_part": "Clip-on corner cap with internal ribs",
+      "why_it_tests_cad_representation": "Requires an L-shaped shell, snap lips, internal ribbing, rounded outside edges, and subtle undercuts for retention."
+    },
+    {
+      "idea_title": "Lab Handpiece Rest",
+      "product_context": "Dental lab bench fixture for setting down rotary handpieces during prosthetic finishing.",
+      "core_function": "Keeps the handpiece from rolling while protecting the working bit from contact.",
+      "likely_main_part": "Saddle rest with raised bit clearance tunnel",
+      "why_it_tests_cad_representation": "Combines cylindrical cradle surfaces, tunnel-like clearance, anti-roll feet, and a compact ergonomic form with multiple tangent transitions."
+    },
+    {
+      "idea_title": "Orthodontic Elastic Sorting Carousel",
+      "product_context": "Orthodontic lab bench organizer for elastics and small appliance consumables.",
+      "core_function": "Separates small elastics into accessible compartments with a rotating presentation surface.",
+      "likely_main_part": "Circular tray body with partitioned wells",
+      "why_it_tests_cad_representation": "Tests radial partitions, shallow scoop wells, central bearing boss, and lid alignment features without relying on rectangular repetition."
+    },
+    {
+      "idea_title": "Temporary Crown Shell Holder",
+      "product_context": "Dental prosthetic bench aid for trimming provisional crown shells outside clinical use.",
+      "core_function": "Holds thin shell forms from the inside while leaving margins exposed.",
+      "likely_main_part": "Expandable mandrel with tapered support petals",
+      "why_it_tests_cad_representation": "Requires tapered petal geometry, split expansion gaps, smooth internal support surfaces, and clear distinction between flexible and rigid-looking features."
+    },
+    {
+      "idea_title": "Sintering Bead Containment Dish",
+      "product_context": "Dental lab equipment accessory for supporting zirconia parts in a bead medium.",
+      "core_function": "Contains support beads while allowing easy retrieval of small restorations.",
+      "likely_main_part": "Shallow refractory dish with textured retrieval ramp",
+      "why_it_tests_cad_representation": "Mixes a bowl-like cavity, low retaining wall, textured ramp, and small pour relief, challenging surface and feature intent."
+    },
+    {
+      "idea_title": "Impression Tray Repair Clamp",
+      "product_context": "Non-clinical bench fixture for stabilizing impression trays during lab-side repair or modification.",
+      "core_function": "Holds curved tray handles and rims in a fixed orientation for adhesive work.",
+      "likely_main_part": "Curved jaw clamp with handle notch",
+      "why_it_tests_cad_representation": "Tests opposing concave jaws, notched handle clearance, screw boss placement, and the need to represent gripping without excessive detail."
+    },
+    {
+      "idea_title": "Sterile Pack Divider Rail",
+      "product_context": "Sterilization tray hardware for separating wrapped small dental instruments inside a tray.",
+      "core_function": "Creates removable partitions that hold packs upright and visible.",
+      "likely_main_part": "Snap-in divider rail with sliding partition tabs",
+      "why_it_tests_cad_representation": "Combines long rail channels, clip feet, adjustable tab geometry, and repeated but repositionable partition features."
+    },
+    {
+      "idea_title": "Occlusal Plane Reference Platform",
+      "product_context": "Dental lab setup aid for checking model orientation during prosthetic planning.",
+      "core_function": "Provides a visual reference surface and adjustable model support points.",
+      "likely_main_part": "Flat reference plate with leveling pads and sight grooves",
+      "why_it_tests_cad_representation": "Tests planar datum expression, embedded sight grooves, adjustable pad sockets, and the relationship between visual alignment features and support features."
+    },
+    {
+      "idea_title": "Orthodontic Appliance Soldering Jig",
+      "product_context": "Orthodontic bench fixture for holding appliance wires and bands during solder preparation.",
+      "core_function": "Locks small parts in a repeatable relationship while keeping joint areas exposed.",
+      "likely_main_part": "Heat-resistant jig block with pin slots and clamp fingers",
+      "why_it_tests_cad_representation": "Requires mixed straight and curved slots, finger clamps, heat relief areas, and open access around intersecting wire paths."
+    },
+    {
+      "idea_title": "Denture Base Polishing Support",
+      "product_context": "Prosthetic fabrication bench aid for supporting denture bases during finishing.",
+      "core_function": "Cradles a denture base while exposing outer surfaces for polishing access.",
+      "likely_main_part": "Padded cradle form with rocking lock foot",
+      "why_it_tests_cad_representation": "Challenges CAD with broad organic support contours, replaceable pad regions, underside stabilizer features, and asymmetric access cutaways."
+    },
+    {
+      "idea_title": "Autoclave Tray Handle Adapter",
+      "product_context": "Sterilization tray hardware for improving grip on hot or gloved tray handling.",
+      "core_function": "Adds a removable grip interface to a metal tray rim.",
+      "likely_main_part": "Clip-on handle sleeve with insulated grip ribs",
+      "why_it_tests_cad_representation": "Tests thin rim capture geometry, ribbed grip texture, snap retention lips, and a part that must read as both sleeve and handle."
+    },
+    {
+      "idea_title": "Crown Margin Inspection Turntable",
+      "product_context": "Dental lab bench fixture for rotating small restorations during visual inspection.",
+      "core_function": "Lets a technician turn a crown shell smoothly while keeping it centered.",
+      "likely_main_part": "Low rotary puck with interchangeable crown nest",
+      "why_it_tests_cad_representation": "Combines circular bearing-like layers, shallow interchangeable inserts, centering cones, and finger scallops in a compact assembly."
+    },
+    {
+      "idea_title": "Alginate Mixing Bowl Stabilizer",
+      "product_context": "Dental lab bench accessory for stabilizing mixing bowls during material preparation outside the operatory.",
+      "core_function": "Prevents bowl slip while leaving the rim accessible for spatula movement.",
+      "likely_main_part": "Weighted ring base with flexible grip pads",
+      "why_it_tests_cad_representation": "Requires annular geometry, segmented pads, raised anti-slip texture, and open access around a nested bowl without modeling the bowl itself."
+    },
+    {
+      "idea_title": "Sterilization Mesh Lid Retainer",
+      "product_context": "Sterilization tray hardware for holding a mesh lid down during washing and transfer.",
+      "core_function": "Secures a removable perforated lid with accessible release tabs.",
+      "likely_main_part": "Edge retainer clip with dual spring tabs",
+      "why_it_tests_cad_representation": "Tests thin clip geometry, spring-tab relief gaps, hook engagement surfaces, and repeated perforation-clearance features near the tray edge."
+    },
+    {
+      "idea_title": "Orthodontic Expansion Screw Assembly Block",
+      "product_context": "Orthodontic lab bench aid for arranging expansion screw components before embedding in appliances.",
+      "core_function": "Holds small screw bodies and arms in the desired orientation during setup.",
+      "likely_main_part": "Alignment block with keyed central pocket and arm grooves",
+      "why_it_tests_cad_representation": "Combines keyed recesses, narrow grooves, orientation arrows, and clampable side reliefs that test fine mechanical feature intent."
+    }
+  ]
+}

@@ -1,0 +1,234 @@
+{
+  "agent_number": 35,
+  "source_requirements_file": "docs/subcad_limit_test/single_metal_parts/agent_035_electronics_manufacturing_single_metal_parts.json",
+  "stage": "subcad_program_generation",
+  "programs": [
+    {
+      "requirement_id": "SMP-035-01",
+      "part_name": "ESD-Safe Wafer Cassette Transfer Cradle - single metal part",
+      "source_raw_idea_title": "ESD-Safe Wafer Cassette Transfer Cradle",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(135, 85, 47, material=\"steel_a36\")\n    .drill(diameter=5, cx=-50.5, cy=-0.5, depth=47, through=True)\n    .drill(diameter=5, cx=50.5, cy=-0.5, depth=47, through=True)\n    .slot(length=45, width=12, depth=47, cx=-0.5, cy=-0.5)\n    .pocket(width=28, length=33, depth=12, cx=0, cy=0, corner_radius=0.5)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Created rectangular stock at 135 x 85 x 47 mm using material steel_a36.",
+        "Drill two through holes diameter 5 mm on the length centerline at X=17 mm and X=118 mm, Y=42 mm.",
+        "Machine a central obround slot 45 mm long x 12 mm wide through the part, centered at X=67 mm, Y=42 mm.",
+        "Mill a rectangular relief pocket 33 mm x 28 mm x 12 mm deep on the top face, centered between the mounting holes.",
+        "Applied a 1.0 mm top-edge chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers specifically on individual hole and slot mouths are not separately modeled; only the global/top chamfer is included."
+      ],
+      "review_notes": [
+        "SubCAD stock is centered at the origin; requirement datum coordinates were converted from lower-left-near X/Y values to centered cx/cy values."
+      ]
+    },
+    {
+      "requirement_id": "SMP-035-02",
+      "part_name": "Fine-Pitch QFN Manual Test Socket Clamp - single metal part",
+      "source_raw_idea_title": "Fine-Pitch QFN Manual Test Socket Clamp",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(94, 96, material=\"aluminum_6061\")\n    .turn_id(diameter=31, depth=96)\n    .turn_id(diameter=41, depth=3)\n    .pocket(width=31, length=88, depth=2.629, cx=0, cy=0, corner_radius=0)\n    .threaded_hole(diameter=8, depth=47, cx=-16, cy=0)\n    .threaded_hole(diameter=8, depth=47, cx=16, cy=0)\n    .slot(length=96, width=6, depth=94, cx=0, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Created cylindrical round-bar stock at OD 94 mm x length 96 mm using material aluminum_6061.",
+        "Machine a centered through bore diameter 31 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.",
+        "Added one axial counterbore-depth turn_id operation for the specified end counterbore size.",
+        "Added a shallow top pocket approximation for the longitudinal reference flat.",
+        "Added two threaded-hole placeholders at the specified axial stations.",
+        "Added a full-length slot placeholder for the split relief slit.",
+        "Applied a 1.0 mm chamfer operation for outside circular-edge treatment."
+      ],
+      "known_gaps": [
+        "Requirement datum uses cylinder axis as X; Stock.cylindrical/turning operations are used as the closest axial representation and orientation should be reviewed after execution.",
+        "Bore mouth chamfers are covered only by the later general chamfer, not separate internal bore-mouth chamfers.",
+        "Add shallow concentric counterbores on both ends, diameter 41 mm x 3 mm deep. Counterbores are required on both ends; this draft can only express a generic/one-end axial ID enlargement without end selection.",
+        "Mill one longitudinal flat 31 mm wide over 88 mm of length, centered on the top side. A true milled tangent flat on cylindrical OD is approximated by a top pocket/flat cut.",
+        "Add two radial tapped M8 holes through the top flat at X=32 mm and X=64 mm. Exact radial orientation through the top flat is approximated with top-face threaded_hole operations.",
+        "Cut one full-length radial slit 6 mm wide from the outside to the axial bore on datum-B side. Exact radial slit from OD to axial bore is approximated as a full-depth top slot.",
+        "Internal bore-edge chamfers are not individually selected; general chamfer may not reach every required bore/counterbore mouth."
+      ],
+      "review_notes": [
+        "Radial and longitudinal secondary features on round stock are draft approximations until execution artifacts are inspected."
+      ]
+    },
+    {
+      "requirement_id": "SMP-035-03",
+      "part_name": "PCB Edge-Connector Burn-In Fixture - single metal part",
+      "source_raw_idea_title": "PCB Edge-Connector Burn-In Fixture",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(175, 65, 60, material=\"aluminum_6061\")\n    .drill(diameter=6, cx=-74.5, cy=-0.5, depth=60, through=True)\n    .drill(diameter=6, cx=74.5, cy=-0.5, depth=60, through=True)\n    .slot(length=58, width=12, depth=60, cx=-0.5, cy=-0.5)\n    .pocket(width=21, length=43, depth=2, cx=0, cy=0, corner_radius=0.5)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Created rectangular stock at 175 x 65 x 60 mm using material aluminum_6061.",
+        "Drill two through holes diameter 6 mm on the length centerline at X=13 mm and X=162 mm, Y=32 mm.",
+        "Machine a central obround slot 58 mm long x 12 mm wide through the part, centered at X=87 mm, Y=32 mm.",
+        "Mill a rectangular relief pocket 43 mm x 21 mm x 2 mm deep on the top face, centered between the mounting holes.",
+        "Applied a 1.0 mm top-edge chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers specifically on individual hole and slot mouths are not separately modeled; only the global/top chamfer is included."
+      ],
+      "review_notes": [
+        "SubCAD stock is centered at the origin; requirement datum coordinates were converted from lower-left-near X/Y values to centered cx/cy values."
+      ]
+    },
+    {
+      "requirement_id": "SMP-035-04",
+      "part_name": "Pogo-Pin Programming Fixture for Panelized PCBs - single metal part",
+      "source_raw_idea_title": "Pogo-Pin Programming Fixture for Panelized PCBs",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(31, 29, material=\"steel_a36\")\n    .turn_id(diameter=8, depth=29)\n    .turn_id(diameter=18, depth=3)\n    .pocket(width=10, length=21, depth=0.829, cx=0, cy=0, corner_radius=0)\n    .threaded_hole(diameter=5, depth=15.5, cx=-5.5, cy=0)\n    .threaded_hole(diameter=5, depth=15.5, cx=4.5, cy=0)\n    .slot(length=29, width=2, depth=31, cx=0, cy=0)\n    .chamfer(width=1.0)\n    .slot(length=31, width=4, depth=3, angle=90, cx=-0.5, cy=0)\n)\n",
+      "coverage_notes": [
+        "Created cylindrical round-bar stock at OD 31 mm x length 29 mm using material steel_a36.",
+        "Machine a centered through bore diameter 8 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.",
+        "Added one axial counterbore-depth turn_id operation for the specified end counterbore size.",
+        "Added a shallow top pocket approximation for the longitudinal reference flat.",
+        "Added two threaded-hole placeholders at the specified axial stations.",
+        "Added a full-length slot placeholder for the split relief slit.",
+        "Applied a 1.0 mm chamfer operation for outside circular-edge treatment.",
+        "Machine one transverse slot 4 mm wide across the top flat at X=14 mm, depth 3 mm."
+      ],
+      "known_gaps": [
+        "Requirement datum uses cylinder axis as X; Stock.cylindrical/turning operations are used as the closest axial representation and orientation should be reviewed after execution.",
+        "Bore mouth chamfers are covered only by the later general chamfer, not separate internal bore-mouth chamfers.",
+        "Add shallow concentric counterbores on both ends, diameter 18 mm x 3 mm deep. Counterbores are required on both ends; this draft can only express a generic/one-end axial ID enlargement without end selection.",
+        "Mill one longitudinal flat 10 mm wide over 21 mm of length, centered on the top side. A true milled tangent flat on cylindrical OD is approximated by a top pocket/flat cut.",
+        "Add two radial tapped M5 holes through the top flat at X=9 mm and X=19 mm. Exact radial orientation through the top flat is approximated with top-face threaded_hole operations.",
+        "Cut one full-length radial slit 2 mm wide from the outside to the axial bore on datum-B side. Exact radial slit from OD to axial bore is approximated as a full-depth top slot.",
+        "Internal bore-edge chamfers are not individually selected; general chamfer may not reach every required bore/counterbore mouth.",
+        "Cross relief slot is approximated as a transverse top slot on cylindrical stock."
+      ],
+      "review_notes": [
+        "Radial and longitudinal secondary features on round stock are draft approximations until execution artifacts are inspected."
+      ]
+    },
+    {
+      "requirement_id": "SMP-035-05",
+      "part_name": "ESD-Safe Component Reel Inspection Stand - single metal part",
+      "source_raw_idea_title": "ESD-Safe Component Reel Inspection Stand",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(160, 70, 24, material=\"steel_a36\")\n    .drill(diameter=9, cx=-66, cy=0, depth=24, through=True)\n    .drill(diameter=9, cx=66, cy=0, depth=24, through=True)\n    .slot(length=53, width=7, depth=24, cx=0, cy=0)\n    .pocket(width=23, length=40, depth=8, cx=0, cy=0, corner_radius=0.5)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Created rectangular stock at 160 x 70 x 24 mm using material steel_a36.",
+        "Drill two through holes diameter 9 mm on the length centerline at X=14 mm and X=146 mm, Y=35 mm.",
+        "Machine a central obround slot 53 mm long x 7 mm wide through the part, centered at X=80 mm, Y=35 mm.",
+        "Mill a rectangular relief pocket 40 mm x 23 mm x 8 mm deep on the top face, centered between the mounting holes.",
+        "Applied a 1.0 mm top-edge chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers specifically on individual hole and slot mouths are not separately modeled; only the global/top chamfer is included."
+      ],
+      "review_notes": [
+        "SubCAD stock is centered at the origin; requirement datum coordinates were converted from lower-left-near X/Y values to centered cx/cy values."
+      ]
+    },
+    {
+      "requirement_id": "SMP-035-06",
+      "part_name": "BGA Rework Stencil Alignment Frame - single metal part",
+      "source_raw_idea_title": "BGA Rework Stencil Alignment Frame",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(145, 65, 43, material=\"aluminum_6061\")\n    .drill(diameter=13, cx=-59.5, cy=-0.5, depth=43, through=True)\n    .drill(diameter=13, cx=59.5, cy=-0.5, depth=43, through=True)\n    .slot(length=48, width=13, depth=43, cx=-0.5, cy=-0.5)\n    .pocket(width=21, length=36, depth=5, cx=0, cy=0, corner_radius=0.5)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Created rectangular stock at 145 x 65 x 43 mm using material aluminum_6061.",
+        "Drill two through holes diameter 13 mm on the length centerline at X=13 mm and X=132 mm, Y=32 mm.",
+        "Machine a central obround slot 48 mm long x 13 mm wide through the part, centered at X=72 mm, Y=32 mm.",
+        "Mill a rectangular relief pocket 36 mm x 21 mm x 5 mm deep on the top face, centered between the mounting holes.",
+        "Applied a 1.0 mm top-edge chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers specifically on individual hole and slot mouths are not separately modeled; only the global/top chamfer is included."
+      ],
+      "review_notes": [
+        "SubCAD stock is centered at the origin; requirement datum coordinates were converted from lower-left-near X/Y values to centered cx/cy values."
+      ]
+    },
+    {
+      "requirement_id": "SMP-035-07",
+      "part_name": "Tray-to-Socket IC Pick Placement Nest - single metal part",
+      "source_raw_idea_title": "Tray-to-Socket IC Pick Placement Nest",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(135, 120, 5, material=\"steel_a36\")\n    .drill(diameter=13, cx=-43.5, cy=0, depth=5, through=True)\n    .drill(diameter=13, cx=43.5, cy=0, depth=5, through=True)\n    .slot(length=45, width=12, depth=5, cx=-0.5, cy=0)\n    .pocket(width=40, length=33, depth=1, cx=0, cy=0, corner_radius=0.5)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Created rectangular stock at 135 x 120 x 5 mm using material steel_a36.",
+        "Drill two through holes diameter 13 mm on the length centerline at X=24 mm and X=111 mm, Y=60 mm.",
+        "Machine a central obround slot 45 mm long x 12 mm wide through the part, centered at X=67 mm, Y=60 mm.",
+        "Mill a rectangular relief pocket 33 mm x 40 mm x 1 mm deep on the top face, centered between the mounting holes.",
+        "Applied a 1.0 mm top-edge chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers specifically on individual hole and slot mouths are not separately modeled; only the global/top chamfer is included."
+      ],
+      "review_notes": [
+        "SubCAD stock is centered at the origin; requirement datum coordinates were converted from lower-left-near X/Y values to centered cx/cy values."
+      ]
+    },
+    {
+      "requirement_id": "SMP-035-08",
+      "part_name": "Conformal Coating Masking Fixture for Connectors - single metal part",
+      "source_raw_idea_title": "Conformal Coating Masking Fixture for Connectors",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(220, 65, 26, material=\"steel_a36\")\n    .drill(diameter=13, cx=-97, cy=-0.5, depth=26, through=True)\n    .drill(diameter=13, cx=97, cy=-0.5, depth=26, through=True)\n    .slot(length=73, width=11, depth=26, cx=0, cy=-0.5)\n    .pocket(width=21, length=55, depth=8, cx=0, cy=0, corner_radius=0.5)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Created rectangular stock at 220 x 65 x 26 mm using material steel_a36.",
+        "Drill two through holes diameter 13 mm on the length centerline at X=13 mm and X=207 mm, Y=32 mm.",
+        "Machine a central obround slot 73 mm long x 11 mm wide through the part, centered at X=110 mm, Y=32 mm.",
+        "Mill a rectangular relief pocket 55 mm x 21 mm x 8 mm deep on the top face, centered between the mounting holes.",
+        "Applied a 1.0 mm top-edge chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers specifically on individual hole and slot mouths are not separately modeled; only the global/top chamfer is included."
+      ],
+      "review_notes": [
+        "SubCAD stock is centered at the origin; requirement datum coordinates were converted from lower-left-near X/Y values to centered cx/cy values."
+      ]
+    },
+    {
+      "requirement_id": "SMP-035-09",
+      "part_name": "ESD-Safe SMT Nozzle Change Organizer - single metal part",
+      "source_raw_idea_title": "ESD-Safe SMT Nozzle Change Organizer",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(30, 37, material=\"steel_1045\")\n    .turn_id(diameter=8, depth=37)\n    .turn_id(diameter=18, depth=3)\n    .pocket(width=10, length=29, depth=0.858, cx=0, cy=0, corner_radius=0)\n    .threaded_hole(diameter=5, depth=15, cx=-6.5, cy=0)\n    .threaded_hole(diameter=5, depth=15, cx=5.5, cy=0)\n    .slot(length=37, width=5, depth=30, cx=0, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Created cylindrical round-bar stock at OD 30 mm x length 37 mm using material steel_1045.",
+        "Machine a centered through bore diameter 8 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.",
+        "Added one axial counterbore-depth turn_id operation for the specified end counterbore size.",
+        "Added a shallow top pocket approximation for the longitudinal reference flat.",
+        "Added two threaded-hole placeholders at the specified axial stations.",
+        "Added a full-length slot placeholder for the split relief slit.",
+        "Applied a 1.0 mm chamfer operation for outside circular-edge treatment."
+      ],
+      "known_gaps": [
+        "Requirement calls for 4140 alloy steel prehard; draft maps it to allowed SubCAD material steel_1045.",
+        "Requirement datum uses cylinder axis as X; Stock.cylindrical/turning operations are used as the closest axial representation and orientation should be reviewed after execution.",
+        "Bore mouth chamfers are covered only by the later general chamfer, not separate internal bore-mouth chamfers.",
+        "Add shallow concentric counterbores on both ends, diameter 18 mm x 3 mm deep. Counterbores are required on both ends; this draft can only express a generic/one-end axial ID enlargement without end selection.",
+        "Mill one longitudinal flat 10 mm wide over 29 mm of length, centered on the top side. A true milled tangent flat on cylindrical OD is approximated by a top pocket/flat cut.",
+        "Add two radial tapped M5 holes through the top flat at X=12 mm and X=24 mm. Exact radial orientation through the top flat is approximated with top-face threaded_hole operations.",
+        "Cut one full-length radial slit 5 mm wide from the outside to the axial bore on datum-B side. Exact radial slit from OD to axial bore is approximated as a full-depth top slot.",
+        "Internal bore-edge chamfers are not individually selected; general chamfer may not reach every required bore/counterbore mouth."
+      ],
+      "review_notes": [
+        "Radial and longitudinal secondary features on round stock are draft approximations until execution artifacts are inspected."
+      ]
+    },
+    {
+      "requirement_id": "SMP-035-10",
+      "part_name": "Thermal Interface Pad Placement Jig - single metal part",
+      "source_raw_idea_title": "Thermal Interface Pad Placement Jig",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(195, 45, 9, material=\"aluminum_6061\")\n    .drill(diameter=9, cx=-87.5, cy=-0.5, depth=9, through=True)\n    .drill(diameter=9, cx=87.5, cy=-0.5, depth=9, through=True)\n    .slot(length=65, width=18, depth=9, cx=-0.5, cy=-0.5)\n    .pocket(width=18, length=48, depth=2, cx=0, cy=0, corner_radius=0.5)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Created rectangular stock at 195 x 45 x 9 mm using material aluminum_6061.",
+        "Drill two through holes diameter 9 mm on the length centerline at X=10 mm and X=185 mm, Y=22 mm.",
+        "Machine a central obround slot 65 mm long x 18 mm wide through the part, centered at X=97 mm, Y=22 mm.",
+        "Mill a rectangular relief pocket 48 mm x 18 mm x 2 mm deep on the top face, centered between the mounting holes.",
+        "Applied a 1.0 mm top-edge chamfer operation."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers specifically on individual hole and slot mouths are not separately modeled; only the global/top chamfer is included."
+      ],
+      "review_notes": [
+        "SubCAD stock is centered at the origin; requirement datum coordinates were converted from lower-left-near X/Y values to centered cx/cy values."
+      ]
+    }
+  ]
+}

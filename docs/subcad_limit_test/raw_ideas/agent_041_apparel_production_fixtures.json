@@ -1,0 +1,217 @@
+{
+  "agent_number": 41,
+  "domain": "textile factory automation, garment handling conveyors, fabric cutting tables, and apparel production fixtures",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "Garment Bundle Transfer Conveyor Module",
+      "product_context": "A textile factory station where bundled cut pieces move between sewing preparation and assembly cells.",
+      "core_function": "Carries soft stacked garment bundles while keeping their orientation controlled during handoff.",
+      "likely_main_part": "modular conveyor bed with side guide rails and bundle support paddles",
+      "why_it_tests_cad_representation": "Soft goods support, repeating conveyor elements, guide clearances, and transfer interfaces create a mix of rigid machine geometry and fabric-handling intent."
+    },
+    {
+      "idea_title": "Hanging Garment Rail Diverter",
+      "product_context": "An apparel production overhead line that routes hanging work-in-progress garments to different finishing areas.",
+      "core_function": "Switches suspended hangers from one rail path to another without dropping or twisting garments.",
+      "likely_main_part": "pivoting rail switch body with hanger capture throat",
+      "why_it_tests_cad_representation": "Curved rail paths, pivot zones, suspended load clearance, and fail-safe capture surfaces challenge spatial reasoning without relying on simple block shapes."
+    },
+    {
+      "idea_title": "Fabric Roll Loading Cradle",
+      "product_context": "A cutting room setup where fabric rolls are staged before spreading onto an automated cutting table.",
+      "core_function": "Supports and aligns a fabric roll so it can unwind smoothly into downstream spreading equipment.",
+      "likely_main_part": "angled cradle frame with roller supports and adjustable end stops",
+      "why_it_tests_cad_representation": "Cylindrical roll support, tangential contact surfaces, adjustable stops, and ergonomic loading access require clear representation of motion and contact."
+    },
+    {
+      "idea_title": "Cut Panel Sorting Carousel",
+      "product_context": "A post-cutting table station that sorts fabric panels by garment operation before sewing.",
+      "core_function": "Presents labeled compartments for operators or automation to place cut panels into production sequence.",
+      "likely_main_part": "rotating compartment tray with low-friction panel shelves",
+      "why_it_tests_cad_representation": "Radial organization, shallow sheet support, compartment labeling zones, and operator access envelopes test non-rectangular fixture layout."
+    },
+    {
+      "idea_title": "Automated Collar Piece Nesting Tray",
+      "product_context": "A sewing preparation cell handling small shaped collar components before stitching.",
+      "core_function": "Holds flexible collar pieces in repeatable positions for pickup, inspection, or robotic loading.",
+      "likely_main_part": "contoured nesting tray with shallow fabric registration pockets",
+      "why_it_tests_cad_representation": "Irregular fabric outlines, shallow retaining lips, pickup reliefs, and mirrored part variants require shape-aware fixture modeling."
+    },
+    {
+      "idea_title": "Garment Sleeve Orientation Fixture",
+      "product_context": "A semi-automated apparel line where sleeve panels must be presented consistently to an operator or robot.",
+      "core_function": "Keeps sleeve fabric flattened and clocked to a repeatable sewing orientation.",
+      "likely_main_part": "flat fixture plate with curved edge locators and gentle hold-down fingers",
+      "why_it_tests_cad_representation": "The design mixes flat textile support, asymmetrical curved references, compliant holding features, and open access for sewing operations."
+    },
+    {
+      "idea_title": "Fabric Edge Tracking Conveyor Section",
+      "product_context": "A fabric handling conveyor feeding cloth into inspection, spreading, or cutting equipment.",
+      "core_function": "Guides a moving fabric edge while allowing sensor-based alignment corrections.",
+      "likely_main_part": "belt conveyor frame with edge guide channel and sensor mounting rail",
+      "why_it_tests_cad_representation": "Long thin belt surfaces, adjustable sensor brackets, edge-path geometry, and textile clearance constraints stress both layout and assembly representation."
+    },
+    {
+      "idea_title": "Pattern Piece Vacuum Pickup Plate",
+      "product_context": "A robotic cutting-room cell that lifts individual cut fabric pieces from a cutting table.",
+      "core_function": "Provides distributed suction and edge relief for lifting soft fabric panels without folding them.",
+      "likely_main_part": "perforated pickup plate with gasket zones and flexible skirt features",
+      "why_it_tests_cad_representation": "Perforation fields, gasket outlines, soft-contact boundaries, and part-specific reliefs test repeated details and functional surface definition."
+    },
+    {
+      "idea_title": "Sewing Cell Workpiece Flip Fixture",
+      "product_context": "An apparel assembly station where fabric subassemblies need controlled flipping between operations.",
+      "core_function": "Captures a partially sewn piece and turns it over while preserving alignment.",
+      "likely_main_part": "hinged clamshell frame with fabric capture ribs",
+      "why_it_tests_cad_representation": "Hinged motion, open-frame construction, fabric clamping regions, and collision-free flip clearance create a demanding mechanical layout."
+    },
+    {
+      "idea_title": "Cutting Table Scrap Collection Trough",
+      "product_context": "An automated cutting table where offcuts and trim pieces must be removed from the work surface.",
+      "core_function": "Collects loose fabric scrap near the table edge while leaving the cutting surface unobstructed.",
+      "likely_main_part": "sloped trough assembly with removable collection bin",
+      "why_it_tests_cad_representation": "Angled sheet-metal surfaces, removable container interfaces, table-edge mounting, and textile debris flow need careful assembly relationships."
+    },
+    {
+      "idea_title": "Garment Tag Placement Jig",
+      "product_context": "A sewing line workstation for positioning labels or care tags before attachment.",
+      "core_function": "Locates a tag relative to a fabric edge and holds it flat for stitching or heat bonding.",
+      "likely_main_part": "small registration jig with fabric edge fence and tag pocket",
+      "why_it_tests_cad_representation": "Tiny flat components, shallow pockets, fold-clearance features, and operator finger access test precision fixture communication."
+    },
+    {
+      "idea_title": "Waistband Loop Presentation Fixture",
+      "product_context": "A trouser or skirt production line preparing belt loops for repeatable attachment.",
+      "core_function": "Stages folded loop strips in consistent positions for automated pickup or operator sewing.",
+      "likely_main_part": "indexed fixture plate with parallel loop channels and retention clips",
+      "why_it_tests_cad_representation": "Repeating narrow channels, flexible strip containment, pickup clearances, and anti-twist geometry make the part more than a simple tray."
+    },
+    {
+      "idea_title": "Fabric Ply Alignment Pin Bar",
+      "product_context": "A cutting room process that stacks multiple fabric plies before precision cutting.",
+      "core_function": "References the ply stack edge and keeps layers registered during transfer or pre-cut setup.",
+      "likely_main_part": "removable alignment bar with retractable locating pins",
+      "why_it_tests_cad_representation": "Retracting features, textile-safe pin tips, removable mounting, and long-edge registration require mechanism and fixture detail together."
+    },
+    {
+      "idea_title": "Garment Bundle Compression Shelf",
+      "product_context": "A work-in-progress staging area where cut bundles need compact storage without losing sequence.",
+      "core_function": "Applies light compression to fabric bundles while keeping tickets and layers accessible.",
+      "likely_main_part": "spring-loaded shelf frame with floating pressure plate",
+      "why_it_tests_cad_representation": "Moving compression surfaces, soft-stack clearance, label access windows, and adjustable force components test functional assembly reasoning."
+    },
+    {
+      "idea_title": "Robotic Hem Feed Guide",
+      "product_context": "An automated sewing cell feeding garment edges into a hemming station.",
+      "core_function": "Forms and guides a fabric edge into a consistent hem path before stitching.",
+      "likely_main_part": "curved folding guide with entry flare and stitch-path exit throat",
+      "why_it_tests_cad_representation": "Developable guide surfaces, fabric fold path, narrow exit geometry, and machine clearance make it difficult to capture with basic primitives."
+    },
+    {
+      "idea_title": "Apparel Fixture Quick-Change Baseplate",
+      "product_context": "A flexible sewing automation line that swaps fixtures for different garment styles.",
+      "core_function": "Provides repeatable mechanical mounting and service routing for removable apparel fixtures.",
+      "likely_main_part": "baseplate with locating bushings, latch pockets, and utility pass-throughs",
+      "why_it_tests_cad_representation": "Datum structures, quick-change latch geometry, cable or vacuum routing, and modular fixture boundaries test parametric assembly organization."
+    },
+    {
+      "idea_title": "Fabric Spreading End Clamp",
+      "product_context": "A fabric spreading table that anchors the leading edge of fabric during spreading passes.",
+      "core_function": "Grips the fabric edge evenly while allowing quick release after the lay is formed.",
+      "likely_main_part": "clamping rail with padded jaw and release linkage",
+      "why_it_tests_cad_representation": "Long clamping contact, compliant pads, linkage motion, and fabric-safe jaw profiles combine mechanical and textile-specific features."
+    },
+    {
+      "idea_title": "Garment Pocket Placement Template",
+      "product_context": "An apparel sewing cell that positions pockets on panels before stitching.",
+      "core_function": "References the garment panel and outlines the pocket placement zone for repeatable attachment.",
+      "likely_main_part": "transparent or open-frame template with shaped pocket window",
+      "why_it_tests_cad_representation": "Nested outlines, open-frame visibility, asymmetrical placement features, and removable clamps test representation of negative space and layout references."
+    },
+    {
+      "idea_title": "Conveyorized Garment Sleeve Turner",
+      "product_context": "A garment handling line where tubular fabric sections need turning before finishing.",
+      "core_function": "Receives a sleeve or similar tube and assists inversion while transferring it onward.",
+      "likely_main_part": "tapered turning mandrel integrated with a short conveyor section",
+      "why_it_tests_cad_representation": "Tapered fabric-contact geometry, moving transfer surfaces, open access zones, and soft part inversion are hard to describe as static blocks."
+    },
+    {
+      "idea_title": "Cut Piece Edge Inspection Stand",
+      "product_context": "A quality station checking cut textile panels for edge defects before assembly.",
+      "core_function": "Holds flexible panels open and backlit so edge condition can be viewed or scanned.",
+      "likely_main_part": "slanted inspection frame with translucent support surface and edge clamps",
+      "why_it_tests_cad_representation": "Transparent support intent, illumination zones, gentle clamps, and panel viewing angles test material and functional annotation in CAD."
+    },
+    {
+      "idea_title": "Garment Hanger Loading Funnel",
+      "product_context": "A finishing line where garments are transferred from a conveyor or workstation onto hangers.",
+      "core_function": "Guides fabric shoulders toward a hanger while preventing snags or misloads.",
+      "likely_main_part": "smooth funnel-shaped guide frame with hanger rail interface",
+      "why_it_tests_cad_representation": "Swept guide surfaces, snag-free radii, rail alignment, and garment drape clearance challenge smooth geometric representation."
+    },
+    {
+      "idea_title": "Zipper Tape Feed Cassette",
+      "product_context": "An apparel assembly machine feeding zipper tape into a sewing or attachment process.",
+      "core_function": "Organizes zipper tape path and presents it at a stable angle for stitching.",
+      "likely_main_part": "removable feed cassette with tape channel and guide rollers",
+      "why_it_tests_cad_representation": "Flexible strip routing, roller contact, removable cassette datums, and sewing-machine clearance require precise path-based modeling."
+    },
+    {
+      "idea_title": "Button Placket Support Fixture",
+      "product_context": "A shirt production workstation preparing plackets for buttonhole or button attachment.",
+      "core_function": "Supports layered fabric plackets flat while aligning them to machine tooling.",
+      "likely_main_part": "flat support fixture with raised placket fence and tool access slots",
+      "why_it_tests_cad_representation": "Layered fabric thickness intent, slots for tooling, raised registration edges, and operator loading reliefs test detailed fixture semantics."
+    },
+    {
+      "idea_title": "Textile Selvage Trim Conveyor Guide",
+      "product_context": "A fabric preparation line that trims or handles selvage edges before cutting.",
+      "core_function": "Maintains the fabric edge path and guides trimmed waste into a controlled collection route.",
+      "likely_main_part": "edge guide conveyor with trim chute and adjustable guide shoe",
+      "why_it_tests_cad_representation": "Parallel fabric and waste paths, adjustable guide shoes, chute transitions, and tool clearance create complex but practical factory geometry."
+    },
+    {
+      "idea_title": "Embroidery Hoop Loading Fixture",
+      "product_context": "An apparel decoration area loading fabric panels into embroidery hoops before stitching.",
+      "core_function": "Centers and tensions fabric over a hoop while preserving access for closing the frame.",
+      "likely_main_part": "nesting base with hoop locator ring and fabric tension fingers",
+      "why_it_tests_cad_representation": "Concentric ring references, compliant tension features, fabric overhang zones, and hand access pockets test circular fixture logic."
+    },
+    {
+      "idea_title": "Automated Cuff Folding Guide",
+      "product_context": "A shirt or jacket line where cuffs are folded and prepared for attachment.",
+      "core_function": "Guides cuff material through a controlled fold path and presents it to the sewing station.",
+      "likely_main_part": "multi-surface folding guide with entry ramp and exit locator",
+      "why_it_tests_cad_representation": "Fold progression, smooth guide surfaces, narrow textile path, and exit alignment require capturing functional geometry rather than only appearance."
+    },
+    {
+      "idea_title": "Garment Return Conveyor Turntable",
+      "product_context": "An apparel handling cell moving semi-finished garments between parallel workstation lines.",
+      "core_function": "Changes garment travel direction while maintaining bundle or hanger orientation.",
+      "likely_main_part": "low-profile rotating conveyor platform with perimeter guides",
+      "why_it_tests_cad_representation": "Rotational motion, conveyor continuity, soft item containment, and floor-level integration stress both mechanism and factory layout representation."
+    },
+    {
+      "idea_title": "Fabric Pattern Weight Placement Rack",
+      "product_context": "A manual and automated cutting room where pattern weights are staged near fabric lays.",
+      "core_function": "Stores and presents fabric weights for quick placement without interfering with cutting workflow.",
+      "likely_main_part": "angled rack with shaped weight pockets and table-edge mount",
+      "why_it_tests_cad_representation": "Repeated pocket geometry, ergonomic reach orientation, removable weight clearances, and table mounting create a compact fixture representation challenge."
+    },
+    {
+      "idea_title": "Soft Goods Transfer Paddle",
+      "product_context": "A robotic garment handling station moving fabric panels between conveyors and fixtures.",
+      "core_function": "Slides beneath soft textile pieces and transfers them with minimal wrinkling.",
+      "likely_main_part": "thin paddle plate with tapered leading edge and low-friction surface zones",
+      "why_it_tests_cad_representation": "Very thin functional geometry, tapered insertion profile, surface zones, and textile interaction clearances test subtle but important CAD details."
+    },
+    {
+      "idea_title": "Apparel Work Ticket Clip Rail",
+      "product_context": "A sewing line where each garment bundle travels with a process ticket and material samples.",
+      "core_function": "Holds work tickets beside moving garment bundles without blocking fabric access.",
+      "likely_main_part": "conveyor-side clip rail with flexible ticket retainers",
+      "why_it_tests_cad_representation": "Small repeating clip features, document clearance, conveyor attachment, and operator readability angle require detailed accessory modeling."
+    }
+  ]
+}

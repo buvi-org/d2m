@@ -1,0 +1,79 @@
+{
+  "agent_number": 9,
+  "agent_id": "019ecedc-c7f2-7bd3-89b4-4171c3c3f59a",
+  "domain": "furniture hardware, adjustable fittings, architectural connectors, and door/window mechanisms",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Concealed Soft-Close Cabinet Hinge Cup",
+      "product_context": "Kitchen and wardrobe cabinetry with hidden European-style hinges.",
+      "core_function": "Houses the hinge pivot and damping insert inside a recessed cup mounted in the cabinet door.",
+      "likely_main_part": "Machined hinge cup body with mounting ears, pivot bores, damper pocket, and countersunk screw holes.",
+      "why_it_tests_cad_representation": "Combines cylindrical recesses, thin flanges, coaxial hinge features, countersinks, asymmetric pockets, and tight clearances in a compact part."
+    },
+    {
+      "idea_title": "Adjustable Wardrobe Sliding Door Roller Carriage",
+      "product_context": "Top-hung or bottom-running sliding wardrobe door systems.",
+      "core_function": "Supports a sliding door on rollers while allowing height and alignment adjustment after installation.",
+      "likely_main_part": "Roller carriage block with axle bosses, threaded height-adjuster seat, guide slot, and door attachment interface.",
+      "why_it_tests_cad_representation": "Requires nested wheel clearances, offset axle geometry, threaded adjustment features, slots, bosses, and load-bearing wall thickness changes."
+    },
+    {
+      "idea_title": "Eccentric Cam Furniture Connector Housing",
+      "product_context": "Flat-pack furniture panels joined by cam-and-dowel fasteners.",
+      "core_function": "Captures a rotating cam that pulls a dowel head inward to clamp two panels together.",
+      "likely_main_part": "Round cam connector housing with eccentric drive cavity, dowel-entry throat, screwdriver slot, and retention lip.",
+      "why_it_tests_cad_representation": "Tests eccentric internal geometry, interrupted circular profiles, shallow drive features, undercut-like retention forms, and precise panel-facing datum surfaces."
+    },
+    {
+      "idea_title": "Adjustable Glass Shelf Support Pin",
+      "product_context": "Display cabinets and wall units with movable glass shelves.",
+      "core_function": "Supports a glass shelf while providing fine leveling and anti-slip retention.",
+      "likely_main_part": "Stepped shelf pin with threaded leveling stem, flattened glass pad, rubber insert recess, and locking shoulder.",
+      "why_it_tests_cad_representation": "Mixes turned cylindrical sections with flats, small recesses, threaded regions, pad geometry, and contact surfaces that must align to a shelf plane."
+    },
+    {
+      "idea_title": "Architectural Curtain Wall T-Slot Anchor Clamp",
+      "product_context": "Aluminum curtain wall framing used to secure panels or mullion accessories.",
+      "core_function": "Slides into an extrusion channel and clamps against the slot lips when tightened.",
+      "likely_main_part": "T-slot anchor clamp with tapered wedge face, threaded boss, anti-rotation tabs, and bearing shoulders.",
+      "why_it_tests_cad_representation": "Tests channel-specific geometry, wedge angles, slot engagement lips, asymmetric anti-rotation features, and threaded load paths."
+    },
+    {
+      "idea_title": "Pivot Door Bottom Bearing Shoe",
+      "product_context": "Heavy frameless or timber pivot doors in architectural interiors.",
+      "core_function": "Supports the lower pivot spindle and transfers door weight into the floor-mounted pivot assembly.",
+      "likely_main_part": "Bearing shoe block with vertical spindle bore, thrust washer recess, door-edge mounting holes, and alignment datum faces.",
+      "why_it_tests_cad_representation": "Requires deep bores, concentric bearing seats, countersunk fasteners, thick-to-thin transitions, and accurately related mounting and pivot axes."
+    },
+    {
+      "idea_title": "Tilt-and-Turn Window Locking Cam Keeper",
+      "product_context": "European-style tilt-and-turn window perimeter locking systems.",
+      "core_function": "Receives a mushroom cam from the sash hardware and locks it against the window frame.",
+      "likely_main_part": "Frame-mounted keeper with ramped cam entry, captive locking pocket, slotted adjustment holes, and raised wear pads.",
+      "why_it_tests_cad_representation": "Tests ramped contact surfaces, partial pockets, elongated mounting slots, small reliefs, and geometry tied to the path of a rotating locking cam."
+    },
+    {
+      "idea_title": "Concealed Door Closer Arm Linkage Block",
+      "product_context": "Concealed overhead door closers used in commercial doors.",
+      "core_function": "Connects the closer arm to a sliding track while allowing pivoting motion under spring load.",
+      "likely_main_part": "Linkage block with cross pin bore, sliding shoe interface, arm clevis pocket, and lubrication groove.",
+      "why_it_tests_cad_representation": "Combines clevis-style geometry, precision pin bores, sliding contact faces, grooves, filleted load paths, and clearance for angular movement."
+    },
+    {
+      "idea_title": "Adjustable Stair Handrail Glass Clamp",
+      "product_context": "Architectural glass balustrades with mounted handrail supports.",
+      "core_function": "Clamps onto a glass panel and provides an adjustable saddle for a round or oval handrail.",
+      "likely_main_part": "Clamp body half with glass pad recess, handrail saddle boss, adjustment screw seat, and alignment ribs.",
+      "why_it_tests_cad_representation": "Tests curved saddle geometry, pad pockets, split-clamp interfaces, threaded adjustment seats, and multiple functional surfaces at different angles."
+    },
+    {
+      "idea_title": "Flush Sliding Door Edge Pull Mechanism Cup",
+      "product_context": "Pocket doors and flush sliding interior doors.",
+      "core_function": "Provides a recessed finger pull and houses a small pivoting tab that can be pulled from the door edge.",
+      "likely_main_part": "Recessed edge-pull cup with curved finger cavity, pivot pin bosses, tab clearance pocket, and countersunk fixing holes.",
+      "why_it_tests_cad_representation": "Requires sculpted ergonomic recesses, thin edge flanges, pin bosses, internal clearance volumes, countersinks, and door-edge mounting constraints."
+    }
+  ]
+}

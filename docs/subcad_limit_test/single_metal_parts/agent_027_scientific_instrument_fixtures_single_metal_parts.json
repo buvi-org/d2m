@@ -1,0 +1,1059 @@
+{
+  "agent_number": 27,
+  "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+  "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+  "stage": "single_metal_part_requirements",
+  "source_raw_file": "docs/subcad_limit_test/raw_ideas/agent_027_scientific_instrument_fixtures.json",
+  "requirements": [
+    {
+      "requirement_id": "SMP-027-01",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 27,
+        "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+        "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+        "raw_idea_index": 1,
+        "raw_idea_title": "Kinematic Mirror Mount Flexure Plate"
+      },
+      "part_name": "Kinematic Mirror Mount Flexure Plate - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 170,
+        "width_mm": 70,
+        "thickness_mm": 6
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Kinematic Mirror Mount Flexure Plate'. The broader\nuse case is: Optical spectroscopy beamline alignment for steering a laser into a monochromator or\ninterferometer. The chosen deliverable is only the metal body implied by: Machined monolithic\nflexure plate with mirror pocket, thin hinge webs, actuator contact pads, and rear mounting bosses.\nAll other product elements are external reference items and must not be modeled. The part must\nperform this mechanical role: Provides fine angular adjustment of a front mirror pad through three-\npoint kinematic support and elastic flexure compliance. It is intentionally included in the SubCAD\nlimit corpus because: Combines thin flexures, offset bosses, counterbores, mirror recesses, actuator\npads, symmetry, and tight clearances in one mechanically meaningful part. The part is made from low-\ncarbon steel, ASTM A36 or equivalent using sheet or plate stock. Start from one flat sheet or plate\nblank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that\nsame piece. If bends are called out, they are bends in the same sheet part, not separate welded\npieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 170 mm x 70 mm x 6 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 13 mm on the length centerline at X=14 mm and X=156 mm, Y=35 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 56 mm long x 17 mm wide through the part, centered at X=85 mm, Y=35 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 42 mm x 23 mm x 3 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "counterbored seat",
+          "description": "Add a central counterbore diameter 25 mm x 2 mm deep around the center feature."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'counterbored seat' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Kinematic Mirror Mount Flexure Plate'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-027-02",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 27,
+        "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+        "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+        "raw_idea_index": 2,
+        "raw_idea_title": "Vacuum Flange Optical Window Clamp Ring"
+      },
+      "part_name": "Vacuum Flange Optical Window Clamp Ring - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "1045 medium-carbon steel, normalized",
+        "reason": "durable wear surface for workshop loading"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 190,
+        "width_mm": 80,
+        "thickness_mm": 12
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Vacuum Flange Optical Window Clamp Ring'. The\nbroader use case is: High-vacuum spectroscopy chamber with a removable fused silica or sapphire\nviewport. The chosen deliverable is only the metal body implied by: Annular clamp ring with bolt\ncircle, stepped window recess, gasket groove, relief chamfers, and alignment notches. All other\nproduct elements are external reference items and must not be modeled. The part must perform this\nmechanical role: Compresses an optical window and gasket evenly against a vacuum flange while\npreserving a clear optical aperture. It is intentionally included in the SubCAD limit corpus\nbecause: Tests concentric circular features, annular grooves, bolt-pattern repetition, stepped\nprofiles, aperture constraints, and sealing-surface geometry. The part is made from 1045 medium-\ncarbon steel, normalized using sheet or plate stock. Start from one flat sheet or plate blank. Cut\nthe outside profile, machine holes, slots, pockets, lips, and relief features into that same piece.\nIf bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 190 mm x 80 mm x 12 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 11 mm on the length centerline at X=16 mm and X=174 mm, Y=40 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 63 mm long x 16 mm wide through the part, centered at X=95 mm, Y=40 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 47 mm x 26 mm x 3 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "serrated contact edge",
+          "description": "Cut 6 equal triangular serrations across the rear edge, each 2 mm deep."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'serrated contact edge' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Vacuum Flange Optical Window Clamp Ring'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-027-03",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 27,
+        "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+        "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+        "raw_idea_index": 3,
+        "raw_idea_title": "Cryogenic Sample Paddle Holder"
+      },
+      "part_name": "Cryogenic Sample Paddle Holder - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 140,
+        "width_mm": 120,
+        "thickness_mm": 5
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Cryogenic Sample Paddle Holder'. The broader use\ncase is: Low-temperature optical or Raman spectroscopy stage for holding a small crystal, wafer\ncoupon, or thin sample. The chosen deliverable is only the metal body implied by: Small machined\ncopper sample holder with pocket, clamp screw bosses, thermal strap tabs, alignment slot, and\nbeveled optical clearance faces. All other product elements are external reference items and must\nnot be modeled. The part must perform this mechanical role: Secures a sample paddle thermally and\nmechanically while allowing optical access from multiple angles. It is intentionally included in the\nSubCAD limit corpus because: Requires mixed small-scale features, asymmetric cutouts, angled\nreliefs, threaded-boss placement, and material-driven functional geometry. The part is made from\nlow-carbon steel, ASTM A36 or equivalent using sheet or plate stock. Start from one flat sheet or\nplate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into\nthat same piece. If bends are called out, they are bends in the same sheet part, not separate welded\npieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 140 mm x 120 mm x 5 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 13 mm on the length centerline at X=24 mm and X=116 mm, Y=60 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 46 mm long x 13 mm wide through the part, centered at X=70 mm, Y=60 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 35 mm x 40 mm x 1 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "machined angled reference face",
+          "description": "Machine one top reference face at 24 degrees over the last 28 mm of length."
+        },
+        {
+          "name": "side tapped hole",
+          "description": "Tap one side hole M9 from the right long edge into the central pocket; hole axis is parallel to Y."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'machined angled reference face' is present with the stated size and position.",
+        "The feature named 'side tapped hole' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Cryogenic Sample Paddle Holder'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-027-04",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 27,
+        "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+        "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+        "raw_idea_index": 4,
+        "raw_idea_title": "Fiber Collimator V-Groove Alignment Block"
+      },
+      "part_name": "Fiber Collimator V-Groove Alignment Block - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 29,
+        "overall_length_mm": 65,
+        "axial_bore_diameter_mm": 8,
+        "wall_minimum_mm": 10
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Fiber Collimator V-Groove Alignment Block'. The\nbroader use case is: Spectrometer input optics where a fiber ferrule must be aligned to a\ncollimating lens barrel. The chosen deliverable is only the metal body implied by: Rectangular\nalignment block with precision V-groove, lens bore, split-clamp slit, cross holes, dowel pin holes,\nand datum feet. All other product elements are external reference items and must not be modeled. The\npart must perform this mechanical role: Locates a fiber ferrule and cylindrical lens housing on a\nshared optical axis with clamp access. It is intentionally included in the SubCAD limit corpus\nbecause: Tests V-shaped prismatic cuts, coaxial bores, clamp slots, orthogonal fastener holes, datum\nsurfaces, and alignment-critical relationships. The part is made from low-carbon steel, ASTM A36 or\nequivalent using round bar stock. Start from one cut length of round metal bar. Turn the outside,\nface both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No\nseparate inserts or fasteners are part of the deliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 29 mm and length 65 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 8 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 18 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 9 mm wide over 57 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M7 holes through the top flat at X=21 mm and X=43 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 6 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        },
+        {
+          "name": "cross relief slot",
+          "description": "Machine one transverse slot 8 mm wide across the top flat at X=32 mm, depth 2 mm."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "The feature named 'cross relief slot' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Fiber Collimator V-Groove Alignment Block'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-027-05",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 27,
+        "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+        "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+        "raw_idea_index": 5,
+        "raw_idea_title": "Miniature Vacuum Feedthrough Bracket"
+      },
+      "part_name": "Miniature Vacuum Feedthrough Bracket - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "AISI 316 stainless steel",
+        "reason": "corrosion resistance and cleanable metal surfaces"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 125,
+        "width_mm": 100,
+        "thickness_mm": 5
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Miniature Vacuum Feedthrough Bracket'. The broader\nuse case is: Lab vacuum chamber carrying electrical or optical feedthrough connectors near a\nspectroscopy sample stage. The chosen deliverable is only the metal body implied by: L-shaped\nmachined bracket with circular saddle, split clamp ears, mounting slots, cable relief channel, and\nlightening pockets. All other product elements are external reference items and must not be modeled.\nThe part must perform this mechanical role: Supports a circular feedthrough body and routes strain-\nrelieved cables without interfering with nearby chamber hardware. It is intentionally included in\nthe SubCAD limit corpus because: Includes bracket orthogonality, partial cylindrical seats, slotted\nholes, clamp ears, internal pockets, and cable-clearance geometry. The part is made from AISI 316\nstainless steel using sheet or plate stock. Start from one flat sheet or plate blank. Cut the\noutside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If\nbends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 125 mm x 100 mm x 5 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 5 mm on the length centerline at X=20 mm and X=105 mm, Y=50 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 41 mm long x 12 mm wide through the part, centered at X=62 mm, Y=50 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 31 mm x 33 mm x 2 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Miniature Vacuum Feedthrough Bracket'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-027-06",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 27,
+        "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+        "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+        "raw_idea_index": 6,
+        "raw_idea_title": "Cuvette Carousel Indexing Plate"
+      },
+      "part_name": "Cuvette Carousel Indexing Plate - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "sheet_or_plate",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one flat sheet or plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.",
+      "overall_envelope_mm": {
+        "length_mm": 210,
+        "width_mm": 80,
+        "thickness_mm": 7
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Cuvette Carousel Indexing Plate'. The broader use\ncase is: UV-visible spectroscopy accessory for presenting multiple square cuvettes to a fixed\noptical beam. The chosen deliverable is only the metal body implied by: Circular carousel plate with\nsquare cuvette pockets, radial optical windows, center bearing bore, detent holes, and engraved\nindex flats. All other product elements are external reference items and must not be modeled. The\npart must perform this mechanical role: Holds several cuvettes at indexed angular positions while\nexposing each optical path through clear side windows. It is intentionally included in the SubCAD\nlimit corpus because: Tests polar arrays, square pockets on a circular part, radial windows, central\nbearing geometry, detent features, and repeated but orientation-sensitive cutouts. The part is made\nfrom low-carbon steel, ASTM A36 or equivalent using sheet or plate stock. Start from one flat sheet\nor plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features\ninto that same piece. If bends are called out, they are bends in the same sheet part, not separate\nwelded pieces.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 210 mm x 80 mm x 7 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 8 mm on the length centerline at X=16 mm and X=194 mm, Y=40 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 70 mm long x 14 mm wide through the part, centered at X=105 mm, Y=40 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 52 mm x 26 mm x 2 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Cuvette Carousel Indexing Plate'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-027-07",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 27,
+        "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+        "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+        "raw_idea_index": 7,
+        "raw_idea_title": "Adjustable Slit Jaw Carrier"
+      },
+      "part_name": "Adjustable Slit Jaw Carrier - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "6061-T6 aluminum",
+        "reason": "low mass with good machinability and stable flat features"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 100,
+        "width_mm": 55,
+        "height_mm": 20
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Adjustable Slit Jaw Carrier'. The broader use case\nis: Entrance or exit slit assembly for a monochromator, spectrograph, or beam-shaping optical\ninstrument. The chosen deliverable is only the metal body implied by: Machined jaw carrier with\nblade ledge, screw slots, guide rail grooves, spring pocket, datum shoulder, and blade clamp holes.\nAll other product elements are external reference items and must not be modeled. The part must\nperform this mechanical role: Carries one precision slit blade and allows controlled linear motion\nrelative to an opposing blade. It is intentionally included in the SubCAD limit corpus because:\nTests thin ledges, long guide features, precision shoulders, nested pockets, elongated slots, and\npart geometry tied to motion constraints. The part is made from 6061-T6 aluminum using rectangular\nblock stock. Start from one rectangular metal block or plate. Saw oversize, face all datum sides,\nthen machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same\nsolid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 100 mm x 55 mm x 20 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 7 mm on the length centerline at X=11 mm and X=89 mm, Y=27 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 33 mm long x 11 mm wide through the part, centered at X=50 mm, Y=27 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 25 mm x 18 mm x 5 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "side tapped hole",
+          "description": "Tap one side hole M8 from the right long edge into the central pocket; hole axis is parallel to Y."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'side tapped hole' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Adjustable Slit Jaw Carrier'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-027-08",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 27,
+        "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+        "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+        "raw_idea_index": 8,
+        "raw_idea_title": "Microscope Objective Vacuum Adapter Nosepiece"
+      },
+      "part_name": "Microscope Objective Vacuum Adapter Nosepiece - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 33,
+        "overall_length_mm": 106,
+        "axial_bore_diameter_mm": 8,
+        "wall_minimum_mm": 12
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Microscope Objective Vacuum Adapter Nosepiece'. The\nbroader use case is: Vacuum-compatible optical inspection chamber using a microscope objective\nmounted through a custom adapter. The chosen deliverable is only the metal body implied by:\nCylindrical adapter body with external flange, internal stepped bore, thread relief, O-ring groove,\nspanner flats, and vent holes. All other product elements are external reference items and must not\nbe modeled. The part must perform this mechanical role: Positions an objective lens at a fixed\nworking distance while sealing or shielding the chamber interface. It is intentionally included in\nthe SubCAD limit corpus because: Combines rotational geometry, stepped internal cavities, sealing\ngrooves, flats on cylinders, radial holes, and optical working-distance constraints. The part is\nmade from low-carbon steel, ASTM A36 or equivalent using round bar stock. Start from one cut length\nof round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats,\nslots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 33 mm and length 106 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 8 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 18 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 11 mm wide over 98 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M5 holes through the top flat at X=35 mm and X=70 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 6 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        },
+        {
+          "name": "opposed wrench flats",
+          "description": "Mill two opposed flats across the outside, leaving 25 mm across flats over the middle third of the length."
+        },
+        {
+          "name": "cross relief slot",
+          "description": "Machine one transverse slot 8 mm wide across the top flat at X=53 mm, depth 3 mm."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "The feature named 'opposed wrench flats' is present with the stated size and position.",
+        "The feature named 'cross relief slot' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Microscope Objective Vacuum Adapter Nosepiece'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-027-09",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 27,
+        "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+        "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+        "raw_idea_index": 9,
+        "raw_idea_title": "Precision Lab Jack Crosshead Block"
+      },
+      "part_name": "Precision Lab Jack Crosshead Block - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "rectangular_block",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "AISI 316 stainless steel",
+        "reason": "corrosion resistance and cleanable metal surfaces"
+      },
+      "manufacturing_context": "Start from one rectangular metal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments into that same solid piece.",
+      "overall_envelope_mm": {
+        "length_mm": 120,
+        "width_mm": 90,
+        "height_mm": 68
+      },
+      "datum_orientation": "Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.",
+      "full_description": "Make the single metal part for the product idea 'Precision Lab Jack Crosshead Block'. The broader\nuse case is: Compact vertical positioning fixture for raising a sample holder or small optical\nelement under a beam path. The chosen deliverable is only the metal body implied by: Machined\ncrosshead block with lead screw nut pocket, twin guide-rod bores, top mounting grid, underside\nclearance pocket, and anti-rotation keyway. All other product elements are external reference items\nand must not be modeled. The part must perform this mechanical role: Transfers screw-driven motion\ninto guided vertical movement while maintaining parallelism and load support. It is intentionally\nincluded in the SubCAD limit corpus because: Tests parallel bore alignment, central pocketing, grid-\npattern mounting holes, internal clearances, guide constraints, and load-path-driven shape. The part\nis made from AISI 316 stainless steel using rectangular block stock. Start from one rectangular\nmetal block or plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots,\nangled faces, grooves, and edge treatments into that same solid piece.",
+      "functional_features": [
+        {
+          "name": "single rectangular metal body",
+          "description": "Machine one body with finished envelope 120 mm x 90 mm x 68 mm."
+        },
+        {
+          "name": "mounting hole pattern",
+          "description": "Drill two through holes diameter 8 mm on the length centerline at X=18 mm and X=102 mm, Y=45 mm."
+        },
+        {
+          "name": "functional center feature",
+          "description": "Machine a central obround slot 40 mm long x 8 mm wide through the part, centered at X=60 mm, Y=45 mm."
+        },
+        {
+          "name": "top relief pocket",
+          "description": "Mill a rectangular relief pocket 30 mm x 30 mm x 23 mm deep on the top face, centered between the mounting holes."
+        },
+        {
+          "name": "edge chamfers",
+          "description": "Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths."
+        },
+        {
+          "name": "side tapped hole",
+          "description": "Tap one side hole M4 from the right long edge into the central pocket; hole axis is parallel to Y."
+        }
+      ],
+      "tolerances": [
+        "Overall envelope dimensions: +/-0.20 mm.",
+        "Hole diameters and slot widths: +/-0.10 mm.",
+        "Hole and slot center positions from datums B and C: +/-0.15 mm.",
+        "Pocket depths and relief depths: +/-0.10 mm.",
+        "Nonfunctional chamfers and radii: +/-0.30 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single rectangular metal body' is present with the stated size and position.",
+        "The feature named 'mounting hole pattern' is present with the stated size and position.",
+        "The feature named 'functional center feature' is present with the stated size and position.",
+        "The feature named 'top relief pocket' is present with the stated size and position.",
+        "The feature named 'edge chamfers' is present with the stated size and position.",
+        "The feature named 'side tapped hole' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Precision Lab Jack Crosshead Block'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    },
+    {
+      "requirement_id": "SMP-027-10",
+      "stage": "single_metal_part_requirement",
+      "status": "review_candidate",
+      "source": {
+        "agent_number": 27,
+        "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+        "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+        "raw_idea_index": 10,
+        "raw_idea_title": "Quartz Tube Furnace Sample Boat Fixture"
+      },
+      "part_name": "Quartz Tube Furnace Sample Boat Fixture - single metal part",
+      "single_part_boundary": {
+        "deliverable": "one metal part only",
+        "stock_family": "round_bar",
+        "allowed_stock_forms": [
+          "sheet",
+          "rod",
+          "plate",
+          "block"
+        ],
+        "excluded_from_scope": [
+          "assemblies",
+          "fasteners",
+          "springs",
+          "bearings",
+          "bushings",
+          "rubber",
+          "plastic",
+          "electronics",
+          "labels",
+          "coatings as geometry"
+        ]
+      },
+      "material": {
+        "material": "low-carbon steel, ASTM A36 or equivalent",
+        "reason": "general-purpose single-piece metal stock"
+      },
+      "manufacturing_context": "Start from one cut length of round metal bar. Turn the outside, face both ends, bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the deliverable.",
+      "overall_envelope_mm": {
+        "outer_diameter_mm": 43,
+        "overall_length_mm": 98,
+        "axial_bore_diameter_mm": 10,
+        "wall_minimum_mm": 16
+      },
+      "datum_orientation": "Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.",
+      "full_description": "Make the single metal part for the product idea 'Quartz Tube Furnace Sample Boat Fixture'. The\nbroader use case is: Tube furnace or in-situ spectroscopy setup where a ceramic or metal sample boat\nmust be repeatably positioned inside a quartz tube. The chosen deliverable is only the metal body\nimplied by: Long narrow machined fixture rail with curved tube-contact feet, boat locating tabs,\nvent slots, end stop, and thermocouple clip boss. All other product elements are external reference\nitems and must not be modeled. The part must perform this mechanical role: Cradles and locates a\nsample boat while allowing gas flow and thermal expansion clearance. It is intentionally included in\nthe SubCAD limit corpus because: Tests elongated proportions, curved support surfaces, thin tabs,\nslot arrays, asymmetric end features, and functional clearances for thermal and gas-flow behavior.\nThe part is made from low-carbon steel, ASTM A36 or equivalent using round bar stock. Start from one\ncut length of round metal bar. Turn the outside, face both ends, bore the center, then mill\nsecondary flats, slots, and radial holes as needed. No separate inserts or fasteners are part of the\ndeliverable.",
+      "functional_features": [
+        {
+          "name": "single cylindrical body",
+          "description": "Turn one coaxial cylinder to OD 43 mm and length 98 mm from solid round bar."
+        },
+        {
+          "name": "axial through bore",
+          "description": "Machine a centered through bore diameter 10 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers."
+        },
+        {
+          "name": "end counterbores",
+          "description": "Add shallow concentric counterbores on both ends, diameter 20 mm x 3 mm deep."
+        },
+        {
+          "name": "milled reference flat",
+          "description": "Mill one longitudinal flat 14 mm wide over 90 mm of length, centered on the top side."
+        },
+        {
+          "name": "radial clamp holes",
+          "description": "Add two radial tapped M8 holes through the top flat at X=32 mm and X=65 mm."
+        },
+        {
+          "name": "split relief slit",
+          "description": "Cut one full-length radial slit 4 mm wide from the outside to the axial bore on datum-B side."
+        },
+        {
+          "name": "outside edge treatment",
+          "description": "Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered."
+        },
+        {
+          "name": "cross relief slot",
+          "description": "Machine one transverse slot 6 mm wide across the top flat at X=49 mm, depth 4 mm."
+        }
+      ],
+      "tolerances": [
+        "Outside diameter and axial bore diameter: +/-0.05 mm.",
+        "Concentricity of bore to outer diameter: within 0.05 mm TIR.",
+        "Milled flats and slots: +/-0.15 mm unless otherwise specified.",
+        "Nonfunctional chamfers: +/-0.3 mm."
+      ],
+      "acceptance_checklist": [
+        "The output contains one continuous metal solid representing one part.",
+        "The stock family, material intent, envelope dimensions, and datum orientation match this requirement.",
+        "The feature named 'single cylindrical body' is present with the stated size and position.",
+        "The feature named 'axial through bore' is present with the stated size and position.",
+        "The feature named 'end counterbores' is present with the stated size and position.",
+        "The feature named 'milled reference flat' is present with the stated size and position.",
+        "The feature named 'radial clamp holes' is present with the stated size and position.",
+        "The feature named 'split relief slit' is present with the stated size and position.",
+        "The feature named 'outside edge treatment' is present with the stated size and position.",
+        "The feature named 'cross relief slot' is present with the stated size and position.",
+        "All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.",
+        "No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.",
+        "Round features are coaxial unless the requirement explicitly says they are radial or offset."
+      ],
+      "negative_requirements": [
+        "Represent exactly one metal part only.",
+        "Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.",
+        "Do not convert the part into an assembly or multiple bodies.",
+        "Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.",
+        "Do not omit datum-critical features just because they are small.",
+        "Do not broaden the requirement back into the full product idea named 'Quartz Tube Furnace Sample Boat Fixture'; this requirement is only for its chosen metal part."
+      ],
+      "immutable_requirement_note": "After review, this English requirement is the product truth for later SubCAD code generation. Do not simplify it to fit current SubCAD limitations."
+    }
+  ]
+}

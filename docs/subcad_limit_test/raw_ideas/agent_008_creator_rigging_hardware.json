@@ -1,0 +1,79 @@
+{
+  "agent_number": 8,
+  "agent_id": "019ecedc-b3ec-7232-b0a2-3ad81aa57b45",
+  "domain": "camera, audio, and creator-equipment rigging hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Cage-Mounted HDMI Cable Clamp With Captive Wedge",
+      "product_context": "A compact clamp for mirrorless camera cages that secures a full-size or micro-HDMI cable near the camera body during handheld video work.",
+      "core_function": "Prevent cable strain and accidental unplugging while allowing quick cable removal without detaching the camera cage.",
+      "likely_main_part": "Machined aluminum clamp body with stepped cable channel, cage mounting slot, captive wedge pocket, and thumbscrew bore.",
+      "why_it_tests_cad_representation": "Combines small asymmetric features, stepped channels, counterbores, sliding wedge geometry, rounded cable reliefs, and tight clearances around threaded hardware."
+    },
+    {
+      "idea_title": "Dual Cold-Shoe Audio Receiver Bridge",
+      "product_context": "A camera-top accessory bridge for mounting two compact wireless microphone receivers above a cinema or mirrorless camera cage.",
+      "core_function": "Hold two receivers side by side while leaving clearance for screen tilt, cables, and top-handle operation.",
+      "likely_main_part": "Machined bridge bar with two cold-shoe rails, center cage-mount slot, cable clearance scallops, and end-stop lips.",
+      "why_it_tests_cad_representation": "Requires accurate rail profiles, repeated but mirrored mounting features, undercut-like lips, slot placement, and clearance cutouts tied to real accessory envelopes."
+    },
+    {
+      "idea_title": "Low-Profile NATO Rail Microphone Shock Mount Base",
+      "product_context": "A base adapter that lets a small shotgun microphone shock mount slide onto a camera cage NATO rail.",
+      "core_function": "Provide fast repositioning of a microphone while locking securely to a standard camera rig rail.",
+      "likely_main_part": "Machined NATO clamp block with dovetail jaw profile, locking screw boss, microphone mount boss, and relief pockets.",
+      "why_it_tests_cad_representation": "Tests standardized rail geometry, angled clamping faces, screw-axis alignment, raised bosses, weight-reducing pockets, and functional interference constraints."
+    },
+    {
+      "idea_title": "Articulating Monitor Rosette Knuckle",
+      "product_context": "A machined center joint for a field monitor arm used on camera rigs, positioned between two short adjustable arms.",
+      "core_function": "Allow a monitor to rotate and lock at repeatable angles without slipping during movement.",
+      "likely_main_part": "Circular rosette knuckle with radial teeth, central through-bore, side arm clevis ears, and recessed washer seat.",
+      "why_it_tests_cad_representation": "Challenges CAD representation with radial tooth arrays, circular symmetry, clevis geometry, coaxial bores, recesses, and load-bearing mating surfaces."
+    },
+    {
+      "idea_title": "Boom Pole Quick-Release Recorder Cradle",
+      "product_context": "A clamp-on holder for attaching a small field audio recorder to a boom pole during documentary sound recording.",
+      "core_function": "Secure the recorder at a readable angle while isolating it from rotation around the pole.",
+      "likely_main_part": "Curved machined cradle with cylindrical pole clamp saddle, recorder backplate, strap slots, and angled viewing offset.",
+      "why_it_tests_cad_representation": "Mixes cylindrical grip surfaces, angled planar mounting, strap pass-through slots, filleted transitions, and ergonomic offsets in one compact part."
+    },
+    {
+      "idea_title": "Camera Cage Side Handle ARRI-Locating Mount Block",
+      "product_context": "A side-handle interface block for attaching a wooden or aluminum grip to a cinema camera cage using ARRI-style locating pins.",
+      "core_function": "Prevent handle twist while transferring hand loads into the camera cage.",
+      "likely_main_part": "Machined mount block with central threaded bore, two locating pin holes, handle tenon pocket, and contoured finger-side chamfers.",
+      "why_it_tests_cad_representation": "Tests precise hole patterns, anti-rotation features, pocketed mating geometry, chamfer orientation, and structural massing around high-load fasteners."
+    },
+    {
+      "idea_title": "V-Mount Battery Plate Offset Spacer With Cable Tunnel",
+      "product_context": "An offset spacer used between a V-mount battery plate and a compact cinema camera rig to improve clearance for rear ports.",
+      "core_function": "Move the battery plate backward and upward while routing power cables through a protected internal path.",
+      "likely_main_part": "Machined spacer block with staggered mounting holes, internal cable tunnel, rear plate bosses, and side-access cutout.",
+      "why_it_tests_cad_representation": "Includes non-coplanar mounting interfaces, hidden passage geometry, offset hole patterns, weight relief, and cable bend-radius constraints."
+    },
+    {
+      "idea_title": "Overhead Desk Camera Arm Clamp Head",
+      "product_context": "A clamp head for a creator desk rig that holds a vertical camera arm above a work surface for top-down filming.",
+      "core_function": "Lock a round or square vertical post to the desk-edge clamp while resisting rotation and sag.",
+      "likely_main_part": "Machined clamp head with desk-clamp interface flange, vertical post bore, split-clamp slot, pinch screw bosses, and anti-rotation keyway.",
+      "why_it_tests_cad_representation": "Tests split clamp mechanics, large bores through compact geometry, keyways, flange transitions, screw bosses, and perpendicular load paths."
+    },
+    {
+      "idea_title": "Lens Support Yoke for 15mm Rod Rig",
+      "product_context": "A support yoke that mounts to standard 15mm rods and cradles a heavy cinema lens beneath the barrel.",
+      "core_function": "Transfer lens weight into the rod system while allowing height adjustment for different lens diameters.",
+      "likely_main_part": "Machined yoke body with twin rod bores, vertical adjustment slot, curved lens saddle, and locking screw lands.",
+      "why_it_tests_cad_representation": "Combines parallel precision bores, curved support surfaces, slotted vertical adjustment, symmetric structure, and contact geometry for cylindrical lenses."
+    },
+    {
+      "idea_title": "Creator Light Stand Cable-Managed Ball Head Adapter",
+      "product_context": "A compact adapter between a small LED panel ball head and a light stand, designed for studio creators who need tidy power routing.",
+      "core_function": "Adapt stand threads to a ball head while guiding the light power cable through a protected side channel.",
+      "likely_main_part": "Machined adapter puck with threaded stand socket, raised ball-head boss, radial cable groove, clamp screw hole, and knurled grip perimeter.",
+      "why_it_tests_cad_representation": "Requires concentric threaded features, radial cable routing, perimeter grip texture, raised bosses, and small-scale clearances around fastening hardware."
+    }
+  ]
+}

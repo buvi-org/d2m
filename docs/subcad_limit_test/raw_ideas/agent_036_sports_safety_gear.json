@@ -1,0 +1,77 @@
+{
+  "agent_number": 36,
+  "domain": "wearable sports safety gear, helmet mounts, protective equipment hardware, and adjustment mechanisms",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "Rotating helmet visor quick-lock hinge",
+      "product_context": "Cycling and skating helmets that need removable or adjustable face shields.",
+      "core_function": "Allows a visor to pivot between raised and lowered positions while locking securely under vibration.",
+      "likely_main_part": "Detented hinge bracket with integrated latch tabs.",
+      "why_it_tests_cad_representation": "Combines rotational clearance, snap-fit retention, asymmetric mounting ears, and repeated small locking features around a curved helmet interface."
+    },
+    {
+      "idea_title": "Sliding goggle strap anchor for protective helmets",
+      "product_context": "Snow, motocross, and field-sport helmets where goggles need stable strap routing.",
+      "core_function": "Captures a goggle strap and lets the anchor slide to tune strap angle without detaching hardware.",
+      "likely_main_part": "Low-profile rail clip with captive sliding loop.",
+      "why_it_tests_cad_representation": "Requires nested sliding geometry, undercuts, strap pass-throughs, stop features, and a mount that conforms to a curved shell."
+    },
+    {
+      "idea_title": "Breakaway action camera helmet mount",
+      "product_context": "Adventure sports helmets that carry accessories but must release during high-force impacts.",
+      "core_function": "Holds a camera during normal motion and separates in a controlled direction during snagging or impact.",
+      "likely_main_part": "Frangible dovetail base with replaceable shear insert.",
+      "why_it_tests_cad_representation": "Tests representation of intentional weak points, keyed sliding interfaces, directional release geometry, and replaceable internal inserts."
+    },
+    {
+      "idea_title": "Indexed chin strap tension dial",
+      "product_context": "Helmets and headguards that need fine strap fit adjustment while worn.",
+      "core_function": "Takes up slack in paired straps through a dial mechanism with tactile indexed positions.",
+      "likely_main_part": "Ratchet dial housing with twin strap spool channels.",
+      "why_it_tests_cad_representation": "Includes concentric moving parts, pawl-and-tooth detail, strap routing tunnels, finger grip texture, and serviceable enclosure seams."
+    },
+    {
+      "idea_title": "Ventilated shin guard impact insert carrier",
+      "product_context": "Soccer, hockey, and martial-arts shin guards using interchangeable impact pads.",
+      "core_function": "Holds a removable protective insert while preserving airflow and keeping the pad aligned against the leg.",
+      "likely_main_part": "Curved perforated carrier shell with flexible retention lips.",
+      "why_it_tests_cad_representation": "Challenges CAD with anatomical curvature, patterned ventilation cutouts, soft-edge retention flanges, and thin protective shell transitions."
+    },
+    {
+      "idea_title": "Modular shoulder pad strap junction",
+      "product_context": "Contact-sport shoulder protection where straps connect shell sections across moving joints.",
+      "core_function": "Joins several straps to a protective shell while allowing limited articulation and quick replacement.",
+      "likely_main_part": "Multi-axis strap yoke with pivoting buckle sockets.",
+      "why_it_tests_cad_representation": "Tests branching load paths, multiple strap slot orientations, pivot bosses, buckle capture geometry, and compact hardware packaging."
+    },
+    {
+      "idea_title": "Helmet rear fit cradle with flex arms",
+      "product_context": "Bike, climbing, and skating helmets that tighten around the back of the head.",
+      "core_function": "Supports the rear head fit system and flexes to accommodate head shape while distributing pressure.",
+      "likely_main_part": "Curved occipital cradle with compliant side arms and adjustment interface.",
+      "why_it_tests_cad_representation": "Requires thin compliant arms, ergonomic curvature, integrated hinge-like flex zones, and attachment points for a separate tension system."
+    },
+    {
+      "idea_title": "Protective glove knuckle bridge",
+      "product_context": "Goalkeeper, motorcycle, and combat-sport gloves with hard knuckle protection.",
+      "core_function": "Spans across knuckles to absorb impact while allowing finger flexion beneath the guard.",
+      "likely_main_part": "Segmented knuckle bridge with living-link relief gaps.",
+      "why_it_tests_cad_representation": "Exercises segmented shell modeling, clearance gaps, organic protective contours, underside standoff ribs, and repeated but non-identical lobes."
+    },
+    {
+      "idea_title": "Clamp-on face cage repair bracket",
+      "product_context": "Hockey, lacrosse, and catcher helmets where a face cage attaches to shell hardware.",
+      "core_function": "Clamps around a cage wire and fastens it to a helmet shell when original tabs are replaced or upgraded.",
+      "likely_main_part": "Split saddle clamp with shell mounting ear and anti-rotation groove.",
+      "why_it_tests_cad_representation": "Tests split-part clamp geometry, cylindrical wire capture, screw boss placement, anti-rotation features, and mixed curved-flat mating surfaces."
+    },
+    {
+      "idea_title": "Pull-tab release buckle guard",
+      "product_context": "Protective vests, pads, and helmets where buckles must be accessible but shielded from accidental release.",
+      "core_function": "Covers a quick-release buckle while leaving a raised pull tab accessible to a gloved hand.",
+      "likely_main_part": "Buckle shroud with guarded pull-tab channel.",
+      "why_it_tests_cad_representation": "Combines protective hooding, ergonomic access openings, strap clearance slots, flexible latch geometry, and collision-sensitive internal spaces."
+    }
+  ]
+}

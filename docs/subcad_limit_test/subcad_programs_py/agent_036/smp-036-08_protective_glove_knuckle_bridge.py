@@ -1,0 +1,30 @@
+# Requirement: SMP-036-08
+# Source agent: 036
+# Source requirements file: docs/subcad_limit_test/single_metal_parts/agent_036_sports_safety_gear_single_metal_parts.json
+# Part: Protective glove knuckle bridge - single metal part
+# Raw idea: Protective glove knuckle bridge
+# Status: draft_unexecuted
+#
+# Coverage notes:
+# - Created rectangular stock at 145 x 40 x 26 mm using material steel_a36.
+# - Drill two through holes diameter 8 mm on the length centerline at X=10 mm and X=135 mm, Y=20 mm.
+# - Machine a central obround slot 48 mm long x 16 mm wide through the part, centered at X=72 mm, Y=20 mm.
+# - Mill a rectangular relief pocket 36 mm x 18 mm x 8 mm deep on the top face, centered between the mounting holes.
+# - Applied a 1.0 mm top-edge chamfer operation.
+#
+# Known gaps:
+# - 0.5 mm chamfers specifically on individual hole and slot mouths are not separately modeled; only the global/top chamfer is included.
+# - Global chamfer operation removed from executable .py because current SubCAD chamfering fails on many complex generated solids; chamfers remain a requirement gap until targeted edge chamfer support is reliable.
+#
+# Review notes:
+# - SubCAD stock is centered at the origin; requirement datum coordinates were converted from lower-left-near X/Y values to centered cx/cy values.
+
+from subcad import Stock
+
+part = (
+    Stock.rectangular(145, 40, 26, material="steel_a36")
+    .drill(diameter=8, cx=-62.5, cy=0, depth=26, through=True)
+    .drill(diameter=8, cx=62.5, cy=0, depth=26, through=True)
+    .slot(length=48, width=16, depth=26, cx=-0.5, cy=0)
+    .pocket(width=18, length=36, depth=8, cx=0, cy=0, corner_radius=0.5)
+)

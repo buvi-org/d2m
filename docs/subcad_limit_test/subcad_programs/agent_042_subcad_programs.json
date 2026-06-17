@@ -1,0 +1,721 @@
+{
+  "agent_number": 42,
+  "source_requirements_file": "docs/subcad_limit_test/single_metal_parts/agent_042_glass_handling_hardware_single_metal_parts.json",
+  "stage": "subcad_program_generation",
+  "programs": [
+    {
+      "requirement_id": "SMP-042-01",
+      "part_name": "Pivoting Vacuum Cup Glass Carrier - single metal part",
+      "source_raw_idea_title": "Pivoting Vacuum Cup Glass Carrier",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(185, 40, 60, material=\"steel_a36\")\n    .drill_at(diameter=9, through=True, from_left=10, from_bottom=20, spot_drill=False)\n    .drill_at(diameter=9, through=True, from_left=175, from_bottom=20, spot_drill=False)\n    .slot_at(length=61, width=11, through=True, from_left=92, from_bottom=20)\n    .pocket_at(width=18, length=46, depth=29, from_left=92, from_bottom=20)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 185 x 40 x 60 mm using steel_a36",
+        "two through mounting holes diameter 9 mm at X=10/175, Y=20",
+        "central obround through slot 61 x 11 mm at X=92, Y=20",
+        "centered top rectangular relief pocket 46 x 18 x 29 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-02",
+      "part_name": "Glazing Bead Press-In Roller - single metal part",
+      "source_raw_idea_title": "Glazing Bead Press-In Roller",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(83, 110, material=\"steel_1045\")\n    .mill_turn_setup(axis=\"Z\")\n    .turn_id(diameter=27, depth=110)\n    .turn_id(diameter=37, depth=3)\n    .pocket(width=27, length=102, depth=2.257, cx=0, cy=0)\n    .threaded_hole(diameter=8, depth=41.5, cx=-19, cy=0)\n    .threaded_hole(diameter=8, depth=41.5, cx=18, cy=0)\n    .slot(length=110, width=6, depth=83, cx=0, cy=0, through=True)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "cylindrical round-bar stock OD 83 mm x length 110 mm using steel_1045",
+        "centered axial through bore diameter 27 mm",
+        "concentric end counterbore diameter 37 mm x 3 mm deep from one accessible end",
+        "longitudinal milled flat proxy 27 mm wide over 102 mm length",
+        "two M8 radial tapped-hole placeholders at axial X=36 and X=73",
+        "full-length split relief slit placeholder width 6 mm",
+        "1.0 mm outside circular-edge chamfer pass"
+      ],
+      "known_gaps": [
+        "Requirement datum uses cylinder axis as X; Stock.cylindrical/turning operations use the native cylindrical axis and should be orientation-reviewed after execution.",
+        "Counterbores are required on both ends; this draft only expresses a generic one-end axial ID enlargement without end selection.",
+        "True tangent flat on cylindrical OD is approximated by a rectangular top pocket/chord cut.",
+        "Radial tapped holes through the top flat are approximated with top-face threaded_hole operations.",
+        "Split slit from outside to axial bore is approximated by a full top-face slot.",
+        "Internal bore-mouth chamfers are not separately targeted; only the later general chamfer is included."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-03",
+      "part_name": "Mirror Clip With Hidden Spring Tongue - single metal part",
+      "source_raw_idea_title": "Mirror Clip With Hidden Spring Tongue",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(155, 90, 3, material=\"steel_a36\")\n    .drill_at(diameter=12, through=True, from_left=18, from_bottom=45, spot_drill=False)\n    .drill_at(diameter=12, through=True, from_left=137, from_bottom=45, spot_drill=False)\n    .slot_at(length=51, width=15, through=True, from_left=77, from_bottom=45)\n    .pocket_at(width=30, length=38, depth=2, from_left=77, from_bottom=45)\n    .groove(length=17, width=90, depth=6, cx=-69, cy=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 155 x 90 x 3 mm using steel_a36",
+        "two through mounting holes diameter 12 mm at X=18/137, Y=45",
+        "central obround through slot 51 x 15 mm at X=77, Y=45",
+        "centered top rectangular relief pocket 38 x 30 x 2 mm deep",
+        "end hook lip/undercut proxy: projection 17 mm, undercut 6 mm",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Leave an integral hook lip on one short end, projecting 17 mm and undercut 6 mm for registration. A projecting integral hook lip is approximated by an end groove within the rectangular envelope.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-04",
+      "part_name": "Glass Edge Corner Protector Clamp - single metal part",
+      "source_raw_idea_title": "Glass Edge Corner Protector Clamp",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(91, 102, material=\"steel_1045\")\n    .mill_turn_setup(axis=\"Z\")\n    .turn_id(diameter=22, depth=102)\n    .turn_id(diameter=32, depth=3)\n    .pocket(width=30, length=94, depth=2.544, cx=0, cy=0)\n    .threaded_hole(diameter=6, depth=45.5, cx=-17, cy=0)\n    .threaded_hole(diameter=6, depth=45.5, cx=17, cy=0)\n    .slot(length=102, width=3, depth=91, cx=0, cy=0, through=True)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "cylindrical round-bar stock OD 91 mm x length 102 mm using steel_1045",
+        "centered axial through bore diameter 22 mm",
+        "concentric end counterbore diameter 32 mm x 3 mm deep from one accessible end",
+        "longitudinal milled flat proxy 30 mm wide over 94 mm length",
+        "two M6 radial tapped-hole placeholders at axial X=34 and X=68",
+        "full-length split relief slit placeholder width 3 mm",
+        "1.0 mm outside circular-edge chamfer pass"
+      ],
+      "known_gaps": [
+        "Requirement datum uses cylinder axis as X; Stock.cylindrical/turning operations use the native cylindrical axis and should be orientation-reviewed after execution.",
+        "Counterbores are required on both ends; this draft only expresses a generic one-end axial ID enlargement without end selection.",
+        "True tangent flat on cylindrical OD is approximated by a rectangular top pocket/chord cut.",
+        "Radial tapped holes through the top flat are approximated with top-face threaded_hole operations.",
+        "Split slit from outside to axial bore is approximated by a full top-face slot.",
+        "Internal bore-mouth chamfers are not separately targeted; only the later general chamfer is included."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-05",
+      "part_name": "Window Sash Alignment Spacer Comb - single metal part",
+      "source_raw_idea_title": "Window Sash Alignment Spacer Comb",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(180, 45, 41, material=\"steel_a36\")\n    .drill_at(diameter=5, through=True, from_left=10, from_bottom=22, spot_drill=False)\n    .drill_at(diameter=5, through=True, from_left=170, from_bottom=22, spot_drill=False)\n    .slot_at(length=60, width=9, through=True, from_left=90, from_bottom=22)\n    .pocket_at(width=18, length=45, depth=2, from_left=90, from_bottom=22)\n    .groove(length=3, width=2.925, depth=3, cx=-88.5, cy=-20.25, angle=90)\n    .groove(length=3, width=2.925, depth=3, cx=-88.5, cy=-15.75, angle=90)\n    .groove(length=3, width=2.925, depth=3, cx=-88.5, cy=-11.25, angle=90)\n    .groove(length=3, width=2.925, depth=3, cx=-88.5, cy=-6.75, angle=90)\n    .groove(length=3, width=2.925, depth=3, cx=-88.5, cy=-2.25, angle=90)\n    .groove(length=3, width=2.925, depth=3, cx=-88.5, cy=2.25, angle=90)\n    .groove(length=3, width=2.925, depth=3, cx=-88.5, cy=6.75, angle=90)\n    .groove(length=3, width=2.925, depth=3, cx=-88.5, cy=11.25, angle=90)\n    .groove(length=3, width=2.925, depth=3, cx=-88.5, cy=15.75, angle=90)\n    .groove(length=3, width=2.925, depth=3, cx=-88.5, cy=20.25, angle=90)\n    .slope_cut(width=45, length=36, start_depth=0, end_depth=31.294, cx=72, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 180 x 45 x 41 mm using steel_a36",
+        "two through mounting holes diameter 5 mm at X=10/170, Y=22",
+        "central obround through slot 60 x 9 mm at X=90, Y=22",
+        "centered top rectangular relief pocket 45 x 18 x 2 mm deep",
+        "10 rear-edge serration positions with 3 mm depth intent",
+        "angled top reference face over last 36 mm using a sloped-floor cut for 41 degree intent",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Triangular serration tooth form is approximated by repeated rectangular groove cuts.",
+        "Angled reference face is represented as a sloped rectangular floor cut rather than a true exterior face reprofile.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-06",
+      "part_name": "Fragile Sheet Dolly Edge Cradle - single metal part",
+      "source_raw_idea_title": "Fragile Sheet Dolly Edge Cradle",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(175, 125, 10, material=\"steel_a36\")\n    .drill_at(diameter=8, through=True, from_left=25, from_bottom=62, spot_drill=False)\n    .drill_at(diameter=8, through=True, from_left=150, from_bottom=62, spot_drill=False)\n    .slot_at(length=58, width=15, through=True, from_left=87, from_bottom=62)\n    .pocket_at(width=41, length=43, depth=1, from_left=87, from_bottom=62)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 175 x 125 x 10 mm using steel_a36",
+        "two through mounting holes diameter 8 mm at X=25/150, Y=62",
+        "central obround through slot 58 x 15 mm at X=87, Y=62",
+        "centered top rectangular relief pocket 43 x 41 x 1 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-07",
+      "part_name": "Glazing Setting Block Inserter - single metal part",
+      "source_raw_idea_title": "Glazing Setting Block Inserter",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(130, 75, 17, material=\"steel_a36\")\n    .drill_at(diameter=7, through=True, from_left=15, from_bottom=37, spot_drill=False)\n    .drill_at(diameter=7, through=True, from_left=115, from_bottom=37, spot_drill=False)\n    .slot_at(length=43, width=16, through=True, from_left=65, from_bottom=37)\n    .pocket_at(width=25, length=32, depth=7, from_left=65, from_bottom=37)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 130 x 75 x 17 mm using steel_a36",
+        "two through mounting holes diameter 7 mm at X=15/115, Y=37",
+        "central obround through slot 43 x 16 mm at X=65, Y=37",
+        "centered top rectangular relief pocket 32 x 25 x 7 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-08",
+      "part_name": "A-Frame Glass Rack Locking Hook - single metal part",
+      "source_raw_idea_title": "A-Frame Glass Rack Locking Hook",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(110, 65, 37, material=\"steel_a36\")\n    .drill_at(diameter=5, through=True, from_left=13, from_bottom=32, spot_drill=False)\n    .drill_at(diameter=5, through=True, from_left=97, from_bottom=32, spot_drill=False)\n    .slot_at(length=36, width=15, through=True, from_left=55, from_bottom=32)\n    .pocket_at(width=21, length=27, depth=14, from_left=55, from_bottom=32)\n    .slope_cut(width=65, length=22, start_depth=0, end_depth=15.405, cx=44, cy=0, slope_axis=\"X\")\n    .groove(length=17, width=65, depth=5, cx=-46.5, cy=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 110 x 65 x 37 mm using steel_a36",
+        "two through mounting holes diameter 5 mm at X=13/97, Y=32",
+        "central obround through slot 36 x 15 mm at X=55, Y=32",
+        "centered top rectangular relief pocket 27 x 21 x 14 mm deep",
+        "angled top reference face over last 22 mm using a sloped-floor cut for 35 degree intent",
+        "end hook lip/undercut proxy: projection 17 mm, undercut 5 mm",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Angled reference face is represented as a sloped rectangular floor cut rather than a true exterior face reprofile.",
+        "Leave an integral hook lip on one short end, projecting 17 mm and undercut 5 mm for registration. A projecting integral hook lip is approximated by an end groove within the rectangular envelope.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-09",
+      "part_name": "Mirror Stand-Off Rosette Mount - single metal part",
+      "source_raw_idea_title": "Mirror Stand-Off Rosette Mount",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(200, 90, 50, material=\"steel_a36\")\n    .drill_at(diameter=11, through=True, from_left=18, from_bottom=45, spot_drill=False)\n    .drill_at(diameter=11, through=True, from_left=182, from_bottom=45, spot_drill=False)\n    .slot_at(length=66, width=8, through=True, from_left=100, from_bottom=45)\n    .pocket_at(width=30, length=50, depth=7, from_left=100, from_bottom=45)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 200 x 90 x 50 mm using steel_a36",
+        "two through mounting holes diameter 11 mm at X=18/182, Y=45",
+        "central obround through slot 66 x 8 mm at X=100, Y=45",
+        "centered top rectangular relief pocket 50 x 30 x 7 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Tap one side hole M10 from the right long edge into the central pocket; hole axis is parallel to Y. SubCAD has no side-entry tapped-hole axis selection in the inspected Stock API, so this side hole is not modeled.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-10",
+      "part_name": "Glass Pane Toe Jack Pad - single metal part",
+      "source_raw_idea_title": "Glass Pane Toe Jack Pad",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(190, 110, 49, material=\"steel_a36\")\n    .drill_at(diameter=9, through=True, from_left=22, from_bottom=55, spot_drill=False)\n    .drill_at(diameter=9, through=True, from_left=168, from_bottom=55, spot_drill=False)\n    .slot_at(length=63, width=10, through=True, from_left=95, from_bottom=55)\n    .pocket_at(width=36, length=47, depth=7, from_left=95, from_bottom=55)\n    .groove(length=9, width=110, depth=6, cx=-90.5, cy=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 190 x 110 x 49 mm using steel_a36",
+        "two through mounting holes diameter 9 mm at X=22/168, Y=55",
+        "central obround through slot 63 x 10 mm at X=95, Y=55",
+        "centered top rectangular relief pocket 47 x 36 x 7 mm deep",
+        "end hook lip/undercut proxy: projection 9 mm, undercut 6 mm",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Leave an integral hook lip on one short end, projecting 9 mm and undercut 6 mm for registration. A projecting integral hook lip is approximated by an end groove within the rectangular envelope.",
+        "Tap one side hole M9 from the right long edge into the central pocket; hole axis is parallel to Y. SubCAD has no side-entry tapped-hole axis selection in the inspected Stock API, so this side hole is not modeled.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-11",
+      "part_name": "Window Corner Silicone Smoothing Guide - single metal part",
+      "source_raw_idea_title": "Window Corner Silicone Smoothing Guide",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(135, 115, 54, material=\"steel_a36\")\n    .drill_at(diameter=10, through=True, from_left=23, from_bottom=57, spot_drill=False)\n    .drill_at(diameter=10, through=True, from_left=112, from_bottom=57, spot_drill=False)\n    .slot_at(length=45, width=14, through=True, from_left=67, from_bottom=57)\n    .pocket_at(width=38, length=33, depth=9, from_left=67, from_bottom=57)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 135 x 115 x 54 mm using steel_a36",
+        "two through mounting holes diameter 10 mm at X=23/112, Y=57",
+        "central obround through slot 45 x 14 mm at X=67, Y=57",
+        "centered top rectangular relief pocket 33 x 38 x 9 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-12",
+      "part_name": "Glass Sheet Separation Wedge Pair - single metal part",
+      "source_raw_idea_title": "Glass Sheet Separation Wedge Pair",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(205, 65, 5, material=\"steel_a36\")\n    .drill_at(diameter=7, through=True, from_left=13, from_bottom=32, spot_drill=False)\n    .drill_at(diameter=7, through=True, from_left=192, from_bottom=32, spot_drill=False)\n    .slot_at(length=68, width=15, through=True, from_left=102, from_bottom=32)\n    .pocket_at(width=21, length=51, depth=1, from_left=102, from_bottom=32)\n    .slope_cut(width=65, length=41, start_depth=0, end_depth=4.5, cx=82, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 205 x 65 x 5 mm using steel_a36",
+        "two through mounting holes diameter 7 mm at X=13/192, Y=32",
+        "central obround through slot 68 x 15 mm at X=102, Y=32",
+        "centered top rectangular relief pocket 51 x 21 x 1 mm deep",
+        "angled top reference face over last 41 mm using a sloped-floor cut for 18 degree intent",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Angled reference face is represented as a sloped rectangular floor cut rather than a true exterior face reprofile.",
+        "Computed 18 degree slope over 41 mm would remove 13.322 mm, exceeding the 5 mm stock height; draft clamps slope depth to 4.5 mm.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-13",
+      "part_name": "Glazier Point Push Tool - single metal part",
+      "source_raw_idea_title": "Glazier Point Push Tool",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(210, 115, 36, material=\"steel_1045\")\n    .drill_at(diameter=6, through=True, from_left=23, from_bottom=57, spot_drill=False)\n    .drill_at(diameter=6, through=True, from_left=187, from_bottom=57, spot_drill=False)\n    .slot_at(length=70, width=13, through=True, from_left=105, from_bottom=57)\n    .pocket_at(width=38, length=52, depth=2, from_left=105, from_bottom=57)\n    .slope_cut(width=115, length=42, start_depth=0, end_depth=35.5, cx=84, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 210 x 115 x 36 mm using steel_1045",
+        "two through mounting holes diameter 6 mm at X=23/187, Y=57",
+        "central obround through slot 70 x 13 mm at X=105, Y=57",
+        "centered top rectangular relief pocket 52 x 38 x 2 mm deep",
+        "angled top reference face over last 42 mm using a sloped-floor cut for 42 degree intent",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Angled reference face is represented as a sloped rectangular floor cut rather than a true exterior face reprofile.",
+        "Computed 42 degree slope over 42 mm would remove 37.817 mm, exceeding the 36 mm stock height; draft clamps slope depth to 35.5 mm.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-14",
+      "part_name": "Glass Lifter Pump Guard Cage - single metal part",
+      "source_raw_idea_title": "Glass Lifter Pump Guard Cage",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(55, 62, material=\"steel_a36\")\n    .mill_turn_setup(axis=\"Z\")\n    .turn_id(diameter=18, depth=62)\n    .turn_id(diameter=28, depth=3)\n    .pocket(width=18, length=54, depth=1.514, cx=0, cy=0)\n    .threaded_hole(diameter=8, depth=27.5, cx=-11, cy=0)\n    .threaded_hole(diameter=8, depth=27.5, cx=10, cy=0)\n    .slot(length=62, width=5, depth=55, cx=0, cy=0, through=True)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "cylindrical round-bar stock OD 55 mm x length 62 mm using steel_a36",
+        "centered axial through bore diameter 18 mm",
+        "concentric end counterbore diameter 28 mm x 3 mm deep from one accessible end",
+        "longitudinal milled flat proxy 18 mm wide over 54 mm length",
+        "two M8 radial tapped-hole placeholders at axial X=20 and X=41",
+        "full-length split relief slit placeholder width 5 mm",
+        "1.0 mm outside circular-edge chamfer pass"
+      ],
+      "known_gaps": [
+        "Requirement datum uses cylinder axis as X; Stock.cylindrical/turning operations use the native cylindrical axis and should be orientation-reviewed after execution.",
+        "Counterbores are required on both ends; this draft only expresses a generic one-end axial ID enlargement without end selection.",
+        "True tangent flat on cylindrical OD is approximated by a rectangular top pocket/chord cut.",
+        "Radial tapped holes through the top flat are approximated with top-face threaded_hole operations.",
+        "Split slit from outside to axial bore is approximated by a full top-face slot.",
+        "Internal bore-mouth chamfers are not separately targeted; only the later general chamfer is included."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-15",
+      "part_name": "Sliding Door Glass Stop Bracket - single metal part",
+      "source_raw_idea_title": "Sliding Door Glass Stop Bracket",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(85, 75, 4, material=\"steel_a36\")\n    .drill_at(diameter=5, through=True, from_left=15, from_bottom=37, spot_drill=False)\n    .drill_at(diameter=5, through=True, from_left=70, from_bottom=37, spot_drill=False)\n    .slot_at(length=30, width=12, through=True, from_left=42, from_bottom=37)\n    .pocket_at(width=25, length=25, depth=1, from_left=42, from_bottom=37)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 85 x 75 x 4 mm using steel_a36",
+        "two through mounting holes diameter 5 mm at X=15/70, Y=37",
+        "central obround through slot 30 x 12 mm at X=42, Y=37",
+        "centered top rectangular relief pocket 25 x 25 x 1 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-16",
+      "part_name": "Mirror Backing Pad Locator - single metal part",
+      "source_raw_idea_title": "Mirror Backing Pad Locator",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(160, 135, 4, material=\"steel_a36\")\n    .drill_at(diameter=7, through=True, from_left=27, from_bottom=67, spot_drill=False)\n    .drill_at(diameter=7, through=True, from_left=133, from_bottom=67, spot_drill=False)\n    .slot_at(length=53, width=10, through=True, from_left=80, from_bottom=67)\n    .pocket_at(width=45, length=40, depth=1, from_left=80, from_bottom=67)\n    .groove(length=13, width=135, depth=2, cx=-73.5, cy=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 160 x 135 x 4 mm using steel_a36",
+        "two through mounting holes diameter 7 mm at X=27/133, Y=67",
+        "central obround through slot 53 x 10 mm at X=80, Y=67",
+        "centered top rectangular relief pocket 40 x 45 x 1 mm deep",
+        "end hook lip/undercut proxy: projection 13 mm, undercut 2 mm",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Leave an integral hook lip on one short end, projecting 13 mm and undercut 2 mm for registration. A projecting integral hook lip is approximated by an end groove within the rectangular envelope.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-17",
+      "part_name": "Window Frame Glass Clamp Foot - single metal part",
+      "source_raw_idea_title": "Window Frame Glass Clamp Foot",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(150, 115, 49, material=\"steel_1045\")\n    .drill_at(diameter=13, through=True, from_left=23, from_bottom=57, spot_drill=False)\n    .drill_at(diameter=13, through=True, from_left=127, from_bottom=57, spot_drill=False)\n    .slot_at(length=50, width=7, through=True, from_left=75, from_bottom=57)\n    .pocket_at(width=38, length=37, depth=21, from_left=75, from_bottom=57)\n    .groove(length=5, width=10.679, depth=5, cx=-72.5, cy=-49.286, angle=90)\n    .groove(length=5, width=10.679, depth=5, cx=-72.5, cy=-32.857, angle=90)\n    .groove(length=5, width=10.679, depth=5, cx=-72.5, cy=-16.429, angle=90)\n    .groove(length=5, width=10.679, depth=5, cx=-72.5, cy=0, angle=90)\n    .groove(length=5, width=10.679, depth=5, cx=-72.5, cy=16.429, angle=90)\n    .groove(length=5, width=10.679, depth=5, cx=-72.5, cy=32.857, angle=90)\n    .groove(length=5, width=10.679, depth=5, cx=-72.5, cy=49.286, angle=90)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 150 x 115 x 49 mm using steel_1045",
+        "two through mounting holes diameter 13 mm at X=23/127, Y=57",
+        "central obround through slot 50 x 7 mm at X=75, Y=57",
+        "centered top rectangular relief pocket 37 x 38 x 21 mm deep",
+        "7 rear-edge serration positions with 5 mm depth intent",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Triangular serration tooth form is approximated by repeated rectangular groove cuts.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-18",
+      "part_name": "Insulated Glass Unit Edge Vent Plug Tool - single metal part",
+      "source_raw_idea_title": "Insulated Glass Unit Edge Vent Plug Tool",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(40, 31, material=\"steel_1045\")\n    .mill_turn_setup(axis=\"Z\")\n    .turn_id(diameter=8, depth=31)\n    .turn_id(diameter=18, depth=3)\n    .pocket(width=13, length=23, depth=1.086, cx=0, cy=0)\n    .threaded_hole(diameter=5, depth=20, cx=-5.5, cy=0)\n    .threaded_hole(diameter=5, depth=20, cx=4.5, cy=0)\n    .slot(length=31, width=6, depth=40, cx=0, cy=0, through=True)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "cylindrical round-bar stock OD 40 mm x length 31 mm using steel_1045",
+        "centered axial through bore diameter 8 mm",
+        "concentric end counterbore diameter 18 mm x 3 mm deep from one accessible end",
+        "longitudinal milled flat proxy 13 mm wide over 23 mm length",
+        "two M5 radial tapped-hole placeholders at axial X=10 and X=20",
+        "full-length split relief slit placeholder width 6 mm",
+        "1.0 mm outside circular-edge chamfer pass"
+      ],
+      "known_gaps": [
+        "Requirement calls for 4140 alloy steel, prehard; allowed Stage 3 material keys do not include 4140, so this draft uses steel_1045 as the closest available steel key.",
+        "Requirement datum uses cylinder axis as X; Stock.cylindrical/turning operations use the native cylindrical axis and should be orientation-reviewed after execution.",
+        "Counterbores are required on both ends; this draft only expresses a generic one-end axial ID enlargement without end selection.",
+        "True tangent flat on cylindrical OD is approximated by a rectangular top pocket/chord cut.",
+        "Radial tapped holes through the top flat are approximated with top-face threaded_hole operations.",
+        "Split slit from outside to axial bore is approximated by a full top-face slot.",
+        "Internal bore-mouth chamfers are not separately targeted; only the later general chamfer is included."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-19",
+      "part_name": "Fragile Sheet Carry Strap Corner Saddle - single metal part",
+      "source_raw_idea_title": "Fragile Sheet Carry Strap Corner Saddle",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(195, 135, 11, material=\"steel_a36\")\n    .drill_at(diameter=5, through=True, from_left=27, from_bottom=67, spot_drill=False)\n    .drill_at(diameter=5, through=True, from_left=168, from_bottom=67, spot_drill=False)\n    .slot_at(length=65, width=17, through=True, from_left=97, from_bottom=67)\n    .pocket_at(width=45, length=48, depth=4, from_left=97, from_bottom=67)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 195 x 135 x 11 mm using steel_a36",
+        "two through mounting holes diameter 5 mm at X=27/168, Y=67",
+        "central obround through slot 65 x 17 mm at X=97, Y=67",
+        "centered top rectangular relief pocket 48 x 45 x 4 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-20",
+      "part_name": "Glass Cutting Oil Reservoir Cap - single metal part",
+      "source_raw_idea_title": "Glass Cutting Oil Reservoir Cap",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(30, 58, material=\"steel_a36\")\n    .mill_turn_setup(axis=\"Z\")\n    .turn_id(diameter=8, depth=58)\n    .turn_id(diameter=18, depth=3)\n    .pocket(width=10, length=50, depth=0.858, cx=0, cy=0)\n    .threaded_hole(diameter=8, depth=15, cx=-10, cy=0)\n    .threaded_hole(diameter=8, depth=15, cx=9, cy=0)\n    .slot(length=58, width=3, depth=30, cx=0, cy=0, through=True)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "cylindrical round-bar stock OD 30 mm x length 58 mm using steel_a36",
+        "centered axial through bore diameter 8 mm",
+        "concentric end counterbore diameter 18 mm x 3 mm deep from one accessible end",
+        "longitudinal milled flat proxy 10 mm wide over 50 mm length",
+        "two M8 radial tapped-hole placeholders at axial X=19 and X=38",
+        "full-length split relief slit placeholder width 3 mm",
+        "1.0 mm outside circular-edge chamfer pass"
+      ],
+      "known_gaps": [
+        "Requirement datum uses cylinder axis as X; Stock.cylindrical/turning operations use the native cylindrical axis and should be orientation-reviewed after execution.",
+        "Counterbores are required on both ends; this draft only expresses a generic one-end axial ID enlargement without end selection.",
+        "True tangent flat on cylindrical OD is approximated by a rectangular top pocket/chord cut.",
+        "Radial tapped holes through the top flat are approximated with top-face threaded_hole operations.",
+        "Split slit from outside to axial bore is approximated by a full top-face slot.",
+        "Internal bore-mouth chamfers are not separately targeted; only the later general chamfer is included."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-21",
+      "part_name": "Glass Shelf Pin With Clear Cushion - single metal part",
+      "source_raw_idea_title": "Glass Shelf Pin With Clear Cushion",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(46, 103, material=\"steel_a36\")\n    .mill_turn_setup(axis=\"Z\")\n    .turn_id(diameter=15, depth=103)\n    .turn_id(diameter=25, depth=3)\n    .pocket(width=15, length=95, depth=1.257, cx=0, cy=0)\n    .threaded_hole(diameter=6, depth=23, cx=-17.5, cy=0)\n    .threaded_hole(diameter=6, depth=23, cx=16.5, cy=0)\n    .slot(length=103, width=4, depth=46, cx=0, cy=0, through=True)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "cylindrical round-bar stock OD 46 mm x length 103 mm using steel_a36",
+        "centered axial through bore diameter 15 mm",
+        "concentric end counterbore diameter 25 mm x 3 mm deep from one accessible end",
+        "longitudinal milled flat proxy 15 mm wide over 95 mm length",
+        "two M6 radial tapped-hole placeholders at axial X=34 and X=68",
+        "full-length split relief slit placeholder width 4 mm",
+        "1.0 mm outside circular-edge chamfer pass"
+      ],
+      "known_gaps": [
+        "Requirement datum uses cylinder axis as X; Stock.cylindrical/turning operations use the native cylindrical axis and should be orientation-reviewed after execution.",
+        "Counterbores are required on both ends; this draft only expresses a generic one-end axial ID enlargement without end selection.",
+        "True tangent flat on cylindrical OD is approximated by a rectangular top pocket/chord cut.",
+        "Radial tapped holes through the top flat are approximated with top-face threaded_hole operations.",
+        "Split slit from outside to axial bore is approximated by a full top-face slot.",
+        "Internal bore-mouth chamfers are not separately targeted; only the later general chamfer is included."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-22",
+      "part_name": "Glazing Tape Corner Applicator - single metal part",
+      "source_raw_idea_title": "Glazing Tape Corner Applicator",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(69, 66, material=\"steel_a36\")\n    .mill_turn_setup(axis=\"Z\")\n    .turn_id(diameter=23, depth=66)\n    .turn_id(diameter=33, depth=3)\n    .pocket(width=23, length=58, depth=1.973, cx=0, cy=0)\n    .threaded_hole(diameter=8, depth=34.5, cx=-11, cy=0)\n    .threaded_hole(diameter=8, depth=34.5, cx=11, cy=0)\n    .slot(length=66, width=5, depth=69, cx=0, cy=0, through=True)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "cylindrical round-bar stock OD 69 mm x length 66 mm using steel_a36",
+        "centered axial through bore diameter 23 mm",
+        "concentric end counterbore diameter 33 mm x 3 mm deep from one accessible end",
+        "longitudinal milled flat proxy 23 mm wide over 58 mm length",
+        "two M8 radial tapped-hole placeholders at axial X=22 and X=44",
+        "full-length split relief slit placeholder width 5 mm",
+        "1.0 mm outside circular-edge chamfer pass"
+      ],
+      "known_gaps": [
+        "Requirement datum uses cylinder axis as X; Stock.cylindrical/turning operations use the native cylindrical axis and should be orientation-reviewed after execution.",
+        "Counterbores are required on both ends; this draft only expresses a generic one-end axial ID enlargement without end selection.",
+        "True tangent flat on cylindrical OD is approximated by a rectangular top pocket/chord cut.",
+        "Radial tapped holes through the top flat are approximated with top-face threaded_hole operations.",
+        "Split slit from outside to axial bore is approximated by a full top-face slot.",
+        "Internal bore-mouth chamfers are not separately targeted; only the later general chamfer is included."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-23",
+      "part_name": "Mirror Hanging Rail End Stop - single metal part",
+      "source_raw_idea_title": "Mirror Hanging Rail End Stop",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(240, 100, 8, material=\"steel_a36\")\n    .drill_at(diameter=5, through=True, from_left=20, from_bottom=50, spot_drill=False)\n    .drill_at(diameter=5, through=True, from_left=220, from_bottom=50, spot_drill=False)\n    .slot_at(length=80, width=11, through=True, from_left=120, from_bottom=50)\n    .pocket_at(width=33, length=60, depth=1, from_left=120, from_bottom=50)\n    .groove(length=7, width=100, depth=2, cx=-116.5, cy=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 240 x 100 x 8 mm using steel_a36",
+        "two through mounting holes diameter 5 mm at X=20/220, Y=50",
+        "central obround through slot 80 x 11 mm at X=120, Y=50",
+        "centered top rectangular relief pocket 60 x 33 x 1 mm deep",
+        "end hook lip/undercut proxy: projection 7 mm, undercut 2 mm",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Leave an integral hook lip on one short end, projecting 7 mm and undercut 2 mm for registration. A projecting integral hook lip is approximated by an end groove within the rectangular envelope.",
+        "Tap one side hole M8 from the right long edge into the central pocket; hole axis is parallel to Y. SubCAD has no side-entry tapped-hole axis selection in the inspected Stock API, so this side hole is not modeled.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-24",
+      "part_name": "Glass Washer Rack Finger Insert - single metal part",
+      "source_raw_idea_title": "Glass Washer Rack Finger Insert",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(195, 85, 69, material=\"steel_a36\")\n    .drill_at(diameter=7, through=True, from_left=17, from_bottom=42, spot_drill=False)\n    .drill_at(diameter=7, through=True, from_left=178, from_bottom=42, spot_drill=False)\n    .slot_at(length=65, width=10, through=True, from_left=97, from_bottom=42)\n    .pocket_at(width=28, length=48, depth=14, from_left=97, from_bottom=42)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 195 x 85 x 69 mm using steel_a36",
+        "two through mounting holes diameter 7 mm at X=17/178, Y=42",
+        "central obround through slot 65 x 10 mm at X=97, Y=42",
+        "centered top rectangular relief pocket 48 x 28 x 14 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-25",
+      "part_name": "Window Pane Removal Suction Pry Tool - single metal part",
+      "source_raw_idea_title": "Window Pane Removal Suction Pry Tool",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(135, 125, 8, material=\"steel_a36\")\n    .drill_at(diameter=11, through=True, from_left=25, from_bottom=62, spot_drill=False)\n    .drill_at(diameter=11, through=True, from_left=110, from_bottom=62, spot_drill=False)\n    .slot_at(length=45, width=10, through=True, from_left=67, from_bottom=62)\n    .pocket_at(width=41, length=33, depth=2, from_left=67, from_bottom=62)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 135 x 125 x 8 mm using steel_a36",
+        "two through mounting holes diameter 11 mm at X=25/110, Y=62",
+        "central obround through slot 45 x 10 mm at X=67, Y=62",
+        "centered top rectangular relief pocket 33 x 41 x 2 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-26",
+      "part_name": "Glass Edge Inspection Light Clip - single metal part",
+      "source_raw_idea_title": "Glass Edge Inspection Light Clip",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(135, 50, 3, material=\"steel_a36\")\n    .drill_at(diameter=7, through=True, from_left=10, from_bottom=25, spot_drill=False)\n    .drill_at(diameter=7, through=True, from_left=125, from_bottom=25, spot_drill=False)\n    .slot_at(length=45, width=13, through=True, from_left=67, from_bottom=25)\n    .pocket_at(width=18, length=33, depth=2, from_left=67, from_bottom=25)\n    .slope_cut(width=50, length=27, start_depth=0, end_depth=2.5, cx=54, cy=0, slope_axis=\"X\")\n    .groove(length=18, width=50, depth=2, cx=-58.5, cy=0)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 135 x 50 x 3 mm using steel_a36",
+        "two through mounting holes diameter 7 mm at X=10/125, Y=25",
+        "central obround through slot 45 x 13 mm at X=67, Y=25",
+        "centered top rectangular relief pocket 33 x 18 x 2 mm deep",
+        "angled top reference face over last 27 mm using a sloped-floor cut for 27 degree intent",
+        "end hook lip/undercut proxy: projection 18 mm, undercut 2 mm",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Angled reference face is represented as a sloped rectangular floor cut rather than a true exterior face reprofile.",
+        "Computed 27 degree slope over 27 mm would remove 13.757 mm, exceeding the 3 mm stock height; draft clamps slope depth to 2.5 mm.",
+        "Leave an integral hook lip on one short end, projecting 18 mm and undercut 2 mm for registration. A projecting integral hook lip is approximated by an end groove within the rectangular envelope.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-27",
+      "part_name": "Mirror Mount Anti-Twist Washer - single metal part",
+      "source_raw_idea_title": "Mirror Mount Anti-Twist Washer",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(80, 65, 44, material=\"steel_a36\")\n    .drill_at(diameter=13, through=True, from_left=13, from_bottom=32, spot_drill=False)\n    .drill_at(diameter=13, through=True, from_left=67, from_bottom=32, spot_drill=False)\n    .slot_at(length=30, width=14, through=True, from_left=40, from_bottom=32)\n    .pocket_at(width=21, length=25, depth=20, from_left=40, from_bottom=32)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 80 x 65 x 44 mm using steel_a36",
+        "two through mounting holes diameter 13 mm at X=13/67, Y=32",
+        "central obround through slot 30 x 14 mm at X=40, Y=32",
+        "centered top rectangular relief pocket 25 x 21 x 20 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-28",
+      "part_name": "Glazier Horseshoe Shim Dispenser - single metal part",
+      "source_raw_idea_title": "Glazier Horseshoe Shim Dispenser",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(195, 95, 19, material=\"steel_a36\")\n    .drill_at(diameter=6, through=True, from_left=19, from_bottom=47, spot_drill=False)\n    .drill_at(diameter=6, through=True, from_left=176, from_bottom=47, spot_drill=False)\n    .slot_at(length=65, width=11, through=True, from_left=97, from_bottom=47)\n    .pocket_at(width=31, length=48, depth=3, from_left=97, from_bottom=47)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 195 x 95 x 19 mm using steel_a36",
+        "two through mounting holes diameter 6 mm at X=19/176, Y=47",
+        "central obround through slot 65 x 11 mm at X=97, Y=47",
+        "centered top rectangular relief pocket 48 x 31 x 3 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-29",
+      "part_name": "Fragile Sheet Truck Side Retainer - single metal part",
+      "source_raw_idea_title": "Fragile Sheet Truck Side Retainer",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(230, 115, 12, material=\"steel_a36\")\n    .drill_at(diameter=8, through=True, from_left=23, from_bottom=57, spot_drill=False)\n    .drill_at(diameter=8, through=True, from_left=207, from_bottom=57, spot_drill=False)\n    .slot_at(length=76, width=13, through=True, from_left=115, from_bottom=57)\n    .pocket_at(width=38, length=57, depth=3, from_left=115, from_bottom=57)\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 230 x 115 x 12 mm using steel_a36",
+        "two through mounting holes diameter 8 mm at X=23/207, Y=57",
+        "central obround through slot 76 x 13 mm at X=115, Y=57",
+        "centered top rectangular relief pocket 57 x 38 x 3 mm deep",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    },
+    {
+      "requirement_id": "SMP-042-30",
+      "part_name": "Window Spacer Frame Corner Crimper - single metal part",
+      "source_raw_idea_title": "Window Spacer Frame Corner Crimper",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(75, 70, 20, material=\"steel_a36\")\n    .drill_at(diameter=11, through=True, from_left=14, from_bottom=35, spot_drill=False)\n    .drill_at(diameter=11, through=True, from_left=61, from_bottom=35, spot_drill=False)\n    .slot_at(length=30, width=10, through=True, from_left=37, from_bottom=35)\n    .pocket_at(width=23, length=25, depth=1, from_left=37, from_bottom=35)\n    .slope_cut(width=70, length=18, start_depth=0, end_depth=9.571, cx=28.5, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)",
+      "coverage_notes": [
+        "rectangular stock envelope 75 x 70 x 20 mm using steel_a36",
+        "two through mounting holes diameter 11 mm at X=14/61, Y=35",
+        "central obround through slot 30 x 10 mm at X=37, Y=35",
+        "centered top rectangular relief pocket 25 x 23 x 1 mm deep",
+        "angled top reference face over last 18 mm using a sloped-floor cut for 28 degree intent",
+        "1.0 mm top outside chamfer pass"
+      ],
+      "known_gaps": [
+        "Angled reference face is represented as a sloped rectangular floor cut rather than a true exterior face reprofile.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately targeted by this draft."
+      ],
+      "review_notes": [
+        "Draft generated from frozen Stage 2 requirement and not executed or visually compared yet.",
+        "Rectangular/sheet X/Y feature placement uses drill_at/slot_at/pocket_at datum offsets from the lower-left requirement origin where applicable."
+      ]
+    }
+  ]
+}

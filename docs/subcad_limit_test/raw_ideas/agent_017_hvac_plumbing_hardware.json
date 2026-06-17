@@ -1,0 +1,79 @@
+{
+  "agent_number": 17,
+  "agent_id": "019ecede-bef9-7e92-a5ae-3bd87ee3cea4",
+  "domain": "HVAC, plumbing, pump fittings, valve accessories, and building-service mechanical hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Flanged Pump Suction Diffuser Body",
+      "product_context": "Inline centrifugal pump installations in HVAC chilled-water or condenser-water loops.",
+      "core_function": "Straightens inlet flow, captures debris, and provides a compact transition between piping and pump suction flange.",
+      "likely_main_part": "Cast or machined diffuser housing with offset inlet, flanged outlet, internal strainer seat, drain boss, and removable access cover interface.",
+      "why_it_tests_cad_representation": "Combines non-coaxial pipe transitions, flange bolt patterns, internal seating geometry, angled flow passages, bosses, and service-cover features in one part."
+    },
+    {
+      "idea_title": "Grooved Pipe Butterfly Valve Gearbox Mount Yoke",
+      "product_context": "Valve accessory used on grooved-end butterfly valves in building-service water systems.",
+      "core_function": "Supports and aligns a manual gearbox or actuator above the valve stem while transferring torque into the valve shaft.",
+      "likely_main_part": "Machined bridge yoke with stem bore, actuator bolt pattern, curved saddle underside, anti-rotation lugs, and clearance pockets.",
+      "why_it_tests_cad_representation": "Requires accurate coaxial shaft features, mixed circular and rectangular mounting patterns, curved mating surfaces, pockets, and orientation-critical lugs."
+    },
+    {
+      "idea_title": "Condensate Trap Cleanout Union Body",
+      "product_context": "HVAC air-handler condensate drain piping where traps require maintenance access.",
+      "core_function": "Forms a water-seal trap section with a removable cleanout connection for clearing sludge or biological buildup.",
+      "likely_main_part": "Machined U-trap body with threaded pipe ends, raised cleanout boss, plug seat, internal curved passage, and wrench flats.",
+      "why_it_tests_cad_representation": "Tests swept internal fluid paths, threaded cylindrical interfaces, offset service bosses, sealing shoulders, and flats on otherwise rounded plumbing geometry."
+    },
+    {
+      "idea_title": "Balancing Valve Memory Stop Collar",
+      "product_context": "Hydronic balancing valves used to set and preserve flow positions in HVAC distribution branches.",
+      "core_function": "Locks a valve handwheel or stem at a calibrated preset position after commissioning.",
+      "likely_main_part": "Split collar with indexed arc scale, clamp screw ears, stem bore, stop tab, and small detent pockets.",
+      "why_it_tests_cad_representation": "Includes split-ring geometry, fine angular indexing, asymmetric clamp ears, small repeated detents, and functional interference-control features."
+    },
+    {
+      "idea_title": "Pump Seal Flush Port Manifold Block",
+      "product_context": "Auxiliary fitting for mechanical seal cooling or flushing on HVAC and plumbing booster pumps.",
+      "core_function": "Routes a controlled flush line between pump casing, seal chamber, drain, and instrumentation ports.",
+      "likely_main_part": "Compact machined manifold block with intersecting drilled passages, threaded ports on multiple faces, mounting holes, and plug bosses.",
+      "why_it_tests_cad_representation": "Challenges CAD representation with hidden intersecting bores, multi-face port orientation, sealing spotfaces, plugs, and precise passage relationships."
+    },
+    {
+      "idea_title": "Duct-Mounted Static Pressure Probe Compression Fitting",
+      "product_context": "HVAC duct pressure sensing for VAV systems and air-handling unit controls.",
+      "core_function": "Holds and seals a small pressure probe tube through sheet-metal duct wall while allowing depth adjustment.",
+      "likely_main_part": "Machined compression fitting body with duct-side flange, tapered ferrule seat, probe bore, locking nut thread, and gasket groove.",
+      "why_it_tests_cad_representation": "Mixes thin-wall mounting flange geometry, concentric sealing cones, external threads, small through-bores, and gasket retention details."
+    },
+    {
+      "idea_title": "Strainer Blowdown Valve Adapter Elbow",
+      "product_context": "Y-strainers and basket strainers in pump rooms requiring piped blowdown connections.",
+      "core_function": "Adapts a strainer drain port to an angled valve outlet while maintaining wrench access and clearance from the strainer body.",
+      "likely_main_part": "Machined 45-degree elbow adapter with male inlet thread, female outlet thread, hex wrench section, drain passage, and sealing shoulder.",
+      "why_it_tests_cad_representation": "Tests angled cylindrical passages, compound threaded ends, hex-to-round transitions, sealing faces, and realistic service-clearance geometry."
+    },
+    {
+      "idea_title": "Pressure Reducing Valve Pilot Tubing Bracket",
+      "product_context": "Valve accessory for pilot-operated pressure reducing valves in domestic water booster systems.",
+      "core_function": "Positions and protects small pilot tubing and fittings around the main valve body.",
+      "likely_main_part": "Formed or machined standoff bracket with valve-body saddle, tube clamp channels, slotted mounting holes, and raised protective ribs.",
+      "why_it_tests_cad_representation": "Represents a context-specific bracket with curved saddle fit, narrow tube-retention features, slots, ribs, and installation-driven asymmetry."
+    },
+    {
+      "idea_title": "Grooved Coupling Sprinkler Drain Test Port Insert",
+      "product_context": "Building-service fire protection or plumbing test assemblies using grooved mechanical couplings.",
+      "core_function": "Adds a small drain or test-gauge connection at a grooved pipe joint without adding a full tee fitting.",
+      "likely_main_part": "Curved coupling insert segment with pipe-radius underside, grooved-joint sealing land, threaded radial port, and anti-slip shoulders.",
+      "why_it_tests_cad_representation": "Requires partial cylindrical shell geometry, radial boss placement, groove-compatible sealing surfaces, and small threaded penetrations through curved walls."
+    },
+    {
+      "idea_title": "Air Separator Vent Float Chamber Cap",
+      "product_context": "Hydronic air separators in HVAC mechanical rooms with automatic air vent assemblies.",
+      "core_function": "Closes the float chamber, supports the vent mechanism, and provides threaded service and outlet connections.",
+      "likely_main_part": "Machined domed cap with large sealing flange, central vent boss, internal float clearance cavity, small outlet thread, and wrench flats.",
+      "why_it_tests_cad_representation": "Combines external dome contours, internal cavity constraints, sealing flanges, concentric and eccentric bosses, threads, flats, and serviceable assembly interfaces."
+    }
+  ]
+}

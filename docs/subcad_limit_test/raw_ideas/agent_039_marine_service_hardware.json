@@ -1,0 +1,217 @@
+{
+  "agent_number": 39,
+  "domain": "marine engine service, boat deck hardware, rigging tools, bilge systems, and dock equipment",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "Outboard Lower Unit Service Cradle",
+      "product_context": "Marine mechanics need a stable bench fixture for handling removed outboard lower units during inspection, draining, seal work, and reassembly.",
+      "core_function": "Support an irregular engine gearcase in several service orientations while keeping drain points, skeg, prop shaft area, and fastener zones accessible.",
+      "likely_main_part": "Contoured cradle frame with adjustable padded supports and clampable mounting base.",
+      "why_it_tests_cad_representation": "Requires representing asymmetric organic support contact, tilted service positions, clearance windows, and fixture adjustability without relying on simple block-like geometry."
+    },
+    {
+      "idea_title": "Portable Propeller Puller With Hub Guard",
+      "product_context": "Boat yards often remove stubborn propellers from shafts while trying to avoid damage to blades, hubs, threads, and nearby running gear.",
+      "core_function": "Apply controlled pulling force around a propeller hub while shielding vulnerable surfaces and keeping the tool centered on the shaft.",
+      "likely_main_part": "Yoke-style puller body with protective hub cup and sliding reaction arms.",
+      "why_it_tests_cad_representation": "Challenges CAD with radial symmetry, curved blade clearance, movable arms, nested protective surfaces, and force-path readability."
+    },
+    {
+      "idea_title": "Deck Cleat Load Spreader Backing Plate",
+      "product_context": "Boat owners retrofit or service deck cleats where underside access is awkward and the deck laminate needs broader load distribution.",
+      "core_function": "Spread cleat fastener loads below a deck while adapting to underside curvature and allowing tool access around nearby obstructions.",
+      "likely_main_part": "Curved backing plate with captive fastener features and edge relief cutouts.",
+      "why_it_tests_cad_representation": "Tests curved thin-plate forms, underside installation constraints, countersunk or captive hardware features, and non-rectangular relief geometry."
+    },
+    {
+      "idea_title": "Flush Hatch Latch Service Jig",
+      "product_context": "Marine technicians replace flush deck hatch latches where alignment between the latch barrel, gasket compression, and strike plate is difficult to judge.",
+      "core_function": "Hold hatch latch components in the correct relationship while marking, drilling, or checking gasket compression.",
+      "likely_main_part": "Flat alignment jig with recessed latch pocket, strike reference face, and gasket clearance gauge surfaces.",
+      "why_it_tests_cad_representation": "Combines shallow recesses, planar datum references, gasket offset logic, and temporary installation geometry in a compact tool."
+    },
+    {
+      "idea_title": "Rigging Turnbuckle Safety Clip Installer",
+      "product_context": "Sailboat rigging service involves installing and removing small safety clips on turnbuckles in tight deck or mast-base locations.",
+      "core_function": "Guide a safety clip into a turnbuckle body while keeping fingers clear of sharp wire ends and confined fittings.",
+      "likely_main_part": "Slim forked hand tool with clip-retaining groove and angled handle.",
+      "why_it_tests_cad_representation": "Tests small retained-part geometry, narrow slots, angled access, ergonomic surfaces, and interaction with existing rigging hardware."
+    },
+    {
+      "idea_title": "Standing Rigging Tension Reference Gauge",
+      "product_context": "Boat service crews need a quick physical reference for checking repeatable rigging tension without full electronic instrumentation.",
+      "core_function": "Deflect a wire rope in a controlled way and show a mechanical indication related to tension.",
+      "likely_main_part": "Clamp-on gauge frame with wire saddles, spring-loaded deflection shoe, and pointer scale body.",
+      "why_it_tests_cad_representation": "Involves open-frame structure, cable contact saddles, moving indicator linkage, spring travel volume, and readable mechanical reference surfaces."
+    },
+    {
+      "idea_title": "Bilge Pump Float Switch Debris Shield",
+      "product_context": "Bilge compartments collect leaves, hair, wire ties, and service debris that can jam float switches and cause unreliable pump behavior.",
+      "core_function": "Protect a float switch from debris while allowing free water flow and manual testing access.",
+      "likely_main_part": "Perforated cage cover with snap-on base and hinged inspection flap.",
+      "why_it_tests_cad_representation": "Tests perforated protective geometry, hinge details, snap features, wet-environment access, and internal clearance for a moving float."
+    },
+    {
+      "idea_title": "Bilge Hose Anti-Kink Bulkhead Guide",
+      "product_context": "Marine installers route bilge discharge hose through cramped compartments where bends near bulkheads can restrict flow.",
+      "core_function": "Guide a flexible hose through a smooth bend and secure it to a bulkhead without crushing or kinking.",
+      "likely_main_part": "Curved saddle bracket with hose-retaining straps and bulkhead mounting flange.",
+      "why_it_tests_cad_representation": "Requires curved path geometry, strap interfaces, flexible-hose clearance, flange orientation, and compact mounting features."
+    },
+    {
+      "idea_title": "Dock Line Chafe Guard With Quick Wrap",
+      "product_context": "Dock lines rub against cleats, chocks, pilings, and rub rails, especially during changing tide or wake conditions.",
+      "core_function": "Wrap around a dock line and provide a replaceable wear surface that stays positioned at the contact area.",
+      "likely_main_part": "Flexible sleeve body with interlocking edge profile and textured outer wear surface.",
+      "why_it_tests_cad_representation": "Tests flexible sleeve representation, partial cylindrical wrapping, interlocking edges, textured wear zones, and rope-contact behavior."
+    },
+    {
+      "idea_title": "Folding Dock Step With Wet-Grip Tread",
+      "product_context": "Marinas and private docks often need a compact step that can fold away from walk paths while remaining usable with wet footwear.",
+      "core_function": "Provide a fold-down stepping surface with secure traction and a lockable stowed position.",
+      "likely_main_part": "Hinged tread platform with side brackets, latch detail, and molded grip pattern.",
+      "why_it_tests_cad_representation": "Challenges CAD with moving hinge states, tread texture, lock geometry, load path through brackets, and stowed versus deployed envelopes."
+    },
+    {
+      "idea_title": "Fuel Water Separator Bowl Wrench",
+      "product_context": "Marine engine service includes removing clear separator bowls that can be slippery, fragile, and hard to access below filters.",
+      "core_function": "Grip a filter bowl evenly for removal without point loading the transparent housing.",
+      "likely_main_part": "Cup-style wrench with scalloped inner grip ribs and offset handle socket.",
+      "why_it_tests_cad_representation": "Tests thin cup geometry, internal rib patterns, fragile-part contact control, offset tool clearance, and service orientation."
+    },
+    {
+      "idea_title": "Stern Drive Bellows Clamp Positioning Tool",
+      "product_context": "Stern drive bellows replacement requires placing clamps around flexible boots in crowded transom assemblies.",
+      "core_function": "Hold and guide a clamp band into the proper seating area around a flexible bellows lip.",
+      "likely_main_part": "Curved clamp guide with hooked end, handle, and visual seating reference.",
+      "why_it_tests_cad_representation": "Includes curved approach geometry, interaction with flexible bellows, hidden seating references, and narrow access around adjacent hardware."
+    },
+    {
+      "idea_title": "Mast Base Wiring Drip Loop Organizer",
+      "product_context": "Sailboat mast wiring often enters through deck glands where wires need strain relief and drip-loop organization to reduce leaks.",
+      "core_function": "Organize cable loops and guide water away from entry glands while keeping service access clear.",
+      "likely_main_part": "Low-profile cable guide plate with staggered saddles and drainage channels.",
+      "why_it_tests_cad_representation": "Tests routed cable management, drainage geometry, low-profile deck fit, multiple passage paths, and serviceable clamp features."
+    },
+    {
+      "idea_title": "Marine Battery Box Tie-Down Rail",
+      "product_context": "Boat batteries need secure retention while allowing inspection, ventilation, and quick strap replacement in cramped lockers.",
+      "core_function": "Provide a corrosion-resistant rail system for routing retention straps around a battery box without blocking lid access.",
+      "likely_main_part": "Base rail with strap slots, raised standoffs, and corner guards.",
+      "why_it_tests_cad_representation": "Combines strap path modeling, raised supports, edge protection, access clearance, and load-bearing rail features."
+    },
+    {
+      "idea_title": "Dock Pedestal Cable Hanger",
+      "product_context": "Marina shore-power cables often hang from dock pedestals and need organized storage that avoids sharp bends and water pooling.",
+      "core_function": "Hold coiled shore-power cable off the deck with a smooth support surface and drainage-friendly shape.",
+      "likely_main_part": "Wall-mounted curved hanger with drip grooves and locking retaining lip.",
+      "why_it_tests_cad_representation": "Requires large-radius support forms, retaining lips, drainage grooves, mounting bosses, and weight-bearing wall interface."
+    },
+    {
+      "idea_title": "Through-Hull Fitting Bedding Scraper",
+      "product_context": "Marine refit work includes removing old sealant around through-hull fittings without gouging hull laminate or metal flanges.",
+      "core_function": "Scrape cured bedding compound around circular fittings while following flange curvature and controlling blade depth.",
+      "likely_main_part": "Curved scraper head with replaceable blade pocket and depth-limiting shoe.",
+      "why_it_tests_cad_representation": "Tests circular-contact tooling, controlled blade projection, replaceable inserts, ergonomic handle angle, and surface-following geometry."
+    },
+    {
+      "idea_title": "Anchor Roller Service Alignment Block",
+      "product_context": "Bow anchor rollers wear, bend, or misalign, making it difficult to center the roller, pin, and chain path during replacement.",
+      "core_function": "Temporarily align roller cheeks and chain path while a roller or pin is fitted.",
+      "likely_main_part": "Removable alignment block with chain-groove reference and side cheek spacers.",
+      "why_it_tests_cad_representation": "Combines channel geometry, removable fixture logic, nested clearances between side plates, and alignment references for rotating parts."
+    },
+    {
+      "idea_title": "Scupper Flap Replacement Fixture",
+      "product_context": "Deck scupper flaps degrade and are often serviced near curved transoms or cockpit drains where alignment affects sealing.",
+      "core_function": "Hold a replacement flap and hinge strip in position while fasteners are started and sealant is applied.",
+      "likely_main_part": "Curved face fixture with flap pocket, hinge guide, and temporary clamp pads.",
+      "why_it_tests_cad_representation": "Tests curved sealing faces, flexible flap accommodation, hinge alignment, clamp pad placement, and wet-side drainage clearance."
+    },
+    {
+      "idea_title": "Marine Hose Clamp Torque Access Driver",
+      "product_context": "Engine rooms contain hose clamps on coolant, fuel, and exhaust hoses that are hard to tighten consistently from awkward angles.",
+      "core_function": "Reach clamp screws around hoses and fittings while keeping the driver aligned and limiting over-tightening.",
+      "likely_main_part": "Offset driver head with guide sleeve, torque indicator body, and low-clearance handle.",
+      "why_it_tests_cad_representation": "Involves offset rotational axes, limited access envelopes, moving torque indicator features, and hose-adjacent clearance geometry."
+    },
+    {
+      "idea_title": "Removable Swim Platform Cleat Adapter",
+      "product_context": "Small boats sometimes need temporary tie-off points on swim platforms without permanent hardware changes.",
+      "core_function": "Clamp to a platform edge and provide a temporary cleat surface with protective pads and anti-rotation features.",
+      "likely_main_part": "Clamp-on cleat body with padded jaws and integrated horn shape.",
+      "why_it_tests_cad_representation": "Tests clamp jaw motion, soft pad interfaces, cleat horn geometry, anti-rotation surfaces, and removable load path representation."
+    },
+    {
+      "idea_title": "Bilge Pump Cartridge Twist Tool",
+      "product_context": "Many bilge pumps use removable cartridges that can stick from grime, mineral deposits, or poor hand access.",
+      "core_function": "Engage the pump cartridge tabs and apply twist leverage without breaking plastic pump features.",
+      "likely_main_part": "Ring-shaped twist tool with internal drive lugs and raised grip wings.",
+      "why_it_tests_cad_representation": "Challenges CAD with internal lug geometry, bayonet engagement logic, hand-grip forms, and clearance around pump housings."
+    },
+    {
+      "idea_title": "Lifeline Gate Latch Alignment Spacer",
+      "product_context": "Sailboat lifeline gates need repeatable latch alignment after stanchion service, cable replacement, or gate hardware changes.",
+      "core_function": "Temporarily space and align gate latch parts while cable tension and terminal positions are adjusted.",
+      "likely_main_part": "Clip-on spacer body with latch-reference pockets and cable clearance slots.",
+      "why_it_tests_cad_representation": "Tests slender clip features, cable pass-throughs, latch pocket geometry, temporary assembly references, and small hardware interaction."
+    },
+    {
+      "idea_title": "Dock Fender Rail Quick Clamp",
+      "product_context": "Dock fenders are frequently repositioned for different hull shapes and mooring conditions without permanent dock modifications.",
+      "core_function": "Clamp a fender line or fender body to a dock rail with quick repositioning and anti-slip grip.",
+      "likely_main_part": "Cam clamp bracket with rounded rail saddle and line-retaining cleat.",
+      "why_it_tests_cad_representation": "Involves cam action, rounded rail contact, rope retention, textured grip pads, and variable dock rail profiles."
+    },
+    {
+      "idea_title": "Impeller Vane Preload Sleeve",
+      "product_context": "Raw-water pump impellers can be difficult to install because the flexible vanes must be folded into the pump cavity direction.",
+      "core_function": "Compress and orient impeller vanes before insertion into a pump housing.",
+      "likely_main_part": "Split tapered sleeve with internal vane guides and release tabs.",
+      "why_it_tests_cad_representation": "Requires representing flexible vane interaction, tapered internal surfaces, split tool behavior, and directional guide features."
+    },
+    {
+      "idea_title": "Cockpit Drain Strainer Lift Tool",
+      "product_context": "Deck and cockpit drain strainers become stuck from sealant, corrosion, or debris and are often too flush to grip by hand.",
+      "core_function": "Engage strainer slots and lift or rotate the insert without damaging surrounding gelcoat.",
+      "likely_main_part": "Low-profile pronged key with protective underside pad and cross handle.",
+      "why_it_tests_cad_representation": "Tests prong-slot engagement, shallow clearance, protective pad surfaces, rotational hand tool geometry, and delicate deck contact."
+    },
+    {
+      "idea_title": "Boat Cover Snap Stud Locator",
+      "product_context": "Canvas shops and owners install snap fasteners on uneven deck edges and need consistent placement relative to existing fabric snaps.",
+      "core_function": "Transfer snap positions from cover fabric to deck hardware locations while accounting for edge curvature.",
+      "likely_main_part": "Adjustable locator strip with snap-receiving sockets and deck marking tips.",
+      "why_it_tests_cad_representation": "Combines adjustable indexing, small socket features, fabric-to-deck transfer geometry, and curved edge reference handling."
+    },
+    {
+      "idea_title": "Dock Ladder Standoff Foot",
+      "product_context": "Dock ladders need replaceable feet that protect hulls, reduce dock wear, and adapt to uneven mounting surfaces.",
+      "core_function": "Provide a cushioned standoff between a ladder leg and dock or hull-facing surface while resisting rotation.",
+      "likely_main_part": "Molded foot pad with socket cup, ribbed contact face, and retention strap groove.",
+      "why_it_tests_cad_representation": "Tests soft pad geometry, socketed tubular interfaces, ribbed contact surfaces, strap grooves, and non-slip orientation features."
+    },
+    {
+      "idea_title": "Outboard Cowling Latch Inspection Prop",
+      "product_context": "Service technicians inspect outboard engines with cowlings partially open, where latches and seals can be awkward to hold clear.",
+      "core_function": "Prop and stabilize an engine cowling during latch, gasket, and wiring inspection.",
+      "likely_main_part": "Articulating prop arm with soft end pads and quick-lock hinge.",
+      "why_it_tests_cad_representation": "Involves articulated states, soft contact pads, hinge locking detail, irregular cowling contact, and service clearance representation."
+    },
+    {
+      "idea_title": "Deck Fill Cap Grip Adapter",
+      "product_context": "Fuel, water, and waste deck fill caps can seize or become difficult to open without scratching polished deck hardware.",
+      "core_function": "Grip a deck fill cap key pattern and provide leverage while protecting the surrounding deck ring.",
+      "likely_main_part": "Round cap adapter with keyed underside, protective skirt, and folding leverage handle.",
+      "why_it_tests_cad_representation": "Tests keyed underside geometry, protective skirt clearance, folding handle states, rotational tool contact, and polished-surface protection."
+    },
+    {
+      "idea_title": "Marina Hose Bib Anti-Drip Holster",
+      "product_context": "Dockside washdown hoses and bibs often drip onto walkways or hang loosely from pedestals after use.",
+      "core_function": "Hold a hose nozzle or bib tail upward and route residual water into a small drain path.",
+      "likely_main_part": "Pedestal-mounted holster cup with angled rest, drain channel, and hose clip.",
+      "why_it_tests_cad_representation": "Combines angled support, water drainage, cylindrical hose capture, wall mounting, and open cup geometry in a dock environment."
+    }
+  ]
+}

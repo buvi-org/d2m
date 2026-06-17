@@ -1,0 +1,79 @@
+{
+  "agent_number": 25,
+  "agent_id": "019ecee1-380f-7e73-9c92-5d9c881cc54f",
+  "domain": "jewelry tools, watchmaking fixtures, clock mechanisms, small precision repair jigs, and wearable hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Ring Shank Ovalizing Mandrel Block",
+      "product_context": "Jewelry bench tool for reshaping distorted ring bands before sizing or solder repair.",
+      "core_function": "Holds a ring shank against a controlled oval mandrel profile while side pressure is applied through guide faces.",
+      "likely_main_part": "Hardened steel mandrel block with stepped oval profiles, relief slots, and clamp-reference flats.",
+      "why_it_tests_cad_representation": "Requires smooth non-circular profiles, stepped size transitions, precise symmetry, edge reliefs, and functional datum surfaces."
+    },
+    {
+      "idea_title": "Watch Balance Staff Pivot Burnishing Jig",
+      "product_context": "Watchmaking fixture used during restoration of mechanical watch balance assemblies.",
+      "core_function": "Supports a balance staff at a fixed axis while exposing tiny pivots for controlled burnishing or polishing.",
+      "likely_main_part": "Miniature V-block carriage with opposed jewel-like support seats and micro-adjustable stop geometry.",
+      "why_it_tests_cad_representation": "Tests tiny coaxial features, V-grooves, shallow cups, delicate clearances, and constrained tool-access openings."
+    },
+    {
+      "idea_title": "Clock Gear Depthing Gauge Frame",
+      "product_context": "Clock repair fixture for setting correct center distance between meshing gears before bushing plates.",
+      "core_function": "Lets two clock arbors be positioned and locked so gear mesh depth can be inspected.",
+      "likely_main_part": "Slotted gauge frame with parallel arbor channels, clamp lands, engraved scale recesses, and pivot bores.",
+      "why_it_tests_cad_representation": "Combines long slots, coaxial bore pairs, linear adjustability, scale features, and thin rigid frame geometry."
+    },
+    {
+      "idea_title": "Bracelet Link Pin Press Anvil",
+      "product_context": "Wearable hardware repair tool for resizing metal watch bracelets and jewelry chain links.",
+      "core_function": "Supports bracelet links while a press pin drives out friction-fit or split pins without deforming the link.",
+      "likely_main_part": "Replaceable steel anvil with stepped link channels, pin-exit holes, chamfered entry guides, and underside locating boss.",
+      "why_it_tests_cad_representation": "Requires nested channels, small through-holes, chamfers, offsets for asymmetric links, and robust part orientation."
+    },
+    {
+      "idea_title": "Micro Screw Slot Dressing Holder",
+      "product_context": "Precision repair jig for refinishing damaged screw heads from watches, eyeglasses, and small instruments.",
+      "core_function": "Captures tiny screws at a repeatable height so the slot can be filed or polished squarely.",
+      "likely_main_part": "Threaded holding plate with counterbored screw nests, screwdriver clearance windows, and indexing edge stops.",
+      "why_it_tests_cad_representation": "Tests miniature threads, counterbores, thin webs, slot alignment, and repeated small feature patterns."
+    },
+    {
+      "idea_title": "Gem Setting Prong Equalizer Plate",
+      "product_context": "Jewelry setting tool for aligning and checking prong spacing around round or oval stones.",
+      "core_function": "Provides radial reference grooves that help bend prongs evenly before final stone tightening.",
+      "likely_main_part": "Circular hardened plate with concentric stone seats, radial prong channels, and tapered access notches.",
+      "why_it_tests_cad_representation": "Challenges radial arrays, concentric shallow pockets, tapered slots, compound symmetry, and fine edge transitions."
+    },
+    {
+      "idea_title": "Pocket Watch Case Hinge Alignment Jig",
+      "product_context": "Restoration fixture for repairing hinged pocket watch cases and lids.",
+      "core_function": "Holds case body and lid hinge knuckles coaxially while a replacement hinge pin is fitted.",
+      "likely_main_part": "Curved support saddle with adjustable hinge-axis cradle, clamp pads, and clearance cutouts for case lips.",
+      "why_it_tests_cad_representation": "Requires curved support surfaces, offset hinge-axis references, organic clearance pockets, and mixed cylindrical/planar datums."
+    },
+    {
+      "idea_title": "Earring Post Soldering Heat Sink Clamp",
+      "product_context": "Jewelry repair tool for replacing or straightening earring posts without overheating decorative fronts.",
+      "core_function": "Clamps the ornament face while exposing the post base and drawing heat away during soldering.",
+      "likely_main_part": "Copper clamp jaw with shallow domed cavities, post clearance slot, alignment pins, and textured grip lands.",
+      "why_it_tests_cad_representation": "Tests thermal-mass geometry, shallow concave surfaces, narrow slots, paired alignment features, and ergonomic exterior shaping."
+    },
+    {
+      "idea_title": "Clock Escapement Pallet Fork Setting Fixture",
+      "product_context": "Clock mechanism repair fixture for adjusting pallet geometry relative to an escape wheel.",
+      "core_function": "Positions a pallet arbor and reference escape-wheel arc so lock and drop can be checked.",
+      "likely_main_part": "Precision fixture plate with arbor jewel seats, angular reference slots, removable stop bosses, and curved inspection window.",
+      "why_it_tests_cad_representation": "Combines angular datum geometry, arc-shaped windows, small bearing seats, modular locating bosses, and mechanism-clearance modeling."
+    },
+    {
+      "idea_title": "Wearable Sensor Strap Lug Drill Guide",
+      "product_context": "Wearable hardware fabrication jig for drilling consistent spring-bar or screw-bar holes in custom strap lugs.",
+      "core_function": "Locates a drill bushing across paired lugs so holes remain coaxial and correctly spaced from the case body.",
+      "likely_main_part": "U-shaped drill guide body with hardened bushing bore, lug-spacing bridge, case-radius relief, and clamp screw pads.",
+      "why_it_tests_cad_representation": "Tests U-channel geometry, coaxial transverse bores, replaceable bushing pockets, curved reliefs, and tolerance-critical mirrored features."
+    }
+  ]
+}

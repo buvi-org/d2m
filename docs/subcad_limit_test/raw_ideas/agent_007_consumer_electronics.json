@@ -1,0 +1,79 @@
+{
+  "agent_number": 7,
+  "agent_id": "019ecedc-9fec-79c1-8825-7604d975afd3",
+  "domain": "consumer electronics enclosures, thermal parts, hinges, stands, and service hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Fanless Mini PC Finned Top Shell",
+      "product_context": "A compact living-room or office mini PC that uses its upper enclosure as the primary passive heat sink.",
+      "core_function": "Protect internal electronics while conducting heat from the processor module to exterior cooling fins.",
+      "likely_main_part": "CNC-machined aluminum top enclosure with integrated fin array, internal boss pads, gasket groove, and corner fastener wells.",
+      "why_it_tests_cad_representation": "Combines thin enclosure walls, dense repeated fins, internal mounting geometry, thermal contact pads, edge radii, recessed screw pockets, and sealing features in one part."
+    },
+    {
+      "idea_title": "Foldable Laptop Torque Hinge Barrel",
+      "product_context": "A premium ultrabook hinge assembly connecting the display lid to the keyboard deck.",
+      "core_function": "Provide controlled rotational resistance while packaging a display cable channel through the hinge region.",
+      "likely_main_part": "Machined hinge knuckle barrel with alternating hinge ears, axial bore, cable relief slot, torque washer seats, and anti-rotation flats.",
+      "why_it_tests_cad_representation": "Requires coaxial cylindrical features, segmented hinge leaves, tight clearances, slots through curved geometry, nested bores, and asymmetric mechanical stops."
+    },
+    {
+      "idea_title": "Adjustable Tablet Drawing Stand Spine",
+      "product_context": "A desktop stand for a large drawing tablet used by illustrators and industrial designers.",
+      "core_function": "Support the tablet at multiple locked drawing angles while routing charging cable clearance behind the device.",
+      "likely_main_part": "Machined rear support spine with ratchet arc, pivot bosses, cable pass-through, rubber foot pockets, and weight-reducing side pockets.",
+      "why_it_tests_cad_representation": "Tests curved ratchet teeth, angled support surfaces, paired pivots, pocketed lightweight structure, cable routing geometry, and repeated locking detents."
+    },
+    {
+      "idea_title": "Smartphone Repair Alignment Clamp Jaw",
+      "product_context": "A service bench fixture for holding smartphones during screen separation, adhesive curing, or frame straightening.",
+      "core_function": "Secure a phone frame without crushing buttons, camera bumps, antennas, or fragile glass edges.",
+      "likely_main_part": "Machined precision clamp jaw with stepped contact pads, reliefs for side buttons, camera bump clearance, dovetail slide interface, and replaceable soft insert pockets.",
+      "why_it_tests_cad_representation": "Introduces product-specific reliefs, asymmetric stepped surfaces, sliding fixture geometry, shallow pockets, tight edge references, and small service-tool features."
+    },
+    {
+      "idea_title": "Gaming Console SSD Expansion Heat Sink Cover",
+      "product_context": "An aftermarket internal cover for a console storage expansion bay that cools a high-speed NVMe SSD.",
+      "core_function": "Replace the stock bay cover while spreading SSD heat to exposed ribs and maintaining console airflow clearance.",
+      "likely_main_part": "Low-profile machined aluminum bay cover with underside thermal pad land, top-side ribbing, latch notch, screw tab, and airflow chamfers.",
+      "why_it_tests_cad_representation": "Tests a shallow constrained envelope, mixed top and underside detail, ribs, thin walls, offset fastening features, latch geometry, and thermal interface surfaces."
+    },
+    {
+      "idea_title": "Wireless Earbud Case Hinge Reinforcement Insert",
+      "product_context": "A repair upgrade insert for cracked charging-case hinges on premium wireless earbuds.",
+      "core_function": "Restore lid alignment and hinge strength while fitting inside the original plastic case shell.",
+      "likely_main_part": "Tiny machined metal hinge bridge with dual pin bosses, curved shell-matching back face, adhesive keying grooves, and micro screw holes.",
+      "why_it_tests_cad_representation": "Pushes small-scale CAD detail with curved mating surfaces, miniature bores, thin bosses, adhesive texture grooves, and precise bilateral hinge alignment."
+    },
+    {
+      "idea_title": "Camera Monitor Swivel Mount Yoke",
+      "product_context": "A compact field monitor mount for mirrorless camera rigs used by video creators.",
+      "core_function": "Hold an external monitor with adjustable tilt while resisting loosening during handheld shooting.",
+      "likely_main_part": "Machined U-shaped swivel yoke with side trunnion bores, cold-shoe foot, threaded accessory holes, cable clearance scallop, and serrated friction faces.",
+      "why_it_tests_cad_representation": "Combines yoke geometry, coaxial pivot bores, serrated circular faces, threaded hole patterns, undercut-like cable clearance, and camera accessory mounting standards."
+    },
+    {
+      "idea_title": "VR Headset Counterweight Battery Cradle",
+      "product_context": "A rear strap accessory for a VR headset that holds a removable battery pack as a counterweight.",
+      "core_function": "Secure the battery, spread load across the head strap, and provide cooling gaps around the pack.",
+      "likely_main_part": "Machined curved cradle with strap slots, battery retention lips, spring latch pocket, ventilation channels, and cable strain-relief hook.",
+      "why_it_tests_cad_representation": "Tests ergonomic curvature, strap-through slots, retaining lips, latch pockets, vent channel arrays, cable management hooks, and non-rectangular consumer accessory form."
+    },
+    {
+      "idea_title": "Docking Station Heat-Spreader Bottom Chassis",
+      "product_context": "A USB-C laptop docking station with multiple high-power ports and internal regulator heat sources.",
+      "core_function": "Serve as the structural bottom chassis while spreading heat from power electronics to the desk-facing metal body.",
+      "likely_main_part": "Machined aluminum lower chassis with internal component islands, thermal pad mesas, connector wall cutouts, screw bosses, and perimeter assembly ledge.",
+      "why_it_tests_cad_representation": "Requires enclosure datum structure, connector-specific openings, multiple internal height levels, bosses, perimeter ledges, thermal pads, and manufacturable corner radii."
+    },
+    {
+      "idea_title": "E-Reader Waterproof Port Service Plug Frame",
+      "product_context": "A replacement service part for a waterproof e-reader charging-port area after repeated port repairs.",
+      "core_function": "Hold the USB-C receptacle region, compress a seal, and restore exterior shell stiffness around the port.",
+      "likely_main_part": "Machined micro frame with USB-C port window, O-ring groove, snap-tab reliefs, tiny fastener ears, and exterior contour matching the e-reader edge.",
+      "why_it_tests_cad_representation": "Tests small precise port geometry, seal grooves, thin ears, snap clearances, curved exterior matching surfaces, and repair-focused integration with an existing consumer enclosure."
+    }
+  ]
+}

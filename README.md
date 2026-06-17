@@ -12,7 +12,7 @@ This repository is currently a prototype/research codebase. Some foundational pi
 4. **Simulate machining** — A tri-dexel/five-axis simulation stack is under active development
 5. **Plan with AI** — Agentic CadQuery -> SubCAD translation exists for LLM-driven code generation, with execution feedback
 
-Initial implemented scope is concentrated on **CNC/subtractive manufacturing**. Injection molding, casting, 3D printing, sheet metal, RL fine-tuning, and production UI are aspirational roadmap items.
+Initial implemented scope is concentrated on **CNC/subtractive manufacturing**, with an early sheet-metal slice now available for laser-cut blanks and simple press-brake bends. Injection molding, casting, 3D printing, broader sheet-metal automation, RL fine-tuning, and production UI are aspirational roadmap items.
 
 ## Current Reality
 
@@ -33,6 +33,7 @@ Implemented and tested:
 
 - Phase 1 synthetic dataset generation: 9,994 labeled parts are available in `synthetic_10k_samples.7z`.
 - SubCAD fluent API for subtractive machining operations, STEP/STL export, process-plan JSON, fixtures, tool assemblies, and multi-setup metadata.
+- Experimental sheet-metal fluent API for `Stock.sheet(...)`, `laser_cut_profile`, `laser_cut_internal`/`laser_cut_hole`/`laser_cut_slot`, and `press_brake_bend`.
 - Agentic CadQuery -> SubCAD translator infrastructure, including LLM provider abstraction, prompt builders, convergence controller, REPL execution, geometry comparison, and optional localized/feature-aware feedback paths.
 - Corrected Zero-to-CAD live benchmark runner that saves each original dataset STEP as the target, compares generated SubCAD output against that original STEP, and records trusted match policy artifacts.
 - Mesh comparison utilities for per-vertex signed deviation and Z-slice feedback.
@@ -72,6 +73,7 @@ SubCAD can currently be used as a CadQuery-backed subtractive machining represen
 
 - Author machining programs with the fluent `Stock` API, including core operations, Phase 2 operations, pure STEP-coverage operation families, fixtures, setups, work offsets, and tool/material metadata.
 - Represent axis-aligned hollow tube bosses with `tube_profile`, including X/Y/Z placement, inner bore diameter, union into retained-feature chains, and standalone replace mode.
+- Model a basic sheet-metal workflow: start from a flat sheet, laser-cut an outside blank and internal holes/slots, then form straight bends with `press_brake_bend`.
 - Export STEP/STL geometry plus JSON process plans using the `subcad.shop_floor.v1` schema.
 - Preserve neutral toolpaths for shop-floor review, estimation, validation, preview-only G-code rendering, browser playback, and simulation handoff.
 - Export Markdown/JSON setup sheets with stock, material, selected tools, tool assemblies, fixtures, operations, setup/work-offset data, validation messages, and deferred-production-G-code notes.

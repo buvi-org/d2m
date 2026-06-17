@@ -59,6 +59,89 @@ def create_cylindrical_stock(diameter: float, height: float) -> "cq.Workplane":
     return cq.Workplane("XY").cylinder(height, diameter / 2.0)
 
 
+def press_brake_bend(
+    shape: "cq.Workplane",
+    *,
+    axis: str = "X",
+    position: float = 0.0,
+    angle: float = 90.0,
+    side: str = "positive",
+    radius: float = 1.0,
+    axis_z: float | None = None,
+) -> "cq.Workplane":
+    """Approximate a press-brake bend by splitting and rotating one sheet side.
+
+    The operation is intended for laser-cut sheet blanks modeled as thin
+    solids in the XY plane. It preserves any cut holes or slots on the bent
+    side because the actual B-Rep half is transformed.
+    """
+    if not _HAS_CADQUERY:
+        raise RuntimeError("cadquery is not available")
+
+    axis_name = str(axis or "X").upper()
+    if axis_name not in {"X", "Y"}:
+        raise ValueError("press brake bend axis must be 'X' or 'Y'")
+
+    if abs(float(angle)) <= 1e-9:
+        return shape
+
+    moving_side = str(side or "positive").lower()
+    positive = moving_side in {"+", "positive", "pos", "right", "top", "upper"}
+    if not positive and moving_side not in {"-", "negative", "neg", "left", "bottom", "lower"}:
+        raise ValueError("press brake bend side must be positive/+ or negative/-")
+
+    bbox = shape.val().BoundingBox()
+    x_min, x_max = bbox.xmin, bbox.xmax
+    y_min, y_max = bbox.ymin, bbox.ymax
+    z_min, z_max = bbox.zmin, bbox.zmax
+    span_x = max(x_max - x_min, 1.0)
+    span_y = max(y_max - y_min, 1.0)
+    span_z = max(z_max - z_min, 1.0)
+    pad = max(span_x, span_y, span_z, abs(float(radius)) * 4.0, 10.0)
+    z_center = (z_min + z_max) / 2.0
+    z_height = span_z + 2.0 * pad
+    split = float(position)
+
+    def y_box(y0: float, y1: float) -> "cq.Workplane | None":
+        if y1 <= y0 + 1e-9:
+            return None
+        return (
+            cq.Workplane("XY")
+            .box(span_x + 2.0 * pad, y1 - y0, z_height, centered=True)
+            .translate(((x_min + x_max) / 2.0, (y0 + y1) / 2.0, z_center))
+        )
+
+    def x_box(x0: float, x1: float) -> "cq.Workplane | None":
+        if x1 <= x0 + 1e-9:
+            return None
+        return (
+            cq.Workplane("XY")
+            .box(x1 - x0, span_y + 2.0 * pad, z_height, centered=True)
+            .translate(((x0 + x1) / 2.0, (y_min + y_max) / 2.0, z_center))
+        )
+
+    if axis_name == "X":
+        moving_box = y_box(split, y_max) if positive else y_box(y_min, split)
+        fixed_box = y_box(y_min, split) if positive else y_box(split, y_max)
+        start = (x_min - pad, split, axis_z if axis_z is not None else z_max)
+        end = (x_max + pad, split, axis_z if axis_z is not None else z_max)
+    else:
+        moving_box = x_box(split, x_max) if positive else x_box(x_min, split)
+        fixed_box = x_box(x_min, split) if positive else x_box(split, x_max)
+        start = (split, y_min - pad, axis_z if axis_z is not None else z_max)
+        end = (split, y_max + pad, axis_z if axis_z is not None else z_max)
+
+    if moving_box is None:
+        return shape
+
+    moving = shape.intersect(moving_box)
+    rotated = moving.rotate(start, end, float(angle))
+    if fixed_box is None:
+        return rotated
+    fixed = shape.intersect(fixed_box)
+    return fixed.union(rotated)
+
+
 def create_tapered_cylinder(
     bottom_diameter: float,
     top_diameter: float,

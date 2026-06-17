@@ -1,0 +1,79 @@
+{
+  "agent_number": 13,
+  "agent_id": "019ecede-6f09-70b2-a5f2-2ebf258e84a4",
+  "domain": "aerospace ground-support, drone hardware, RC aircraft, and UAV payload mounting parts",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "UAV Gimbal Vibration-Isolator Yoke",
+      "product_context": "Multirotor inspection drone carrying a stabilized optical payload under the fuselage.",
+      "core_function": "Supports a two-axis camera gimbal while mechanically filtering high-frequency motor vibration.",
+      "likely_main_part": "Machined forked yoke with elastomer bushing pockets, cable pass-throughs, and asymmetric mounting ears.",
+      "why_it_tests_cad_representation": "Combines nested cylindrical bushing seats, fork geometry, thin clearance gaps, filleted load paths, and non-symmetric payload offsets."
+    },
+    {
+      "idea_title": "Wingtip Navigation-Light Pod Housing",
+      "product_context": "Composite RC aircraft or fixed-wing UAV requiring replaceable LED navigation lights at the wingtip.",
+      "core_function": "Holds LED boards, lens hardware, and wiring while conforming to an aerodynamic wingtip profile.",
+      "likely_main_part": "Contoured aluminum pod shell with internal board ledges, lens-retaining lip, and curved wing-interface flange.",
+      "why_it_tests_cad_representation": "Requires smooth aerodynamic exterior surfaces, thin-wall shell features, internal shelves, small screw bosses, and a compound curved mating face."
+    },
+    {
+      "idea_title": "Drone Battery Quick-Release Rail Saddle",
+      "product_context": "Industrial quadcopter using slide-in smart batteries that must be swapped rapidly in field operations.",
+      "core_function": "Guides and locks a battery pack into a repeatable position while resisting vibration and crash loads.",
+      "likely_main_part": "Machined rail saddle with dovetail grooves, latch notch, connector alignment pocket, and tapered lead-in ramps.",
+      "why_it_tests_cad_representation": "Tests dovetail geometry, ramp transitions, precise datum surfaces, undercut-like retention profiles, and connector-clearance cutouts."
+    },
+    {
+      "idea_title": "Pitot Tube Heated Mount Block",
+      "product_context": "Fixed-wing UAV air-data system mounted on a nose boom or wing strut.",
+      "core_function": "Clamps and aligns a pitot tube while routing heater wires and maintaining aerodynamic exposure.",
+      "likely_main_part": "Small machined clamp block with split bore, wire channel, set-screw flats, and angled airframe mounting face.",
+      "why_it_tests_cad_representation": "Includes coaxial bores, split-clamp reliefs, angled datum planes, tiny fastener features, and hidden cable-routing passages."
+    },
+    {
+      "idea_title": "Ground-Support Propeller Torque Fixture Jaw",
+      "product_context": "Maintenance bench tool for holding UAV propeller hubs during torque checks and blade replacement.",
+      "core_function": "Captures a propeller hub without damaging it while allowing access to central fasteners.",
+      "likely_main_part": "Replaceable contoured fixture jaw with hub-radius pocket, soft-insert recesses, anti-rotation keys, and clearance scallops.",
+      "why_it_tests_cad_representation": "Tests organic contact pockets, removable insert cavities, repeated symmetry broken by tool-access cutouts, and datum-key alignment."
+    },
+    {
+      "idea_title": "UAV Payload Bay Blind-Mate Connector Carrier",
+      "product_context": "Modular payload bay where cameras, radios, or sensors are swapped without manually connecting cables.",
+      "core_function": "Positions electrical connectors so payload modules engage reliably during slide-in installation.",
+      "likely_main_part": "Machined connector carrier with floating mount pockets, spring clearance wells, alignment dowel holes, and chamfered docking funnels.",
+      "why_it_tests_cad_representation": "Requires precise connector datum control, floating tolerance features, repeated small pockets, alignment features, and funnel-like lead-in geometry."
+    },
+    {
+      "idea_title": "RC Aircraft Retractable Landing-Gear Trunnion",
+      "product_context": "Large-scale RC aircraft or small UAV with servo-actuated retractable landing gear.",
+      "core_function": "Acts as the rotating structural hinge between landing strut and retract mechanism.",
+      "likely_main_part": "CNC-machined trunnion block with cross-bore pivot, strut socket, stop faces, servo-link tab, and weight-relief pockets.",
+      "why_it_tests_cad_representation": "Combines perpendicular bores, high-load fillets, hard mechanical stops, pockets near curved sockets, and compact multi-axis feature relationships."
+    },
+    {
+      "idea_title": "Drone Lidar Isolation Deck Insert",
+      "product_context": "Mapping UAV carrying a lidar unit that must remain level and isolated from frame vibration.",
+      "core_function": "Provides a precision mounting interface between the airframe and a vibration-isolated lidar deck.",
+      "likely_main_part": "Machined deck insert with three-point leveling pads, isolation bushing cups, sensor datum pins, and recessed cable exits.",
+      "why_it_tests_cad_representation": "Tests coplanar precision pads, circular cup arrays, local datum features, cable egress cutouts, and stiffness-focused pocketing."
+    },
+    {
+      "idea_title": "Ground Charging Dock Alignment Cone",
+      "product_context": "Autonomous drone docking station where the aircraft lands onto a charging cradle.",
+      "core_function": "Guides the drone skid or landing foot into position for reliable charge-contact engagement.",
+      "likely_main_part": "Machined funnel-shaped alignment cone with replaceable wear-strip slots, drain grooves, contact clearance window, and base fastener pattern.",
+      "why_it_tests_cad_representation": "Requires conical guide geometry, slots on sloped surfaces, drainage channels, asymmetric windows, and durable mounting-base transitions."
+    },
+    {
+      "idea_title": "UAV Antenna Mast Folding Hinge Knuckle",
+      "product_context": "Long-range UAV with a folding telemetry antenna mast for transport and launch handling.",
+      "core_function": "Allows the antenna mast to fold while locking rigidly in the deployed position.",
+      "likely_main_part": "Machined hinge knuckle with interleaved lugs, coaxial pin bore, detent-ball pocket, hard-stop shoulder, and cable groove.",
+      "why_it_tests_cad_representation": "Tests interlocking hinge lug geometry, coaxial tolerance-critical holes, detent features, stop surfaces, and routed cable relief in a compact part."
+    }
+  ]
+}

@@ -210,7 +210,10 @@ def normalize_profile_points(profile: Any, *, arc_segments: int = 16, circle_seg
             return _chain_points(list(profile["segments"]), arc_segments)
 
         if profile_type in {"slot", "obround", "obround_slot", "slot2d"}:
-            return _slot_points(profile, arc_segments)
+            points = _slot_points(profile, arc_segments)
+            angle = float(profile.get("rotation_deg", profile.get("angle", 0.0)))
+            cx, cy = _center(profile)
+            return _rotate_points(points, angle, cx, cy)
 
         if profile_type in {"polygon", "regular_polygon"} or "n_sides" in profile or "sides" in profile:
             polygon = _polygon_points(profile)

@@ -560,6 +560,31 @@ class Stock:
         )
 
     @classmethod
+    def sheet(
+        cls,
+        length: float,
+        width: float,
+        thickness: float,
+        material: str = "steel_a36",
+    ) -> "Stock":
+        """Create flat sheet stock for laser cutting and press-brake forming."""
+        shape = create_rectangular_stock(length, width, thickness)
+        dims = {
+            "length": length,
+            "width": width,
+            "height": thickness,
+            "thickness": thickness,
+            "stock_form": "sheet",
+            "process_family": "sheet_metal",
+        }
+        return cls(
+            _shape=shape,
+            _material=material,
+            _plan=ProcessPlan(material=material, stock_dimensions=dims),
+            _stock_dims=dims,
+        )
+
+    @classmethod
     def cylindrical(
         cls,
         diameter: float,
@@ -1652,6 +1677,95 @@ class Stock:
             through=through, face_selector=face_selector,
             tool=tool, material=self._material,
         ))
+
+    def laser_cut_profile(self, profile, *, kerf_width: float = 0.15,
+                          assist_gas: str = "nitrogen",
+                          cut_speed_mm_min: float = 2400.0,
+                          pierce_time_s: float = 0.15,
+                          face_selector: str = ">Z",
+                          cx: Optional[float] = None,
+                          cy: Optional[float] = None) -> "Stock":
+        """Laser-cut the outside sheet blank and retain the supplied profile."""
+        from .operations import LaserCutProfileOp
+        profile = _place_profile(profile, cx, cy)
+        return self._apply_op(LaserCutProfileOp(
+            profile=profile,
+            depth=float(self._stock_dims.get("thickness", self._stock_dims.get("height", 1.0))),
+            kerf_width=kerf_width,
+            assist_gas=assist_gas,
+            cut_speed_mm_min=cut_speed_mm_min,
+            pierce_time_s=pierce_time_s,
+            face_selector=face_selector,
+            material=self._material,
+        ))
+
+    def laser_cut_internal(self, profile, *, kerf_width: float = 0.15,
+                           assist_gas: str = "nitrogen",
+                           cut_speed_mm_min: float = 2400.0,
+                           pierce_time_s: float = 0.15,
+                           face_selector: str = ">Z",
+                           cx: Optional[float] = None,
+                           cy: Optional[float] = None) -> "Stock":
+        """Laser-cut an internal through-profile in the sheet blank."""
+        from .operations import LaserCutInternalOp
+        profile = _place_profile(profile, cx, cy)
+        return self._apply_op(LaserCutInternalOp(
+            profile=profile,
+            depth=float(self._stock_dims.get("thickness", self._stock_dims.get("height", 1.0))),
+            kerf_width=kerf_width,
+            assist_gas=assist_gas,
+            cut_speed_mm_min=cut_speed_mm_min,
+            pierce_time_s=pierce_time_s,
+            face_selector=face_selector,
+            material=self._material,
+        ))
+
+    def laser_cut_hole(self, diameter: float, *, cx: float = 0.0, cy: float = 0.0,
+                       **kwargs) -> "Stock":
+        """Laser-cut a round through-hole in sheet stock."""
+        profile = {"type": "circle", "diameter": diameter, "cx": cx, "cy": cy}
+        return self.laser_cut_internal(profile, **kwargs)
+
+    def laser_cut_slot(self, length: float, width: float, *, cx: float = 0.0,
+                       cy: float = 0.0, angle: float = 0.0,
+                       **kwargs) -> "Stock":
+        """Laser-cut a rounded slot through sheet stock."""
+        profile = {
+            "type": "slot",
+            "length": length,
+            "width": width,
+            "cx": cx,
+            "cy": cy,
+            "angle": angle,
+        }
+        return self.laser_cut_internal(profile, **kwargs)
+
+    def press_brake_bend(self, *, axis: str = "X", position: float = 0.0,
+                         angle: float = 90.0, side: str = "positive",
+                         radius: float = 1.0,
+                         axis_z: Optional[float] = None,
+                         tooling: str = "air_bend_v_die") -> "Stock":
+        """Form one side of the sheet around a straight press-brake bend line."""
+        from .operations import PressBrakeBendOp
+        thickness = float(self._stock_dims.get("thickness", self._stock_dims.get("height", 1.0)))
+        if axis_z is None:
+            axis_z = thickness / 2.0
+        op = PressBrakeBendOp(
+            axis=axis,
+            bend_position=position,
+            angle=angle,
+            side=side,
+            radius=radius,
+            sheet_thickness=thickness,
+            axis_z=axis_z,
+            tooling=tooling,
+            material=self._material,
+        )
+        return self._apply_op(op)
+
+    def bend(self, **kwargs) -> "Stock":
+        """Alias for :meth:`press_brake_bend`."""
+        return self.press_brake_bend(**kwargs)
 
     def profile_contour(self, profile, depth: float, *, side: str = "outside",
                         face_selector: str = ">Z",

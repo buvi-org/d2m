@@ -1,0 +1,79 @@
+{
+  "agent_number": 6,
+  "agent_id": "019ecedb-80be-79a1-b545-cd84782f2cdb",
+  "domain": "automotive service tools, inspection aids, brackets, jigs, and repair hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Brake Caliper Piston Wind-Back Adapter",
+      "product_context": "Automotive brake service tool used when retracting rear brake caliper pistons with integrated parking brake mechanisms.",
+      "core_function": "Engages the piston face slots while transmitting axial pressure and rotation from a service wrench or press tool.",
+      "likely_main_part": "Cylindrical adapter puck with opposing drive lugs, central square-drive socket, chamfered rim, and relief grooves.",
+      "why_it_tests_cad_representation": "Requires precise coaxial features, raised lugs on a circular face, socket geometry, chamfers, and functional clearances between shallow and deep features."
+    },
+    {
+      "idea_title": "Oxygen Sensor Offset Wrench Head",
+      "product_context": "Exhaust repair tool for removing oxygen sensors in tight engine bays without disconnecting the wiring harness first.",
+      "core_function": "Grips the hex body of an oxygen sensor while leaving a side slot for the sensor wire to pass through.",
+      "likely_main_part": "Offset crowfoot-style wrench head with hex bore, open cable slot, square-drive boss, and reinforced curved neck.",
+      "why_it_tests_cad_representation": "Combines interrupted hex geometry, asymmetric openings, load-bearing transitions, bosses, and nontrivial wall thickness constraints."
+    },
+    {
+      "idea_title": "CV Boot Clamp Crimping Anvil",
+      "product_context": "Drivetrain service fixture used to crimp ear-style CV boot clamps consistently during axle repair.",
+      "core_function": "Supports the clamp ear and guides plier jaws so the crimp closes to a repeatable height without damaging the boot.",
+      "likely_main_part": "Small hardened anvil block with contoured saddle, clamp-ear pocket, jaw guide channels, and mounting holes.",
+      "why_it_tests_cad_representation": "Tests concave saddles, small radiused pockets, parallel guide features, compact hole placement, and service-clearance-driven geometry."
+    },
+    {
+      "idea_title": "Wheel Stud Press Support Cup",
+      "product_context": "Hub repair hardware used with a shop press or C-clamp tool to remove and install wheel studs without bending the hub flange.",
+      "core_function": "Supports the hub around the stud head while leaving clearance for the stud to pass through during pressing.",
+      "likely_main_part": "Thick annular cup with stepped bore, relieved side window, flange contact face, and anti-slip outer flats.",
+      "why_it_tests_cad_representation": "Includes nested cylindrical bores, stepped internal cavities, side cutouts, thick-section proportions, and datum-critical bearing surfaces."
+    },
+    {
+      "idea_title": "Tie Rod End Taper Inspection Gauge",
+      "product_context": "Steering inspection aid for checking whether a tie rod end taper or steering knuckle bore is worn beyond acceptable fit.",
+      "core_function": "Provides reference taper surfaces and depth marks to compare seating depth and contact pattern.",
+      "likely_main_part": "Machined tapered plug gauge with shoulder stop, engraved depth bands, knurled grip section, and flat reference face.",
+      "why_it_tests_cad_representation": "Tests tapered solids, shoulder transitions, engraved or recessed markings, mixed grip textures, and tolerance-sensitive reference surfaces."
+    },
+    {
+      "idea_title": "Strut Knuckle Spreader Wedge",
+      "product_context": "Suspension service tool for opening the clamping slot on MacPherson strut knuckles during strut removal.",
+      "core_function": "Slides into the knuckle slot and expands it a controlled amount without over-spreading or gouging the casting.",
+      "likely_main_part": "Tapered wedge with rounded nose, stop shoulder, wrench flats, and shallow retention groove.",
+      "why_it_tests_cad_representation": "Uses tapered prismatic geometry, rounded leading surfaces, functional stops, flats on angled bodies, and stress-aware transitions."
+    },
+    {
+      "idea_title": "Brake Rotor Runout Indicator Clamp",
+      "product_context": "Brake inspection aid for mounting a dial indicator to a suspension upright or caliper bracket when measuring rotor runout.",
+      "core_function": "Clamps to an irregular service location and provides a rigid adjustable mount for an indicator stem.",
+      "likely_main_part": "Split clamp block with V-groove jaw, cross-bolt slot, indicator stem bore, and perpendicular locking screw boss.",
+      "why_it_tests_cad_representation": "Challenges representation of split bodies, V-grooves, intersecting bores, clamp slots, bosses, and perpendicular fastening features."
+    },
+    {
+      "idea_title": "Fuel Injector Puller Bridge",
+      "product_context": "Engine service jig for extracting stuck fuel injectors from a cylinder head without prying against fragile plastic or aluminum surfaces.",
+      "core_function": "Spans across nearby head features and guides a pull screw aligned with the injector axis.",
+      "likely_main_part": "Rigid bridge bar with arched center clearance, adjustable foot pads, threaded pull-screw boss, and elongated mounting slots.",
+      "why_it_tests_cad_representation": "Combines arched relief geometry, slots, threaded boss placement, planar support feet, and alignment-critical central features."
+    },
+    {
+      "idea_title": "Exhaust Hanger Removal Fork",
+      "product_context": "Exhaust service hand tool for pushing rubber exhaust isolators off welded hanger rods.",
+      "core_function": "Captures the hanger rod while applying force to the rubber isolator face without tearing it.",
+      "likely_main_part": "Forked pry head with semicircular rod notch, broad curved pusher face, offset handle socket, and reinforced ribs.",
+      "why_it_tests_cad_representation": "Tests forked negative spaces, curved contact faces, socket-to-head offsets, ribbed reinforcement, and ergonomic service geometry."
+    },
+    {
+      "idea_title": "Door Hinge Pin Alignment Jig",
+      "product_context": "Body repair jig used when replacing worn door hinge pins and bushings on vehicles with heavy doors.",
+      "core_function": "Holds the hinge leaves coaxial while guiding a replacement pin or reamer through both hinge barrels.",
+      "likely_main_part": "Clamp-on alignment block with dual hinge-barrel saddles, guide bushing bore, tightening screw pads, and datum shoulders.",
+      "why_it_tests_cad_representation": "Requires coaxial guide features, paired saddles, clamp pads, shoulders, and constrained access geometry tied to a real repair workflow."
+    }
+  ]
+}

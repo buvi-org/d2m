@@ -1,0 +1,79 @@
+{
+  "agent_number": 11,
+  "agent_id": "019ecedc-f524-7971-a510-b44de4588ebd",
+  "domain": "industrial sensors, test instruments, measurement fixtures, and calibration hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Flush-Mount Inductive Proximity Sensor Housing",
+      "product_context": "Rugged sensor body used on automated machine tools to detect carriage or fixture position in oily environments.",
+      "core_function": "Holds an inductive sensing coil, connector insert, sealing features, and wrench flats while presenting a precise threaded mounting interface.",
+      "likely_main_part": "Cylindrical stainless sensor barrel with external metric threads, hex flats, stepped internal bore, front sensing lip, O-ring groove, and rear connector pocket.",
+      "why_it_tests_cad_representation": "Combines coaxial turned geometry, external threading, wrench flats intersecting a cylinder, sealing grooves, thin front lips, and nested internal bores."
+    },
+    {
+      "idea_title": "Dial Indicator Magnetic Base Swivel Joint",
+      "product_context": "Articulated positioning hardware for holding a dial indicator on inspection tables or machine frames.",
+      "core_function": "Allows a metrology arm to pivot and lock at a chosen angle without slipping under indicator load.",
+      "likely_main_part": "Machined ball-and-socket clamp yoke with split lugs, spherical seat, cross bolt bore, serrated friction faces, and threaded arm mount.",
+      "why_it_tests_cad_representation": "Requires spherical contact surfaces, split clamp geometry, coaxial and offset bores, lug symmetry, serrations, and assembly-critical clearances."
+    },
+    {
+      "idea_title": "Portable Pressure Calibrator Manifold Block",
+      "product_context": "Bench or field calibration fixture for comparing pressure transmitters against a reference gauge.",
+      "core_function": "Routes pneumatic or hydraulic pressure between pump input, reference gauge, device under test, bleed valve, and isolation valve.",
+      "likely_main_part": "Rectangular stainless manifold block with intersecting drilled passages, multiple threaded ports, valve cavities, chamfered edges, mounting feet, and engraved port pads.",
+      "why_it_tests_cad_representation": "Tests hidden internal channel logic, orthogonal port placement, pipe-thread bosses, valve counterbores, sealing faces, and manufacturable drilling paths."
+    },
+    {
+      "idea_title": "K-Type Thermocouple Compression Fitting Adapter",
+      "product_context": "Process instrumentation fitting used to mount a thermocouple probe into a heated chamber or pipe wall.",
+      "core_function": "Compresses a ferrule around the probe sheath while sealing into a threaded process port.",
+      "likely_main_part": "Hex-body adapter with male pipe thread, tapered ferrule cone, through bore, rear compression nut interface, wrench flats, and lead-in chamfers.",
+      "why_it_tests_cad_representation": "Mixes tapered sealing cones, axial through holes, external process threads, hex-prism-to-cylinder transitions, small clearances, and chamfered compression features."
+    },
+    {
+      "idea_title": "Laser Displacement Sensor Alignment Clamp",
+      "product_context": "Adjustable mount for aiming a compact laser triangulation sensor at a production inspection target.",
+      "core_function": "Clamps the sensor body and provides fine angular alignment while preserving optical clearance around the emitter and receiver window.",
+      "likely_main_part": "Split rectangular cradle with semicircular clamp bore, slotted adjustment arc, datum mounting face, captive screw pockets, and relieved optical window opening.",
+      "why_it_tests_cad_representation": "Tests partial cylindrical cuts through blocky geometry, curved slots, asymmetric reliefs, thin clamp bridges, screw bosses, and datum-critical mounting surfaces."
+    },
+    {
+      "idea_title": "Calibration Weight Carrier Tray Insert",
+      "product_context": "Precision storage and handling insert for certified mass standards used in scale and balance calibration labs.",
+      "core_function": "Locates several cylindrical calibration weights without contact damage and provides finger access for removal.",
+      "likely_main_part": "Machined aluminum tray insert with stepped circular pockets, soft-radius finger scoops, engraved weight labels, dowel locating holes, and perimeter retaining ledge.",
+      "why_it_tests_cad_representation": "Includes repeated pocket patterns with varying diameters, blended access cutouts, shallow engraving fields, ledges, fillets, and ergonomic clearance geometry."
+    },
+    {
+      "idea_title": "Vibration Accelerometer Stud-Mount Adapter",
+      "product_context": "Mechanical adapter used to mount an accelerometer onto curved motor housings or bearing blocks during vibration testing.",
+      "core_function": "Provides a flat sensor mounting pad and a secure threaded connection to a non-flat machine surface.",
+      "likely_main_part": "Low-profile circular adapter puck with curved underside saddle, central threaded stud hole, top precision pad, spanner holes, and anti-rotation flats.",
+      "why_it_tests_cad_representation": "Challenges representation of concave saddle surfaces, flat-to-curved transitions, threaded axial features, tool-access holes, and orientation-specific mounting faces."
+    },
+    {
+      "idea_title": "Micrometer Calibration Step Gauge Block",
+      "product_context": "Shop-floor reference artifact for checking outside micrometers and digital calipers at several known distances.",
+      "core_function": "Provides multiple precision step heights and measuring lands in one rigid calibration object.",
+      "likely_main_part": "Ground steel stepped gauge bar with ascending precision shoulders, relief grooves at step roots, chamfered handling ends, serial-number pad, and case locating notch.",
+      "why_it_tests_cad_representation": "Tests exact stepped datum relationships, sharp-but-relieved inside corners, tolerance-sensitive measuring faces, asymmetric notch placement, and labeled nonfunctional surfaces."
+    },
+    {
+      "idea_title": "Conductivity Probe Flow Cell Body",
+      "product_context": "Inline measurement cell for holding conductivity or pH probes in a controlled liquid sample stream.",
+      "core_function": "Directs fluid past the sensing tip while sealing threaded probe ports and tube connections.",
+      "likely_main_part": "Machined polymer or stainless flow cell body with central flow chamber, angled probe port, inlet and outlet tube bosses, O-ring glands, and transparent cover screw pattern.",
+      "why_it_tests_cad_representation": "Combines angled intersecting bores, internal fluid cavity, sealing grooves, raised tube bosses, cover fastener patterns, and asymmetric inspection geometry."
+    },
+    {
+      "idea_title": "Torque Sensor Reaction Arm Hub",
+      "product_context": "Adapter hub for coupling a rotary torque transducer to a reaction arm during motor or gearbox testing.",
+      "core_function": "Transfers torque reaction to a fixed arm while keeping the sensor shaft concentric and accessible.",
+      "likely_main_part": "Cylindrical hub with keyed central bore, radial reaction-arm lug, bolt circle, split clamp slot, dowel holes, and filleted torque-transfer shoulders.",
+      "why_it_tests_cad_representation": "Tests keyed bores, radial protrusions from rotational bodies, bolt-circle patterns, clamp slots crossing round geometry, heavy fillets, and load-path-specific shape."
+    }
+  ]
+}

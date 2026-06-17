@@ -1,0 +1,231 @@
+{
+  "agent_number": 15,
+  "source_requirements_file": "docs/subcad_limit_test/single_metal_parts/agent_015_textile_craft_machine_hardware_single_metal_parts.json",
+  "stage": "subcad_program_generation",
+  "programs": [
+    {
+      "requirement_id": "SMP-015-01",
+      "part_name": "Walking-Foot Sewing Machine Feed Dog - single metal part",
+      "source_raw_idea_title": "Walking-Foot Sewing Machine Feed Dog",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(200, 70, 70, material=\"steel_a36\")\n    .drill(diameter=11, cx=-86, cy=0, through=True)\n    .drill(diameter=11, cx=86, cy=0, through=True)\n    .slot(length=66, width=17, cx=0, cy=0, through=True)\n    .pocket(width=23, length=50, depth=15, cx=0, cy=0)\n    .profile_cutout([(96.0, -35.0), (100.0, -30.0), (96.0, -25.0)], through=True)\n    .profile_cutout([(96.0, -25.0), (100.0, -20.0), (96.0, -15.0)], through=True)\n    .profile_cutout([(96.0, -15.0), (100.0, -10.0), (96.0, -5.0)], through=True)\n    .profile_cutout([(96.0, -5.0), (100.0, 0.0), (96.0, 5.0)], through=True)\n    .profile_cutout([(96.0, 5.0), (100.0, 10.0), (96.0, 15.0)], through=True)\n    .profile_cutout([(96.0, 15.0), (100.0, 20.0), (96.0, 25.0)], through=True)\n    .profile_cutout([(96.0, 25.0), (100.0, 30.0), (96.0, 35.0)], through=True)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 200 x 70 x 70 mm with mapped material steel_a36.",
+        "Two through mounting holes dia 11 mm at X=14/186, Y=35.",
+        "Central through obround slot 66 x 17 mm at X=100, Y=35.",
+        "Top relief pocket 50 x 23 x 15 mm deep, centered between mounting holes.",
+        "7 triangular rear-edge serrations, each 4 mm deep, represented by repeated triangular profile_cutout operations.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Serration profile_cutout placement needs execution review because the triangles lie on the rear edge boundary.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-015-02",
+      "part_name": "Leather Strap Edge Beveler Guide Shoe - single metal part",
+      "source_raw_idea_title": "Leather Strap Edge Beveler Guide Shoe",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(245, 55, 6, material=\"steel_a36\")\n    .drill(diameter=11, cx=-111.5, cy=-0.5, through=True)\n    .drill(diameter=11, cx=111.5, cy=-0.5, through=True)\n    .slot(length=81, width=10, cx=-0.5, cy=-0.5, through=True)\n    .pocket(width=18, length=61, depth=3, cx=0, cy=0)\n    .groove(length=245, width=27, depth=3, cx=0, cy=0)\n    .slope_cut(width=55, length=49, start_depth=0, end_depth=6, cx=98, cy=0, slope_axis=\"X\")\n    .threaded_hole(diameter=5, depth=27.5, cx=117.5, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 245 x 55 x 6 mm with mapped material steel_a36.",
+        "Two through mounting holes dia 11 mm at X=11/234, Y=27.",
+        "Central through obround slot 81 x 10 mm at X=122, Y=27.",
+        "Top relief pocket 61 x 18 x 3 mm deep, centered between mounting holes.",
+        "Centered full-length groove mouth 27 mm x depth 3 mm.",
+        "Angled top reference face over last 49 mm using slope_cut at nominal 36 degree intent.",
+        "M5 tapped hole represented with threaded_hole near the right side/c. pocket region.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "V-groove included angle 90 degrees is approximated as a rectangular groove because Stock.groove has no V profile parameter.",
+        "Angled reference face is represented as a sloped rectangular cut; exact external wedge/angle verification remains for Stage 4 review.",
+        "Side tapped hole axis parallel to Y is not represented exactly; program uses a top-face vertical threaded-hole proxy.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-015-03",
+      "part_name": "Embroidery Hoop Quick-Lock Cam Clamp - single metal part",
+      "source_raw_idea_title": "Embroidery Hoop Quick-Lock Cam Clamp",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(180, 85, 19, material=\"steel_1045\")\n    .drill(diameter=7, cx=-73, cy=-0.5, through=True)\n    .drill(diameter=7, cx=73, cy=-0.5, through=True)\n    .slot(length=60, width=14, cx=0, cy=-0.5, through=True)\n    .pocket(width=28, length=45, depth=2, cx=0, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 180 x 85 x 19 mm with mapped material steel_1045.",
+        "Two through mounting holes dia 7 mm at X=17/163, Y=42.",
+        "Central through obround slot 60 x 14 mm at X=90, Y=42.",
+        "Top relief pocket 45 x 28 x 2 mm deep, centered between mounting holes.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-015-04",
+      "part_name": "Rotary Cutter Blade Depth Collar - single metal part",
+      "source_raw_idea_title": "Rotary Cutter Blade Depth Collar",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.cylindrical(38, 113, material=\"steel_1045\")\n    .bore(diameter=9, through=True)\n    .counterbore(hole_diameter=9, counterbore_diameter=19, counterbore_depth=3, cx=0, cy=0)\n    .pocket(width=12, length=105, depth=1, cx=0, cy=0)\n    .threaded_hole(diameter=6, depth=38, cx=-19.5, cy=0, through=True)\n    .threaded_hole(diameter=6, depth=38, cx=18.5, cy=0, through=True)\n    .slot(length=14.5, width=6, depth=38, cx=0, cy=5.875, through=True)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Cylindrical stock OD 38 mm x length 113 mm with mapped material steel_1045.",
+        "Centered through bore diameter 9 mm.",
+        "One concentric counterbore diameter 19 mm x 3 mm deep.",
+        "Longitudinal top flat intent 12 mm wide over 105 mm length.",
+        "Two tapped radial clamp-hole callouts M6 at X=37 and X=75 mm represented by threaded_hole operations.",
+        "Radial split relief slit width 6 mm from OD toward bore represented by a through slot.",
+        "1.0 mm outside circular edge break represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Requirement datum says cylinder axis is X; Stock.cylindrical and top-face bore are Z-axis oriented, so axial orientation must be reviewed.",
+        "Counterbores are required on both ends; this draft only represents the accessible top/end counterbore.",
+        "Milled flat is approximated by a shallow rectangular pocket on the top of the cylindrical stock, not an exact chordal flat.",
+        "Radial tapped holes through the top flat are represented in Stock top-face coordinates; true radial orientation and thread sidewall are not exact.",
+        "Split relief slit is approximated as a top-face through slot; exact OD-to-bore radial cut on datum-B side needs review.",
+        "Internal bore-mouth chamfers are not independently selectable in this draft."
+      ],
+      "review_notes": [
+        "Round-bar programs use Stock.cylindrical(diameter, height) per the generation guide; axis convention may differ from the frozen X-axis requirement text.",
+        "Material source calls for 4140 alloy steel; mapped to steel_1045 because the requested Stage 3 allowed material set has no 4140 key."
+      ]
+    },
+    {
+      "requirement_id": "SMP-015-05",
+      "part_name": "Serger Looper Carrier Arm - single metal part",
+      "source_raw_idea_title": "Serger Looper Carrier Arm",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(195, 75, 40, material=\"steel_a36\")\n    .drill(diameter=13, cx=-82.5, cy=-0.5, through=True)\n    .drill(diameter=13, cx=82.5, cy=-0.5, through=True)\n    .slot(length=65, width=11, cx=-0.5, cy=-0.5, through=True)\n    .pocket(width=25, length=48, depth=7, cx=0, cy=0)\n    .slope_cut(width=75, length=39, start_depth=0, end_depth=13.429, cx=78, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 195 x 75 x 40 mm with mapped material steel_a36.",
+        "Two through mounting holes dia 13 mm at X=15/180, Y=37.",
+        "Central through obround slot 65 x 11 mm at X=97, Y=37.",
+        "Top relief pocket 48 x 25 x 7 mm deep, centered between mounting holes.",
+        "Angled top reference face over last 39 mm using slope_cut at nominal 19 degree intent.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Angled reference face is represented as a sloped rectangular cut; exact external wedge/angle verification remains for Stage 4 review.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-015-06",
+      "part_name": "Weaving Loom Shuttle Race Insert - single metal part",
+      "source_raw_idea_title": "Weaving Loom Shuttle Race Insert",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(205, 35, 33, material=\"steel_a36\")\n    .drill(diameter=8, cx=-92.5, cy=-0.5, through=True)\n    .drill(diameter=8, cx=92.5, cy=-0.5, through=True)\n    .slot(length=68, width=9, cx=-0.5, cy=-0.5, through=True)\n    .pocket(width=18, length=51, depth=1, cx=0, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 205 x 35 x 33 mm with mapped material steel_a36.",
+        "Two through mounting holes dia 8 mm at X=10/195, Y=17.",
+        "Central through obround slot 68 x 9 mm at X=102, Y=17.",
+        "Top relief pocket 51 x 18 x 1 mm deep, centered between mounting holes.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-015-07",
+      "part_name": "Buttonhole Attachment Template Cam - single metal part",
+      "source_raw_idea_title": "Buttonhole Attachment Template Cam",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(90, 45, 8, material=\"steel_a36\")\n    .drill(diameter=8, cx=-35, cy=-0.5, through=True)\n    .drill(diameter=8, cx=35, cy=-0.5, through=True)\n    .slot(length=30, width=18, cx=0, cy=-0.5, through=True)\n    .pocket(width=18, length=25, depth=1, cx=0, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 90 x 45 x 8 mm with mapped material steel_a36.",
+        "Two through mounting holes dia 8 mm at X=10/80, Y=22.",
+        "Central through obround slot 30 x 18 mm at X=45, Y=22.",
+        "Top relief pocket 25 x 18 x 1 mm deep, centered between mounting holes.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-015-08",
+      "part_name": "Leather Skiving Machine Presser Foot - single metal part",
+      "source_raw_idea_title": "Leather Skiving Machine Presser Foot",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(170, 95, 69, material=\"steel_1045\")\n    .drill(diameter=11, cx=-66, cy=-0.5, through=True)\n    .drill(diameter=11, cx=66, cy=-0.5, through=True)\n    .slot(length=56, width=8, cx=0, cy=-0.5, through=True)\n    .pocket(width=31, length=42, depth=31, cx=0, cy=0)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 170 x 95 x 69 mm with mapped material steel_1045.",
+        "Two through mounting holes dia 11 mm at X=19/151, Y=47.",
+        "Central through obround slot 56 x 8 mm at X=85, Y=47.",
+        "Top relief pocket 42 x 31 x 31 mm deep, centered between mounting holes.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-015-09",
+      "part_name": "Embroidery Thread Tension Disc Hub - single metal part",
+      "source_raw_idea_title": "Embroidery Thread Tension Disc Hub",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(185, 40, 23, material=\"steel_a36\")\n    .drill(diameter=7, cx=-82.5, cy=0, through=True)\n    .drill(diameter=7, cx=82.5, cy=0, through=True)\n    .slot(length=61, width=15, cx=-0.5, cy=0, through=True)\n    .pocket(width=18, length=46, depth=11, cx=0, cy=0)\n    .threaded_hole(diameter=8, depth=20, cx=84.5, cy=0)\n    .profile_cutout([(87.5, -20.0), (92.5, -16.0), (87.5, -12.0)], through=True)\n    .profile_cutout([(87.5, -12.0), (92.5, -8.0), (87.5, -4.0)], through=True)\n    .profile_cutout([(87.5, -4.0), (92.5, 0.0), (87.5, 4.0)], through=True)\n    .profile_cutout([(87.5, 4.0), (92.5, 8.0), (87.5, 12.0)], through=True)\n    .profile_cutout([(87.5, 12.0), (92.5, 16.0), (87.5, 20.0)], through=True)\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 185 x 40 x 23 mm with mapped material steel_a36.",
+        "Two through mounting holes dia 7 mm at X=10/175, Y=20.",
+        "Central through obround slot 61 x 15 mm at X=92, Y=20.",
+        "Top relief pocket 46 x 18 x 11 mm deep, centered between mounting holes.",
+        "M8 tapped hole represented with threaded_hole near the right side/c. pocket region.",
+        "5 triangular rear-edge serrations, each 5 mm deep, represented by repeated triangular profile_cutout operations.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Side tapped hole axis parallel to Y is not represented exactly; program uses a top-face vertical threaded-hole proxy.",
+        "Serration profile_cutout placement needs execution review because the triangles lie on the rear edge boundary.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    },
+    {
+      "requirement_id": "SMP-015-10",
+      "part_name": "Bias Tape Maker Folding Funnel - single metal part",
+      "source_raw_idea_title": "Bias Tape Maker Folding Funnel",
+      "program_status": "draft_unexecuted",
+      "subcad_program": "from subcad import Stock\n\npart = (\n    Stock.rectangular(145, 65, 40, material=\"steel_a36\")\n    .drill(diameter=10, cx=-59.5, cy=-0.5, through=True)\n    .drill(diameter=10, cx=59.5, cy=-0.5, through=True)\n    .slot(length=48, width=8, cx=-0.5, cy=-0.5, through=True)\n    .pocket(width=21, length=36, depth=20, cx=0, cy=0)\n    .slope_cut(width=65, length=29, start_depth=0, end_depth=10.555, cx=58, cy=0, slope_axis=\"X\")\n    .chamfer(width=1.0)\n)\n",
+      "coverage_notes": [
+        "Rectangular stock envelope 145 x 65 x 40 mm with mapped material steel_a36.",
+        "Two through mounting holes dia 10 mm at X=13/132, Y=32.",
+        "Central through obround slot 48 x 8 mm at X=72, Y=32.",
+        "Top relief pocket 36 x 21 x 20 mm deep, centered between mounting holes.",
+        "Angled top reference face over last 29 mm using slope_cut at nominal 20 degree intent.",
+        "1.0 mm top/outside chamfer represented with Stock.chamfer."
+      ],
+      "known_gaps": [
+        "Angled reference face is represented as a sloped rectangular cut; exact external wedge/angle verification remains for Stage 4 review.",
+        "0.5 mm chamfers on individual hole and slot mouths are not separately selectable in this draft."
+      ],
+      "review_notes": [
+        "Coordinate conversion used Stock centered XY coordinates from the requirement lower-left origin."
+      ]
+    }
+  ]
+}

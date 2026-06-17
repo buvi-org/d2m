@@ -1,0 +1,79 @@
+{
+  "agent_number": 10,
+  "agent_id": "019ecedc-e135-79c1-aaa2-2a57036d5234",
+  "domain": "outdoor gear, camping hardware, marine accessories, and rugged field equipment",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Cam-Lock Tent Pole Hub",
+      "product_context": "Four-season expedition tents using rigid aluminum pole frameworks in high wind.",
+      "core_function": "Joins multiple tent poles at fixed compound angles while a rotating cam locks each pole socket against pullout.",
+      "likely_main_part": "Machined central hub body with angled cylindrical sockets, cam bore, detent pockets, and drain channels.",
+      "why_it_tests_cad_representation": "Requires several non-coplanar angled bores, intersecting socket geometry, rotational cam clearance, asymmetric fillets, and small retention features."
+    },
+    {
+      "idea_title": "Kayak Deck Gear Track Anchor",
+      "product_context": "Sea kayaks and fishing kayaks that mount rod holders, GPS arms, and tie-down accessories on deck rails.",
+      "core_function": "Slides into a low-profile deck track and locks accessories in place with a captive wedge clamp.",
+      "likely_main_part": "Machined T-slot slider block with tapered wedge pocket, threaded boss, underside reliefs, and rounded rail-bearing edges.",
+      "why_it_tests_cad_representation": "Combines profile-driven rail geometry, captured sliding interfaces, tapered internal features, precise edge breaks, and functional orientation constraints."
+    },
+    {
+      "idea_title": "Folding Camp Stove Pot Support Arm",
+      "product_context": "Compact backpacking stoves that must support cookware while folding flat for packing.",
+      "core_function": "Pivots outward from a burner body and provides a serrated support surface for pots of varying diameters.",
+      "likely_main_part": "Machined folding arm with hinge barrel, stop shoulder, scalloped pot-contact teeth, lightening pockets, and nested folded profile.",
+      "why_it_tests_cad_representation": "Tests hinge-axis geometry, curved serrations, thin structural ribs, weight-saving cutouts, and interference-aware folded versus deployed shapes."
+    },
+    {
+      "idea_title": "Marine Cleat Quick-Release Fairlead",
+      "product_context": "Small sailboats and tenders needing controlled rope routing near a cleat without permanent line trapping.",
+      "core_function": "Guides dock line or control line through a smooth open throat while allowing quick side release under slack.",
+      "likely_main_part": "Machined fairlead body with flared rope throat, mounting bosses, swept entry horns, countersunk fastener holes, and polished bearing radii.",
+      "why_it_tests_cad_representation": "Requires organic rope-contact surfaces, compound curves, countersinks, asymmetric open geometry, and high-radius transitions that are hard to express as simple primitives."
+    },
+    {
+      "idea_title": "Ice Axe Spike Protector Lock Collar",
+      "product_context": "Mountaineering packs carrying technical ice axes with removable spike covers.",
+      "core_function": "Clamps around an ice axe shaft and locks a protective spike cap so it cannot fall off during transport.",
+      "likely_main_part": "Machined split collar with shaped shaft channel, bayonet lug slots, pinch screw bridge, and keyed cap-retention ears.",
+      "why_it_tests_cad_representation": "Tests split-body geometry, non-round channels, bayonet-slot paths, screw-clearance bridges, and mating-part retention details."
+    },
+    {
+      "idea_title": "Rugged Tripod Ground Spike Foot",
+      "product_context": "Field survey tripods, spotting scopes, and camera supports used on mud, gravel, snow, and packed soil.",
+      "core_function": "Replaces a rubber foot with a folding ground spike and broad shoulder that resists twisting under load.",
+      "likely_main_part": "Machined foot housing with conical spike seat, transverse pivot bosses, serrated ground shoulder, drainage slots, and threaded leg socket.",
+      "why_it_tests_cad_representation": "Includes coaxial threaded features, conical seats, pivot bosses, serrated terrain contact, and dirt-shedding openings in a compact part."
+    },
+    {
+      "idea_title": "Dive Reel Line Guide Shuttle",
+      "product_context": "Scuba and cave-diving reels where line must spool evenly without snagging on the frame.",
+      "core_function": "Guides braided line across the reel width while sliding on parallel rods and maintaining a rounded low-friction eyelet.",
+      "likely_main_part": "Machined shuttle block with twin guide-rod bores, radiused line eyelet, anti-rotation flats, and recessed wear insert pocket.",
+      "why_it_tests_cad_representation": "Tests parallel precision bores, smooth internal rope-contact radii, insert recesses, sliding clearances, and compact symmetry with functional exceptions."
+    },
+    {
+      "idea_title": "Backcountry Water Filter Pump Lever",
+      "product_context": "Hand-pump water filters used for group camping and remote field expeditions.",
+      "core_function": "Transfers hand force to a pump piston while folding against the filter body for storage.",
+      "likely_main_part": "Machined lever arm with offset pivot clevis, ergonomic thumb pad, linkage pin bore, stop tab, and hollowed underside.",
+      "why_it_tests_cad_representation": "Requires offset load paths, clevis geometry, blended ergonomic surfaces, pin alignment, stop faces, and underside shelling-like relief."
+    },
+    {
+      "idea_title": "Boat Hook Telescoping Pole Cam Clamp",
+      "product_context": "Telescoping marine poles used for docking, mooring pickup, and retrieving lines from the water.",
+      "core_function": "Locks nested pole sections at adjustable length using an external cam lever and shaped compression shoe.",
+      "likely_main_part": "Machined clamp collar with split cylindrical bore, cam-lever lugs, internal compression shoe pocket, hinge pin bosses, and anti-slip texture grooves.",
+      "why_it_tests_cad_representation": "Tests split clamp mechanics, cylindrical nesting, lever pivot architecture, internal pocketing, textured grip features, and clamp-clearance tolerances."
+    },
+    {
+      "idea_title": "Field Radio Mast Guyline Tensioner",
+      "product_context": "Portable communications masts for emergency response, overlanding, and remote survey teams.",
+      "core_function": "Adjusts and locks guyline tension while allowing quick release with gloved hands.",
+      "likely_main_part": "Machined tensioner body with angled rope channels, eccentric locking cam cavity, tie-off eye, ribbed grip flanges, and load-rated anchor hole.",
+      "why_it_tests_cad_representation": "Combines rope-path geometry, eccentric cam clearance, high-load eyelet shapes, grip ribs, and angled through-features that stress representation of functional mechanical intent."
+    }
+  ]
+}

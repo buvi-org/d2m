@@ -1,0 +1,79 @@
+{
+  "agent_number": 26,
+  "agent_id": "019ecee1-48a5-72f0-a266-355281aabfda",
+  "domain": "office equipment, printer/scanner mechanisms, desk hardware, file storage, and workspace adjustment parts",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Printer Paper Tray Lift Cam",
+      "product_context": "Laser printer input tray assembly",
+      "core_function": "Raises the paper stack incrementally so pickup rollers maintain consistent contact pressure",
+      "likely_main_part": "Eccentric lift cam with keyed shaft bore and follower ramp",
+      "why_it_tests_cad_representation": "Requires off-center profiles, curved ramp surfaces, shaft interfaces, and controlled clearances for moving contact"
+    },
+    {
+      "idea_title": "Scanner Lid Counterbalance Hinge Arm",
+      "product_context": "Flatbed scanner or copier lid mechanism",
+      "core_function": "Supports the scanner lid at multiple opening angles while resisting sudden closure",
+      "likely_main_part": "Machined hinge arm with pivot bosses, spring anchor holes, and stop faces",
+      "why_it_tests_cad_representation": "Combines rotational joints, load-bearing bosses, angular stops, and asymmetric geometry"
+    },
+    {
+      "idea_title": "Adjustable Monitor Arm Tilt Knuckle",
+      "product_context": "Desk-mounted monitor support arm",
+      "core_function": "Allows controlled monitor tilt while locking position under display weight",
+      "likely_main_part": "Serrated tilt knuckle with central clamp bore and radial teeth",
+      "why_it_tests_cad_representation": "Tests circular patterns, interlocking teeth, clamp geometry, and orientation-critical mating surfaces"
+    },
+    {
+      "idea_title": "Office Chair Height Lever Bracket",
+      "product_context": "Pneumatic office chair adjustment control",
+      "core_function": "Transfers user lever motion to the gas cylinder release button",
+      "likely_main_part": "Stamped-style machined lever bracket with pivot hole, actuator tab, and cable slot",
+      "why_it_tests_cad_representation": "Requires thin-wall features, offset tabs, bend-like geometry, pivot alignment, and actuation clearances"
+    },
+    {
+      "idea_title": "Filing Cabinet Anti-Tip Interlock Slider",
+      "product_context": "Multi-drawer metal filing cabinet",
+      "core_function": "Prevents more than one drawer from opening at the same time",
+      "likely_main_part": "Vertical interlock slider bar with stepped notches and drawer latch contact faces",
+      "why_it_tests_cad_representation": "Tests long slender parts, repeated notch features, precise slot relationships, and functional interference geometry"
+    },
+    {
+      "idea_title": "Printer Duplexer Sheet Diverter Gate",
+      "product_context": "Duplex printing path inside an office printer",
+      "core_function": "Redirects paper between the output path and reverse feed path for two-sided printing",
+      "likely_main_part": "Pivoting diverter gate with curved guide rib and axle journals",
+      "why_it_tests_cad_representation": "Requires thin curved surfaces, rib geometry, pivot journals, and smooth paper-path transitions"
+    },
+    {
+      "idea_title": "Keyboard Tray Slide Lock Pawl",
+      "product_context": "Under-desk retractable keyboard tray",
+      "core_function": "Locks the tray at selected extension positions and releases with a small handle motion",
+      "likely_main_part": "Spring-loaded pawl with tooth profile, pivot boss, and release tab",
+      "why_it_tests_cad_representation": "Tests ratchet teeth, small pivot features, spring seats, and mechanically meaningful contact angles"
+    },
+    {
+      "idea_title": "Document Feeder Separator Roller Hub",
+      "product_context": "Automatic document feeder for scanner or multifunction printer",
+      "core_function": "Mounts a friction roller while coupling it to a drive shaft and allowing service replacement",
+      "likely_main_part": "Roller hub with splined bore, retaining groove, and outer sleeve shoulder",
+      "why_it_tests_cad_representation": "Requires concentric cylinders, splines, grooves, shoulders, and tolerance-sensitive rotational features"
+    },
+    {
+      "idea_title": "Standing Desk Crossbar Clamp Block",
+      "product_context": "Electric height-adjustable desk frame",
+      "core_function": "Clamps a telescoping crossbar to the desk leg frame while preserving alignment",
+      "likely_main_part": "Clamp block with split bore, bolt bosses, alignment tongue, and relief pockets",
+      "why_it_tests_cad_representation": "Tests split clamp geometry, fastener features, structural pockets, and assembly-driven constraints"
+    },
+    {
+      "idea_title": "Modular Desk Cable Grommet Iris Ring",
+      "product_context": "Cable management port in an office desk surface",
+      "core_function": "Adjusts the opening size around routed cables while keeping the desktop pass-through covered",
+      "likely_main_part": "Rotating iris ring with overlapping blade slots and detent notches",
+      "why_it_tests_cad_representation": "Requires annular parts, repeating curved slots, detents, overlapping motion paths, and user-adjustable mechanism geometry"
+    }
+  ]
+}

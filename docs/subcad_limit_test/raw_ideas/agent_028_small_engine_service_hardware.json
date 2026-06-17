@@ -1,0 +1,79 @@
+{
+  "agent_number": 28,
+  "agent_id": "019ecee1-7090-7203-9883-df6c0b871433",
+  "domain": "small engines, lawn equipment, generator accessories, carburetor/linkage hardware, and service fixtures",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Small Engine Flywheel Holding Clamp",
+      "product_context": "Bench servicing single-cylinder lawn mower, tiller, and pressure-washer engines",
+      "core_function": "Locks the flywheel rim or cooling fins in place while the crankshaft nut is loosened or torqued",
+      "likely_main_part": "CNC-machined crescent clamp body with stepped jaw faces and a threaded locking boss",
+      "why_it_tests_cad_representation": "Requires curved gripping geometry, offset bosses, jaw clearances, internal steps, and load-bearing fillets"
+    },
+    {
+      "idea_title": "Carburetor Throttle Shaft Alignment Jig",
+      "product_context": "Repairing float-bowl carburetors used on small engines and generators",
+      "core_function": "Holds the carburetor body and throttle shaft square while bushings, plates, or screws are serviced",
+      "likely_main_part": "Machined fixture block with carburetor mounting holes, shaft-support bores, and datum faces",
+      "why_it_tests_cad_representation": "Combines precision coaxial holes, asymmetric mounting patterns, pockets, reference faces, and small fastener features"
+    },
+    {
+      "idea_title": "Governor Linkage Calibration Plate",
+      "product_context": "Setting governor arm and throttle linkage travel on lawn equipment engines",
+      "core_function": "Provides fixed reference slots and pin positions for checking linkage length and lever sweep",
+      "likely_main_part": "Flat machined gauge plate with arced slots, dowel-pin holes, and engraved reference marks",
+      "why_it_tests_cad_representation": "Tests curved slot layout, datum-based hole placement, thin-plate proportions, and annotation-friendly mechanical features"
+    },
+    {
+      "idea_title": "Portable Generator Exhaust Deflector Bracket",
+      "product_context": "Accessory for redirecting hot exhaust away from generator frames, cables, or nearby surfaces",
+      "core_function": "Mounts to existing muffler guard points and supports an angled deflector shield",
+      "likely_main_part": "Bent-or-machined angle bracket with slotted mounting ears, spacer bosses, and shield attachment holes",
+      "why_it_tests_cad_representation": "Requires angled planes, elongated slots, standoffs, clearance offsets, and thermal spacing considerations"
+    },
+    {
+      "idea_title": "Recoil Starter Pulley Removal Fixture",
+      "product_context": "Servicing pull-start assemblies on mowers, trimmers, pumps, and small generators",
+      "core_function": "Captures the starter pulley without crushing it so the center fastener or spring cup can be removed",
+      "likely_main_part": "Circular nest plate with radial reliefs, center access bore, and removable retaining tabs",
+      "why_it_tests_cad_representation": "Tests circular pockets, radial symmetry with interruptions, access clearances, tab interfaces, and nested part geometry"
+    },
+    {
+      "idea_title": "Primer Bulb Retainer Ring Press Tool",
+      "product_context": "Installing primer bulb retaining rings on small carburetors and fuel-system housings",
+      "core_function": "Presses the retaining ring evenly into a recessed carburetor face without deforming the bulb",
+      "likely_main_part": "Machined annular press head with stepped inner clearance and outer locating lip",
+      "why_it_tests_cad_representation": "Requires concentric stepped rings, delicate clearance volumes, chamfers, wall thickness control, and contact-surface definition"
+    },
+    {
+      "idea_title": "Small Engine Valve Spring Compression Bridge",
+      "product_context": "Cylinder-head service on overhead-valve lawn mower and generator engines",
+      "core_function": "Spans the valve cover area and compresses a valve spring using a screw-driven pad",
+      "likely_main_part": "Machined bridge frame with forked feet, central threaded boss, and valve-stem clearance window",
+      "why_it_tests_cad_representation": "Combines bridge-like structure, threaded boss placement, forked supports, internal cutouts, and force-path geometry"
+    },
+    {
+      "idea_title": "Fuel Line Quick-Cut Measuring Fixture",
+      "product_context": "Preparing replacement fuel hoses for trimmers, blowers, generators, and compact engines",
+      "core_function": "Locates flexible fuel line at repeatable lengths and guides a square cut",
+      "likely_main_part": "Machined channel block with hose grooves, length stops, and a blade-guide slot",
+      "why_it_tests_cad_representation": "Tests semi-cylindrical grooves, adjustable stop pockets, narrow guide slots, clamp features, and ergonomic fixture geometry"
+    },
+    {
+      "idea_title": "Generator Wheel Kit Axle Spacer Block",
+      "product_context": "Accessory hardware for fitting wheel kits to portable generator tubular frames",
+      "core_function": "Maintains axle spacing and frame clearance while distributing load around the mounting tube",
+      "likely_main_part": "Machined spacer block with saddle radius, through-bolt holes, axle bore, and anti-rotation flats",
+      "why_it_tests_cad_representation": "Requires cylindrical saddle cuts, intersecting bores, frame clearance geometry, flats, and load-bearing transitions"
+    },
+    {
+      "idea_title": "Air Filter Cover Latch Replacement Bracket",
+      "product_context": "Repair part for cracked or missing latch mounts on mower and generator air filter housings",
+      "core_function": "Provides a rigid replacement latch anchor that screws into existing housing points",
+      "likely_main_part": "Small machined bracket with hooked latch profile, countersunk holes, and raised locating pads",
+      "why_it_tests_cad_representation": "Tests small-scale functional hooks, countersinks, raised pads, asymmetric profiles, and tight packaging constraints"
+    }
+  ]
+}

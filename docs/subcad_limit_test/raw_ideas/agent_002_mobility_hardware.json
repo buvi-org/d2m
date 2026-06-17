@@ -1,0 +1,79 @@
+{
+  "agent_number": 2,
+  "agent_id": "019ecedb-2ff5-7812-918b-734decd022ca",
+  "domain": "bicycle, scooter, and light mobility hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Bicycle thru-axle chain tensioner dropout insert",
+      "product_context": "Single-speed or internally geared bicycle frame with sliding rear dropouts",
+      "core_function": "Provides precise fore-aft axle adjustment while maintaining wheel alignment under pedaling load",
+      "likely_main_part": "Machined dropout insert with axle bore, adjustment screw seat, guide rails, and clamp faces",
+      "why_it_tests_cad_representation": "Requires coaxial axle geometry, sliding contact faces, threaded adjustment features, asymmetric reliefs, and tight relationships between clamping and alignment surfaces"
+    },
+    {
+      "idea_title": "Electric scooter folding stem hinge knuckle",
+      "product_context": "Commuter electric scooter with a folding handlebar stem",
+      "core_function": "Allows the stem to fold for storage while locking rigidly during riding",
+      "likely_main_part": "Machined hinge knuckle with interlocking ears, pivot bore, latch pocket, stop faces, and cable clearance channel",
+      "why_it_tests_cad_representation": "Combines hinge articulation geometry, nested forked features, hard stop surfaces, nontrivial pockets, and clearance routing in a compact safety-critical part"
+    },
+    {
+      "idea_title": "Cargo bicycle adjustable kickstand yoke",
+      "product_context": "Long-tail or front-loader cargo bicycle needing a stable center stand",
+      "core_function": "Connects twin kickstand legs to the frame and lets their stance width or angle be tuned",
+      "likely_main_part": "Machined yoke block with paired leg sockets, cross-pin bores, frame interface bosses, and angular stop shoulders",
+      "why_it_tests_cad_representation": "Tests mirrored but angled sockets, load-bearing bosses, intersecting holes, repeated pin features, and geometry that must communicate stance and mechanical limits"
+    },
+    {
+      "idea_title": "Bicycle disc brake flat-mount adapter with cooling fins",
+      "product_context": "Road or gravel bicycle adapting a caliper to a larger rotor size",
+      "core_function": "Offsets the brake caliper to the correct rotor radius while adding heat-dissipating surface area",
+      "likely_main_part": "Machined brake adapter with stepped mounting pads, through holes, counterbores, rotor-clearance arch, and integral fins",
+      "why_it_tests_cad_representation": "Requires precise hole spacing, parallel datum surfaces, curved clearance envelopes, thin repeated fin geometry, and functional offsets"
+    },
+    {
+      "idea_title": "Scooter rear suspension rocker link",
+      "product_context": "Light electric scooter with compact rear swingarm suspension",
+      "core_function": "Transfers motion from the rear swingarm to a small shock absorber with defined leverage ratio",
+      "likely_main_part": "Machined rocker link with three bearing bores, offset lobes, spacer bosses, and weight-relief pockets",
+      "why_it_tests_cad_representation": "Tests multi-axis pivot relationships, organic but machinable link profiles, boss thickness transitions, pocketing, and bearing-seat precision"
+    },
+    {
+      "idea_title": "Folding bicycle handlebar latch cam",
+      "product_context": "Folding bicycle handlepost latch mechanism",
+      "core_function": "Applies over-center clamping force to secure the folding handlebar post",
+      "likely_main_part": "Machined eccentric cam lever with pivot bore, cam surface, finger relief, and latch-pin contact pad",
+      "why_it_tests_cad_representation": "Requires eccentric surfaces, smooth cam profiles, ergonomic lever shaping, contact patches, and clear representation of over-center locking geometry"
+    },
+    {
+      "idea_title": "E-bike mid-drive motor torque arm spline clamp",
+      "product_context": "Retrofitted or modular e-bike mid-drive system mounted near the bottom bracket",
+      "core_function": "Resists motor reaction torque by clamping around a splined or keyed interface and tying into the frame",
+      "likely_main_part": "Machined split clamp arm with spline-like bore features, pinch bolt ears, offset arm, and frame contact pad",
+      "why_it_tests_cad_representation": "Tests internal keyed geometry, split-clamp behavior, bolt ear symmetry, torque-load path clarity, and blended transitions from circular clamp to structural arm"
+    },
+    {
+      "idea_title": "Recumbent trike steering bellcrank",
+      "product_context": "Light mobility recumbent tricycle with under-seat indirect steering",
+      "core_function": "Converts handlebar linkage movement into tie-rod motion for front wheel steering",
+      "likely_main_part": "Machined bellcrank with central bearing boss, two offset linkage holes, tapered arms, and angular indexing marks",
+      "why_it_tests_cad_representation": "Requires accurate angular relationships, multiple pivot centers, non-rectilinear arm shapes, bearing features, and clear mechanical intent through linkage geometry"
+    },
+    {
+      "idea_title": "Bicycle dynamo hub wire-exit strain relief cap",
+      "product_context": "Touring bicycle front hub with integrated dynamo wiring",
+      "core_function": "Protects the electrical connector and guides the wire away from the spinning hub and spokes",
+      "likely_main_part": "Machined protective cap with hub-interface bore, wire channel, clamp screw boss, curved outer shield, and anti-rotation tab",
+      "why_it_tests_cad_representation": "Tests small protective shell geometry, internal channels, anti-rotation features, screw bosses, and spatial clearance around rotating bicycle components"
+    },
+    {
+      "idea_title": "Manual wheelchair quick-release caster fork crown",
+      "product_context": "Lightweight manual wheelchair or adaptive mobility chair",
+      "core_function": "Holds the front caster fork and enables quick removal or height adjustment",
+      "likely_main_part": "Machined caster crown block with vertical stem bore, transverse release-pin hole, stepped height-index grooves, and fork lug interfaces",
+      "why_it_tests_cad_representation": "Combines vertical and transverse precision holes, indexed adjustment features, fork interface geometry, compact load paths, and accessibility-focused mechanical detail"
+    }
+  ]
+}

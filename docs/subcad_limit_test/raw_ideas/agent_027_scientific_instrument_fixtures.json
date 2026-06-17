@@ -1,0 +1,79 @@
+{
+  "agent_number": 27,
+  "agent_id": "019ecee1-5ca5-7772-b168-d9f31fc9754a",
+  "domain": "scientific instruments, spectroscopy/optics mounts, vacuum lab hardware, sample handling, and precision lab fixtures",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Kinematic Mirror Mount Flexure Plate",
+      "product_context": "Optical spectroscopy beamline alignment for steering a laser into a monochromator or interferometer.",
+      "core_function": "Provides fine angular adjustment of a front mirror pad through three-point kinematic support and elastic flexure compliance.",
+      "likely_main_part": "Machined monolithic flexure plate with mirror pocket, thin hinge webs, actuator contact pads, and rear mounting bosses.",
+      "why_it_tests_cad_representation": "Combines thin flexures, offset bosses, counterbores, mirror recesses, actuator pads, symmetry, and tight clearances in one mechanically meaningful part."
+    },
+    {
+      "idea_title": "Vacuum Flange Optical Window Clamp Ring",
+      "product_context": "High-vacuum spectroscopy chamber with a removable fused silica or sapphire viewport.",
+      "core_function": "Compresses an optical window and gasket evenly against a vacuum flange while preserving a clear optical aperture.",
+      "likely_main_part": "Annular clamp ring with bolt circle, stepped window recess, gasket groove, relief chamfers, and alignment notches.",
+      "why_it_tests_cad_representation": "Tests concentric circular features, annular grooves, bolt-pattern repetition, stepped profiles, aperture constraints, and sealing-surface geometry."
+    },
+    {
+      "idea_title": "Cryogenic Sample Paddle Holder",
+      "product_context": "Low-temperature optical or Raman spectroscopy stage for holding a small crystal, wafer coupon, or thin sample.",
+      "core_function": "Secures a sample paddle thermally and mechanically while allowing optical access from multiple angles.",
+      "likely_main_part": "Small machined copper sample holder with pocket, clamp screw bosses, thermal strap tabs, alignment slot, and beveled optical clearance faces.",
+      "why_it_tests_cad_representation": "Requires mixed small-scale features, asymmetric cutouts, angled reliefs, threaded-boss placement, and material-driven functional geometry."
+    },
+    {
+      "idea_title": "Fiber Collimator V-Groove Alignment Block",
+      "product_context": "Spectrometer input optics where a fiber ferrule must be aligned to a collimating lens barrel.",
+      "core_function": "Locates a fiber ferrule and cylindrical lens housing on a shared optical axis with clamp access.",
+      "likely_main_part": "Rectangular alignment block with precision V-groove, lens bore, split-clamp slit, cross holes, dowel pin holes, and datum feet.",
+      "why_it_tests_cad_representation": "Tests V-shaped prismatic cuts, coaxial bores, clamp slots, orthogonal fastener holes, datum surfaces, and alignment-critical relationships."
+    },
+    {
+      "idea_title": "Miniature Vacuum Feedthrough Bracket",
+      "product_context": "Lab vacuum chamber carrying electrical or optical feedthrough connectors near a spectroscopy sample stage.",
+      "core_function": "Supports a circular feedthrough body and routes strain-relieved cables without interfering with nearby chamber hardware.",
+      "likely_main_part": "L-shaped machined bracket with circular saddle, split clamp ears, mounting slots, cable relief channel, and lightening pockets.",
+      "why_it_tests_cad_representation": "Includes bracket orthogonality, partial cylindrical seats, slotted holes, clamp ears, internal pockets, and cable-clearance geometry."
+    },
+    {
+      "idea_title": "Cuvette Carousel Indexing Plate",
+      "product_context": "UV-visible spectroscopy accessory for presenting multiple square cuvettes to a fixed optical beam.",
+      "core_function": "Holds several cuvettes at indexed angular positions while exposing each optical path through clear side windows.",
+      "likely_main_part": "Circular carousel plate with square cuvette pockets, radial optical windows, center bearing bore, detent holes, and engraved index flats.",
+      "why_it_tests_cad_representation": "Tests polar arrays, square pockets on a circular part, radial windows, central bearing geometry, detent features, and repeated but orientation-sensitive cutouts."
+    },
+    {
+      "idea_title": "Adjustable Slit Jaw Carrier",
+      "product_context": "Entrance or exit slit assembly for a monochromator, spectrograph, or beam-shaping optical instrument.",
+      "core_function": "Carries one precision slit blade and allows controlled linear motion relative to an opposing blade.",
+      "likely_main_part": "Machined jaw carrier with blade ledge, screw slots, guide rail grooves, spring pocket, datum shoulder, and blade clamp holes.",
+      "why_it_tests_cad_representation": "Tests thin ledges, long guide features, precision shoulders, nested pockets, elongated slots, and part geometry tied to motion constraints."
+    },
+    {
+      "idea_title": "Microscope Objective Vacuum Adapter Nosepiece",
+      "product_context": "Vacuum-compatible optical inspection chamber using a microscope objective mounted through a custom adapter.",
+      "core_function": "Positions an objective lens at a fixed working distance while sealing or shielding the chamber interface.",
+      "likely_main_part": "Cylindrical adapter body with external flange, internal stepped bore, thread relief, O-ring groove, spanner flats, and vent holes.",
+      "why_it_tests_cad_representation": "Combines rotational geometry, stepped internal cavities, sealing grooves, flats on cylinders, radial holes, and optical working-distance constraints."
+    },
+    {
+      "idea_title": "Precision Lab Jack Crosshead Block",
+      "product_context": "Compact vertical positioning fixture for raising a sample holder or small optical element under a beam path.",
+      "core_function": "Transfers screw-driven motion into guided vertical movement while maintaining parallelism and load support.",
+      "likely_main_part": "Machined crosshead block with lead screw nut pocket, twin guide-rod bores, top mounting grid, underside clearance pocket, and anti-rotation keyway.",
+      "why_it_tests_cad_representation": "Tests parallel bore alignment, central pocketing, grid-pattern mounting holes, internal clearances, guide constraints, and load-path-driven shape."
+    },
+    {
+      "idea_title": "Quartz Tube Furnace Sample Boat Fixture",
+      "product_context": "Tube furnace or in-situ spectroscopy setup where a ceramic or metal sample boat must be repeatably positioned inside a quartz tube.",
+      "core_function": "Cradles and locates a sample boat while allowing gas flow and thermal expansion clearance.",
+      "likely_main_part": "Long narrow machined fixture rail with curved tube-contact feet, boat locating tabs, vent slots, end stop, and thermocouple clip boss.",
+      "why_it_tests_cad_representation": "Tests elongated proportions, curved support surfaces, thin tabs, slot arrays, asymmetric end features, and functional clearances for thermal and gas-flow behavior."
+    }
+  ]
+}

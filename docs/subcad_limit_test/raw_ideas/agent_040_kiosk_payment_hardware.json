@@ -1,0 +1,217 @@
+{
+  "agent_number": 40,
+  "domain": "vending machines, kiosks, ticketing machines, coin/bill handling, and public-payment service hardware",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "Modular vending machine product spiral tray",
+      "product_context": "A snack vending machine uses removable trays that guide packaged products toward a dispensing bay while allowing quick restocking.",
+      "core_function": "Hold products in separate lanes and advance them toward the customer pickup area.",
+      "likely_main_part": "A molded tray insert with repeated channel dividers, retention lips, and mounting features.",
+      "why_it_tests_cad_representation": "The part combines repeated cavities, thin walls, rounded product guides, and alignment details that challenge patterning and feature hierarchy."
+    },
+    {
+      "idea_title": "Outdoor kiosk weather hood",
+      "product_context": "A public payment kiosk needs a protective hood around its screen and card reader for exposure to rain and glare.",
+      "core_function": "Shield user-facing controls while preserving access, visibility, and drainage.",
+      "likely_main_part": "A formed front canopy with side cheeks, drip edges, and integrated fastener bosses.",
+      "why_it_tests_cad_representation": "The geometry requires angled surfaces, overhangs, recessed service zones, and subtle edge treatments in one coherent shell."
+    },
+    {
+      "idea_title": "Ticket machine printer paper guide",
+      "product_context": "A transit ticketing machine routes printed tickets from an internal printer to a customer-accessible slot.",
+      "core_function": "Guide flexible paper through a smooth path without jams or snag points.",
+      "likely_main_part": "A curved chute with anti-snag ribs, access cutouts, and latch tabs.",
+      "why_it_tests_cad_representation": "The design tests curved internal passages, smooth transitions, thin rib networks, and serviceable enclosure features."
+    },
+    {
+      "idea_title": "Coin validator removable funnel",
+      "product_context": "A coin-operated kiosk directs inserted coins from the entry bezel into a validation module.",
+      "core_function": "Collect coins from a broad entry zone and deliver them consistently to the validator throat.",
+      "likely_main_part": "A tapered funnel with mounting ears, anti-bounce surfaces, and a narrow exit throat.",
+      "why_it_tests_cad_representation": "The part mixes freeform tapering, gravity-fed flow surfaces, mounting geometry, and clearance-sensitive exit features."
+    },
+    {
+      "idea_title": "Bill acceptor service cassette handle",
+      "product_context": "A bill-handling cabinet includes a removable cash cassette for secure collection and maintenance.",
+      "core_function": "Provide a durable grip and keyed interface for removing a cash cassette from the machine.",
+      "likely_main_part": "A reinforced pull handle with recessed grip geometry, latch clearance, and security indexing.",
+      "why_it_tests_cad_representation": "The handle needs ergonomic contours, internal reinforcement, asymmetric latch reliefs, and manufacturable transitions."
+    },
+    {
+      "idea_title": "Parking pay station coin return cup",
+      "product_context": "A parking pay station returns rejected coins or change to a shallow customer retrieval area.",
+      "core_function": "Receive falling coins and make them easy to remove while preventing spill-out.",
+      "likely_main_part": "A recessed cup insert with scooped floor, raised front lip, and drain features.",
+      "why_it_tests_cad_representation": "The object tests concave surfaces, user-access ergonomics, lip profiles, and small functional openings."
+    },
+    {
+      "idea_title": "Self-service kiosk card reader bezel",
+      "product_context": "A payment kiosk presents a card reader module through a vandal-resistant front panel.",
+      "core_function": "Frame the payment reader, guide card insertion, and protect surrounding enclosure edges.",
+      "likely_main_part": "A contoured bezel with chamfered lead-in, screw covers, and anti-pry flanges.",
+      "why_it_tests_cad_representation": "The part requires nested openings, precise front-facing contours, hidden attachment details, and durable edge geometry."
+    },
+    {
+      "idea_title": "Transit gate token escrow door",
+      "product_context": "A fare machine temporarily holds a token before routing it to acceptance or return paths.",
+      "core_function": "Block or release a small payment token while aligning it with downstream tracks.",
+      "likely_main_part": "A pivoting gate plate with axle bosses, stop tabs, and contoured token contact faces.",
+      "why_it_tests_cad_representation": "The mechanism tests rotational features, contact surfaces, thin plate strength, and precise stop geometry."
+    },
+    {
+      "idea_title": "Vending pickup bay anti-theft flap",
+      "product_context": "A vending machine pickup bay needs a barrier that allows product retrieval but discourages reach-in theft.",
+      "core_function": "Swing open for customer access while blocking direct access to the storage area.",
+      "likely_main_part": "A hinged flap with curved shield face, side pivots, and weighted return detail.",
+      "why_it_tests_cad_representation": "The design includes a moving panel, curved blocking surfaces, hinge geometry, and clearance-aware side features."
+    },
+    {
+      "idea_title": "Kiosk receipt bin overflow guard",
+      "product_context": "A public kiosk with a receipt printer needs a front insert that prevents loose paper from clogging the exit area.",
+      "core_function": "Guide receipts outward and keep abandoned paper away from the printer mouth.",
+      "likely_main_part": "A sloped paper guard with raised side rails, tear-edge clearance, and snap mounts.",
+      "why_it_tests_cad_representation": "The part tests shallow angled planes, thin guide rails, snap-fit details, and printer-adjacent clearances."
+    },
+    {
+      "idea_title": "Bill stacker compression paddle",
+      "product_context": "A bill acceptor stacks inserted banknotes into a secure cassette after validation.",
+      "core_function": "Push flexible bills into a compact stack while avoiding wrinkling or misalignment.",
+      "likely_main_part": "A flat paddle with compliant ribs, guide slots, and reinforced actuator connection.",
+      "why_it_tests_cad_representation": "It challenges representation of thin broad surfaces, structural ribbing, sliding interfaces, and soft-contact geometry."
+    },
+    {
+      "idea_title": "Kiosk speaker grille insert",
+      "product_context": "An information kiosk provides audio prompts through a protected front-panel speaker area.",
+      "core_function": "Allow sound transmission while protecting the speaker from tampering and debris.",
+      "likely_main_part": "A perforated grille insert with rear standoffs, outer frame, and drainage channels.",
+      "why_it_tests_cad_representation": "The part uses repeated openings, thin webs, enclosure mating features, and small environmental details."
+    },
+    {
+      "idea_title": "Ticket dispenser tear bar carrier",
+      "product_context": "A ticket vending unit lets users tear printed passes cleanly at the exit slot.",
+      "core_function": "Support a serrated tear edge and align paper as it exits the printer path.",
+      "likely_main_part": "A carrier rail with serration support, paper clearance slot, and fastening lands.",
+      "why_it_tests_cad_representation": "The representation must capture sharp functional edges, long narrow features, slot geometry, and mounting pads."
+    },
+    {
+      "idea_title": "Coin hopper outlet gate",
+      "product_context": "A change-making machine meters coins from a hopper into a payout chute.",
+      "core_function": "Control coin release from the hopper while resisting jams and wear.",
+      "likely_main_part": "A sliding gate with shaped coin pocket, guide ribs, and actuator tab.",
+      "why_it_tests_cad_representation": "The part combines sliding constraints, shallow pockets, ribbed guidance, and wear-sensitive contact edges."
+    },
+    {
+      "idea_title": "Public kiosk maintenance latch cover",
+      "product_context": "A streetside service kiosk hides its maintenance latch behind a small tamper-resistant cover.",
+      "core_function": "Protect a service latch from casual access while allowing authorized opening.",
+      "likely_main_part": "A flush cover plate with recessed key access, hinge knuckles, and pry-resistant perimeter.",
+      "why_it_tests_cad_representation": "It tests flush surface alignment, small hinge details, recessed access geometry, and security-driven edge profiles."
+    },
+    {
+      "idea_title": "Reverse vending bottle entry throat",
+      "product_context": "A recycling machine accepts containers through a guided entry before scanning and sorting.",
+      "core_function": "Center an inserted container and discourage users from reaching into the machine.",
+      "likely_main_part": "A rounded entry throat with funnel ribs, shield baffles, and sensor windows.",
+      "why_it_tests_cad_representation": "The shape requires blended openings, internal baffles, repeated guide ribs, and transparent sensor clearance zones."
+    },
+    {
+      "idea_title": "Kiosk barcode scanner shroud",
+      "product_context": "A ticketing kiosk includes a scanner window for reading mobile tickets and printed codes.",
+      "core_function": "Shade the scanner, guide user placement, and protect the scan window.",
+      "likely_main_part": "A recessed shroud with angled walls, window frame, and anti-glare hood.",
+      "why_it_tests_cad_representation": "The design challenges angled recesses, frame geometry, line-of-sight constraints, and user-facing surface transitions."
+    },
+    {
+      "idea_title": "Coin sorting rail segment",
+      "product_context": "A coin handling module routes coins by size and path after initial validation.",
+      "core_function": "Guide rolling coins along a controlled track toward sorting features.",
+      "likely_main_part": "A rail segment with curved track bed, retaining wall, and adjustable stop interface.",
+      "why_it_tests_cad_representation": "The part tests narrow curved channels, rolling contact surfaces, retention geometry, and modular alignment features."
+    },
+    {
+      "idea_title": "Bill acceptor entry mouth",
+      "product_context": "A payment terminal guides banknotes from the exterior bezel into internal feed rollers.",
+      "core_function": "Lead bills into the transport path while rejecting folded corners and misfeeds.",
+      "likely_main_part": "A tapered entry mouth with rounded lips, central guide ribs, and sensor clearance.",
+      "why_it_tests_cad_representation": "It needs smooth funnel geometry, thin alignment ribs, integrated openings, and careful front-to-back transitions."
+    },
+    {
+      "idea_title": "Laundry payment kiosk coin vault liner",
+      "product_context": "A shared laundry payment station stores collected coins in a removable secure vault.",
+      "core_function": "Protect the vault interior from abrasion and guide coins away from the access door.",
+      "likely_main_part": "A drop-in liner with sloped floor, impact ribs, and keyed locating tabs.",
+      "why_it_tests_cad_representation": "The model combines sloping internal planes, abrasion ribs, keyed placement features, and enclosure-fit tolerances."
+    },
+    {
+      "idea_title": "Vending machine cup drop carousel plate",
+      "product_context": "A beverage vending machine separates stacked cups before drink dispensing.",
+      "core_function": "Index cup stacks and release a single cup into the filling area.",
+      "likely_main_part": "A rotating plate with scalloped pockets, center hub, and retaining edge details.",
+      "why_it_tests_cad_representation": "The part challenges radial repetition, curved pocket cutouts, hub geometry, and moving-system clearances."
+    },
+    {
+      "idea_title": "Kiosk cash drawer guide rail",
+      "product_context": "A service technician slides a cash drawer out of a payment kiosk during collection.",
+      "core_function": "Support guided drawer motion while resisting twist and unauthorized removal.",
+      "likely_main_part": "A structural rail with stop features, screw bosses, and captured sliding surfaces.",
+      "why_it_tests_cad_representation": "The object tests long structural geometry, repeated mounting features, stop details, and sliding interface representation."
+    },
+    {
+      "idea_title": "Ticket machine illuminated button collar",
+      "product_context": "A public ticket machine uses illuminated push buttons for fare selection or confirmation.",
+      "core_function": "Frame a button, carry light around its edge, and seal the panel opening.",
+      "likely_main_part": "A translucent collar with stepped flange, light-channel geometry, and sealing lip.",
+      "why_it_tests_cad_representation": "The part tests concentric profiles, material-specific light paths, sealing details, and small front-panel features."
+    },
+    {
+      "idea_title": "Payment kiosk privacy side wing",
+      "product_context": "A card payment kiosk reduces shoulder-surfing around PIN entry and screen prompts.",
+      "core_function": "Block side views of sensitive input areas without interfering with user access.",
+      "likely_main_part": "A side wing panel with curved leading edge, mounting flange, and stiffening ribs.",
+      "why_it_tests_cad_representation": "The shape combines thin protective panels, curved ergonomic edges, bracket-like mounting, and ribbed reinforcement."
+    },
+    {
+      "idea_title": "Coin return acoustic dampener insert",
+      "product_context": "A coin-operated public machine reduces noise when returned coins drop into a metal cup.",
+      "core_function": "Absorb coin impact and keep returned coins visible and retrievable.",
+      "likely_main_part": "A removable soft insert with textured floor, perimeter lip, and drain reliefs.",
+      "why_it_tests_cad_representation": "The part tests flexible-material cues, shallow texture, nested fit geometry, and functional surface relief."
+    },
+    {
+      "idea_title": "Self-checkout kiosk bag hook bracket",
+      "product_context": "A small public payment kiosk provides a bag hook near the payment area for customer convenience.",
+      "core_function": "Hold a hanging load while staying compact and vandal resistant.",
+      "likely_main_part": "A hooked bracket with thickened root, concealed fastener pocket, and rounded nose.",
+      "why_it_tests_cad_representation": "The geometry asks for load-bearing curvature, hidden fastening, variable thickness, and smooth public-touch surfaces."
+    },
+    {
+      "idea_title": "Parking meter solar panel frame",
+      "product_context": "A standalone parking payment meter uses a small solar panel on its upper housing.",
+      "core_function": "Hold the panel at a protected angle while sealing it into the meter enclosure.",
+      "likely_main_part": "An angled frame with gasket channel, corner bosses, and cable pass-through.",
+      "why_it_tests_cad_representation": "The part blends inclined frame geometry, seal grooves, wiring openings, and enclosure attachment features."
+    },
+    {
+      "idea_title": "Transit card reload kiosk tap pad",
+      "product_context": "A fare reload kiosk gives users a marked contactless area for tapping stored-value cards.",
+      "core_function": "Create a durable target surface over the contactless reader while guiding card placement.",
+      "likely_main_part": "A shallow pad insert with raised alignment border, icon recess, and rear mounting clips.",
+      "why_it_tests_cad_representation": "The design tests low-relief surface features, tactile borders, clipped mounting, and visual-symbol accommodation without code."
+    },
+    {
+      "idea_title": "Bill recycler diverter flap",
+      "product_context": "A cash-handling service terminal routes accepted bills either to storage or to a recycle cassette.",
+      "core_function": "Redirect bills between transport paths with minimal friction and clear actuation.",
+      "likely_main_part": "A thin diverter flap with curved leading edge, pivot bosses, and actuator lug.",
+      "why_it_tests_cad_representation": "The mechanism stresses thin moving surfaces, tangent flow paths, pivot features, and asymmetric actuator geometry."
+    },
+    {
+      "idea_title": "Vending machine service door hinge reinforcement",
+      "product_context": "A large vending enclosure needs reinforced internal hinge support for repeated maintenance access.",
+      "core_function": "Distribute hinge loads across the cabinet door while preserving internal clearance.",
+      "likely_main_part": "A reinforcement plate with hinge boss pads, formed ribs, and cable relief notches.",
+      "why_it_tests_cad_representation": "The part combines flat structural stock, raised pads, formed stiffeners, and irregular clearance cutouts."
+    }
+  ]
+}

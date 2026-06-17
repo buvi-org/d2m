@@ -1,0 +1,77 @@
+{
+  "agent_number": 34,
+  "domain": "bakery, beverage, brewery, dairy, and sanitary food-processing line hardware",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "CIP Spray Ball Manifold With Tri-Clamp Branches",
+      "product_context": "Sanitary cleaning loop for brewery fermenters, dairy tanks, and beverage mix vessels.",
+      "core_function": "Distribute cleaning solution through multiple spray devices while maintaining hygienic flow paths and removable connections.",
+      "likely_main_part": "Polished tubular manifold with angled tri-clamp outlets and integral mounting lugs.",
+      "why_it_tests_cad_representation": "Challenges CAD with repeated clamp ferrules, smooth tube intersections, angled branches, polished sanitary radii, and readable orientation of many similar ports."
+    },
+    {
+      "idea_title": "Bakery Dough Chunker Infeed Guard Assembly",
+      "product_context": "Bakery line hardware feeding dough masses toward a divider or chunking station.",
+      "core_function": "Guide sticky dough into a cutting area while shielding operators and allowing washdown access.",
+      "likely_main_part": "Sloped stainless infeed guard with removable rails, hinge points, and inspection openings.",
+      "why_it_tests_cad_representation": "Tests thin sheet-metal panels, sloped product-contact surfaces, hinge hardware, guard openings, and smooth transitions that must not look like solid blocks."
+    },
+    {
+      "idea_title": "Sanitary Butterfly Valve With Pneumatic Actuator",
+      "product_context": "Beverage, dairy, or brewery transfer line where flow must be isolated or diverted during production and cleaning.",
+      "core_function": "Open and close a hygienic process line using a compact automated valve package.",
+      "likely_main_part": "Tri-clamp butterfly valve body with vertical actuator, position indicator, and clamp unions.",
+      "why_it_tests_cad_representation": "Combines circular valve geometry, clamp details, actuator cylinders, shaft alignment, handle indicators, and mixed polished and matte component surfaces."
+    },
+    {
+      "idea_title": "Dairy Sample Port With Sterile Cap Chain",
+      "product_context": "Milk, yogurt, or cream processing skid requiring controlled sampling without contaminating the main line.",
+      "core_function": "Provide a cleanable takeoff point for drawing small product samples from a sanitary pipe run.",
+      "likely_main_part": "Short angled sample valve body with cap, chain, ferrule, and compact hand knob.",
+      "why_it_tests_cad_representation": "Forces accurate small-part relationships: angled nozzle, chained cap, knob grip texture, clamp interface, and clear distinction between valve body and pipe."
+    },
+    {
+      "idea_title": "Brewery Whirlpool Tangential Inlet Nozzle",
+      "product_context": "Brewhouse vessel hardware for introducing wort tangentially during whirlpool separation.",
+      "core_function": "Direct liquid into a vessel wall with controlled tangential flow while preserving sanitary weld geometry.",
+      "likely_main_part": "Curved or angled vessel-wall inlet nozzle with reinforcing pad and external clamp connection.",
+      "why_it_tests_cad_representation": "Tests off-axis penetration through a curved wall, welded reinforcement, nozzle alignment, and the visual cue that flow enters tangentially rather than radially."
+    },
+    {
+      "idea_title": "Beverage Bottle Rinser Starwheel Segment",
+      "product_context": "Beverage packaging line component that carries bottles through a rinsing or sanitizing station.",
+      "core_function": "Index bottles through spray positions while keeping containers evenly spaced and supported.",
+      "likely_main_part": "Replaceable starwheel plate with curved bottle pockets, hub bore, and fastener pattern.",
+      "why_it_tests_cad_representation": "Stresses radial repetition, scalloped pocket geometry, smooth pocket fillets, central hub features, and planar plastic-versus-metal material contrast."
+    },
+    {
+      "idea_title": "Sanitary Conveyor Drip Tray With Lift-Out Screen",
+      "product_context": "Food-processing conveyor section below dairy cups, bakery pans, or beverage containers where spills need controlled drainage.",
+      "core_function": "Catch washdown water or product drips and route them to a drain while allowing tool-free cleaning.",
+      "likely_main_part": "Shallow sloped stainless tray with removable perforated screen, side lips, and drain ferrule.",
+      "why_it_tests_cad_representation": "Tests shallow sheet-metal forms, perforation patterns, removable nested parts, subtle slopes, lips, drain fittings, and non-ambiguous separations between tray and screen."
+    },
+    {
+      "idea_title": "Dairy Hygienic Pump Skid With Flush Base",
+      "product_context": "Compact dairy or beverage transfer skid placed near fillers, pasteurizers, or ingredient tanks.",
+      "core_function": "Support a sanitary centrifugal pump and piping in a cleanable layout with minimal product hold-up.",
+      "likely_main_part": "Open stainless tube-frame skid carrying pump volute, motor, sanitary elbows, and leveling feet.",
+      "why_it_tests_cad_representation": "Combines frame tubing, pump volute curves, motor cylinder forms, sanitary elbows, feet, and spatial clearance between cleanable components."
+    },
+    {
+      "idea_title": "Bakery Icing Deposit Nozzle Bar",
+      "product_context": "Bakery finishing line applying icing, glaze, or filling across moving pastries.",
+      "core_function": "Distribute viscous food product through multiple adjustable nozzles over a conveyor path.",
+      "likely_main_part": "Horizontal sanitary header with indexed nozzle bodies, clamp-on brackets, and adjustment knobs.",
+      "why_it_tests_cad_representation": "Challenges regular nozzle repetition, small adjustment features, viscous-product geometry cues, clamp brackets, and the difference between header tube, nozzle tips, and controls."
+    },
+    {
+      "idea_title": "Brewery Dry-Hop Dosing Hopper With Sight Window",
+      "product_context": "Brewery ingredient handling hardware used to introduce hops or botanicals into a closed process line.",
+      "core_function": "Hold and dose loose ingredients into a sanitary transfer path while allowing operators to see fill state.",
+      "likely_main_part": "Tapered stainless hopper with domed lid, sight window, clamp outlet, and latch hardware.",
+      "why_it_tests_cad_representation": "Tests tapered shell geometry, transparent insert representation, latches, sanitary outlet fittings, lid curvature, and clear differentiation between hopper volume and external hardware."
+    }
+  ]
+}

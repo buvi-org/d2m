@@ -1,0 +1,79 @@
+{
+  "agent_number": 22,
+  "agent_id": "019ecee0-0722-73f0-8311-3e7af52584b7",
+  "domain": "toys, model-making, hobby robotics, tabletop games, and mechanical hobby kits",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Adjustable marble maze tile",
+      "product_context": "A modular tabletop marble run set where users rearrange square tiles to create maze paths.",
+      "core_function": "Guides a small ball through channels with adjustable gates and junctions.",
+      "likely_main_part": "Machined maze tile with recessed tracks, locating pins, gate slots, and underside connector pockets.",
+      "why_it_tests_cad_representation": "Requires nested grooves, variable-depth channels, filleted intersections, small alignment features, and functional clearances for moving inserts."
+    },
+    {
+      "idea_title": "Wind-up walking insect kit",
+      "product_context": "A hobby mechanical toy kit assembled by children or model makers.",
+      "core_function": "Converts spring-driven rotary motion into alternating leg movement.",
+      "likely_main_part": "Central crank frame with axle bosses, cam slots, leg pivot holes, and spring motor mounting points.",
+      "why_it_tests_cad_representation": "Tests linked pivot geometry, mirrored but offset features, compact bearing surfaces, thin ribs, and tolerance-sensitive rotating interfaces."
+    },
+    {
+      "idea_title": "Mini desktop cable car model",
+      "product_context": "A scale model-making kit for building a small suspended cable car display.",
+      "core_function": "Carries a tiny cabin along a taut cord using grooved wheels.",
+      "likely_main_part": "Machined trolley carriage with pulley forks, axle holes, hanger bracket, and cabin attachment tabs.",
+      "why_it_tests_cad_representation": "Combines curved wheel-clearance pockets, thin fork arms, coaxial holes, load-bearing brackets, and constrained assembly interfaces."
+    },
+    {
+      "idea_title": "Tabletop game rotating score dial",
+      "product_context": "An accessory for board games that tracks points, turns, or resources.",
+      "core_function": "Allows a player to rotate numbered dials while keeping the selected value indexed.",
+      "likely_main_part": "Dial housing plate with concentric recesses, detent pockets, viewing windows, and snap-fit axle posts.",
+      "why_it_tests_cad_representation": "Tests concentric circular geometry, partial cutouts, repeated detent features, layered moving parts, and visible alignment windows."
+    },
+    {
+      "idea_title": "Hobby robot gripper claw",
+      "product_context": "A small robotics kit end-effector for picking up lightweight classroom objects.",
+      "core_function": "Opens and closes two fingers using a servo-driven linkage.",
+      "likely_main_part": "Machined gripper palm with servo pocket, linkage pivots, finger stops, and mounting flange.",
+      "why_it_tests_cad_representation": "Requires precise servo geometry, nontrivial pivot spacing, mechanical travel limits, symmetric linkage mounts, and compact clearance envelopes."
+    },
+    {
+      "idea_title": "Snap-together model drawbridge",
+      "product_context": "A mechanical scenery kit for tabletop terrain or educational bridge models.",
+      "core_function": "Raises and lowers a small bridge deck using side trunnions and a crank.",
+      "likely_main_part": "Bridge hinge tower with bearing sockets, crank axle supports, deck stops, and base connector slots.",
+      "why_it_tests_cad_representation": "Tests structural towers, aligned hinge bores, stop surfaces, assembly slots, and parts that must represent both static and moving constraints."
+    },
+    {
+      "idea_title": "Programmable peg cam music box kit",
+      "product_context": "A hands-on mechanical kit where users arrange pegs to trigger small levers or chimes.",
+      "core_function": "Rotates a drum with removable pegs that actuate followers in sequence.",
+      "likely_main_part": "Cylindrical cam drum with radial peg holes, end bearing journals, indexing marks, and drive coupling.",
+      "why_it_tests_cad_representation": "Challenges cylindrical feature placement, repeated radial hole patterns, indexing references, rotational symmetry, and detachable component interfaces."
+    },
+    {
+      "idea_title": "Miniature articulated crane model",
+      "product_context": "A non-motorized model-making kit for constructing a small workshop crane.",
+      "core_function": "Allows a boom to pivot and a hook carriage to slide along a short rail.",
+      "likely_main_part": "Boom rail extrusion with hinge clevis, trolley groove, stop blocks, and cable guide holes.",
+      "why_it_tests_cad_representation": "Tests long slender parts, sliding-track profiles, hinge clevis geometry, end stops, and mixed load-bearing and decorative detail."
+    },
+    {
+      "idea_title": "Magnetic tile hinge connector",
+      "product_context": "An accessory for magnetic construction tiles used to build foldable geometric models.",
+      "core_function": "Connects two flat panels while allowing controlled angular rotation.",
+      "likely_main_part": "Hinge connector block with magnet pockets, interlocking knuckles, hinge pin bore, and panel seating lips.",
+      "why_it_tests_cad_representation": "Requires magnet retention cavities, alternating hinge knuckles, coaxial bores, tight panel-fit features, and orientation-specific assembly details."
+    },
+    {
+      "idea_title": "Tabletop marble elevator module",
+      "product_context": "A mechanical expansion module for a desktop marble machine or kinetic sculpture kit.",
+      "core_function": "Lifts marbles one step at a time using a hand-cranked ratchet wheel.",
+      "likely_main_part": "Ratchet lift wheel with marble pockets, pawl teeth, axle hub, side clearance grooves, and crank interface.",
+      "why_it_tests_cad_representation": "Tests compound rotational geometry, repeated pockets, asymmetric ratchet teeth, functional clearances, and interaction between continuous curves and discrete indexing features."
+    }
+  ]
+}

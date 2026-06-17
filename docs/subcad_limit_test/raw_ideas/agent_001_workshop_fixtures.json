@@ -1,0 +1,79 @@
+{
+  "agent_number": 1,
+  "agent_id": "019ecedb-1bec-7c82-ad46-f757737deaed",
+  "domain": "workshop fixtures and small machine-shop accessories",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Low-Profile V-Block Clamp Jaw",
+      "product_context": "Used on a milling machine vise to hold small round stock or tubing without raising the workpiece too high above the jaws.",
+      "core_function": "Provides a centered V-groove contact surface and clamp relief features so cylindrical work can be gripped repeatably.",
+      "likely_main_part": "Hardened rectangular vise jaw insert with machined V-groove, counterbored mounting holes, and edge chamfers.",
+      "why_it_tests_cad_representation": "Combines prismatic jaw geometry with angled groove faces, hole placement, symmetry, relief cuts, and chamfered working edges."
+    },
+    {
+      "idea_title": "Adjustable Drill Press Depth Stop Collar",
+      "product_context": "Accessory fitted around a drill press quill or stop rod for quickly setting repeatable drilling depth in a small workshop.",
+      "core_function": "Locks at a chosen height and provides a positive mechanical stop for repeated hole depths.",
+      "likely_main_part": "Split cylindrical collar with clamp screw boss, radial slot, bored center hole, and knurled or faceted grip rim.",
+      "why_it_tests_cad_representation": "Requires accurate cylindrical modeling, split clamp features, screw clearance, boss integration, and small ergonomic surface details."
+    },
+    {
+      "idea_title": "T-Slot Step Clamp Toe",
+      "product_context": "A replacement toe piece for a milling table step-clamp set used to press down on irregular workpieces.",
+      "core_function": "Transfers clamping force from a strap clamp onto the workpiece while allowing height adjustment from the stepped rear surface.",
+      "likely_main_part": "Machined clamp toe with serrated step profile, radiused contact nose, elongated bolt slot, and hardened bearing pad.",
+      "why_it_tests_cad_representation": "Tests stepped geometry, elongated slots, angled contact surfaces, serrations, fillets, and load-bearing proportions."
+    },
+    {
+      "idea_title": "Lathe Carriage Dial Indicator Holder",
+      "product_context": "Mounts a dial indicator to a small engine lathe carriage for measuring travel or setting repeatable stops.",
+      "core_function": "Positions an indicator stem rigidly near the work axis while allowing fine orientation adjustment.",
+      "likely_main_part": "Compact machined arm with dovetail or clamp mount, indicator stem bore, pinch slot, and screw boss.",
+      "why_it_tests_cad_representation": "Involves intersecting bores, clamp slots, compact offset arms, functional clearances, and orientation-critical reference faces."
+    },
+    {
+      "idea_title": "Quick-Change Toolpost Boring Bar Sleeve",
+      "product_context": "Insert sleeve used in a lathe quick-change tool holder to adapt smaller boring bars to a larger holder bore.",
+      "core_function": "Centers and supports a boring bar while giving set screws flat bearing surfaces and preventing rotation.",
+      "likely_main_part": "Precision cylindrical sleeve with through bore, external flat, split relief slit, and set-screw dimples.",
+      "why_it_tests_cad_representation": "Tests concentric cylindrical features, thin-wall part representation, flats on round stock, slots, and small localized contact pockets."
+    },
+    {
+      "idea_title": "Machinist Parallel Keeper Clip",
+      "product_context": "Small shop accessory used to keep matched parallels paired and upright in a vise drawer or setup tray.",
+      "core_function": "Holds two parallels together at their ends without damaging precision ground faces.",
+      "likely_main_part": "Spring-style U-shaped machined clip with relief grooves, finger tab, and soft-contact inner pads or pockets.",
+      "why_it_tests_cad_representation": "Requires thin-section geometry, internal clearances, rounded transitions, contact pockets, and nontrivial open U-shaped topology."
+    },
+    {
+      "idea_title": "Bench Grinder Tool Rest Angle Block",
+      "product_context": "Fixture used on a bench grinder tool rest to quickly set a repeatable sharpening angle for lathe tools or drill bits.",
+      "core_function": "Provides a fixed angled reference surface that registers against the grinder rest and supports the tool at a known angle.",
+      "likely_main_part": "Triangular or wedge-shaped machined block with stop lip, clamping slot, angle-engraving recess, and relieved underside.",
+      "why_it_tests_cad_representation": "Tests angled datum surfaces, wedge geometry, slots through sloped faces, small reference lips, and text or marking recess placement."
+    },
+    {
+      "idea_title": "Small Rotary Table Centering Plug",
+      "product_context": "Used to locate a workpiece or vise over the center bore of a small rotary table during milling setups.",
+      "core_function": "Fits into the rotary table center hole and presents a raised pilot diameter for aligning fixtures.",
+      "likely_main_part": "Stepped cylindrical plug with taper lead-in, shoulder flange, threaded puller hole, and wrench flats.",
+      "why_it_tests_cad_representation": "Combines coaxial steps, taper transitions, shoulder references, internal threading representation, and flats intersecting cylindrical bodies."
+    },
+    {
+      "idea_title": "Vise Jaw Stop With Sliding Finger",
+      "product_context": "Milling vise accessory that lets a machinist repeatedly position short workpieces against the same side reference.",
+      "core_function": "Clamps to a vise jaw and presents an adjustable stop finger that can be set beside the cutting area.",
+      "likely_main_part": "Machined clamp body with jaw-grip hook, dovetail or slot for sliding finger, clamp screw bore, and stop face.",
+      "why_it_tests_cad_representation": "Tests nested functional features, clamping hooks, sliding interfaces, perpendicular stop faces, screw bosses, and compact assembly-oriented geometry."
+    },
+    {
+      "idea_title": "Tap Guide Block With Interchangeable Bushings",
+      "product_context": "Hand-tapping aid used on a drill press table or bench to keep taps square to a drilled hole.",
+      "core_function": "Guides a tap vertically through a close-fitting bushing while the block sits flat on the workpiece.",
+      "likely_main_part": "Rectangular guide block with central counterbored bushing pocket, clearance window, side retention screw, and underside relief.",
+      "why_it_tests_cad_representation": "Requires precise stacked bores, counterbores, replaceable insert pockets, side fastener geometry, flatness-critical base features, and clearance cutouts."
+    }
+  ]
+}

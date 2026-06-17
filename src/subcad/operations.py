@@ -46,8 +46,9 @@ from .geometry import (
     create_tapered_cylinder,
     create_axis_aligned_tube,
     create_axis_aligned_profile_tube,
+    press_brake_bend as apply_press_brake_bend,
 )
-from .profiles import profile_span_yx
+from .profiles import normalize_profile_points, profile_span_yx
 from .tool_library import ToolSpec, ToolCatalog
 from .tool_selection import ToolRequirement, ToolSelectionResult, select_or_fallback, select_tool
 from .material import get_feeds_speeds
@@ -453,6 +454,63 @@ def _pick_reamer(hole_diameter: float) -> ToolSpec:
         return reamers[-1]
     # Fallback: no reamers in catalog
     return ToolSpec("drill", hole_diameter, tip_angle=45.0)
+
+
+def _laser_tool(kerf_width: float) -> ToolSpec:
+    return ToolSpec(
+        "fiber_laser",
+        max(float(kerf_width), 0.01),
+        flute_length=100.0,
+        material="laser",
+        catalog_id="FIBER_LASER",
+        reach_mm=100.0,
+    )
+
+
+def _profile_contour_length(points: list[tuple[float, float]]) -> float:
+    if len(points) < 2:
+        return 0.0
+    closed = points + [points[0]]
+    return sum(math.dist(a, b) for a, b in zip(closed[:-1], closed[1:]))
+
+
+def _laser_profile_toolpath(
+    operation: str,
+    profile: Any,
+    tool: ToolSpec,
+    *,
+    cut_speed_mm_min: float,
+    kerf_width: float,
+    pierce_time_s: float,
+) -> Toolpath:
+    points = normalize_profile_points(profile)
+    tp = Toolpath(
+        operation=operation,
+        safe_z=5.0,
+        tool_type=tool.tool_type,
+        tool_diameter_mm=tool.diameter,
+        feed_mm_min=float(cut_speed_mm_min),
+        coolant=False,
+        metadata={
+            "process": "laser_cut",
+            "kerf_width_mm": float(kerf_width),
+            "pierce_time_s": float(pierce_time_s),
+            "profile_point_count": len(points),
+            "profile_length_mm": round(_profile_contour_length(points), 6),
+        },
+    )
+    if not points:
+        return tp
+    first_x, first_y = points[0]
+    _move(tp, "rapid", first_x, first_y, tp.safe_z)
+    _move(tp, "plunge", first_x, first_y, 0.0, feed=cut_speed_mm_min)
+    if pierce_time_s > 0:
+        _move(tp, "dwell", first_x, first_y, 0.0, dwell_seconds=pierce_time_s)
+    for x, y in points[1:]:
+        _move(tp, "feed", x, y, 0.0, feed=cut_speed_mm_min)
+    _move(tp, "feed", first_x, first_y, 0.0, feed=cut_speed_mm_min)
+    _move(tp, "retract", first_x, first_y, tp.safe_z)
+    return tp
 
 
 # =============================================================================
@@ -2828,6 +2886,169 @@ class ProfileContourOp(ContourOp):
 
 
 @dataclass
+class LaserCutInternalOp(MachiningOperation):
+    """Laser-cut an internal through-profile in a sheet blank."""
+
+    profile: Any = field(default_factory=dict)
+    depth: float = 1.0
+    kerf_width: float = 0.15
+    assist_gas: str = "nitrogen"
+    cut_speed_mm_min: float = 2400.0
+    pierce_time_s: float = 0.15
+    face_selector: str = ">Z"
+    material: str = "steel_a36"
+    operation_name: str = "laser_cut_internal"
+
+    def __post_init__(self):
+        self.tool = self.tool or _laser_tool(self.kerf_width)
+        self.feeds_speeds = {
+            "feed_rate_mm_min": float(self.cut_speed_mm_min),
+            "feed_rate_mm_per_min": float(self.cut_speed_mm_min),
+            "cut_speed_mm_min": float(self.cut_speed_mm_min),
+            "pierce_time_s": float(self.pierce_time_s),
+            "assist_gas": self.assist_gas,
+        }
+        self.position = None
+
+    def apply(self, shape):
+        return profile_pocket_cut(
+            shape,
+            self.profile,
+            self.depth,
+            face_selector=self.face_selector,
+            through=True,
+        )
+
+    def to_dict(self) -> dict:
+        width, length = _profile_bounds(self.profile)
+        return {
+            "operation": self.operation_name,
+            "process": "laser_cut",
+            "operation_family": "sheet_metal_cutting",
+            "profile": _profile_payload(self.profile),
+            "dimensions": {
+                "length": length,
+                "width": width,
+                "depth": self.depth,
+            },
+            "depth_mm": self.depth,
+            "through": True,
+            "face_selector": self.face_selector,
+            "kerf_width_mm": self.kerf_width,
+            "assist_gas": self.assist_gas,
+            "cut_speed_mm_min": self.cut_speed_mm_min,
+            "pierce_time_s": self.pierce_time_s,
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
+            "feeds_speeds": self.feeds_speeds,
+            "coverage_family": "sheet_metal",
+            "manufacturing_completeness": "pure_operation",
+        }
+
+    def to_toolpath(self) -> Toolpath:
+        return _laser_profile_toolpath(
+            self.operation_name,
+            self.profile,
+            self.tool,
+            cut_speed_mm_min=self.cut_speed_mm_min,
+            kerf_width=self.kerf_width,
+            pierce_time_s=self.pierce_time_s,
+        )
+
+
+@dataclass
+class LaserCutProfileOp(LaserCutInternalOp):
+    """Laser-cut the outside blank profile and retain the requested outline."""
+
+    operation_name: str = "laser_cut_profile"
+
+    def apply(self, shape):
+        return profile_cutout_cut(
+            shape,
+            self.profile,
+            self.depth,
+            face_selector=self.face_selector,
+            through=True,
+        )
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data.update({
+            "operation": self.operation_name,
+            "strategy": "outside_profile_cut",
+            "notes": "Retains the supplied closed profile as the flat sheet blank.",
+        })
+        return data
+
+
+@dataclass
+class PressBrakeBendOp(MachiningOperation):
+    """Press-brake forming operation for a previously cut sheet blank."""
+
+    axis: str = "X"
+    bend_position: float = 0.0
+    angle: float = 90.0
+    side: str = "positive"
+    radius: float = 1.0
+    sheet_thickness: float = 1.0
+    axis_z: Optional[float] = None
+    tooling: str = "air_bend_v_die"
+    material: str = "steel_a36"
+
+    def __post_init__(self):
+        self.tool = self.tool or ToolSpec(
+            "press_brake_punch",
+            max(float(self.radius) * 2.0, 1.0),
+            material="tool_steel",
+            catalog_id="PRESS_BRAKE_PUNCH",
+        )
+        self.feeds_speeds = {
+            "bend_angle_deg": float(self.angle),
+            "inside_radius_mm": float(self.radius),
+            "sheet_thickness_mm": float(self.sheet_thickness),
+            "tooling": self.tooling,
+        }
+        self.position = None
+
+    def apply(self, shape):
+        return apply_press_brake_bend(
+            shape,
+            axis=self.axis,
+            position=self.bend_position,
+            angle=self.angle,
+            side=self.side,
+            radius=self.radius,
+            axis_z=self.axis_z,
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "operation": "press_brake_bend",
+            "process": "press_brake",
+            "operation_family": "sheet_metal_forming",
+            "axis": str(self.axis).upper(),
+            "bend_line_position_mm": self.bend_position,
+            "side": self.side,
+            "angle_deg": self.angle,
+            "inside_radius_mm": self.radius,
+            "sheet_thickness_mm": self.sheet_thickness,
+            "axis_z_mm": self.axis_z,
+            "tooling": self.tooling,
+            "tool_type": self.tool.tool_type,
+            "tool_diameter_mm": self.tool.diameter,
+            "tool": _tool_dict(self.tool),
+            "feeds_speeds": self.feeds_speeds,
+            "coverage_family": "sheet_metal",
+            "manufacturing_completeness": "pure_operation",
+            "notes": "Geometry is an approximate split-and-rotate sheet bend; radius is recorded as manufacturing intent.",
+        }
+
+    def to_toolpath(self):
+        return []
+
+
+@dataclass
 class MachineAroundProfileOp(ProfileCutoutOp):
     """Machine around retained profile/boss/pad material."""
 
@@ -3402,6 +3623,9 @@ _OP_REGISTRY: dict[str, type[MachiningOperation]] = {
     "profile_pocket":   ProfilePocketOp,
     "profile_cutout":   ProfileCutoutOp,
     "profile_contour":  ProfileContourOp,
+    "laser_cut_profile": LaserCutProfileOp,
+    "laser_cut_internal": LaserCutInternalOp,
+    "press_brake_bend": PressBrakeBendOp,
     "machine_around_profile": MachineAroundProfileOp,
     "machine_around_profiles": MachineAroundProfilesOp,
     "machine_around_cylinder": MachineAroundCylinderOp,

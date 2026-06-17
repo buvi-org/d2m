@@ -1,0 +1,79 @@
+{
+  "agent_number": 18,
+  "agent_id": "019ecede-d2e8-7dd3-b891-a86103443f4b",
+  "domain": "sports equipment, gym/fitness hardware, rehabilitation exercise devices, and adjustable training mechanisms",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Adjustable Olympic Barbell Safety Catch Hook",
+      "product_context": "Power rack attachment for catching a loaded barbell during squats or bench press",
+      "core_function": "Locks into rack uprights at selectable heights and presents a reinforced curved catch surface for the bar",
+      "likely_main_part": "Machined steel hook body with rack pin bore, radiused bar cradle, rear locating boss, and gusseted load path",
+      "why_it_tests_cad_representation": "Combines large-radius contact geometry, offset load-bearing features, multiple coaxial holes, filleted transitions, and asymmetric reinforcement ribs"
+    },
+    {
+      "idea_title": "Indexed Cable Machine Pulley Swivel Arm",
+      "product_context": "Adjustable functional trainer used in gyms for cable exercises at different pull angles",
+      "core_function": "Rotates a pulley housing through indexed angular positions while carrying cable tension",
+      "likely_main_part": "Aluminum swivel yoke arm with pivot boss, detent holes on an arc, pulley axle supports, and cable clearance cutouts",
+      "why_it_tests_cad_representation": "Tests curved hole patterns, forked yoke geometry, concentric pivot features, thin clearance slots, and load-bearing blends between bosses and arms"
+    },
+    {
+      "idea_title": "Rehabilitation Ankle Resistance Pedal",
+      "product_context": "Physical therapy device for controlled ankle dorsiflexion and plantarflexion exercises",
+      "core_function": "Supports the foot while connecting to adjustable resistance bands or a small torque mechanism",
+      "likely_main_part": "Contoured pedal plate with heel cup, strap slots, pivot barrel, resistance anchor holes, and underside stiffening ribs",
+      "why_it_tests_cad_representation": "Requires ergonomic curved surfaces, strap apertures, ribbed underside structure, hinge-axis alignment, and multiple anchor points with smooth edges"
+    },
+    {
+      "idea_title": "Variable Incline Bench Locking Sector",
+      "product_context": "Adjustable weight bench mechanism for selecting backrest incline angles",
+      "core_function": "Provides discrete locking positions for the bench support arm under user and weight load",
+      "likely_main_part": "Machined sector plate with radial tooth pockets, central pivot bore, mounting holes, stop shoulder, and thickened perimeter",
+      "why_it_tests_cad_representation": "Tests radial arrays, angular indexing features, variable-thickness profiles, precise pivot relationships, and stress-relief fillets around notches"
+    },
+    {
+      "idea_title": "Rowing Machine Foot Stretcher Slider",
+      "product_context": "Indoor rowing machine foot platform adjustable for different shoe sizes",
+      "core_function": "Slides along a rail and locks the foot stretcher position while supporting strap and heel forces",
+      "likely_main_part": "Sliding carriage block with rail groove, spring-pin locking holes, footplate mounting bosses, and strap clearance windows",
+      "why_it_tests_cad_representation": "Combines linear guide geometry, repeated locking features, offset mounting bosses, rectangular through-windows, and tight functional clearances"
+    },
+    {
+      "idea_title": "Adjustable Dumbbell Weight Selection Cam",
+      "product_context": "Selectorized dumbbell handle that engages different weight plates based on dial position",
+      "core_function": "Rotates to capture or release plate lugs in a programmed sequence",
+      "likely_main_part": "Cylindrical cam sleeve with stepped engagement lobes, center bore, detent groove, timing marks, and retaining-ring channels",
+      "why_it_tests_cad_representation": "Tests nonuniform rotational profiles, stepped cam surfaces, concentric grooves, axial feature sequencing, and precise angular relationships"
+    },
+    {
+      "idea_title": "Treadmill Deck Flexion Hinge Block",
+      "product_context": "Folding treadmill deck support that allows controlled deck lift and locked storage position",
+      "core_function": "Carries the pivot joint between the frame and running deck while providing hard stops for travel limits",
+      "likely_main_part": "Forged or machined hinge block with twin clevis ears, large pivot bore, stop lugs, mounting slots, and relief pockets",
+      "why_it_tests_cad_representation": "Tests clevis symmetry, high-load pivot bores, integrated stop geometry, elongated slots, pocketed mass reduction, and robust fillet networks"
+    },
+    {
+      "idea_title": "Grip-Width Adjustable Lat Pulldown Handle Hub",
+      "product_context": "Cable attachment handle with sliding grips for different shoulder widths and exercise variations",
+      "core_function": "Locks two handle arms at selectable lateral positions while transferring cable load through a central eye",
+      "likely_main_part": "Central hub block with cable eye boss, opposing dovetail tracks, locking pin holes, scale recesses, and end stops",
+      "why_it_tests_cad_representation": "Requires dovetail or keyed sliding geometry, opposing mirrored features, load-centered eyelet modeling, repeated adjustment holes, and compact clearance details"
+    },
+    {
+      "idea_title": "Continuous Passive Motion Knee Linkage Crank",
+      "product_context": "Rehabilitation machine that gently cycles a patient's knee through a programmed range of motion",
+      "core_function": "Converts motor rotation into adjustable reciprocating motion for a leg support linkage",
+      "likely_main_part": "Eccentric crank disk with adjustable radial slot, drive shaft bore, linkage pin boss, counterweight pocket, and clamp split",
+      "why_it_tests_cad_representation": "Tests eccentric geometry, radial slots, clamping splits, offset bosses, circular-pocket mass balancing, and motion-critical reference axes"
+    },
+    {
+      "idea_title": "Resistance Sled Harness Tow Cleat",
+      "product_context": "Training sled used for sprint resistance and strength conditioning",
+      "core_function": "Anchors a tow strap or harness line to the sled while allowing quick angle changes under high pulling loads",
+      "likely_main_part": "Machined tow cleat with rounded strap horn, base bolt pattern, angled web reinforcement, rope groove, and wear-facing radii",
+      "why_it_tests_cad_representation": "Combines organic strap-contact curves, angled reinforcement webs, bolt-hole patterns, groove surfaces, and thick-to-thin transitions under realistic load paths"
+    }
+  ]
+}

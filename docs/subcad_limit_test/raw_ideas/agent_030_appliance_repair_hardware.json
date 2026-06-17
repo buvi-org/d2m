@@ -1,0 +1,79 @@
+{
+  "agent_number": 30,
+  "agent_id": "019ecee1-9875-7051-83a9-c30de525f6c5",
+  "domain": "home appliance repair hardware, washing-machine/dryer fixtures, refrigerator mechanisms, dishwasher parts, and service alignment tools",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Washing Machine Drum Spider Arm Replacement Hub",
+      "product_context": "Front-load washing machines use a cast metal spider assembly to connect the drum to the drive shaft and support high-speed spin loads.",
+      "core_function": "Transmit torque from the drive shaft to the drum while keeping the drum centered under wet laundry imbalance.",
+      "likely_main_part": "Three-arm radial hub with central splined bore, raised bearing land, ribbed arms, and bolt bosses at each arm end.",
+      "why_it_tests_cad_representation": "Combines radial symmetry, tapered organic arms, filleted ribs, coaxial bores, bolt patterns, and nonuniform boss geometry in one machined part."
+    },
+    {
+      "idea_title": "Dryer Idler Pulley Tension Bracket",
+      "product_context": "Belt-driven clothes dryers use an idler pulley bracket to maintain belt tension against the rotating drum.",
+      "core_function": "Hold a pulley axle at a precise offset while allowing spring-loaded belt tensioning.",
+      "likely_main_part": "Bent plate-style bracket with pivot hole, pulley axle boss, spring hook tab, reinforcing flange, and slotted mounting hole.",
+      "why_it_tests_cad_representation": "Requires flat plate features, bends or stepped offsets, asymmetric holes, tab details, slots, and load-bearing bosses with clear mechanical relationships."
+    },
+    {
+      "idea_title": "Refrigerator Door Hinge Cam Lift Block",
+      "product_context": "Many refrigerator doors use hinge cams to lift and self-close the door during the final swing angle.",
+      "core_function": "Create a controlled rising cam path that helps the door close and compress the gasket evenly.",
+      "likely_main_part": "Cylindrical hinge insert with spiral ramp surface, central pivot bore, keyed anti-rotation notch, and wear pads.",
+      "why_it_tests_cad_representation": "Challenges CAD representation with helical or ramped cam geometry, coaxial features, keyed cutouts, contact surfaces, and precise angular transitions."
+    },
+    {
+      "idea_title": "Dishwasher Upper Rack Height Adjuster Rail Block",
+      "product_context": "Adjustable dishwasher racks use sliding blocks and detents to raise or lower the upper rack for tall dishes.",
+      "core_function": "Guide the rack support through multiple height positions and lock it into stable detent stops.",
+      "likely_main_part": "Molded or machined guide block with vertical channel, detent pockets, latch window, roller pin holes, and rail engagement ribs.",
+      "why_it_tests_cad_representation": "Includes nested channels, repeated detent forms, thin ribs, through-holes, rectangular cutouts, and features that must align on multiple faces."
+    },
+    {
+      "idea_title": "Washing Machine Motor Alignment Shim Gauge",
+      "product_context": "Service technicians need alignment tools when replacing belt-drive motors or adjusting pulley tracking in washers.",
+      "core_function": "Set the motor mounting height and pulley offset relative to the drum pulley during service.",
+      "likely_main_part": "Stepped gauge plate with reference ledges, offset measurement fingers, elongated bolt clearance slots, and engraved depth marks.",
+      "why_it_tests_cad_representation": "Tests stepped planar geometry, thin precision fingers, slot placement, measurement references, chamfers, and dimensional intent across multiple offsets."
+    },
+    {
+      "idea_title": "Refrigerator Ice Maker Ejector Shaft Coupler",
+      "product_context": "Automatic ice makers use a rotating ejector shaft to push formed cubes from the tray into the bin.",
+      "core_function": "Couple a small drive motor output to the ejector shaft while absorbing minor misalignment.",
+      "likely_main_part": "Short cylindrical coupler with D-bore on one side, cross-slot socket on the other, retaining groove, and flexible relief cuts.",
+      "why_it_tests_cad_representation": "Combines two different internal drive profiles, grooves, relief slots, concentric cylinders, and small toleranced coupling features."
+    },
+    {
+      "idea_title": "Dishwasher Spray Arm Bearing Turret",
+      "product_context": "Rotating dishwasher spray arms ride on a central turret that feeds water while allowing low-friction rotation.",
+      "core_function": "Support the spray arm, seal the water path, and provide a bearing surface for smooth rotation.",
+      "likely_main_part": "Vertical turret fitting with stepped cylindrical body, central water bore, radial outlet ports, snap-ring groove, and flange base.",
+      "why_it_tests_cad_representation": "Requires coaxial stepped solids, internal flow passages, radial holes intersecting a central bore, retaining grooves, and seal-seat geometry."
+    },
+    {
+      "idea_title": "Dryer Drum Roller Axle Support Bracket",
+      "product_context": "Clothes dryer drums are supported by rollers mounted to brackets inside the cabinet.",
+      "core_function": "Hold the roller axle square to the drum path while resisting vibration and thermal cycling.",
+      "likely_main_part": "Stamped-style support bracket with upright axle boss, triangular gussets, base mounting slots, locating tabs, and raised embosses.",
+      "why_it_tests_cad_representation": "Tests angled gussets, bosses rising from sheet-like geometry, slots, tabs, emboss-like raised areas, and relationships between thin and thick features."
+    },
+    {
+      "idea_title": "Washer Suspension Rod Calibration Clamp",
+      "product_context": "Top-load washers use suspension rods and springs that may need service alignment after tub or rod replacement.",
+      "core_function": "Clamp around a suspension rod to hold a temporary calibration height while springs are checked or replaced.",
+      "likely_main_part": "Split collar clamp with semicircular bore, hinge knuckle, screw boss, height reference stop, and anti-slip inner ridges.",
+      "why_it_tests_cad_representation": "Includes split circular geometry, hinge barrels, screw clearance and threaded boss regions, small internal ridges, and asymmetric clamp details."
+    },
+    {
+      "idea_title": "Refrigerator Compressor Foot Leveling Spacer",
+      "product_context": "Replacement refrigerator compressors often need vibration-isolating spacers or adapters to match cabinet mounting holes.",
+      "core_function": "Adapt compressor foot geometry to the cabinet base while maintaining level height and rubber grommet compression.",
+      "likely_main_part": "Low rectangular spacer block with raised circular grommet seat, countersunk mounting hole, offset locating pin, and underside relief pocket.",
+      "why_it_tests_cad_representation": "Tests mixed prismatic and cylindrical features, countersinks, offset pins, underside pockets, filleted load surfaces, and clear top-bottom feature orientation."
+    }
+  ]
+}

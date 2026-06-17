@@ -1,0 +1,217 @@
+{
+  "agent_number": 37,
+  "domain": "construction tools, concrete forming hardware, tile-setting aids, masonry layout fixtures, and jobsite measurement accessories",
+  "stage": "raw_product_ideas",
+  "ideas": [
+    {
+      "idea_title": "Adjustable formwork corner alignment clamp",
+      "product_context": "A reusable clamp used by concrete crews to hold intersecting form panels square while bracing is installed.",
+      "core_function": "Locks against two panel faces and provides a visible reference corner for checking alignment before pouring.",
+      "likely_main_part": "L-shaped clamp body with sliding jaw blocks, screw bosses, ribbed webs, and panel-contact pads.",
+      "why_it_tests_cad_representation": "Tests perpendicular fixture geometry, sliding components, clamping pads, reinforcement ribs, and readable functional contact surfaces."
+    },
+    {
+      "idea_title": "Concrete form tie spacing gauge",
+      "product_context": "A handheld layout tool used to mark repeatable form tie locations across temporary wall forms.",
+      "core_function": "Indexes from a previous mark or panel edge and positions a marking window for the next tie location.",
+      "likely_main_part": "Flat rail-like body with hooked reference end, sliding marker window, locking thumb pad, and recessed grip.",
+      "why_it_tests_cad_representation": "Exercises long datum features, movable index windows, shallow engraved reference zones, and ergonomic handling surfaces."
+    },
+    {
+      "idea_title": "Reusable chamfer strip holder for concrete forms",
+      "product_context": "A clip-on accessory used to hold chamfer strips along exposed form edges before concrete placement.",
+      "core_function": "Captures a chamfer insert and clips it to a form board without fasteners through the finished face.",
+      "likely_main_part": "Springy clip channel with triangular insert pocket, outer latch lip, and pull-tab grip.",
+      "why_it_tests_cad_representation": "Challenges angled channel geometry, thin retaining lips, clip deflection intent, and nested removable insert forms."
+    },
+    {
+      "idea_title": "Form panel lifting handle with wedge lock",
+      "product_context": "A temporary handle attached to modular concrete form panels during setup and stripping.",
+      "core_function": "Grips an existing panel slot and creates a comfortable handhold for moving the panel safely.",
+      "likely_main_part": "Loop handle body with tapered wedge tongue, cam lever pocket, and broad load-spreading foot.",
+      "why_it_tests_cad_representation": "Combines ergonomic loops, wedge engagement, lever clearance, and load-bearing contact pads in one compact assembly."
+    },
+    {
+      "idea_title": "Concrete edge screed rail bracket",
+      "product_context": "A jobsite bracket used to support temporary screed rails along slab edges and pour boundaries.",
+      "core_function": "Holds a straight rail at an adjustable elevation while staying anchored to surrounding formwork.",
+      "likely_main_part": "Offset bracket with rail cradle, vertical adjustment slot, locking knob boss, and clamp foot.",
+      "why_it_tests_cad_representation": "Tests offset load paths, slot-based adjustment, rail cradles, and the relationship between temporary support and reference surface."
+    },
+    {
+      "idea_title": "Form brace angle saddle",
+      "product_context": "A hardware saddle used where diagonal braces meet vertical concrete form panels.",
+      "core_function": "Receives a brace member at a set angle and spreads force into the form frame.",
+      "likely_main_part": "Angled saddle plate with curved brace seat, side ears, fastener bosses, and gusset ribs.",
+      "why_it_tests_cad_representation": "Exercises angled intersections, concave seating surfaces, gusseted reinforcement, and asymmetric fastening layouts."
+    },
+    {
+      "idea_title": "Snap-tie cone removal grip",
+      "product_context": "A hand tool for removing reusable cone pieces from concrete form tie locations after stripping.",
+      "core_function": "Engages the cone rim and applies twisting force without damaging the surrounding concrete face.",
+      "likely_main_part": "T-handle tool with forked nose, curved engagement teeth, and protective bearing ring.",
+      "why_it_tests_cad_representation": "Tests small engagement teeth, circular rim contact, hand-tool ergonomics, and controlled clearance around a recessed feature."
+    },
+    {
+      "idea_title": "Panel joint leak guard clip",
+      "product_context": "A temporary clip used along concrete form seams where crews want to hold a gasket or foam strip in place.",
+      "core_function": "Pins a compressible sealing strip against a form joint until normal form pressure takes over.",
+      "likely_main_part": "C-shaped clip with gasket groove, squeeze tabs, hinge-like flex region, and outer pull ridge.",
+      "why_it_tests_cad_representation": "Challenges thin spring sections, captured soft-strip intent, seam-centered placement, and functional snap-on geometry."
+    },
+    {
+      "idea_title": "Tile lippage control wedge plier",
+      "product_context": "A tile-setting hand tool used to tighten leveling wedges through spacer clips during floor or wall installation.",
+      "core_function": "Pushes a wedge into a leveling clip with controlled pressure while keeping tile faces protected.",
+      "likely_main_part": "Pliers body with offset jaws, replaceable soft pads, ratchet notch arc, and hand grips.",
+      "why_it_tests_cad_representation": "Tests articulated tool geometry, offset jaw contact, replaceable pad detail, and ratchet-like incremental features."
+    },
+    {
+      "idea_title": "Tile spacer removal hook",
+      "product_context": "A small finishing tool used after tile adhesive cures to pull reusable spacers from grout joints.",
+      "core_function": "Hooks under spacer tabs and lifts them out without chipping tile edges.",
+      "likely_main_part": "Slim handle with angled hook tip, edge guard shoe, and textured thumb rest.",
+      "why_it_tests_cad_representation": "Exercises delicate hook geometry, protective contact shoe forms, small ergonomic surfaces, and clearance-sensitive tool tips."
+    },
+    {
+      "idea_title": "Tile layout centerline bridge",
+      "product_context": "A layout aid placed across a room centerline or feature line while planning tile courses.",
+      "core_function": "Bridges over chalk lines and provides repeatable reference notches for dry-lay positioning.",
+      "likely_main_part": "Low bridge rail with sight windows, stepped reference notches, rubber feet, and pencil guide slots.",
+      "why_it_tests_cad_representation": "Tests transparent or open sight features, repeated notches, non-slip feet, and visible alignment references."
+    },
+    {
+      "idea_title": "Curved tile contour transfer comb",
+      "product_context": "A tile-setting aid for copying irregular wall, pipe, or trim profiles onto cut tiles.",
+      "core_function": "Transfers a contour through sliding pins held in a shallow frame so the shape can be traced.",
+      "likely_main_part": "Comb frame with many parallel sliding fingers, side locks, and broad tracing edge.",
+      "why_it_tests_cad_representation": "Challenges dense repeated movable elements, constrained sliding paths, thin pins, and a captured but adjustable profile."
+    },
+    {
+      "idea_title": "Shower niche tile reveal jig",
+      "product_context": "A fixture used by tile installers to keep a consistent reveal around recessed shower niches.",
+      "core_function": "References the niche opening and tile face while marking trim and tile positions.",
+      "likely_main_part": "Rectangular frame jig with adjustable corner tabs, ledge rests, and inset marking grooves.",
+      "why_it_tests_cad_representation": "Exercises nested rectangular frames, adjustable tabs, corner clearances, and surfaces that must indicate layout intent."
+    },
+    {
+      "idea_title": "Tile adhesive notch checker",
+      "product_context": "A handheld gauge used to compare fresh trowel ridges against the intended notch pattern.",
+      "core_function": "Provides a visual and tactile check that mortar ridges have the expected profile before tile placement.",
+      "likely_main_part": "Flat gauge plate with multiple tooth silhouettes, handle slot, and wipe-clean beveled edges.",
+      "why_it_tests_cad_representation": "Tests repeated negative tooth profiles, thin gauge surfaces, labeled profile zones, and precise edge readability without exact sizing."
+    },
+    {
+      "idea_title": "Tile edge trim miter marking saddle",
+      "product_context": "A marking aid for metal or plastic tile edge trims used around corners and transitions.",
+      "core_function": "Holds trim in a stable channel and guides pencil marks for miter cuts.",
+      "likely_main_part": "V-channel saddle with angled guide fences, retention lips, and underside anti-slip pads.",
+      "why_it_tests_cad_representation": "Combines nested trim channels, angled guide planes, retaining lips, and small support pads."
+    },
+    {
+      "idea_title": "Masonry block corner story pole clamp",
+      "product_context": "A clamp-on fixture used with a vertical story pole during block wall layout.",
+      "core_function": "Attaches to a pole and presents adjustable line holders for tracking courses and corner alignment.",
+      "likely_main_part": "Split clamp collar with sliding line tabs, locking screws, and molded course markers.",
+      "why_it_tests_cad_representation": "Tests clamp collars, movable tabs, fine reference marks, and the relationship between vertical layout and horizontal string lines."
+    },
+    {
+      "idea_title": "Brick bond pattern spacer rail",
+      "product_context": "A masonry layout rail used to preview or mark staggered brick bond patterns before laying courses.",
+      "core_function": "Indexes brick face positions and mortar joints along a wall run for consistent layout.",
+      "likely_main_part": "Flat rail with alternating reference windows, end hook, sliding stop, and joint-center notches.",
+      "why_it_tests_cad_representation": "Exercises repeated staggered visual references, shallow notches, adjustable stops, and layout features that encode pattern logic."
+    },
+    {
+      "idea_title": "Masonry string line corner turret",
+      "product_context": "A reusable corner fixture used to hold mason line at a block or brick wall corner.",
+      "core_function": "Anchors to the corner and lets line wrap around a rotating post while maintaining clear sight lines.",
+      "likely_main_part": "Corner clamp base with vertical turret post, line grooves, thumb latch, and protective jaw pads.",
+      "why_it_tests_cad_representation": "Tests corner gripping geometry, rotational line-post features, helical or grooved contact paths, and padded jaw interfaces."
+    },
+    {
+      "idea_title": "Mortar joint raking depth guide",
+      "product_context": "A hand guide used during masonry finishing or restoration to keep joint raking visually consistent.",
+      "core_function": "Runs along adjacent brick faces while a central guide controls the raking tool position.",
+      "likely_main_part": "Bridge-shaped guide with twin shoe rails, central tool slot, and debris relief channels.",
+      "why_it_tests_cad_representation": "Combines twin reference surfaces, central slot geometry, shallow channels, and a bridge form that spans an irregular joint."
+    },
+    {
+      "idea_title": "Block web knockout marking template",
+      "product_context": "A masonry accessory used to mark cut or knockout areas on concrete masonry units for services or reinforcement.",
+      "core_function": "Registers on block faces and outlines common openings while avoiding web and edge damage zones.",
+      "likely_main_part": "Template plate with registration hooks, open marking windows, grip ridge, and orientation tabs.",
+      "why_it_tests_cad_representation": "Tests thin template windows, block-face registration, directional markers, and negative-space geometry meant for tracing."
+    },
+    {
+      "idea_title": "Jobsite laser target magnetic bracket",
+      "product_context": "A measurement accessory that holds a laser target card on metal studs, form hardware, or equipment surfaces.",
+      "core_function": "Positions a target face upright while allowing quick rotation and height adjustment on ferrous surfaces.",
+      "likely_main_part": "Magnetic base with pivoting target plate, sliding stem, lock knob, and protective bumper edges.",
+      "why_it_tests_cad_representation": "Exercises magnetic base cues, pivot joints, sliding adjustment, flat target planes, and rugged protective features."
+    },
+    {
+      "idea_title": "Tape measure stand-off hook",
+      "product_context": "A compact accessory clipped to a tape measure hook for measuring from pipes, studs, or form edges with an offset.",
+      "core_function": "Creates a temporary reference foot that catches around irregular edges while the tape remains readable.",
+      "likely_main_part": "Clip-on hook body with curved catch lip, tape-hook pocket, spring latch, and wear pads.",
+      "why_it_tests_cad_representation": "Tests small clip interfaces, curved edge catches, thin latch features, and accessory geometry built around an implied host tool."
+    },
+    {
+      "idea_title": "Chalk line corner wrap guide",
+      "product_context": "A jobsite layout accessory used when snapping chalk lines around outside corners or columns.",
+      "core_function": "Holds the chalk string off the corner edge and provides a smooth wrap path for continuous layout marks.",
+      "likely_main_part": "Corner-mounted guide with rounded string channel, clamp wings, and chalk-residue relief grooves.",
+      "why_it_tests_cad_representation": "Challenges smooth guide paths around corners, clamp wings, residue grooves, and geometry that controls a flexible line."
+    },
+    {
+      "idea_title": "Measuring rod foot stabilizer",
+      "product_context": "A survey and layout accessory attached to the base of a grade rod or measuring staff on rough jobsite surfaces.",
+      "core_function": "Keeps the rod vertical and stable while presenting a consistent bottom contact point.",
+      "likely_main_part": "Wide stabilizer foot with central rod socket, leveling bubble pocket, serrated ground pads, and release latch.",
+      "why_it_tests_cad_representation": "Tests broad base stability, socketed vertical alignment, bubble-level recesses, textured ground-contact surfaces, and latch details."
+    },
+    {
+      "idea_title": "Stud bay depth gauge for remodel layout",
+      "product_context": "A measurement accessory used to probe wall cavities and locate usable clearance before installing blocking or boxes.",
+      "core_function": "Slides into an opening and indicates relative depth while keeping the handle flush to the wall face.",
+      "likely_main_part": "Telescoping probe with flush face plate, sliding indicator collar, end bumper, and finger pull.",
+      "why_it_tests_cad_representation": "Exercises telescoping components, flush reference plates, indicator collars, and probe geometry designed for hidden spaces."
+    },
+    {
+      "idea_title": "Door opening diagonal check gauge",
+      "product_context": "A jobsite layout tool used by carpenters and masons to compare diagonals of framed or formed openings.",
+      "core_function": "Captures one diagonal reference and transfers it to the opposite diagonal for squareness checks.",
+      "likely_main_part": "Extending bar assembly with corner cups, sliding lock collar, and visible comparison pointer.",
+      "why_it_tests_cad_representation": "Tests telescoping bar logic, corner cup contact geometry, comparison markers, and long slender alignment features."
+    },
+    {
+      "idea_title": "Anchor bolt projection checker",
+      "product_context": "A construction layout gauge used after concrete placement to check that anchor bolts project enough for base plates.",
+      "core_function": "Drops over an anchor bolt and shows whether thread exposure and washer clearance are acceptable.",
+      "likely_main_part": "Cylindrical sleeve gauge with side viewing window, base plate foot, and color-band recesses.",
+      "why_it_tests_cad_representation": "Combines cylindrical clearance features, cutaway windows, datum feet, and visible pass-fail zones without specifying actual projection values."
+    },
+    {
+      "idea_title": "Rebar chair placement comb",
+      "product_context": "A layout aid used before a concrete pour to space support chairs under reinforcing mesh or bars.",
+      "core_function": "Indexes chair positions along a run and lets a worker mark or place supports consistently.",
+      "likely_main_part": "Long comb-like template with repeated chair pockets, end reference hook, and carrying hand cutout.",
+      "why_it_tests_cad_representation": "Exercises repeated pocket geometry, open handholds, edge referencing, and pattern-based placement intent."
+    },
+    {
+      "idea_title": "Expansion joint insert alignment fork",
+      "product_context": "A concrete flatwork tool used to hold flexible expansion joint material upright during placement.",
+      "core_function": "Straddles the joint insert and keeps it aligned while adjacent concrete is worked.",
+      "likely_main_part": "Forked alignment head with spring fingers, handle socket, and rounded concrete-contact skids.",
+      "why_it_tests_cad_representation": "Tests forked flexible jaws, temporary contact skids, socketed handle connection, and alignment around a thin inserted strip."
+    },
+    {
+      "idea_title": "Masonry opening sill slope gauge",
+      "product_context": "A layout fixture used when forming or setting masonry sill materials under windows or wall openings.",
+      "core_function": "References the wall face and indicates a consistent outward drainage slope for the sill surface.",
+      "likely_main_part": "Wedge-profile gauge body with face hook, small level vial recess, and sliding edge stop.",
+      "why_it_tests_cad_representation": "Challenges wedge surfaces, visible reference hooks, inset vial pockets, and adjustable stops tied to a sloped datum."
+    }
+  ]
+}

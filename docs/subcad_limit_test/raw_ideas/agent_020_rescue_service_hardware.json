@@ -1,0 +1,79 @@
+{
+  "agent_number": 20,
+  "agent_id": "019ecedf-df47-7c11-8d51-634e18f30daf",
+  "domain": "rugged field cases, emergency-response equipment, non-weapon protective/service hardware, and rescue-tool accessories",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Rugged Waterproof Drone Battery Transit Case",
+      "product_context": "Field teams transporting spare UAV batteries for search mapping, inspection, or disaster assessment.",
+      "core_function": "Protects multiple battery packs from impact, water ingress, and accidental terminal contact during transport.",
+      "likely_main_part": "Machined internal battery tray with isolated pockets, drain channels, and lid-compression bosses.",
+      "why_it_tests_cad_representation": "Requires repeated pocket geometry, clearance spacing, rounded protective ribs, gasket compression features, and asymmetric terminal-protection details."
+    },
+    {
+      "idea_title": "Ambulance Rail-Mount Oxygen Regulator Guard",
+      "product_context": "Emergency medical vehicles where exposed oxygen regulators need protection from bumps and equipment collisions.",
+      "core_function": "Shields a regulator while allowing gauge visibility, hose routing, and quick access for adjustment.",
+      "likely_main_part": "Machined protective cage bracket with rail clamp interface, window cutouts, and hose pass-throughs.",
+      "why_it_tests_cad_representation": "Combines clamp geometry, protective openings, standoff ribs, rounded edges, and constrained access zones around a delicate device."
+    },
+    {
+      "idea_title": "Flood-Rescue Throw Bag Belt Dock",
+      "product_context": "Swift-water rescue personnel carrying throw bags on modular belts or buoyancy vests.",
+      "core_function": "Holds a rescue rope throw bag securely while allowing one-handed release under wet conditions.",
+      "likely_main_part": "Machined quick-release belt dock with curved cradle, latch pocket, and drainage slots.",
+      "why_it_tests_cad_representation": "Tests curved retention surfaces, ergonomic release geometry, slot arrays, water-drain features, and attachment interfaces."
+    },
+    {
+      "idea_title": "Field Radio Shock-Isolation Corner Frame",
+      "product_context": "Disaster-response crews carrying portable radios in rough terrain or temporary command posts.",
+      "core_function": "Protects a handheld or compact base radio from drops while keeping controls and ports accessible.",
+      "likely_main_part": "Machined corner-frame shell with elastomer insert pockets, exposed control windows, and lanyard anchors.",
+      "why_it_tests_cad_representation": "Requires offset frames, corner bosses, recessed insert cavities, port cutouts, and nonuniform protective wall thickness."
+    },
+    {
+      "idea_title": "Collapsible Stretcher Hinge Reinforcement Block",
+      "product_context": "Rescue stretchers used in field extraction, industrial sites, and emergency shelters.",
+      "core_function": "Reinforces a folding stretcher hinge while preserving lock alignment and smooth deployment.",
+      "likely_main_part": "Machined hinge block with dual pivot bores, lock-pin channel, stop faces, and weight-reduction pockets.",
+      "why_it_tests_cad_representation": "Tests coaxial holes, load-bearing bosses, mechanical stops, pocketing, and tight alignment constraints."
+    },
+    {
+      "idea_title": "Portable Decontamination Shower Hose Manifold Bracket",
+      "product_context": "Emergency hazmat or disaster sites using temporary decontamination shower systems.",
+      "core_function": "Organizes and supports multiple hose connections while keeping valves protected and readable.",
+      "likely_main_part": "Machined manifold support plate with angled hose ports, valve guards, mounting tabs, and labeling recesses.",
+      "why_it_tests_cad_representation": "Includes angled cylindrical features, repeated port spacing, protective raised ribs, shallow engraving zones, and mount-hole patterns."
+    },
+    {
+      "idea_title": "Hard Case Insert for Thermal Imaging Camera Kit",
+      "product_context": "Fire, rescue, and inspection teams storing a thermal camera, spare battery, charger, and cable set.",
+      "core_function": "Keeps sensitive imaging equipment organized and protected inside a rugged field case.",
+      "likely_main_part": "Machined or milled foam-compatible insert master with camera-shaped cavity, accessory wells, and finger-lift reliefs.",
+      "why_it_tests_cad_representation": "Tests nested organic-adjacent cavities, varied-depth pockets, filleted finger cutouts, labeling pads, and case-alignment features."
+    },
+    {
+      "idea_title": "Rescue Saw Blade Transport Shield",
+      "product_context": "Emergency crews transporting powered rescue saws separately from consumable abrasive or carbide blades.",
+      "core_function": "Protects circular blades from edge damage and protects users from accidental contact during storage.",
+      "likely_main_part": "Machined circular blade guard plate with central hub lock, radial ribs, and indexed blade-size stops.",
+      "why_it_tests_cad_representation": "Requires concentric circular geometry, radial reinforcement, hub-lock details, stepped diameter references, and edge-clearance channels."
+    },
+    {
+      "idea_title": "Temporary Command Post Cable Crossover Protector",
+      "product_context": "Emergency operations centers with power, radio, and network cables crossing walkways.",
+      "core_function": "Protects cables from foot traffic and reduces trip hazards in temporary field setups.",
+      "likely_main_part": "Machined modular cable-channel segment with interlocking ends, ribbed ramp surfaces, and underside grip pockets.",
+      "why_it_tests_cad_representation": "Tests long channel profiles, interlocking male-female geometry, patterned traction ribs, underside cavities, and modular repeatability."
+    },
+    {
+      "idea_title": "Search-and-Rescue Headlamp Helmet Adapter",
+      "product_context": "Rescue workers mounting high-output headlamps to helmets without permanent modification.",
+      "core_function": "Provides a secure adjustable interface between helmet accessory slots and a lamp body.",
+      "likely_main_part": "Machined adapter bracket with slotted adjustment arc, helmet-clip hooks, lamp pivot boss, and cable-retention groove.",
+      "why_it_tests_cad_representation": "Combines hook geometry, pivot bosses, curved slots, thin retention features, and compact ergonomic clearances."
+    }
+  ]
+}

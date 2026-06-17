@@ -1,0 +1,79 @@
+{
+  "agent_number": 4,
+  "agent_id": "019ecedb-57cd-77a2-8fb5-2ef0c6914e5c",
+  "domain": "medical, lab, and dental non-implant mechanical hardware",
+  "stage": "raw_product_ideas",
+  "source": "backfilled_from_original_subagent_session_log",
+  "ideas": [
+    {
+      "idea_title": "Dental Handpiece Sterilization Cassette Hinge Block",
+      "product_context": "Reusable autoclavable cassette used in dental clinics to organize high-speed handpieces during cleaning and sterilization.",
+      "core_function": "Provides a precision pivot and latch interface for the cassette lid while surviving repeated thermal cycles.",
+      "likely_main_part": "Machined stainless hinge-and-latch end block with twin hinge barrels, spring slot, drain reliefs, and keyed lid stops.",
+      "why_it_tests_cad_representation": "Combines coaxial hinge bores, thin sterilization-drain channels, asymmetric latch geometry, filleted transitions, and tight positional relationships between functional features."
+    },
+    {
+      "idea_title": "Benchtop Centrifuge Rotor Adapter",
+      "product_context": "Accessory for a small clinical or research centrifuge that lets a fixed-angle rotor accept a different sample tube size.",
+      "core_function": "Centers and supports sample tubes at a defined angle while preserving balance and allowing easy removal.",
+      "likely_main_part": "Machined aluminum conical tube sleeve with angled bore, stepped tube seat, extraction notch, balance flats, and bottom relief pocket.",
+      "why_it_tests_cad_representation": "Requires angled cylindrical cuts through a tapered body, nested coaxial seats, mass-reduction pockets, orientation-specific notches, and smooth internal radii."
+    },
+    {
+      "idea_title": "Microscope Slide Warming Stage Clamp",
+      "product_context": "Clamp component for a heated microscope stage used in pathology or lab sample preparation.",
+      "core_function": "Holds glass slides flat against a heated surface without obscuring the viewing area.",
+      "likely_main_part": "Machined spring clamp arm with low-profile finger pads, pivot bore, torsion spring pocket, travel stop, and relieved underside.",
+      "why_it_tests_cad_representation": "Tests thin compliant arm geometry, ergonomic pad contours, undercuts, pivot alignment, local thickness changes, and small-radius clearances."
+    },
+    {
+      "idea_title": "Adjustable Dental Impression Tray Handle",
+      "product_context": "Reusable mechanical handle for dental impression trays that allows controlled angular positioning before impression material is loaded.",
+      "core_function": "Locks the tray at selectable angles for easier placement in different patient mouth geometries.",
+      "likely_main_part": "Machined ratcheting handle yoke with curved tooth sector, cross-pin holes, thumb-release pocket, and tray dovetail receiver.",
+      "why_it_tests_cad_representation": "Includes curved ratchet teeth, mating dovetail geometry, yoke arms with aligned bores, ergonomic recesses, and load-bearing fillets."
+    },
+    {
+      "idea_title": "Lab Pipette Calibration Weight Cradle",
+      "product_context": "Fixture used during pipette calibration to hold small vessels or weighing boats in a repeatable position on an analytical balance.",
+      "core_function": "Positions calibration containers consistently while minimizing contact area and trapped liquid.",
+      "likely_main_part": "Machined stainless weighing cradle with shallow spherical seat, radial drainage grooves, three-point feet, and tweezer access cutouts.",
+      "why_it_tests_cad_representation": "Challenges representation of shallow curved seating surfaces, radial groove patterns, tiny support feet, symmetric but interrupted geometry, and delicate edge breaks."
+    },
+    {
+      "idea_title": "Dental Model Articulator Condyle Guide",
+      "product_context": "Component in a dental lab articulator used to simulate jaw movement for crown and denture work.",
+      "core_function": "Guides a condyle pin along a controlled curved path with adjustable mechanical stops.",
+      "likely_main_part": "Machined guide block with curved slot track, angle scale boss, stop-screw channels, mounting counterbores, and reference flats.",
+      "why_it_tests_cad_representation": "Tests swept slot geometry, compound curved paths, screw-adjustment details, engraved or raised indexing features, and datum-critical mounting surfaces."
+    },
+    {
+      "idea_title": "Microtome Disposable Blade Holder Jaw",
+      "product_context": "Replaceable jaw component for a laboratory microtome used to section paraffin-embedded tissue samples.",
+      "core_function": "Clamps a thin disposable blade at a precise rake angle while allowing safe blade exchange.",
+      "likely_main_part": "Machined hardened steel clamping jaw with long angled blade shelf, serrated grip ridge, screw bosses, clearance scallops, and safety chamfers.",
+      "why_it_tests_cad_representation": "Requires long precision angled planes, very thin ledges, repeated fine ridges, screw clamping geometry, chamfer hierarchy, and strict parallelism."
+    },
+    {
+      "idea_title": "Orthodontic Wire Bending Turret",
+      "product_context": "Manual bench tool used by orthodontic technicians to form repeatable bends in archwire outside the patient mouth.",
+      "core_function": "Provides multiple pin diameters and bend radii on a compact rotating turret.",
+      "likely_main_part": "Machined circular turret disk with eccentric forming pins, indexed detent pockets, central bearing bore, radius grooves, and locking notch.",
+      "why_it_tests_cad_representation": "Combines circular indexing, repeated off-axis features, mixed pin bosses, shallow forming grooves, detent geometry, and rotational symmetry broken by locks."
+    },
+    {
+      "idea_title": "Lab Tube Decapper Cam Plate",
+      "product_context": "Mechanism component in a benchtop sample tube decapper for non-automated or semi-automated lab workflows.",
+      "core_function": "Transforms a handle motion into a controlled lifting and twisting action on screw caps.",
+      "likely_main_part": "Machined cam plate with spiral cam slot, follower entry ramp, mounting holes, hard stops, and lightening pockets.",
+      "why_it_tests_cad_representation": "Tests noncircular slot paths, ramped cam surfaces, mechanical stop faces, offset mounting patterns, and pockets that must avoid functional cam regions."
+    },
+    {
+      "idea_title": "Dental Vacuum Trap Quick-Release Collar",
+      "product_context": "Reusable collar for a dental suction line debris trap that lets staff remove a collection cup for cleaning.",
+      "core_function": "Locks a transparent trap cup onto the suction housing with a quarter-turn bayonet action.",
+      "likely_main_part": "Machined polymer or aluminum bayonet collar with internal interrupted lugs, grip flutes, O-ring groove, stop tabs, and drain orientation mark.",
+      "why_it_tests_cad_representation": "Requires internal bayonet features, annular sealing grooves, interrupted rotational geometry, exterior grip patterning, and precise axial clearances."
+    }
+  ]
+}
