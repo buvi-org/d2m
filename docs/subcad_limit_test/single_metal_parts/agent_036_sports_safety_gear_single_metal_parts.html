@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent 036 Single Metal Part Requirements - d2m</title>
+  <link rel="stylesheet" href="../../site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../../../README.html">Home</a>
+      <a href="../../../TODO.html">TODO.md</a>
+      <a href="../../zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="../../architecture.html">docs/architecture.md</a>
+      <a href="../../plan.html">docs/plan.md</a>
+      <a href="../../step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="../../simulation.html">docs/simulation.md</a>
+      <a href="../../subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="../execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../../../web/README.html">web/README.md</a>
+      <a href="../../../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/subcad_limit_test/single_metal_parts/agent_036_sports_safety_gear_single_metal_parts.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="agent-036-single-metal-part-requirements">Agent 036 Single Metal Part Requirements</h1>
+<p>Domain: wearable sports safety gear, helmet mounts, protective equipment hardware, and adjustment mechanisms</p>
+<p>Each item below is one metal part only. Product assemblies and nonmetal components are explicitly out of scope.</p>
+<h2 id="smp-036-01-rotating-helmet-visor-quick-lock-hinge">SMP-036-01 - Rotating helmet visor quick-lock hinge</h2>
+<p>Part name: Rotating helmet visor quick-lock hinge - single metal part</p>
+<p>Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)</p>
+<p>Envelope: <code>{"length_mm": 180, "thickness_mm": 4, "width_mm": 145}</code></p>
+<p>Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.</p>
+<p>Full description:</p>
+<p>Make the single metal part for the product idea 'Rotating helmet visor quick-lock hinge'. The
+broader use case is: Cycling and skating helmets that need removable or adjustable face shields. The
+chosen deliverable is only the metal body implied by: Detented hinge bracket with integrated latch
+tabs. All other product elements are external reference items and must not be modeled. The part must
+perform this mechanical role: Allows a visor to pivot between raised and lowered positions while
+locking securely under vibration. It is intentionally included in the SubCAD limit corpus because:
+Combines rotational clearance, snap-fit retention, asymmetric mounting ears, and repeated small
+locking features around a curved helmet interface. The part is made from low-carbon steel, ASTM A36
+or equivalent using sheet or plate stock. Start from one flat sheet or plate blank. Cut the outside
+profile, machine holes, slots, pockets, lips, and relief features into that same piece. If bends are
+called out, they are bends in the same sheet part, not separate welded pieces.</p>
+<p>Functional features:
+- single rectangular metal body: Machine one body with finished envelope 180 mm x 145 mm x 4 mm.
+- mounting hole pattern: Drill two through holes diameter 5 mm on the length centerline at X=29 mm and X=151 mm, Y=72 mm.
+- functional center feature: Machine a central obround slot 60 mm long x 13 mm wide through the part, centered at X=90 mm, Y=72 mm.
+- top relief pocket: Mill a rectangular relief pocket 45 mm x 48 mm x 1 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.</p>
+<p>Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.</p>
+<p>Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.</p>
+<p>Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Rotating helmet visor quick-lock hinge'; this requirement is only for its chosen metal part.</p>
+<hr/>
+<h2 id="smp-036-02-sliding-goggle-strap-anchor-for-protective-helmets">SMP-036-02 - Sliding goggle strap anchor for protective helmets</h2>
+<p>Part name: Sliding goggle strap anchor for protective helmets - single metal part</p>
+<p>Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)</p>
+<p>Envelope: <code>{"length_mm": 215, "thickness_mm": 7, "width_mm": 65}</code></p>
+<p>Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.</p>
+<p>Full description:</p>
+<p>Make the single metal part for the product idea 'Sliding goggle strap anchor for protective
+helmets'. The broader use case is: Snow, motocross, and field-sport helmets where goggles need
+stable strap routing. The chosen deliverable is only the metal body implied by: Low-profile rail
+clip with captive sliding loop. All other product elements are external reference items and must not
+be modeled. The part must perform this mechanical role: Captures a goggle strap and lets the anchor
+slide to tune strap angle without detaching hardware. It is intentionally included in the SubCAD
+limit corpus because: Requires nested sliding geometry, undercuts, strap pass-throughs, stop
+features, and a mount that conforms to a curved shell. The part is made from low-carbon steel, ASTM
+A36 or equivalent using sheet or plate stock. Start from one flat sheet or plate blank. Cut the
+outside profile, machine holes, slots, pockets, lips, and relief features into that same piece. If
+bends are called out, they are bends in the same sheet part, not separate welded pieces.</p>
+<p>Functional features:
+- single rectangular metal body: Machine one body with finished envelope 215 mm x 65 mm x 7 mm.
+- mounting hole pattern: Drill two through holes diameter 8 mm on the length centerline at X=13 mm and X=202 mm, Y=32 mm.
+- functional center feature: Machine a central obround slot 71 mm long x 7 mm wide through the part, centered at X=107 mm, Y=32 mm.
+- top relief pocket: Mill a rectangular relief pocket 53 mm x 21 mm x 2 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+- integral hook lip: Leave an integral hook lip on one short end, projecting 8 mm and undercut 6 mm for registration.</p>
+<p>Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.</p>
+<p>Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- The feature named 'integral hook lip' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.</p>
+<p>Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Sliding goggle strap anchor for protective helmets'; this requirement is only for its chosen metal part.</p>
+<hr/>
+<h2 id="smp-036-03-breakaway-action-camera-helmet-mount">SMP-036-03 - Breakaway action camera helmet mount</h2>
+<p>Part name: Breakaway action camera helmet mount - single metal part</p>
+<p>Material: 6061-T6 aluminum (low mass with good machinability and stable flat features)</p>
+<p>Envelope: <code>{"height_mm": 42, "length_mm": 140, "width_mm": 90}</code></p>
+<p>Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.</p>
+<p>Full description:</p>
+<p>Make the single metal part for the product idea 'Breakaway action camera helmet mount'. The broader
+use case is: Adventure sports helmets that carry accessories but must release during high-force
+impacts. The chosen deliverable is only the metal body implied by: Frangible dovetail base with
+replaceable shear insert. All other product elements are external reference items and must not be
+modeled. The part must perform this mechanical role: Holds a camera during normal motion and
+separates in a controlled direction during snagging or impact. It is intentionally included in the
+SubCAD limit corpus because: Tests representation of intentional weak points, keyed sliding
+interfaces, directional release geometry, and replaceable internal inserts. The part is made from
+6061-T6 aluminum using rectangular block stock. Start from one rectangular metal block or plate. Saw
+oversize, face all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and
+edge treatments into that same solid piece.</p>
+<p>Functional features:
+- single rectangular metal body: Machine one body with finished envelope 140 mm x 90 mm x 42 mm.
+- mounting hole pattern: Drill two through holes diameter 8 mm on the length centerline at X=18 mm and X=122 mm, Y=45 mm.
+- functional center feature: Machine a central obround slot 46 mm long x 7 mm wide through the part, centered at X=70 mm, Y=45 mm.
+- top relief pocket: Mill a rectangular relief pocket 35 mm x 30 mm x 11 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+- dovetail slide form: Machine a straight dovetail groove on the top face, length 116 mm, throat 18 mm, included angle 60 degrees.</p>
+<p>Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.</p>
+<p>Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- The feature named 'dovetail slide form' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.</p>
+<p>Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Breakaway action camera helmet mount'; this requirement is only for its chosen metal part.</p>
+<hr/>
+<h2 id="smp-036-04-indexed-chin-strap-tension-dial">SMP-036-04 - Indexed chin strap tension dial</h2>
+<p>Part name: Indexed chin strap tension dial - single metal part</p>
+<p>Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)</p>
+<p>Envelope: <code>{"axial_bore_diameter_mm": 15, "outer_diameter_mm": 47, "overall_length_mm": 98, "wall_minimum_mm": 16}</code></p>
+<p>Datum orientation: Use the cylinder axis as X. The left faced end is datum A at X=0. The radial direction through the largest flat or slot is datum B. Positive Z points upward from the part centerline when the main flat faces up.</p>
+<p>Full description:</p>
+<p>Make the single metal part for the product idea 'Indexed chin strap tension dial'. The broader use
+case is: Helmets and headguards that need fine strap fit adjustment while worn. The chosen
+deliverable is only the metal body implied by: Ratchet dial housing with twin strap spool channels.
+All other product elements are external reference items and must not be modeled. The part must
+perform this mechanical role: Takes up slack in paired straps through a dial mechanism with tactile
+indexed positions. It is intentionally included in the SubCAD limit corpus because: Includes
+concentric moving parts, pawl-and-tooth detail, strap routing tunnels, finger grip texture, and
+serviceable enclosure seams. The part is made from low-carbon steel, ASTM A36 or equivalent using
+round bar stock. Start from one cut length of round metal bar. Turn the outside, face both ends,
+bore the center, then mill secondary flats, slots, and radial holes as needed. No separate inserts
+or fasteners are part of the deliverable.</p>
+<p>Functional features:
+- single cylindrical body: Turn one coaxial cylinder to OD 47 mm and length 98 mm from solid round bar.
+- axial through bore: Machine a centered through bore diameter 15 mm along the full length; both bore mouths have 1.0 mm x 45 degree chamfers.
+- end counterbores: Add shallow concentric counterbores on both ends, diameter 25 mm x 3 mm deep.
+- milled reference flat: Mill one longitudinal flat 15 mm wide over 90 mm of length, centered on the top side.
+- radial clamp holes: Add two radial tapped M6 holes through the top flat at X=32 mm and X=65 mm.
+- split relief slit: Cut one full-length radial slit 6 mm wide from the outside to the axial bore on datum-B side.
+- outside edge treatment: Break all outside circular edges with 1.0 mm chamfers and keep internal bore edges visibly chamfered.</p>
+<p>Tolerances:
+- Outside diameter and axial bore diameter: +/-0.05 mm.
+- Concentricity of bore to outer diameter: within 0.05 mm TIR.
+- Milled flats and slots: +/-0.15 mm unless otherwise specified.
+- Nonfunctional chamfers: +/-0.3 mm.</p>
+<p>Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single cylindrical body' is present with the stated size and position.
+- The feature named 'axial through bore' is present with the stated size and position.
+- The feature named 'end counterbores' is present with the stated size and position.
+- The feature named 'milled reference flat' is present with the stated size and position.
+- The feature named 'radial clamp holes' is present with the stated size and position.
+- The feature named 'split relief slit' is present with the stated size and position.
+- The feature named 'outside edge treatment' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Round features are coaxial unless the requirement explicitly says they are radial or offset.</p>
+<p>Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Indexed chin strap tension dial'; this requirement is only for its chosen metal part.</p>
+<hr/>
+<h2 id="smp-036-05-ventilated-shin-guard-impact-insert-carrier">SMP-036-05 - Ventilated shin guard impact insert carrier</h2>
+<p>Part name: Ventilated shin guard impact insert carrier - single metal part</p>
+<p>Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)</p>
+<p>Envelope: <code>{"length_mm": 255, "thickness_mm": 5, "width_mm": 145}</code></p>
+<p>Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.</p>
+<p>Full description:</p>
+<p>Make the single metal part for the product idea 'Ventilated shin guard impact insert carrier'. The
+broader use case is: Soccer, hockey, and martial-arts shin guards using interchangeable impact pads.
+The chosen deliverable is only the metal body implied by: Curved perforated carrier shell with
+flexible retention lips. All other product elements are external reference items and must not be
+modeled. The part must perform this mechanical role: Holds a removable protective insert while
+preserving airflow and keeping the pad aligned against the leg. It is intentionally included in the
+SubCAD limit corpus because: Challenges CAD with anatomical curvature, patterned ventilation
+cutouts, soft-edge retention flanges, and thin protective shell transitions. The part is made from
+low-carbon steel, ASTM A36 or equivalent using sheet or plate stock. Start from one flat sheet or
+plate blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into
+that same piece. If bends are called out, they are bends in the same sheet part, not separate welded
+pieces.</p>
+<p>Functional features:
+- single rectangular metal body: Machine one body with finished envelope 255 mm x 145 mm x 5 mm.
+- mounting hole pattern: Drill two through holes diameter 9 mm on the length centerline at X=29 mm and X=226 mm, Y=72 mm.
+- functional center feature: Machine a central obround slot 85 mm long x 18 mm wide through the part, centered at X=127 mm, Y=72 mm.
+- top relief pocket: Mill a rectangular relief pocket 63 mm x 48 mm x 2 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.</p>
+<p>Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.</p>
+<p>Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.</p>
+<p>Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Ventilated shin guard impact insert carrier'; this requirement is only for its chosen metal part.</p>
+<hr/>
+<h2 id="smp-036-06-modular-shoulder-pad-strap-junction">SMP-036-06 - Modular shoulder pad strap junction</h2>
+<p>Part name: Modular shoulder pad strap junction - single metal part</p>
+<p>Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)</p>
+<p>Envelope: <code>{"length_mm": 220, "thickness_mm": 10, "width_mm": 50}</code></p>
+<p>Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.</p>
+<p>Full description:</p>
+<p>Make the single metal part for the product idea 'Modular shoulder pad strap junction'. The broader
+use case is: Contact-sport shoulder protection where straps connect shell sections across moving
+joints. The chosen deliverable is only the metal body implied by: Multi-axis strap yoke with
+pivoting buckle sockets. All other product elements are external reference items and must not be
+modeled. The part must perform this mechanical role: Joins several straps to a protective shell
+while allowing limited articulation and quick replacement. It is intentionally included in the
+SubCAD limit corpus because: Tests branching load paths, multiple strap slot orientations, pivot
+bosses, buckle capture geometry, and compact hardware packaging. The part is made from low-carbon
+steel, ASTM A36 or equivalent using sheet or plate stock. Start from one flat sheet or plate blank.
+Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that same
+piece. If bends are called out, they are bends in the same sheet part, not separate welded pieces.</p>
+<p>Functional features:
+- single rectangular metal body: Machine one body with finished envelope 220 mm x 50 mm x 10 mm.
+- mounting hole pattern: Drill two through holes diameter 6 mm on the length centerline at X=10 mm and X=210 mm, Y=25 mm.
+- functional center feature: Machine a central obround slot 73 mm long x 12 mm wide through the part, centered at X=110 mm, Y=25 mm.
+- top relief pocket: Mill a rectangular relief pocket 55 mm x 18 mm x 4 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.</p>
+<p>Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.</p>
+<p>Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.</p>
+<p>Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Modular shoulder pad strap junction'; this requirement is only for its chosen metal part.</p>
+<hr/>
+<h2 id="smp-036-07-helmet-rear-fit-cradle-with-flex-arms">SMP-036-07 - Helmet rear fit cradle with flex arms</h2>
+<p>Part name: Helmet rear fit cradle with flex arms - single metal part</p>
+<p>Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)</p>
+<p>Envelope: <code>{"height_mm": 47, "length_mm": 115, "width_mm": 85}</code></p>
+<p>Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.</p>
+<p>Full description:</p>
+<p>Make the single metal part for the product idea 'Helmet rear fit cradle with flex arms'. The broader
+use case is: Bike, climbing, and skating helmets that tighten around the back of the head. The
+chosen deliverable is only the metal body implied by: Curved occipital cradle with compliant side
+arms and adjustment interface. All other product elements are external reference items and must not
+be modeled. The part must perform this mechanical role: Supports the rear head fit system and flexes
+to accommodate head shape while distributing pressure. It is intentionally included in the SubCAD
+limit corpus because: Requires thin compliant arms, ergonomic curvature, integrated hinge-like flex
+zones, and attachment points for a separate tension system. The part is made from low-carbon steel,
+ASTM A36 or equivalent using rectangular block stock. Start from one rectangular metal block or
+plate. Saw oversize, face all datum sides, then machine the pockets, holes, slots, angled faces,
+grooves, and edge treatments into that same solid piece.</p>
+<p>Functional features:
+- single rectangular metal body: Machine one body with finished envelope 115 mm x 85 mm x 47 mm.
+- mounting hole pattern: Drill two through holes diameter 13 mm on the length centerline at X=17 mm and X=98 mm, Y=42 mm.
+- functional center feature: Machine a central obround slot 38 mm long x 7 mm wide through the part, centered at X=57 mm, Y=42 mm.
+- top relief pocket: Mill a rectangular relief pocket 28 mm x 28 mm x 16 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.</p>
+<p>Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.</p>
+<p>Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.</p>
+<p>Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Helmet rear fit cradle with flex arms'; this requirement is only for its chosen metal part.</p>
+<hr/>
+<h2 id="smp-036-08-protective-glove-knuckle-bridge">SMP-036-08 - Protective glove knuckle bridge</h2>
+<p>Part name: Protective glove knuckle bridge - single metal part</p>
+<p>Material: low-carbon steel, ASTM A36 or equivalent (general-purpose single-piece metal stock)</p>
+<p>Envelope: <code>{"height_mm": 26, "length_mm": 145, "width_mm": 40}</code></p>
+<p>Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.</p>
+<p>Full description:</p>
+<p>Make the single metal part for the product idea 'Protective glove knuckle bridge'. The broader use
+case is: Goalkeeper, motorcycle, and combat-sport gloves with hard knuckle protection. The chosen
+deliverable is only the metal body implied by: Segmented knuckle bridge with living-link relief
+gaps. All other product elements are external reference items and must not be modeled. The part must
+perform this mechanical role: Spans across knuckles to absorb impact while allowing finger flexion
+beneath the guard. It is intentionally included in the SubCAD limit corpus because: Exercises
+segmented shell modeling, clearance gaps, organic protective contours, underside standoff ribs, and
+repeated but non-identical lobes. The part is made from low-carbon steel, ASTM A36 or equivalent
+using rectangular block stock. Start from one rectangular metal block or plate. Saw oversize, face
+all datum sides, then machine the pockets, holes, slots, angled faces, grooves, and edge treatments
+into that same solid piece.</p>
+<p>Functional features:
+- single rectangular metal body: Machine one body with finished envelope 145 mm x 40 mm x 26 mm.
+- mounting hole pattern: Drill two through holes diameter 8 mm on the length centerline at X=10 mm and X=135 mm, Y=20 mm.
+- functional center feature: Machine a central obround slot 48 mm long x 16 mm wide through the part, centered at X=72 mm, Y=20 mm.
+- top relief pocket: Mill a rectangular relief pocket 36 mm x 18 mm x 8 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.</p>
+<p>Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.</p>
+<p>Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.</p>
+<p>Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Protective glove knuckle bridge'; this requirement is only for its chosen metal part.</p>
+<hr/>
+<h2 id="smp-036-09-clamp-on-face-cage-repair-bracket">SMP-036-09 - Clamp-on face cage repair bracket</h2>
+<p>Part name: Clamp-on face cage repair bracket - single metal part</p>
+<p>Material: 1045 medium-carbon steel, normalized (durable wear surface for workshop loading)</p>
+<p>Envelope: <code>{"length_mm": 135, "thickness_mm": 6, "width_mm": 60}</code></p>
+<p>Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.</p>
+<p>Full description:</p>
+<p>Make the single metal part for the product idea 'Clamp-on face cage repair bracket'. The broader use
+case is: Hockey, lacrosse, and catcher helmets where a face cage attaches to shell hardware. The
+chosen deliverable is only the metal body implied by: Split saddle clamp with shell mounting ear and
+anti-rotation groove. All other product elements are external reference items and must not be
+modeled. The part must perform this mechanical role: Clamps around a cage wire and fastens it to a
+helmet shell when original tabs are replaced or upgraded. It is intentionally included in the SubCAD
+limit corpus because: Tests split-part clamp geometry, cylindrical wire capture, screw boss
+placement, anti-rotation features, and mixed curved-flat mating surfaces. The part is made from 1045
+medium-carbon steel, normalized using sheet or plate stock. Start from one flat sheet or plate
+blank. Cut the outside profile, machine holes, slots, pockets, lips, and relief features into that
+same piece. If bends are called out, they are bends in the same sheet part, not separate welded
+pieces.</p>
+<p>Functional features:
+- single rectangular metal body: Machine one body with finished envelope 135 mm x 60 mm x 6 mm.
+- mounting hole pattern: Drill two through holes diameter 6 mm on the length centerline at X=12 mm and X=123 mm, Y=30 mm.
+- functional center feature: Machine a central obround slot 45 mm long x 10 mm wide through the part, centered at X=67 mm, Y=30 mm.
+- top relief pocket: Mill a rectangular relief pocket 33 mm x 20 mm x 3 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.
+- side tapped hole: Tap one side hole M7 from the right long edge into the central pocket; hole axis is parallel to Y.</p>
+<p>Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.</p>
+<p>Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- The feature named 'side tapped hole' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.</p>
+<p>Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Clamp-on face cage repair bracket'; this requirement is only for its chosen metal part.</p>
+<hr/>
+<h2 id="smp-036-10-pull-tab-release-buckle-guard">SMP-036-10 - Pull-tab release buckle guard</h2>
+<p>Part name: Pull-tab release buckle guard - single metal part</p>
+<p>Material: AISI 316 stainless steel (corrosion resistance and cleanable metal surfaces)</p>
+<p>Envelope: <code>{"length_mm": 175, "thickness_mm": 3, "width_mm": 120}</code></p>
+<p>Datum orientation: Use the finished bottom face as datum A. Use the long left edge as datum B and the near short edge as datum C. The origin is the lower-left-near corner of the finished rectangular envelope; X follows length, Y follows width, and Z is upward.</p>
+<p>Full description:</p>
+<p>Make the single metal part for the product idea 'Pull-tab release buckle guard'. The broader use
+case is: Protective vests, pads, and helmets where buckles must be accessible but shielded from
+accidental release. The chosen deliverable is only the metal body implied by: Buckle shroud with
+guarded pull-tab channel. All other product elements are external reference items and must not be
+modeled. The part must perform this mechanical role: Covers a quick-release buckle while leaving a
+raised pull tab accessible to a gloved hand. It is intentionally included in the SubCAD limit corpus
+because: Combines protective hooding, ergonomic access openings, strap clearance slots, flexible
+latch geometry, and collision-sensitive internal spaces. The part is made from AISI 316 stainless
+steel using sheet or plate stock. Start from one flat sheet or plate blank. Cut the outside profile,
+machine holes, slots, pockets, lips, and relief features into that same piece. If bends are called
+out, they are bends in the same sheet part, not separate welded pieces.</p>
+<p>Functional features:
+- single rectangular metal body: Machine one body with finished envelope 175 mm x 120 mm x 3 mm.
+- mounting hole pattern: Drill two through holes diameter 11 mm on the length centerline at X=24 mm and X=151 mm, Y=60 mm.
+- functional center feature: Machine a central obround slot 58 mm long x 13 mm wide through the part, centered at X=87 mm, Y=60 mm.
+- top relief pocket: Mill a rectangular relief pocket 43 mm x 40 mm x 2 mm deep on the top face, centered between the mounting holes.
+- edge chamfers: Apply 1.0 mm x 45 degree chamfers to all top outside edges and 0.5 mm chamfers to hole and slot mouths.</p>
+<p>Tolerances:
+- Overall envelope dimensions: +/-0.20 mm.
+- Hole diameters and slot widths: +/-0.10 mm.
+- Hole and slot center positions from datums B and C: +/-0.15 mm.
+- Pocket depths and relief depths: +/-0.10 mm.
+- Nonfunctional chamfers and radii: +/-0.30 mm.</p>
+<p>Acceptance checklist:
+- The output contains one continuous metal solid representing one part.
+- The stock family, material intent, envelope dimensions, and datum orientation match this requirement.
+- The feature named 'single rectangular metal body' is present with the stated size and position.
+- The feature named 'mounting hole pattern' is present with the stated size and position.
+- The feature named 'functional center feature' is present with the stated size and position.
+- The feature named 'top relief pocket' is present with the stated size and position.
+- The feature named 'edge chamfers' is present with the stated size and position.
+- All required chamfers, reliefs, and edge treatments are visible in STEP and STL outputs.
+- No extra parts, fasteners, hardware, labels, cosmetic meshes, or nonmetal components are present.
+- Flat datums remain planar and usable; pockets or slots do not accidentally break unsupported walls.</p>
+<p>Negative requirements:
+- Represent exactly one metal part only.
+- Do not model screws, nuts, springs, bushings, bearings, rubber pads, plastic covers, electronics, labels, handles, knobs, adhesives, weld beads, or separate inserts.
+- Do not convert the part into an assembly or multiple bodies.
+- Do not replace through holes, slots, pockets, grooves, flats, tapers, or chamfers with cosmetic markings.
+- Do not omit datum-critical features just because they are small.
+- Do not broaden the requirement back into the full product idea named 'Pull-tab release buckle guard'; this requirement is only for its chosen metal part.</p>
+<hr/>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

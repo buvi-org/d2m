@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>d2m — Design to Manufacturing AI - d2m</title>
+  <link rel="stylesheet" href="docs/site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="README.html">Home</a>
+      <a href="TODO.html">TODO.md</a>
+      <a href="docs/zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="docs/architecture.html">docs/architecture.md</a>
+      <a href="docs/plan.html">docs/plan.md</a>
+      <a href="docs/step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="docs/simulation.html">docs/simulation.md</a>
+      <a href="docs/subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="docs/subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="docs/subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="web/README.html">web/README.md</a>
+      <a href="machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>README.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="d2m-design-to-manufacturing-ai">d2m — Design to Manufacturing AI</h1>
+<p>An AI-powered <strong>Computer-Aided Process Planning (CAPP)</strong> project for turning CAD designs into manufacturing process plans. The long-term target is: upload a STEP file with material and volume specs, and d2m outputs ranked, rule-compliant process plans — sequence of operations, machines, tools, cost estimates, and DFM (Design for Manufacturability) feedback.</p>
+<p>This repository is currently a prototype/research codebase. Some foundational pieces are implemented and tested; the full end-to-end AI planning product is not yet complete.</p>
+<h2 id="what-it-does">What It Does</h2>
+<ol>
+<li><strong>Ingest CAD</strong> — Accept STEP files and metadata (material, tolerances, production volume)</li>
+<li><strong>Generate/translate subtractive CAD</strong> — SubCAD represents machining operations as executable subtractive programs</li>
+<li><strong>Compare outputs</strong> — Candidate geometry can be compared against reference STEP geometry with global and localized metrics</li>
+<li><strong>Simulate machining</strong> — A tri-dexel/five-axis simulation stack is under active development</li>
+<li><strong>Plan with AI</strong> — Agentic CadQuery -&gt; SubCAD translation exists for LLM-driven code generation, with execution feedback</li>
+</ol>
+<p>Initial implemented scope is concentrated on <strong>CNC/subtractive manufacturing</strong>, with an early sheet-metal slice now available for laser-cut blanks and simple press-brake bends. Injection molding, casting, 3D printing, broader sheet-metal automation, RL fine-tuning, and production UI are aspirational roadmap items.</p>
+<h2 id="current-reality">Current Reality</h2>
+<p>Current STEP-to-SubCAD objective: build a training/evaluation set of at least
+100,000 original-STEP-verified Zero-to-CAD pairs for a model/workflow that
+generates executable pure SubCAD from STEP evidence. Current accepted-pair and
+planner-capacity status is tracked only in
+<code>docs/zero_to_cad_status.md</code>. Planner coverage is not success. A row counts only
+after generated pure SubCAD executes, emits the manufacturing artifacts, and its
+generated STEP matches the original Zero-to-CAD <code>model.step</code> under the trusted
+comparison policy. Hybrid/imported opaque geometry, direct CadQuery
+reconstruction, and skipped unsupported features are rejected for verified pairs.
+The accepted index now re-checks saved comparison artifacts and requires strict
+volume agreement (default maximum 5% error) in addition to the original-STEP
+trusted geometry policy; older loose-volume matches are excluded until repaired.</p>
+<p>Implemented and tested:</p>
+<ul>
+<li>Phase 1 synthetic dataset generation: 9,994 labeled parts are available in <code>synthetic_10k_samples.7z</code>.</li>
+<li>SubCAD fluent API for subtractive machining operations, STEP/STL export, process-plan JSON, fixtures, tool assemblies, and multi-setup metadata.</li>
+<li>Experimental sheet-metal fluent API for <code>Stock.sheet(...)</code>, <code>laser_cut_profile</code>, <code>laser_cut_internal</code>/<code>laser_cut_hole</code>/<code>laser_cut_slot</code>, and <code>press_brake_bend</code>.</li>
+<li>Agentic CadQuery -&gt; SubCAD translator infrastructure, including LLM provider abstraction, prompt builders, convergence controller, REPL execution, geometry comparison, and optional localized/feature-aware feedback paths.</li>
+<li>Corrected Zero-to-CAD live benchmark runner that saves each original dataset STEP as the target, compares generated SubCAD output against that original STEP, and records trusted match policy artifacts.</li>
+<li>Mesh comparison utilities for per-vertex signed deviation and Z-slice feedback.</li>
+</ul>
+<p>SubCAD Shop-Floor v1 is now treated as complete for the current prototype contract:</p>
+<ul>
+<li>Schema v1 process plans use <code>subcad.shop_floor.v1</code> while preserving legacy plan fields used by the current tests.</li>
+<li>Neutral toolpaths describe motion intent without committing to a controller-specific G-code dialect.</li>
+<li>Setup-sheet exports include stock, material, tools, operations, setups, work offsets, validation warnings, and a clear note that production G-code posting is deferred.</li>
+<li>Validation produces actionable errors/warnings before simulation or downstream CAM handoff.</li>
+</ul>
+<p><strong>Phase 2 toolpaths are now complete and passing for the current prototype contract</strong>:</p>
+<ul>
+<li>Every Phase 2 operation emits a non-empty neutral toolpath suitable for preview, estimating, validation, and simulation handoff.</li>
+<li>Process plans include useful toolpath summaries for Phase 2 operations.</li>
+<li>A preview-only G-code adapter renders controller-neutral intent for review and warns that production postprocessing remains deferred.</li>
+<li>Validation and time estimation use authored toolpath data, including malformed-path checks and path-length-based cycle-time estimates.</li>
+</ul>
+<p><strong>Fixture and tool inventory v1 is now complete for the current prototype contract</strong>:</p>
+<ul>
+<li>Versioned catalog files describe shop-floor fixtures and available tools as structured data, rather than treating them as arbitrary generated objects.</li>
+<li>Fixtures now carry semantic dimensions, clamping/clearance zones, setup context, and visualization payloads for the browser review workflow.</li>
+<li>Tools now preserve selected catalog identity, tool assembly metadata, holder/stickout/flute data, and backward-compatible flat fields in process plans.</li>
+<li>The browser viewer can show fixture bodies, clamp zones, setup context, neutral toolpaths, and cutter/shank/holder geometry for review.</li>
+</ul>
+<p>Recently fixed blocker:</p>
+<ul>
+<li>The previous tri-dexel zero-volume failure has been fixed. <code>test_sim_bridge.py</code> now verifies nonzero stock volume, modified columns, and positive material removal. Simulation is still a prototype, but the core volume/material-removal path is no longer blocked.</li>
+</ul>
+<p><strong>Manufacturing Trust v1 has its first implementation slice in place</strong>: inventory-aware tool selection, realistic pass planning for core operations, sampled fixture/tool-holder clearance, benchmark comparison cases, and review visualization that exposes tools, holders, passes, timing, and warnings.</p>
+<p><strong>Manufacturing Economics v1 has its first implementation slice in place</strong>: local machine/material/tool cost catalogs, tool-change time, setup/load-unload time, material cost, tool wear cost, total time/cost estimates, setup-sheet economics output, visualization metadata, and ranked program comparison by fastest, cheapest, weighted score, and Pareto status.</p>
+<h2 id="what-subcad-can-do-now">What SubCAD Can Do Now</h2>
+<p>SubCAD can currently be used as a CadQuery-backed subtractive machining representation for prototype workflows:</p>
+<ul>
+<li>Author machining programs with the fluent <code>Stock</code> API, including core operations, Phase 2 operations, pure STEP-coverage operation families, fixtures, setups, work offsets, and tool/material metadata.</li>
+<li>Represent axis-aligned hollow tube bosses with <code>tube_profile</code>, including X/Y/Z placement, inner bore diameter, union into retained-feature chains, and standalone replace mode.</li>
+<li>Model a basic sheet-metal workflow: start from a flat sheet, laser-cut an outside blank and internal holes/slots, then form straight bends with <code>press_brake_bend</code>.</li>
+<li>Export STEP/STL geometry plus JSON process plans using the <code>subcad.shop_floor.v1</code> schema.</li>
+<li>Preserve neutral toolpaths for shop-floor review, estimation, validation, preview-only G-code rendering, browser playback, and simulation handoff.</li>
+<li>Export Markdown/JSON setup sheets with stock, material, selected tools, tool assemblies, fixtures, operations, setup/work-offset data, validation messages, and deferred-production-G-code notes.</li>
+<li>Review fixture bodies, clamp zones, selected tools, holder/cutter assemblies, operation timelines, and stock states in the browser visualization workflow.</li>
+<li>Estimate engineering time/cost from local catalogs, including cutting time, tool-change time, setup/load-unload time, material, machine, setup, and tooling cost.</li>
+<li>Compare alternate SubCAD programs by time/cost tradeoff and Pareto ranking.</li>
+<li>Run local validation and integration tests for SubCAD, fixturing, shop-floor schema v1, Phase 2 toolpaths, translator infrastructure, and the simulation bridge.</li>
+</ul>
+<p>SubCAD is not yet a production CAM/postprocessor or quoting system. Controller-certified G-code, industrial CAM strategy coverage, formal ERP/shop quoting, a full upload-to-plan product UI, large-scale live translation success claims, and validated simulation/RL workflows remain future work.</p>
+<p>Current translator benchmark reality: the corrected runner compares against the original Zero-to-CAD STEP, not a self-generated STEP. The compatibility gate is now a typed pure-operation planner rather than a blocked-term filter. Current planner-capacity and accepted-pair status is tracked in <code>docs/zero_to_cad_status.md</code>. Planner coverage is not verified 100k success: each saved pair still must execute and pass original-STEP geometry comparison.</p>
+<p>The translator now supports an AI-heavy mode for scaling beyond row-specific
+deterministic builders. Use <code>--translation-mode ai_heavy</code> to skip deterministic
+builder output and let the LLM infer pure SubCAD operations directly from the
+CadQuery source, operation trace, measures, and STEP dimensions. Planner
+candidates remain visible as evidence, but they are advisory rather than
+restrictive. Feature-family pilots can add <code>--attempt-unsupported</code> when we want
+the model, not the planner, to decide whether an unsupported row is still
+representable as pure SubCAD. Original-STEP verification still decides whether a
+row is accepted.</p>
+<p>Training readiness requires versioned accepted-pair manifests that preserve
+source split/row/UUID, original STEP hash/path, generated SubCAD and generated
+STEP hashes/paths, feature-family tags, comparison policy, validation/economics
+artifacts, runner command, prompt/model id, SubCAD/process-plan schema version,
+and git commit. Failed attempts and self-generated SubCAD -&gt; STEP pairs remain
+separate from the primary verified split.</p>
+<p>Run <code>python -m src.data.build_zero_to_cad_accepted_index</code> to regenerate the local
+deduplicated accepted index and summary from <code>runs/zero_to_cad_live_pilots</code>.</p>
+<h3 id="visualization-workflow">Visualization workflow</h3>
+<p>The primary visualization direction is browser-based Three.js with Python exporting the session assets. This keeps CadQuery/trimesh/simulation logic in Python while using the browser for interactive inspection.</p>
+<pre><code class="language-python">from src.subcad import Stock
+
+part = (
+    Stock.rectangular(60, 40, 16)
+    .face_mill(depth=1)
+    .pocket(width=18, length=24, depth=4)
+)
+
+part.visualization_package("web/sessions/latest", target=part)
+economics = part.estimate_cost(machine="generic_3axis_mill", quantity=5)
+part.visualization_package("web/sessions/latest", target=part, economics=economics)
+</code></pre>
+<p>Then serve <code>web/</code> and open the session viewer:</p>
+<pre><code class="language-bash">cd web
+python -m http.server 8080
+</code></pre>
+<p>Open <code>http://localhost:8080/visualization.html?session=sessions/latest/scene.json</code>.</p>
+<p>The viewer loads stock/target STL assets, neutral toolpaths, selected tool/holder metadata, fixture/clamp-zone data, comparison JSON, and diff markers. WebGPU remains the longer-term path for browser-side material removal; the current reliable path is Python export plus Three.js review.</p>
+<p>Economics is available as an engineering estimate:</p>
+<pre><code class="language-python">from src.subcad import compare_programs
+
+estimate = part.estimate_cost(machine="generic_3axis_mill", quantity=10)
+print(estimate["time_breakdown"]["total_time_per_part_min"])
+print(estimate["cost_breakdown"]["total_cost"])
+
+comparison = compare_programs([program_a, program_b], weights={"time": 0.6, "cost": 0.4})
+print(comparison["fastest_index"], comparison["cheapest_index"], comparison["weighted_best_index"])
+</code></pre>
+<p>These values are for engineering tradeoff review only, not production quotes.</p>
+<p>Recent local test status:</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>python test_agentic_translator.py</code></td>
+<td>PASS, 182/182. Includes strict Zero-to-CAD runner policy tests, AI-heavy unsupported-attempt coverage, generated-code normalization/discipline checks, STEP-envelope prompt guards, sloped-trough/shell planner and prompt coverage, arbitrary-profile duct guidance, wedge workplane extrusion guidance, and row-timeout failure handling; live LLM runs are separate.</td>
+</tr>
+<tr>
+<td><code>python test_subcad_tube_profile.py</code></td>
+<td>PASS, 8/8. Covers axis-aligned circular and arbitrary-profile <code>tube_profile</code> geometry and process-plan records.</td>
+</tr>
+<tr>
+<td><code>python test_subcad_side_profile_cutout.py</code></td>
+<td>PASS, 6/6. Covers side-face triangular profile cutouts for XZ/YZ cross-sections.</td>
+</tr>
+<tr>
+<td><code>python test_subcad_sloped_floor.py</code></td>
+<td>PASS, 14/14. Covers <code>slope_cut</code>/<code>sloped_floor</code> wedge geometry, <code>shell_wall</code> sloped-shell geometry, process-plan records, toolpaths, and pass-plan metadata.</td>
+</tr>
+<tr>
+<td><code>python test_subcad_integration.py</code></td>
+<td>PASS, 39/39</td>
+</tr>
+<tr>
+<td><code>python test_fixturing_integration.py</code></td>
+<td>PASS, 19/19</td>
+</tr>
+<tr>
+<td><code>python test_sim_bridge.py</code></td>
+<td>PASS, 51/51</td>
+</tr>
+<tr>
+<td><code>python test_subcad_shopfloor_v1.py</code></td>
+<td>PASS. Acceptance test for completed SubCAD Shop-Floor v1 contract.</td>
+</tr>
+<tr>
+<td><code>python test_subcad_phase2_toolpaths.py</code></td>
+<td>PASS. Acceptance test for completed Phase 2 toolpaths, preview-only G-code adapter, validation, and estimation.</td>
+</tr>
+<tr>
+<td><code>python test_subcad_visualization.py</code></td>
+<td>PASS. Browser visualization package coverage, including current fixture/tool review metadata.</td>
+</tr>
+<tr>
+<td><code>python test_subcad_manufacturing_economics.py</code></td>
+<td>PASS. Engineering time/cost estimate and program-comparison coverage.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="architecture">Architecture</h2>
+<pre><code>CAD File (STEP) + Specs
+    │
+    ├─→ GNN Feature Extractor ──→ Structured Features JSON
+    ├─→ 4-View Renderer ────────→ PNG Images (front, top, side, iso)
+    │
+    ▼
+LLM (DeepSeek V4 Pro) + Knowledge Graph (Neo4j)
+    │
+    ▼
+Process Plan JSON + DFM Notes + Explanations
+    │
+    ▼
+Simulation Engine (optional) ──→ RL Feedback Loop
+</code></pre>
+<p>See <a href="docs/architecture.html">docs/architecture.md</a> for full technical architecture.</p>
+<h2 id="tech-stack">Tech Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CAD/SubCAD Geometry</td>
+<td>CadQuery-backed SubCAD operations, STEP/STL export, shop-floor schema v1, neutral toolpaths, fixture/tool catalogs</td>
+</tr>
+<tr>
+<td>CAD Parsing</td>
+<td>pythonOCC / CadQuery</td>
+</tr>
+<tr>
+<td>Feature Recognition</td>
+<td>Planned: PyTorch Geometric (GNN / GAT)</td>
+</tr>
+<tr>
+<td>Knowledge Graph</td>
+<td>Neo4j + custom Python rule engine</td>
+</tr>
+<tr>
+<td>LLM Planning</td>
+<td>Agentic translator scaffolding; fine-tuning is planned</td>
+</tr>
+<tr>
+<td>Simulation</td>
+<td>Tri-dexel/five-axis prototype; core volume/material-removal bridge tests now pass; neutral-toolpath preference/fallback is part of Shop-Floor v1</td>
+</tr>
+<tr>
+<td>UI</td>
+<td>Browser review prototype under <code>web/</code> for stock, target, toolpaths, tools/holders, fixtures, clamp zones, and operation playback; product UI is planned</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td>Cloud GPU (Vast.ai / RunPod for training), Render / Hugging Face Spaces for hosting</td>
+</tr>
+</tbody>
+</table>
+<p><a href="docs/architecture.html">see full architecture documentation</a> with more details.</p>
+<h2 id="project-plan">Project Plan</h2>
+<p>Phased solo build using AI-assisted development (Claude Code, Cursor):</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Timeline</th>
+<th>Scope</th>
+<th>Cost (₹)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>0</strong>: Prototype</td>
+<td>Week 1-2</td>
+<td>Partially complete — core SubCAD, translator scaffolding, and rule/process-plan primitives exist; full upload-to-plan UX is not complete.</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>1</strong>: Synthetic Data</td>
+<td>Week 2-3</td>
+<td>✅ Complete — 9,994 labeled parts with STEP + JSON. CadQuery CSG engine + rule-based labeling.</td>
+<td>2,000-8,000</td>
+</tr>
+<tr>
+<td><strong>2</strong>: Feature Recognition / Translation</td>
+<td>Week 3-5</td>
+<td>Prototype hardening — typed pure-operation planner, translator scaffolding, and comparison utilities exist; feature-family verification is next. GNN feature recognition remains planned.</td>
+<td>8,000-15,000</td>
+</tr>
+<tr>
+<td><strong>2.5</strong>: SubCAD Shop-Floor v1</td>
+<td>Complete</td>
+<td>Schema v1, neutral toolpaths, setup-sheet export, validation buckets, and deferred production G-code contract.</td>
+<td>TBD</td>
+</tr>
+<tr>
+<td><strong>2.6</strong>: Phase 2 Toolpaths</td>
+<td>✅ Complete</td>
+<td>Non-empty neutral paths for Phase 2 ops, plan summaries, preview-only G-code adapter, malformed-path validation, and authored-path estimation.</td>
+<td>TBD</td>
+</tr>
+<tr>
+<td><strong>2.7</strong>: Fixture + Tool Inventory v1</td>
+<td>✅ Complete</td>
+<td>Structured fixture/tool catalogs, selected tool assemblies, fixture/clamp visualization, and browser review metadata.</td>
+<td>TBD</td>
+</tr>
+<tr>
+<td><strong>3</strong>: Manufacturing Trust v1</td>
+<td>Initial slice complete</td>
+<td>Inventory-aware tool planning, realistic pass plans, sampled fixture/tool-holder clearance, stronger simulation comparison tests, and warning-focused visualization.</td>
+<td>TBD</td>
+</tr>
+<tr>
+<td><strong>3.1</strong>: Manufacturing Economics v1</td>
+<td>Initial slice complete</td>
+<td>Tool-change/setup/load-unload time, material/machine/setup/tooling cost, setup-sheet/viewer economics metadata, and time/cost program comparison.</td>
+<td>TBD</td>
+</tr>
+<tr>
+<td><strong>3.2</strong>: 100k Original-STEP-Verified SubCAD Dataset</td>
+<td>Active</td>
+<td>Build accepted manifests where every row executes as pure SubCAD, exports generated STEP/process artifacts, and matches the original Zero-to-CAD STEP under the trusted comparison policy.</td>
+<td>LLM/API usage as needed</td>
+</tr>
+<tr>
+<td><strong>4</strong>: LLM Fine-Tuning</td>
+<td>Planned</td>
+<td>Fine-tune/evaluate planning or code-generation model after reliable translated pairs and scoring.</td>
+<td>3,000-8,000</td>
+</tr>
+<tr>
+<td><strong>5</strong>: Product Integration + UI</td>
+<td>Planned</td>
+<td>Full upload → plan → validation workflow and production UI.</td>
+<td>5,000-10,000</td>
+</tr>
+<tr>
+<td><strong>6</strong>: Simulation + RL</td>
+<td>Aspirational</td>
+<td>RL loop after simulator is reliable and validated against real outcomes.</td>
+<td>15,000-40,000</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Total estimated training cost</strong>: ₹40,000–1,20,000 ($480–$1,450)</p>
+<p>See <a href="docs/plan.html">docs/plan.md</a> for detailed phased roadmap with milestones and risk mitigations.</p>
+<h2 id="quick-start">Quick Start</h2>
+<pre><code class="language-bash"># Clone with LFS
+git clone https://github.com/buvi-org/d2m.git
+cd d2m
+git lfs pull
+
+# Install
+pip install -r requirements.txt
+
+# Extract the 10K synthetic dataset (67 MB archive, ~1.1 GB extracted)
+7z x synthetic_10k_samples.7z -odata/synthetic_10k
+</code></pre>
+<h3 id="generate-your-own-synthetic-data">Generate your own synthetic data</h3>
+<pre><code class="language-bash"># Full 10K batch (multi-process, no renders for speed)
+python generate_synthetic_data.py --count 10000 --output-dir ./data/synthetic --workers 8 --no-render
+
+# With 4-view PNG renders (slower)
+python generate_synthetic_data.py --count 100 --output-dir ./data/synthetic --workers 4
+
+# Resume interrupted batch
+python generate_synthetic_data.py --count 10000 --output-dir ./data/synthetic --resume
+
+# Convert generated parts to JSONL training format
+python convert_dataset.py --input-dir data/synthetic --output data/train.jsonl --val-split 0.1
+</code></pre>
+<h3 id="current-zero-to-cad-verification-workflow">Current Zero-to-CAD verification workflow</h3>
+<pre><code class="language-bash"># Measure planner coverage over the local Zero-to-CAD corpus
+python -m src.data.run_zero_to_cad_feature_benchmarks --split all --no-summary-file
+
+# Verify one guarded row against the original dataset STEP
+python -m src.data.run_zero_to_cad_feature_benchmarks --split train --start-offset 6026 --scan-limit 1 --target-matches 1 --max-attempts 1 --max-failures 1 --executor translator --execute --comparison-methods volume,mesh,slices --min-mesh-score 95
+</code></pre>
+<h3 id="tests-and-current-validation">Tests and current validation</h3>
+<pre><code class="language-bash"># Translator/SubCAD tests that currently pass locally
+python test_agentic_translator.py
+python test_subcad_integration.py
+python test_fixturing_integration.py
+
+# Simulation bridge test
+python test_sim_bridge.py
+
+# Shop-floor v1 acceptance test
+python test_subcad_shopfloor_v1.py
+
+# Phase 2 toolpath acceptance test
+python test_subcad_phase2_toolpaths.py
+
+# Visualization package coverage
+python test_subcad_visualization.py
+
+# Manufacturing economics coverage
+python test_subcad_manufacturing_economics.py
+</code></pre>
+<h2 id="status">Status</h2>
+<p><strong>Completed</strong> — Phase 1 synthetic dataset, SubCAD operation model, process-plan/export basics, fixture/setup metadata, SubCAD Shop-Floor v1, Phase 2 neutral toolpaths, fixture/tool inventory v1, Manufacturing Economics v1 initial slice, browser fixture/tool/economics review metadata, preview-only G-code adapter, authored-path validation/estimation, typed pure SubCAD operation planner, initial geometry-backed pure operations for selected-edge/profile/retained-boss features, and non-live agentic translator tests.</p>
+<p><strong>Current hardening priority</strong> — AI-Heavy Translation Scale-Up v1: run accepted-index guarded AI-heavy live batches, keep deterministic builders only as optional cheap fast paths, measure match rate and token/API spend, and use failed attempts to improve prompts/SubCAD APIs instead of adding narrow row-specific planners. Current verified progress is tracked in <code>docs/zero_to_cad_status.md</code>.</p>
+<p><strong>In progress / prototype</strong> — Agentic CadQuery -&gt; SubCAD translation against original STEP targets, localized/feature-aware comparison validation, feature-family benchmark reporting, and simulation feedback quality. The corrected live runner now uses original Zero-to-CAD STEP targets and can attempt most local rows through the pure planner, but 100k success still requires each family to execute and match the original STEP. See <a href="docs/step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a> for the current decision: STEP/B-Rep JSON is the source of truth, while images/video with projected dimensions are supporting evidence.</p>
+<p><strong>Recently fixed</strong> — Simulation bridge zero-volume failure. Core dexel volume and material-removal tests now pass, but simulation/RL claims should still be treated as roadmap until validated on representative real workflows.</p>
+<p><strong>Planned</strong> — Production controller-specific G-code postprocessing, GNN feature recognition, LLM fine-tuning, production UI, fully validated simulation feedback loop, and RL.</p>
+<h2 id="license">License</h2>
+<p>MIT</p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

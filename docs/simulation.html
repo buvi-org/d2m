@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>d2m — Digital Simulation Infrastructure - d2m</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="architecture.html">docs/architecture.md</a>
+      <a href="plan.html">docs/plan.md</a>
+      <a href="step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="simulation.html">docs/simulation.md</a>
+      <a href="subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../web/README.html">web/README.md</a>
+      <a href="../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/simulation.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="d2m-digital-simulation-infrastructure">d2m — Digital Simulation Infrastructure</h1>
+<h2 id="overview">Overview</h2>
+<p>The simulation layer validates that AI-generated process plans are physically feasible and provides reward signals for future RL fine-tuning. It must answer: <em>"Will this plan actually work on a real machine?"</em></p>
+<p>For the current 100k STEP-to-SubCAD dataset objective, simulation is supporting
+evidence rather than the acceptance authority. A pair counts only after pure
+SubCAD execution and trusted comparison of the generated STEP against the
+original Zero-to-CAD STEP target. Simulation warnings, collision checks, and
+timing/cost estimates travel with accepted rows as quality metadata.</p>
+<p>No single existing tool meets all needs. The simulation layer is a <strong>custom integration of multiple libraries</strong> with substantial new code for validation and RL reward computation.</p>
+<h2 id="multi-fidelity-architecture">Multi-Fidelity Architecture</h2>
+<p>The core architecture pattern is <strong>three-tier simulation</strong>, trading off accuracy against speed:</p>
+<pre><code>                    ┌─────────────────────────────────┐
+                    │        LLM PLANNER               │
+                    │   Generates process plan (JSON)   │
+                    └───────────────┬─────────────────┘
+                                    │
+            ┌───────────────────────┼───────────────────────┐
+            ▼                       ▼                       ▼
+┌───────────────────────┐ ┌──────────────────┐ ┌──────────────────────┐
+│ TIER 1: Rule-Based    │ │ TIER 2: Voxel    │ │ TIER 3: Full Physics │
+│ Heuristics            │ │ Simulation       │ │ Simulation           │
+│                       │ │                  │ │                      │
+│ Speed: microseconds   │ │ Speed: 1-10 sec  │ │ Speed: min-hrs       │
+│ Fidelity: categorical │ │ Fidelity: medium │ │ Fidelity: high       │
+│                       │ │                  │ │                      │
+│ • Wall thickness      │ │ • Material       │ │ • CFD molding fill   │
+│ • Draft angles        │ │   removal via    │ │ • FEA thermal/       │
+│ • Tool constraints    │ │   voxel subtract  │ │   warpage            │
+│ • Material compat.    │ │ • Swept volume   │ │ • Cutting forces     │
+│ • Tolerance rules     │ │ • Collision check│ │ • Tool deflection    │
+│                       │ │ • Cycle time     │ │ • Surface finish     │
+│                       │ │                  │ │                      │
+│ USE: Reject-sampling  │ │ USE: RL reward   │ │ USE: Final validation│
+│ (discard obviously    │ │ shaping (primary │ │ &amp; fine-tuning        │
+│ bad plans instantly)  │ │ training loop)   │ │ (spot-check)         │
+└───────────────────────┘ └──────────────────┘ └──────────────────────┘
+</code></pre>
+<p><strong>Why multi-fidelity?</strong> RL needs thousands of simulation rollouts. Physics-grade simulation (CFD/FEA) takes hours per run. Voxel simulation takes seconds and the reward signal still correlates with plan quality. High-fidelity validation runs only on the final candidate plans.</p>
+<h2 id="tier-1-rule-based-heuristics-milliseconds">Tier 1: Rule-Based Heuristics (Milliseconds)</h2>
+<p>Implemented entirely in Python. No external simulators needed. Catches ~70% of common issues before any geometry simulation runs.</p>
+<h3 id="cnc-heuristics">CNC Heuristics</h3>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tool diameter vs feature</td>
+<td>Tool Ø &lt; pocket width; Tool Ø &gt; min corner radius × 2</td>
+<td>Machinery's Handbook</td>
+</tr>
+<tr>
+<td>Depth-to-diameter ratio</td>
+<td>DOC ≤ 2.5× tool Ø for side milling; L/D ≤ 4× for drills (no peck)</td>
+<td>Standard machining</td>
+</tr>
+<tr>
+<td>Tolerance capability</td>
+<td>±0.01mm → need reamer/boring; drill alone = ±0.1mm</td>
+<td>ISO 286</td>
+</tr>
+<tr>
+<td>Thread feasibility</td>
+<td>Tap drill = major Ø − pitch; blind hole depth ≥ thread depth + 2× pitch</td>
+<td>ISO 724</td>
+</tr>
+<tr>
+<td>Reachability</td>
+<td>Tool reach &gt; feature depth (accounting for holder clearance)</td>
+<td>Geometry check</td>
+</tr>
+</tbody>
+</table>
+<h3 id="injection-molding-heuristics">Injection Molding Heuristics</h3>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wall thickness range</td>
+<td>0.5mm–4mm for thermoplastics; uniform within 25% variation</td>
+<td>Bralla DFM</td>
+</tr>
+<tr>
+<td>Flow length ratio</td>
+<td>Flow length / wall thickness &lt; 150:1 (typical unfilled)</td>
+<td>Moldflow guidelines</td>
+</tr>
+<tr>
+<td>Draft angle</td>
+<td>≥0.5° (polished), ≥2° (textured surfaces)</td>
+<td>Standard DFM</td>
+</tr>
+<tr>
+<td>Gate placement</td>
+<td>Gate at thickest section; avoid weld lines near stress points</td>
+<td>Heuristic</td>
+</tr>
+<tr>
+<td>Undercut detection</td>
+<td>Requires side-action or lifter if present</td>
+<td>Geometry check</td>
+</tr>
+<tr>
+<td>Sink mark risk</td>
+<td>Local thickness &gt; 1.5× adjacent → sink risk</td>
+<td>Thickness gradient</td>
+</tr>
+</tbody>
+</table>
+<p>These are instant geometric queries on the CAD mesh using <strong>Trimesh</strong>:
+- <code>trimesh.ray.intersects_location</code> for thickness analysis
+- <code>trimesh.curvature</code> for draft angle estimation
+- Mesh section analysis for wall uniformity</p>
+<h2 id="tier-2-voxel-based-material-removal-seconds">Tier 2: Voxel-Based Material Removal (Seconds)</h2>
+<p>The workhorse for RL training. Fast enough for thousands of rollouts, accurate enough for useful reward signals.</p>
+<h3 id="recommended-stack">Recommended Stack</h3>
+<pre><code>trimesh (voxel module)     # Voxel grid operations on CAD geometry
+manifold3d                  # Fast mesh boolean for tool swept volumes
+gcodeparser                 # Parse G-code into structured operations
+numpy                       # Array operations on voxel grids
+pybullet (optional)         # Collision detection for tool-holder-body
+</code></pre>
+<h3 id="how-it-works">How It Works</h3>
+<pre><code class="language-python"># Core simulation loop (simplified)
+
+class VoxelCNCSimulator:
+    def __init__(self, stock_mesh, resolution_mm=0.5):
+        self.stock = trimesh.load(stock_mesh)
+        self.voxels = self.stock.voxelized(pitch=resolution_mm)
+        self.resolution = resolution_mm
+        self.collisions = []
+
+    def simulate_operation(self, op: ToolOperation) -&gt; SimulationResult:
+        # 1. Generate tool swept volume for this op's toolpath
+        tool_mesh = build_tool_mesh(op.tool)
+        swept = sweep_volume(tool_mesh, op.toolpath)  # via manifold3d booleans
+
+        # 2. Voxelize the swept volume at same resolution
+        swept_vox = swept.voxelized(pitch=self.resolution)
+
+        # 3. Subtract from stock (numpy boolean mask)
+        removed_mask = swept_vox.encoding.dense &amp; self.voxels.encoding.dense
+        self.voxels.encoding.dense &amp;= ~removed_mask
+
+        # 4. Check for gouges (tool removing material below finished surface)
+        if self._detect_gouge(removed_mask, op.finish_surface):
+            return SimulationResult(success=False, issue="gouge_detected")
+
+        # 5. Compute metrics
+        volume_removed = np.sum(removed_mask) * (self.resolution ** 3)
+        uncut_volume = self._compute_uncut(op.target_geometry)
+
+        return SimulationResult(
+            success=True,
+            volume_removed=volume_removed,
+            uncut_volume=uncut_volume,
+            cycle_time=estimate_cycle_time(op.toolpath, op.feeds),
+            collisions=[]
+        )
+</code></pre>
+<h3 id="performance">Performance</h3>
+<table>
+<thead>
+<tr>
+<th>Resolution</th>
+<th>Voxels (100mm³ part)</th>
+<th>Operation time</th>
+<th>Memory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0mm</td>
+<td>1,000,000</td>
+<td>~50ms</td>
+<td>~8MB</td>
+</tr>
+<tr>
+<td>0.5mm</td>
+<td>8,000,000</td>
+<td>~200ms</td>
+<td>~64MB</td>
+</tr>
+<tr>
+<td>0.25mm</td>
+<td>64,000,000</td>
+<td>~2s</td>
+<td>~512MB</td>
+</tr>
+</tbody>
+</table>
+<p>0.5mm resolution is the recommended starting point — adequate for most features, fast enough for RL.</p>
+<h2 id="tier-3-full-physics-simulation-minutes-to-hours">Tier 3: Full Physics Simulation (Minutes to Hours)</h2>
+<p>Used only for final validation of top-ranked plans, not during RL training.</p>
+<h3 id="cnc-high-fidelity-options">CNC: High-Fidelity Options</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Approach</th>
+<th>When to Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Manifold3d (high-res mesh)</strong></td>
+<td>Mesh boolean at 0.1mm tolerance</td>
+<td>Final artifact check before production</td>
+</tr>
+<tr>
+<td><strong>OpenCASCADE BREP</strong></td>
+<td>Exact geometric boolean</td>
+<td>Ultimate accuracy verification</td>
+</tr>
+<tr>
+<td><strong>FreeCAD CAM Simulator</strong></td>
+<td>BREP-based stock subtract</td>
+<td>Visual validation of critical features</td>
+</tr>
+<tr>
+<td><strong>CAMotics</strong></td>
+<td>Voxel-based G-code sim</td>
+<td>Quick G-code visual check</td>
+</tr>
+</tbody>
+</table>
+<h3 id="injection-molding-high-fidelity-options">Injection Molding: High-Fidelity Options</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Approach</th>
+<th>When to Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>openInjMoldSim</strong></td>
+<td>OpenFOAM-based CFD for fill/pack/cool</td>
+<td>Phase 2+; best open-source option</td>
+</tr>
+<tr>
+<td><strong>injectionMoldingFoam</strong></td>
+<td>OpenFOAM solver for fiber-reinforced</td>
+<td>If fiber-filled plastics needed</td>
+</tr>
+<tr>
+<td><strong>Salome Platform</strong></td>
+<td>CAD-to-mesh preprocessing</td>
+<td>Companion tool for openInjMoldSim</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Warning</strong>: openInjMoldSim requires CFD expertise. Setup involves:
+1. Import CAD into Salome → generate volume mesh
+2. Define material properties (viscosity curves, PVT data, thermal conductivity)
+3. Configure solver (injection location, pressure, temperature)
+4. Run simulation (hours)
+5. Post-process with ParaView/PyFoam</p>
+<p>This is NOT plug-and-play. Plan 2-3 weeks to get the first simulation running.</p>
+<h2 id="collision-detection">Collision Detection</h2>
+<p>PyBullet is the recommended engine for collision checking. It's fast, Python-native, and Gymnasium-compatible.</p>
+<pre><code class="language-python">class CollisionChecker:
+    """Detect tool-holder collisions with part, fixture, and machine."""
+    def __init__(self):
+        self.client = pybullet.connect(pybullet.DIRECT)  # headless
+
+    def load_setup(self, part_mesh, fixture_mesh, machine_model):
+        self.part_id = self._load_mesh(part_mesh)
+        self.fixture_id = self._load_mesh(fixture_mesh)
+        self.machine_id = self._load_mesh(machine_model)
+
+    def check_toolpath(self, tool_mesh, holder_mesh, positions: list[Matrix4]):
+        for pos in positions:
+            tool_id = self._load_mesh_at(tool_mesh, pos)
+            holder_id = self._load_mesh_at(holder_mesh, pos)
+
+            # Check tool-workpiece (this is cutting, not collision)
+            tool_part = pybullet.getClosestPoints(tool_id, self.part_id, distance=0)
+
+            # Check holder-part (this IS a collision)
+            holder_part = pybullet.getClosestPoints(holder_id, self.part_id, distance=1.0)
+            if holder_part:
+                return CollisionResult(collision=True, body="holder", target="part")
+
+            # Check tool-fixture
+            tool_fixture = pybullet.getClosestPoints(tool_id, self.fixture_id, distance=0)
+            if tool_fixture:
+                return CollisionResult(collision=True, body="tool", target="fixture")
+
+        return CollisionResult(collision=False)
+</code></pre>
+<h2 id="rl-environment-integration">RL Environment Integration</h2>
+<p>The simulator is wrapped in a standard Gymnasium environment:</p>
+<pre><code class="language-python">class CAPPEnv(gymnasium.Env):
+    """
+    Observation: Encoded process plan (operations, tools, parameters, features)
+    Action: Plan modification (tool swap, parameter adjustment, sequence reorder)
+    Reward: volume_removed_efficiency - collision_penalty - time_penalty
+            + constraint_satisfaction_bonus - tool_wear_penalty
+    """
+    def __init__(self, cad_path, material, target_plan):
+        self.tier1 = RuleValidator()          # fast heuristics
+        self.tier2 = VoxelCNCSimulator()      # material removal
+        self.tier3 = None                      # full physics (lazy init)
+
+    def step(self, action):
+        plan = self._apply_action(action)
+        reward = 0.0
+        done = False
+        info = {}
+
+        # Tier 1: Instant rule check (reject obviously bad)
+        t1_result = self.tier1.validate(plan)
+        if t1_result.violations:
+            return self.observation, -10.0, True, {"tier": 1, "violations": t1_result.violations}
+
+        # Tier 2: Voxel simulation
+        t2_result = self.tier2.simulate(plan)
+        reward += t2_result.volume_removed_efficiency * 5.0
+        reward -= len(t2_result.collisions) * 3.0
+        reward -= t2_result.uncut_volume_ratio * 10.0
+        reward += t2_result.constraint_satisfaction * 2.0
+        info["tier"] = 2
+        info["sim_result"] = t2_result
+
+        # Tier 3: Optional high-fidelity spot check (expensive)
+        # Only run on top plans, not every RL step
+
+        return self.observation, reward, t2_result.is_complete, info
+</code></pre>
+<p><strong>RL algorithm</strong>: PPO via Stable-Baselines3 for single-GPU training. Switch to RLlib (Ray) if distributed training is needed.</p>
+<h2 id="existing-tools-landscape">Existing Tools Landscape</h2>
+<h3 id="open-source-cnc-simulators">Open-Source CNC Simulators</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Language</th>
+<th>Capability</th>
+<th>Python API</th>
+<th>RL-Ready</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CAMotics</strong></td>
+<td>C++/Qt</td>
+<td>3-axis G-code sim, voxel removal</td>
+<td>Partial (C bindings)</td>
+<td>No</td>
+<td>Good for visuals, not headless</td>
+</tr>
+<tr>
+<td><strong>FreeCAD CAM</strong></td>
+<td>C++/Python</td>
+<td>3-axis CAM + simulation, BREP-based</td>
+<td>Yes (fragile headless)</td>
+<td>No</td>
+<td>Powerful but API unstable</td>
+</tr>
+<tr>
+<td><strong>PyCAM</strong></td>
+<td>Python</td>
+<td>3-axis toolpath gen, basic sim</td>
+<td>Native</td>
+<td>No</td>
+<td>Dead since 2017</td>
+</tr>
+<tr>
+<td><strong>CQ-CAM</strong></td>
+<td>Python</td>
+<td>CadQuery-based 3-axis CAM</td>
+<td>Native</td>
+<td>No</td>
+<td>Early stage, promising</td>
+</tr>
+</tbody>
+</table>
+<h3 id="geometry-kernels-for-custom-simulators">Geometry Kernels (for custom simulators)</h3>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Speed</th>
+<th>Accuracy</th>
+<th>Python</th>
+<th>License</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Manifold</strong></td>
+<td>Very fast</td>
+<td>High (mesh)</td>
+<td>Yes</td>
+<td>Apache 2.0</td>
+<td><strong>Primary choice</strong></td>
+</tr>
+<tr>
+<td><strong>Trimesh</strong></td>
+<td>Fast</td>
+<td>Medium (mesh)</td>
+<td>Yes</td>
+<td>MIT</td>
+<td><strong>Voxel + analysis</strong></td>
+</tr>
+<tr>
+<td><strong>MeshLib</strong></td>
+<td>Very fast</td>
+<td>High (GPU accel)</td>
+<td>Yes</td>
+<td>Free tier</td>
+<td>Performance leader</td>
+</tr>
+<tr>
+<td><strong>OpenCASCADE</strong></td>
+<td>Slow</td>
+<td>Very high (BREP)</td>
+<td>Yes (pythonOCC)</td>
+<td>LGPL</td>
+<td>Final verification</td>
+</tr>
+</tbody>
+</table>
+<h3 id="injection-molding-simulators">Injection Molding Simulators</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Approach</th>
+<th>Speed</th>
+<th>Accuracy</th>
+<th>Python</th>
+<th>Phase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>openInjMoldSim</strong></td>
+<td>OpenFOAM CFD</td>
+<td>Hours</td>
+<td>High</td>
+<td>Pre/post only</td>
+<td>Phase 2+</td>
+</tr>
+<tr>
+<td><strong>injectionMoldingFoam</strong></td>
+<td>OpenFOAM</td>
+<td>Hours</td>
+<td>High</td>
+<td>Pre/post only</td>
+<td>Phase 2+</td>
+</tr>
+<tr>
+<td><strong>Salome Platform</strong></td>
+<td>CAD→Mesh prep</td>
+<td>Minutes</td>
+<td>N/A</td>
+<td>Full scripting</td>
+<td>Companion</td>
+</tr>
+</tbody>
+</table>
+<h3 id="multi-physics-frameworks">Multi-Physics Frameworks</h3>
+<table>
+<thead>
+<tr>
+<th>Framework</th>
+<th>Strength</th>
+<th>Speed</th>
+<th>GPU Parallel</th>
+<th>Best Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PyBullet</strong></td>
+<td>Collision detection</td>
+<td>Very fast</td>
+<td>No</td>
+<td>Collision + kinematics</td>
+</tr>
+<tr>
+<td><strong>MuJoCo (MJX)</strong></td>
+<td>Contact dynamics + GPU</td>
+<td>Very fast</td>
+<td>Yes (100s parallel)</td>
+<td>Massively parallel RL</td>
+</tr>
+<tr>
+<td><strong>Isaac Sim</strong></td>
+<td>Full physics + rendering</td>
+<td>Slow</td>
+<td>Yes</td>
+<td>Digital twin (Phase 2+)</td>
+</tr>
+<tr>
+<td><strong>Gazebo</strong></td>
+<td>ROS integration</td>
+<td>Moderate</td>
+<td>No</td>
+<td>Not recommended</td>
+</tr>
+</tbody>
+</table>
+<h3 id="g-code-parsers">G-Code Parsers</h3>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Install</th>
+<th>Capability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>gcodeparser</strong></td>
+<td><code>pip install gcodeparser</code></td>
+<td>Parse to objects, modal state tracking</td>
+</tr>
+<tr>
+<td><strong>pygcode</strong></td>
+<td><code>pip install pygcode</code></td>
+<td>Full interpreter with machine state</td>
+</tr>
+<tr>
+<td><strong>python-gcode</strong></td>
+<td><code>pip install python-gcode</code></td>
+<td>Lightweight parsing</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation</strong>: <code>gcodeparser</code> for MVP (simplest, best-maintained).</p>
+<h2 id="injection-molding-simplified-models-no-cfd">Injection Molding: Simplified Models (No CFD)</h2>
+<p>For Phase 0/MVP, use heuristic checks that catch ~80% of molding issues without any CFD:</p>
+<pre><code>Rule Engine (Python + Trimesh)
+│
+├── Wall thickness analysis
+│   ├── Ray-cast through mesh to find min/max thickness
+│   ├── Flag: &lt;0.5mm (short shot risk), &gt;4mm (sink/shrink)
+│   └── Flag: thickness variation &gt;25% within 10mm radius
+│
+├── Draft angle check
+│   ├── Surface normal analysis on vertical faces
+│   └── Flag: &lt;0.5° (ejection difficulty)
+│
+├── Flow length estimation
+│   ├── Shortest-path distance from gate to extremities
+│   └── Flag: length/wall_thickness &gt; 150
+│
+├── Undercut detection
+│   ├── Check for features that prevent straight-pull ejection
+│   └── Flag: requires side-action, lifter, or unscrewing core
+│
+└── Gate/weld line heuristics
+    ├── Identify natural weld line locations (where flows meet)
+    └── Flag: weld line at high-stress feature
+</code></pre>
+<p>All checks run in milliseconds on the triangulated mesh via Trimesh.</p>
+<h2 id="key-gaps-limitations">Key Gaps &amp; Limitations</h2>
+<h3 id="what-open-source-tools-cannot-do">What Open-Source Tools Cannot Do</h3>
+<ol>
+<li>
+<p><strong>5-axis CNC simulation</strong>: No open-source tool implements dexel/tridexel-based 5-axis material removal at production speed. CAMotics is 3-axis only.</p>
+</li>
+<li>
+<p><strong>Cutting forces &amp; tool deflection</strong>: Requires physics-based material modeling (Johnson-Cook, etc.). Only commercial tools (Vericut, Third Wave AdvantEdge) do this.</p>
+</li>
+<li>
+<p><strong>Thermal effects in machining</strong>: Heat generation, coolant effects, thermal expansion — all require coupled FEA. Not available open-source.</p>
+</li>
+<li>
+<p><strong>Full injection molding warpage</strong>: openInjMoldSim handles fill but not coupled warpage/cooling/shrinkage prediction at Moldflow quality.</p>
+</li>
+<li>
+<p><strong>Multi-process chain</strong>: No tool tracks stock state across casting → machining → heat treating → finishing in a unified model. Each step restarts from nominal CAD.</p>
+</li>
+<li>
+<p><strong>Machine-specific kinematics</strong>: Open-source simulators model generic 3-axis orthogonal mills. Commercial tools model specific machines (trunnion, swivel head, hexapod) and check axis limits and singularities.</p>
+</li>
+<li>
+<p><strong>Material databases</strong>: No unified open-source database comparing to Moldflow's 25k+ materials. Cutting force coefficients require per-pair calibration.</p>
+</li>
+</ol>
+<h3 id="accuracy-vs-speed-for-rl">Accuracy vs. Speed for RL</h3>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Accuracy</th>
+<th>Speed/op</th>
+<th>RL-Suitable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rule-based heuristics</td>
+<td>Low (pass/fail)</td>
+<td>&lt;1ms</td>
+<td>Initial screening</td>
+</tr>
+<tr>
+<td>Voxel (1mm)</td>
+<td>Medium</td>
+<td>~50ms</td>
+<td>Primary reward signal</td>
+</tr>
+<tr>
+<td>Voxel (0.5mm)</td>
+<td>Medium-High</td>
+<td>~200ms</td>
+<td>Primary reward signal</td>
+</tr>
+<tr>
+<td>Mesh boolean (Manifold)</td>
+<td>High</td>
+<td>5-60s</td>
+<td>Batch fine-tuning</td>
+</tr>
+<tr>
+<td>BREP boolean (OpenCASCADE)</td>
+<td>Very high</td>
+<td>Min-hrs</td>
+<td>No</td>
+</tr>
+<tr>
+<td>CFD (OpenFOAM)</td>
+<td>High</td>
+<td>Hrs/setup</td>
+<td>No</td>
+</tr>
+<tr>
+<td>FEA (CalculiX)</td>
+<td>High</td>
+<td>Hrs/setup</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Critical insight</strong>: RL does not need perfect physics. It needs a reward signal that <em>correlates</em> with actual quality. A voxel sim that reports "30% less collision volume = better plan" is useful even if absolute collision volume is off by 15%.</p>
+<h2 id="recommended-phase-0-stack">Recommended Phase 0 Stack</h2>
+<p>All pip-installable Python packages:</p>
+<pre><code>trimesh              # CAD import, mesh operations, voxel support
+manifold3d           # Fast mesh boolean operations
+gcodeparser          # G-code parsing
+pybullet             # Collision detection, kinematics
+numpy                # Array operations on voxel grids
+gymnasium            # RL environment API
+stable-baselines3    # RL algorithms (PPO, DQN)
+</code></pre>
+<p><strong>Total added complexity</strong>: ~7 Python packages. No external dependencies beyond <code>pip install</code>.</p>
+<h2 id="build-vs-integrate">Build vs. Integrate</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Decision</th>
+<th>Tool</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G-code parser</td>
+<td><strong>Integrate</strong></td>
+<td>gcodeparser</td>
+<td>Mature, pip-installable, well-maintained</td>
+</tr>
+<tr>
+<td>CAD import</td>
+<td><strong>Integrate</strong></td>
+<td>trimesh</td>
+<td>Best Python CAD import library, voxel support</td>
+</tr>
+<tr>
+<td>CNC material removal</td>
+<td><strong>Build</strong></td>
+<td>on trimesh voxel + manifold3d</td>
+<td>No existing tool has RL-compatible API</td>
+</tr>
+<tr>
+<td>Collision detection</td>
+<td><strong>Integrate</strong></td>
+<td>PyBullet (headless)</td>
+<td>Fast, Python-native, Gymnasium-compatible</td>
+</tr>
+<tr>
+<td>Injection molding checks</td>
+<td><strong>Build</strong></td>
+<td>on trimesh analysis</td>
+<td>Rule-based; no package exists</td>
+</tr>
+<tr>
+<td>Molding CFD</td>
+<td><strong>Defer</strong></td>
+<td>openInjMoldSim (Phase 2+)</td>
+<td>Too heavy for Phase 0</td>
+</tr>
+<tr>
+<td>Visualization</td>
+<td><strong>Integrate</strong></td>
+<td>Trimesh scene + PyVista</td>
+<td>Trimesh for export, PyVista for advanced</td>
+</tr>
+<tr>
+<td>RL framework</td>
+<td><strong>Integrate</strong></td>
+<td>SB3 (single-GPU) or RLlib (distributed)</td>
+<td>Mature, well-documented</td>
+</tr>
+<tr>
+<td>Machine kinematics</td>
+<td><strong>Build</strong></td>
+<td>custom chain model</td>
+<td>Simple for 3-axis; defer 5-axis</td>
+</tr>
+</tbody>
+</table>
+<h2 id="directory-structure-simulation-module">Directory Structure (Simulation Module)</h2>
+<pre><code>src/simulation/
+├── __init__.py
+├── env.py                    # Gymnasium CAPPEnv
+├── tier1_rules.py            # Heuristic rule validators
+├── tier2_voxel.py            # Voxel-based CNC simulation
+├── tier3_physics.py          # High-fidelity integration (Phase 2+)
+├── collision.py              # PyBullet collision detection wrapper
+├── toolpath.py               # Tool swept volume generation
+├── gcode.py                  # G-code parser wrapper
+├── rewards.py                # Reward function definitions
+├── molding_rules.py          # Injection molding heuristics
+├── material_db.py            # Material property lookup tables
+└── visualization.py          # Simulation result visualization
+</code></pre>
+<h2 id="development-roadmap">Development Roadmap</h2>
+<p>Status note: this roadmap is a design target for the broader simulator/RL
+program. The current repository has passing simulation bridge tests and browser
+review assets, while RL and high-fidelity physics remain deferred until the
+verified STEP-to-SubCAD corpus and comparison loop are reliable.</p>
+<h3 id="phase-0-mvp-2-3-months-solo">Phase 0 (MVP — 2-3 months solo)</h3>
+<ul>
+<li>[x] Architecture design (this document)</li>
+<li>[ ] 3-axis voxel CNC simulator (trimesh + manifold3d)</li>
+<li>[ ] G-code parser integration (gcodeparser)</li>
+<li>[ ] Rule-based injection molding checks</li>
+<li>[ ] Basic collision detection (PyBullet)</li>
+<li>[ ] Gymnasium environment wrapper</li>
+<li>[ ] RL loop with SB3 PPO</li>
+<li>[ ] Material DB: 6061, 7075, 4140 steel, ABS, PP, nylon</li>
+</ul>
+<h3 id="phase-1-3-6-months">Phase 1 (3-6 months)</h3>
+<ul>
+<li>[ ] Multi-fidelity pipeline (Tier 1 → Tier 2 → Tier 3)</li>
+<li>[ ] 3-axis machine kinematics model</li>
+<li>[ ] Expanded material database (15+ materials)</li>
+<li>[ ] Hierarchical RL for plan structure + parameter tuning</li>
+<li>[ ] RLlib integration for distributed training</li>
+<li>[ ] Tool engagement analysis for feed/speed validation</li>
+</ul>
+<h3 id="phase-2-6-12-months">Phase 2 (6-12 months)</h3>
+<ul>
+<li>[ ] openInjMoldSim integration for molding CFD</li>
+<li>[ ] Limited 5-axis kinematic support</li>
+<li>[ ] Simplified FEA for thermal distortion (CalculiX)</li>
+<li>[ ] Digital twin visualization (PyVista / Omniverse render)</li>
+<li>[ ] Multi-process chain validation (cast → machine → heat treat → finish)</li>
+</ul>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

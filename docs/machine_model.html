@@ -1,0 +1,1129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Machine Model: Scene-Graph Based CNC Machine Definition - d2m</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="architecture.html">docs/architecture.md</a>
+      <a href="plan.html">docs/plan.md</a>
+      <a href="step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="simulation.html">docs/simulation.md</a>
+      <a href="subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../web/README.html">web/README.md</a>
+      <a href="../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/machine_model.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="machine-model-scene-graph-based-cnc-machine-definition">Machine Model: Scene-Graph Based CNC Machine Definition</h1>
+<h2 id="1-overview">1. Overview</h2>
+<h3 id="11-why-this-exists">1.1 Why This Exists</h3>
+<p>The current <code>kinematics.py</code> hardcodes three machine configurations (TABLE_TABLE, HEAD_HEAD, HEAD_TABLE) via an enum. This is inadequate because:</p>
+<ul>
+<li>A DMG DMU 50 and a Haas UMC-750 are both BC trunnion tables, but they have different <strong>dimensions</strong> (axis travels, table sizes), different <strong>STL geometry</strong> (casting shape, column design), and different <strong>collision risks</strong> (spindle nose vs. trunnion, tool holder vs. fixture).</li>
+<li>It cannot represent non-standard architectures: gantry mills, horizontal boring mills, hexapods, 6-axis robots, or swiss lathes with live tooling.</li>
+<li>Collision pair configuration is baked into assumptions rather than being an explicit, configurable part of the machine definition.</li>
+<li>Adding a new machine requires modifying Python source code and writing new arithmetic for each kinematic chain.</li>
+</ul>
+<p>This document defines a <strong>scene-graph machine model</strong> -- the approach used by Vericut, NCSIMUL, and real CAM post-processors. A machine is a <strong>tree of components</strong>, each with a 3D mesh and a transform relative to its parent. Kinematics are derived by walking the tree. Collision pairs are explicitly configured. The G-code controller is a separate configuration file.</p>
+<h3 id="12-key-concepts">1.2 Key Concepts</h3>
+<table>
+<thead>
+<tr>
+<th>Concept</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Component Tree (Scene Graph)</strong></td>
+<td>A rooted tree where each node is a physical machine component. The tree defines the kinematic chain.</td>
+</tr>
+<tr>
+<td><strong>Walk-Up FK</strong></td>
+<td>Forward kinematics: walk from a leaf node to the root, accumulating transforms. Active axes inject their current position into the accumulated transform.</td>
+</tr>
+<tr>
+<td><strong>Explicit Collision Pairs</strong></td>
+<td>Collision relationships are configured as pairs of collision groups (sets of component IDs). The simulation checks mesh-mesh proximity at every timestep.</td>
+</tr>
+<tr>
+<td><strong>Controller Separation</strong></td>
+<td>The machine defines the physical hardware; the controller defines the G-code dialect, macro mappings, and control logic. These are separate files.</td>
+</tr>
+<tr>
+<td><strong>Tool Assembly Stack</strong></td>
+<td>Tools are not monolithic; a ToolAssembly is a stack of holder + extension(s) + cutter, each with its own STL and transform.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-the-component-tree-scene-graph">2. The Component Tree (Scene Graph)</h2>
+<h3 id="21-basic-concept">2.1 Basic Concept</h3>
+<p>A CNC machine is modeled as a rooted tree where:
+- The <strong>root</strong> is the machine base (bed/casting/frame).
+- <strong>Linear axes</strong> are translation-only nodes.
+- <strong>Rotary axes</strong> are rotation-only nodes.
+- <strong>Static nodes</strong> are fixed structural elements.
+- <strong>Special nodes</strong> (spindle, tool_mount, fixture_mount, stock_mount) define semantic attachment points.</p>
+<p>Each node has:
+- A <strong>parent reference</strong> (tree edge).
+- A <strong>local transform</strong> (offset from parent when the axis is at its zero position).
+- An <strong>STL mesh</strong> reference (for 3D visualization and collision detection).
+- <strong>Axis parameters</strong> (if it is an active axis): travel limits, feed/speed limits, pivot offset.</p>
+<h3 id="22-tree-for-a-5-axis-bc-trunnion-machine-dmg-dmu-50">2.2 Tree for a 5-Axis BC Trunnion Machine (DMG DMU 50)</h3>
+<pre><code>                         ┌──────────────────────┐
+                         │        Bed           │  (root, static)
+                         │    "bed"             │
+                         └──────┬───────┬───────┘
+                                │       │
+              ┌─────────────────┘       └──────────────────┐
+              │                                             │
+    ┌─────────▼──────────┐                      ┌──────────▼─────────┐
+    │   Y Axis (linear)  │                      │  Z Axis (linear)   │
+    │   "y_axis"         │                      │  "z_axis"          │
+    │   axis: Y          │                      │  axis: Z           │
+    │   limits: [-300,300]│                     │  limits: [-400,0]  │
+    └─────────┬──────────┘                      └──────────┬─────────┘
+              │                                             │
+    ┌─────────▼──────────┐                      ┌──────────▼─────────┐
+    │   X Axis (linear)  │                      │  Spindle (spindle) │
+    │   "x_axis"         │                      │  "spindle"         │
+    │   axis: X          │                      │  max_rpm: 18000    │
+    │   limits: [-500,500]│                     └──────────┬─────────┘
+    └─────────┬──────────┘                                │
+              │                               ┌───────────▼─────────┐
+    ┌─────────▼──────────┐                    │  Tool Mount         │
+    │   B Axis (rotary)  │                    │  "tool_mount"       │
+    │   "b_axis"         │                    │  type: tool_mount   │
+    │   axis: B          │                    └─────────────────────┘
+    │   limits: [-120,120]│                             │
+    │   pivot_offset: [0,0,0]│              (ToolAssembly attached here)
+    └─────────┬──────────┘
+              │
+    ┌─────────▼──────────┐
+    │   C Axis (rotary)  │
+    │   "c_axis"         │
+    │   axis: C          │
+    │   limits: [0,360]  │
+    │   continuous: true │
+    │   pivot_offset: [0,0,-150]│
+    └─────────┬──────────┘
+              │
+    ┌─────────▼──────────┐
+    │   Fixture Mount    │
+    │   "fixture_mount"  │
+    │   type: fixture_mount│
+    └────────────────────┘
+              │
+        (Fixture mesh + Stock mesh attached here)
+</code></pre>
+<p>The tree yields two kinematic chains:</p>
+<ul>
+<li><strong>Tool chain</strong>: <code>tool_mount -&gt; spindle -&gt; z_axis -&gt; bed</code></li>
+<li><strong>Workpiece chain</strong>: <code>fixture_mount -&gt; c_axis -&gt; b_axis -&gt; x_axis -&gt; y_axis -&gt; bed</code></li>
+</ul>
+<h3 id="23-tree-for-a-5-axis-tilting-head-rotary-table-head_table-eg-mazak-variaxis">2.3 Tree for a 5-Axis Tilting-Head / Rotary-Table (HEAD_TABLE, e.g. Mazak Variaxis)</h3>
+<pre><code>    Bed (root)
+      ├── Z Axis (linear) -&gt; B Axis (rotary head) -&gt; Spindle -&gt; Tool Mount
+      ├── Y Axis (linear) -&gt; X Axis (linear) -&gt; C Axis (rotary table) -&gt; Fixture Mount
+      └── (Column / frame static parts)
+</code></pre>
+<h3 id="24-tree-for-a-3-axis-vertical-mill">2.4 Tree for a 3-Axis Vertical Mill</h3>
+<pre><code>    Bed (root)
+      ├── Y Axis -&gt; X Axis -&gt; Table -&gt; Fixture Mount
+      └── Z Axis -&gt; Spindle -&gt; Tool Mount
+</code></pre>
+<h3 id="25-tree-for-a-gantry-mill">2.5 Tree for a Gantry Mill</h3>
+<pre><code>    Bed (root)
+      ├── X Axis (gantry bridge) -&gt; Y Axis (cross-slide) -&gt; Z Axis -&gt; Spindle -&gt; Tool Mount
+      └── Table (fixed, may have optional rotary) -&gt; Fixture Mount
+</code></pre>
+<h2 id="3-node-types">3. Node Types</h2>
+<h3 id="31-enumeration">3.1 Enumeration</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+<th>Has Axis?</th>
+<th>Special Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>static</code></td>
+<td>Non-moving structural element. Attached to parent with a fixed transform.</td>
+<td>No</td>
+<td>Pure visual/collision geometry. Does not contribute to kinematic accumulation.</td>
+</tr>
+<tr>
+<td><code>linear_axis</code></td>
+<td>A translation axis (X, Y, Z, U, V, W).</td>
+<td>Yes</td>
+<td>Injects a translation into the kinematic chain. <code>axis</code> field gives the direction (always machine-aligned).</td>
+</tr>
+<tr>
+<td><code>rotary_axis</code></td>
+<td>A rotation axis (A, B, C).</td>
+<td>Yes</td>
+<td>Injects a rotation about its local axis into the kinematic chain. <code>axis</code> letter determines rotation axis convention.</td>
+</tr>
+<tr>
+<td><code>spindle</code></td>
+<td>The rotating spindle cartridge/housing.</td>
+<td>No (rotates but does not change tool position)</td>
+<td>Has max_rpm, max_power_kw. The spindle nose offset (<code>spindle_nose_to_gauge_mm</code>) defines the gauge line.</td>
+</tr>
+<tr>
+<td><code>tool_mount</code></td>
+<td>The interface where the tool assembly attaches (HSK, SK, BT, CAT taper).</td>
+<td>No</td>
+<td>The parent of the tool assembly attachment point. Transform from here defines gauge line to tool tip relationship.</td>
+</tr>
+<tr>
+<td><code>fixture_mount</code></td>
+<td>The interface where the fixture/vise attaches to the machine.</td>
+<td>No</td>
+<td>The parent of the fixture and stock in the workpiece chain.</td>
+</tr>
+<tr>
+<td><code>stock_mount</code></td>
+<td>The attachment point for the raw stock material.</td>
+<td>No</td>
+<td>Typically a child of fixture_mount. The stock mesh is placed relative to this node.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-directional-convention">3.2 Directional Convention</h3>
+<p>The direction of linear axis motion is always along the axis letter direction in the <strong>machine coordinate system</strong>:</p>
+<ul>
+<li><code>X</code>: positive direction is to the right (looking from operator position)</li>
+<li><code>Y</code>: positive direction is away from the operator</li>
+<li><code>Z</code>: positive direction is upward (toward spindle)</li>
+</ul>
+<p>For rotary axes:
+- <code>A</code>: rotation about the X-axis (right-hand rule)
+- <code>B</code>: rotation about the Y-axis (right-hand rule)
+- <code>C</code>: rotation about the Z-axis (right-hand rule)</p>
+<h3 id="33-why-separate-spindle-from-tool_mount">3.3 Why Separate <code>spindle</code> from <code>tool_mount</code></h3>
+<p>In a real machine:
+- The <strong>spindle</strong> is the motorized cartridge -- it has mass, geometry (can collide), RPM limits, and power limits.
+- The <strong>tool_mount</strong> is the taper interface (HSK-A63, SK40, BT40, CAT50). It defines where the tool assembly attaches.</p>
+<p>Separating them allows:
+- Tool changes do not require modifying the machine tree -- only changing which ToolAssembly is attached to <code>tool_mount</code>.
+- Spindle collision with the table/trunnion is checked independently of tool collision with the fixture.
+- Different spindle cartridges can be swapped on some machines.</p>
+<h2 id="4-node-properties">4. Node Properties</h2>
+<h3 id="41-common-properties-all-node-types">4.1 Common Properties (All Node Types)</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Unique identifier within the machine. Must be a valid Python identifier / JSON key.</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>One of: <code>static</code>, <code>linear_axis</code>, <code>rotary_axis</code>, <code>spindle</code>, <code>tool_mount</code>, <code>fixture_mount</code>, <code>stock_mount</code>.</td>
+</tr>
+<tr>
+<td><code>parent</code></td>
+<td>string or null</td>
+<td>Yes</td>
+<td>ID of the parent component. <code>null</code> for the root node.</td>
+</tr>
+<tr>
+<td><code>mesh</code></td>
+<td>string or null</td>
+<td>No</td>
+<td>Path to STL file (relative to the machine JSON directory, or absolute). <code>null</code> means no geometry (pure transform node).</td>
+</tr>
+<tr>
+<td><code>transform</code></td>
+<td>[x, y, z, rx, ry, rz]</td>
+<td>Yes</td>
+<td>6-DOF transform relative to parent when axis is at zero. <code>[x, y, z]</code> in mm, <code>[rx, ry, rz]</code> in degrees (Euler angles, ZYX intrinsic). This is the <strong>zero-offset</strong> -- the position of the node when its axis value is 0.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-axis-specific-properties-linear_axis-and-rotary_axis">4.2 Axis-Specific Properties (<code>linear_axis</code> and <code>rotary_axis</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>axis</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Axis letter: 'X', 'Y', 'Z' for linear; 'A', 'B', 'C' for rotary. 'U', 'V', 'W' for secondary linear axes.</td>
+</tr>
+<tr>
+<td><code>limits</code></td>
+<td>[min, max]</td>
+<td>Yes</td>
+<td>Travel limits in mm (linear) or degrees (rotary). For rotary axes, <code>min</code> and <code>max</code> define the allowed angular range.</td>
+</tr>
+<tr>
+<td><code>max_feed</code></td>
+<td>float</td>
+<td>Yes</td>
+<td>Maximum feed rate in mm/min (linear) or deg/min (rotary).</td>
+</tr>
+<tr>
+<td><code>rapid_feed</code></td>
+<td>float</td>
+<td>No</td>
+<td>Rapid traverse rate. Defaults to <code>max_feed</code>.</td>
+</tr>
+<tr>
+<td><code>max_rpm</code></td>
+<td>float</td>
+<td>No</td>
+<td>Maximum rotational speed (only for rotary axes, not linear).</td>
+</tr>
+<tr>
+<td><code>continuous</code></td>
+<td>bool</td>
+<td>No</td>
+<td>For rotary axes: if <code>true</code>, the axis can wind continuously (no wrap-around at 360). E.g., C-axis on most 5-axis machines. Default: <code>false</code>.</td>
+</tr>
+<tr>
+<td><code>pivot_offset</code></td>
+<td>[x, y, z]</td>
+<td>No</td>
+<td>(rotary_axis only) Offset from the component's local origin to the center of rotation. Default: <code>[0, 0, 0]</code>. Critical for correct FK/IK.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-spindle-specific-properties">4.3 Spindle-Specific Properties</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>max_rpm</code></td>
+<td>float</td>
+<td>Yes</td>
+<td>Maximum spindle RPM.</td>
+</tr>
+<tr>
+<td><code>max_power_kw</code></td>
+<td>float</td>
+<td>No</td>
+<td>Maximum spindle motor power in kW.</td>
+</tr>
+<tr>
+<td><code>max_torque_nm</code></td>
+<td>float</td>
+<td>No</td>
+<td>Maximum spindle torque in Nm.</td>
+</tr>
+<tr>
+<td><code>spindle_nose_to_gauge_mm</code></td>
+<td>float</td>
+<td>No</td>
+<td>Distance from spindle nose face to the gauge line (tool length reference plane). Default: 0. Typical: 50mm for HSK-A63.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="44-collision-related-properties-all-node-types">4.4 Collision-Related Properties (All Node Types)</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>collision_mesh</code></td>
+<td>string or null</td>
+<td>No</td>
+<td>Alternative mesh for collision detection (simplified/convex hull for performance). If <code>null</code>, uses <code>mesh</code>.</td>
+</tr>
+<tr>
+<td><code>collision_margin</code></td>
+<td>float</td>
+<td>No</td>
+<td>Per-component collision margin in mm. Expands the mesh by this amount for proximity queries. Default: 0.0.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-kinematics-derivation">5. Kinematics Derivation</h2>
+<h3 id="51-forward-kinematics-tree-walking">5.1 Forward Kinematics: Tree Walking</h3>
+<p>Forward kinematics computes the <strong>tool pose in the workpiece frame</strong> given a joint vector (axis positions).</p>
+<p><strong>Algorithm:</strong></p>
+<pre><code>Input: joints = [X, Y, Z, A, B, C]  (active axis positions)
+Output: ToolPose (position + orientation in workpiece frame)
+
+1. TOOL CHAIN:
+   Start at tool_mount, walk UP to root.
+   At each node:
+     - Multiply transform by node's local_transform (4x4 matrix from 6-DOF)
+     - If node is an active axis, apply its current joint value:
+       * linear_axis: apply translation along axis letter direction
+       * rotary_axis: apply rotation about axis letter direction (at pivot_offset)
+   Result: T_tool_world = 4x4 matrix of tool origin in world/machine coordinates.
+
+2. WORKPIECE CHAIN:
+   Start at stock_mount (or fixture_mount if no separate stock_mount), walk UP to root.
+   Same accumulation, but for the workpiece side.
+   Result: T_workpiece_world = 4x4 matrix of workpiece origin in world coordinates.
+
+3. TOOL IN WORKPIECE FRAME:
+   T_tool_in_workpiece = inv(T_workpiece_world) @ T_tool_world
+
+4. Decompose T_tool_in_workpiece into position + quaternion for ToolPose.
+</code></pre>
+<p><strong>Key insight:</strong> The bed (root) is the common ancestor. The two chains meet at the root. The tool-to-workpiece transform is the relative transform between the two chains, expressed by inverting one side.</p>
+<h3 id="52-detailed-transform-accumulation">5.2 Detailed Transform Accumulation</h3>
+<p>For each node in the chain (walking toward root):</p>
+<pre><code class="language-python">def accumulate_transform(node, parent_world, joints):
+    # Start with parent's world transform
+    T = parent_world @ node.local_transform
+
+    if node.type == "linear_axis":
+        axis_val = joints.get(node.axis)  # current position
+        T = T @ translation(axis_direction(node.axis) * axis_val)
+
+    elif node.type == "rotary_axis":
+        axis_val = radians(joints.get(node.axis))
+        pivot = node.pivot_offset
+        T = T @ translation(pivot) @ rotation(axis_direction, axis_val) @ translation(-pivot)
+
+    return T
+</code></pre>
+<h3 id="53-inverse-kinematics">5.3 Inverse Kinematics</h3>
+<p>Inverse kinematics computes joint values from a desired tool pose in the workpiece frame.</p>
+<p>The approach depends on the machine topology, but for standard 5-axis machines, analytic closed-form solutions exist:</p>
+<p><strong>General strategy:</strong></p>
+<ol>
+<li>Identify the two chains: tool chain (T) and workpiece chain (W).</li>
+<li>The tool pose in workpiece frame is: <code>P_wp = inv(T_w) @ T_t</code> where <code>T_w</code> is the workpiece chain transform and <code>T_t</code> is the tool chain transform.</li>
+<li>Separate the knowns (desired P_wp) from the unknowns (joint values).</li>
+<li>For TABLE_TABLE: rotary axes are on the workpiece side. Solve for B, C from the tool axis orientation, then solve for X, Y, Z from the position.</li>
+<li>For HEAD_HEAD: rotary axes are on the tool side. Solve for A, B from the tool axis, then solve for X, Y, Z.</li>
+<li>For HEAD_TABLE: one rotary on each side. Solve for B (head), then C (table), then position.</li>
+</ol>
+<p><strong>Tree-based generalization:</strong></p>
+<p>The IK code can interrogate the tree to determine:
+- Which rotary axes exist on the tool chain vs workpiece chain
+- The pivot offsets for each rotary
+- The kinematic chain order (which rotary is primary/secondary)
+- The axis limits for each axis</p>
+<p>This makes IK truly machine-independent. The same solver works for any 5-axis configuration by reading the tree.</p>
+<h3 id="54-singularity-handling">5.4 singularity Handling</h3>
+<p>Singularities occur when:
+- Two rotary axes align (e.g., B=0 in BC trunnion, where C rotation does not change tool orientation)
+- A rotary axis reaches its limit</p>
+<p>The solver detects near-singularity conditions (when <code>sin(axis_angle) &lt; epsilon</code>) and uses the previous joint state to disambiguate. For continuous axes, it tracks accumulated angle beyond [0, 360).</p>
+<h3 id="55-get_world_transform-the-collision-enabler">5.5 <code>get_world_transform</code> -- The Collision Enabler</h3>
+<p>This method computes the 4x4 world transform for <strong>any</strong> component at a given joint state:</p>
+<pre><code class="language-python">def get_world_transform(component_id, joints):
+    """Walk from component_id up to root, accumulating transforms."""
+    T = identity
+    current = components[component_id]
+    while current is not None:
+        T = apply_axis_transform(current, joints) @ current.local_transform @ T
+        current = components[current.parent_id]
+    return T
+</code></pre>
+<p>This is the foundation of collision detection: it tells us where the spindle head, holder, table, trunnion, and fixture are in 3D space at any moment.</p>
+<h2 id="6-collision-system">6. Collision System</h2>
+<h3 id="61-collision-groups">6.1 Collision Groups</h3>
+<p>A <strong>collision group</strong> is a named set of component IDs. Groups abstract away individual components so that collision pairs are configured at a logical level.</p>
+<pre><code class="language-json">"collision_groups": {
+    "tool_group":     ["tool_mount"],
+    "spindle_group":  ["spindle", "z_axis"],
+    "table_group":    ["c_axis", "b_axis", "x_axis", "y_axis"],
+    "fixture_group":  ["fixture_mount"],
+    "head_group":     ["spindle", "tool_mount", "z_axis"]
+}
+</code></pre>
+<h3 id="62-collision-pairs">6.2 Collision Pairs</h3>
+<p>A <strong>collision pair</strong> declares that every component in <code>group_a</code> should be checked against every component in <code>group_b</code>. The special value <code>"stock"</code> refers to the current stock mesh (dynamic), not a fixed component.</p>
+<pre><code class="language-json">"collision_pairs": [
+    {
+        "group_a": "tool_group",
+        "group_b": "fixture_group",
+        "clearance_mm": 2.0,
+        "check_type": "static"
+    },
+    {
+        "group_a": "spindle_group",
+        "group_b": "table_group",
+        "clearance_mm": 5.0,
+        "check_type": "static"
+    },
+    {
+        "group_a": "tool_group",
+        "group_b": "stock",
+        "clearance_mm": 0.0,
+        "check_type": "during_cut"
+    }
+]
+</code></pre>
+<h3 id="63-check-types">6.3 Check Types</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>static</code></td>
+<td>Check at every simulation step (G0 and G1 moves). For machine-machine clearance.</td>
+</tr>
+<tr>
+<td><code>during_cut</code></td>
+<td>Check only during G1 (feed) moves. For tool-stock proximity (contact is expected during cutting).</td>
+</tr>
+<tr>
+<td><code>near_miss</code></td>
+<td>Check but only warn if clearance is below threshold. Does not halt simulation.</td>
+</tr>
+<tr>
+<td><code>rapid_only</code></td>
+<td>Check only during G0 (rapid traverse) moves. For tool-fixture approach safety.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="64-collision-detection-algorithm">6.4 Collision Detection Algorithm</h3>
+<pre><code>For each collision pair (group_a, group_b, clearance, check_type):
+    For each component_id_a in group_a:
+        T_a_world = get_world_transform(component_id_a, joints)
+        mesh_a_world = load_mesh(component_id_a).apply_transform(T_a_world)
+
+        For each component_id_b in group_b:
+            T_b_world = get_world_transform(component_id_b, joints)
+            mesh_b_world = load_mesh(component_id_b).apply_transform(T_b_world)
+
+            distance = trimesh.proximity.closest_point(mesh_a_world, mesh_b_world)[1]
+            if distance &lt; clearance:
+                report Collision(component_a, component_b, distance, clearance)
+</code></pre>
+<p>For the special <code>"stock"</code> group: the stock mesh is transformed by the workpiece chain transform (from fixture_mount up to root) at the current joint state.</p>
+<h3 id="65-near-miss-zones">6.5 Near-Miss Zones</h3>
+<p>A near-miss zone is a clearance range <code>[warn_clearance, critical_clearance]</code>. If the distance falls in this range, a warning is reported but simulation continues. If below <code>critical_clearance</code>, it is a collision.</p>
+<h3 id="66-swept-path-collision-checking">6.6 Swept-Path Collision Checking</h3>
+<p>For collision pairs with <code>check_type: "swept"</code>, instead of checking at discrete poses, the swept volume of the moving component between <code>start_joints</code> and <code>end_joints</code> is computed and checked against the static components. This catches collisions that occur between sampled poses (e.g., a fixture clamp intersecting the tool holder mid-move).</p>
+<p>Swept-path checking is enabled per collision pair and uses the <code>swept_volume</code> module's sampling.</p>
+<h3 id="67-performance-considerations">6.7 Performance Considerations</h3>
+<ul>
+<li>Use <strong>bounding volume hierarchies (BVH)</strong> for mesh-mesh proximity queries (trimesh provides this).</li>
+<li>Use <strong>convex hull simplifications</strong> for collision meshes (faster than full STL).</li>
+<li>Cache world transforms between simulation steps -- many components don't move.</li>
+<li><strong>Broad phase</strong>: AABB check before mesh-mesh proximity.</li>
+<li><strong>Narrow phase</strong>: trimesh.proximity with ProximityQuery.</li>
+</ul>
+<h2 id="7-json-machine-definition-format">7. JSON Machine Definition Format</h2>
+<h3 id="71-complete-specification">7.1 Complete Specification</h3>
+<pre><code class="language-json">{
+  "$schema": "https://buvi-org.github.io/d2m/schemas/machine_model_v1.json",
+  "name": "Machine Name",
+  "version": "1.0",
+  "description": "Optional human-readable description",
+  "manufacturer": "Manufacturer Name",
+  "model": "Model Number",
+
+  "components": [
+    { /* component objects, see below */ }
+  ],
+
+  "collision_groups": {
+    "group_name": ["component_id", "..."],
+    "...": ["..."]
+  },
+
+  "collision_pairs": [
+    {
+      "group_a": "group_name_or_stock",
+      "group_b": "group_name_or_stock",
+      "clearance_mm": 2.0,
+      "check_type": "static"
+    }
+  ],
+
+  "home_position": [0, 0, 0, 0, 0, 0],
+  "tool_change_position": [0, 0, -400, 0, 0, 0],
+
+  "axis_priority": ["Z"],
+  "retract_axis": "Z",
+
+  "work_offset_defaults": {
+    "G54": [250, 150, 50, 0, 0, 0],
+    "G55": [0, 0, 0, 0, 0, 0]
+  },
+
+  "kinematic_chain": {
+    "tool_chain": ["tool_mount", "spindle", "z_axis", "bed"],
+    "workpiece_chain": ["stock_mount", "fixture_mount", "c_axis", "b_axis", "x_axis", "y_axis", "bed"]
+  }
+}
+</code></pre>
+<h3 id="72-component-object-schema">7.2 Component Object Schema</h3>
+<pre><code class="language-json">{
+  "id": "unique_component_id",
+  "type": "linear_axis | rotary_axis | static | spindle | tool_mount | fixture_mount | stock_mount",
+  "parent": "parent_component_id_or_null",
+  "label": "Human-readable name (e.g., 'Z-Axis Saddle')",
+
+  "mesh": "path/to/component.stl",
+  "collision_mesh": "path/to/component_collision.stl",
+  "collision_margin": 0.0,
+
+  "transform": [x, y, z, rx, ry, rz],
+
+  "axis": "X | Y | Z | A | B | C | U | V | W",
+  "limits": [min, max],
+  "max_feed": 30000,
+  "rapid_feed": 50000,
+  "max_rpm": 100,
+  "continuous": false,
+  "pivot_offset": [0, 0, 0],
+
+  "spindle_nose_to_gauge_mm": 50,
+  "max_power_kw": 25,
+  "max_torque_nm": 100
+}
+</code></pre>
+<p>Not all fields apply to all component types. The loader should validate required fields per type.</p>
+<h3 id="73-transform-convention">7.3 Transform Convention</h3>
+<p>The <code>transform</code> field is <code>[x, y, z, rx, ry, rz]</code>:
+- <code>x, y, z</code>: translation in mm
+- <code>rx, ry, rz</code>: Euler angles in degrees, intrinsic ZYX order (rotate about Z, then Y', then X'')</p>
+<p>This yields a 4x4 homogeneous transform:</p>
+<pre><code>T = T(x,y,z) * Rz(rz) * Ry(ry) * Rx(rx)
+</code></pre>
+<p>This transform positions the component <strong>relative to its parent</strong> when the component's axis is at its <strong>zero position</strong> (home). Axis motion adds additional transforms on top of this.</p>
+<h3 id="74-example-full-dmg-dmu-50-definition">7.4 Example: Full DMG DMU 50 Definition</h3>
+<pre><code class="language-json">{
+  "name": "DMG DMU 50",
+  "version": "1.0",
+  "description": "DMG MORI DMU 50 5-axis vertical machining center. BC trunnion table configuration. Travels: X=500, Y=450, Z=400. Table diameter: 630mm. Spindle: HSK-A63, 18,000 RPM, 25 kW.",
+  "manufacturer": "DMG MORI",
+  "model": "DMU 50",
+
+  "components": [
+    {
+      "id": "bed",
+      "type": "static",
+      "parent": null,
+      "label": "Machine Bed / Base Casting",
+      "mesh": "dmg_dmu50/bed.stl",
+      "transform": [0, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "column",
+      "type": "static",
+      "parent": "bed",
+      "label": "Vertical Column",
+      "mesh": "dmg_dmu50/column.stl",
+      "transform": [0, -300, 0, 0, 0, 0]
+    },
+    {
+      "id": "z_axis",
+      "type": "linear_axis",
+      "parent": "column",
+      "label": "Z-Axis Head Slide",
+      "mesh": "dmg_dmu50/z_saddle.stl",
+      "transform": [0, 0, 600, 0, 0, 0],
+      "axis": "Z",
+      "limits": [-400, 0],
+      "max_feed": 30000,
+      "rapid_feed": 50000
+    },
+    {
+      "id": "spindle",
+      "type": "spindle",
+      "parent": "z_axis",
+      "label": "Spindle Cartridge",
+      "mesh": "dmg_dmu50/spindle_head.stl",
+      "transform": [0, 0, -100, 0, 0, 0],
+      "max_rpm": 18000,
+      "max_power_kw": 25,
+      "max_torque_nm": 130,
+      "spindle_nose_to_gauge_mm": 50
+    },
+    {
+      "id": "tool_mount",
+      "type": "tool_mount",
+      "parent": "spindle",
+      "label": "HSK-A63 Tool Interface",
+      "mesh": null,
+      "transform": [0, 0, -50, 0, 0, 0]
+    },
+    {
+      "id": "y_axis",
+      "type": "linear_axis",
+      "parent": "bed",
+      "label": "Y-Axis Saddle",
+      "mesh": "dmg_dmu50/y_saddle.stl",
+      "transform": [0, -225, 0, 0, 0, 0],
+      "axis": "Y",
+      "limits": [-225, 225],
+      "max_feed": 30000,
+      "rapid_feed": 50000
+    },
+    {
+      "id": "x_axis",
+      "type": "linear_axis",
+      "parent": "y_axis",
+      "label": "X-Axis Table Slide",
+      "mesh": "dmg_dmu50/x_table.stl",
+      "transform": [-250, 0, 0, 0, 0, 0],
+      "axis": "X",
+      "limits": [-250, 250],
+      "max_feed": 30000,
+      "rapid_feed": 50000
+    },
+    {
+      "id": "b_axis",
+      "type": "rotary_axis",
+      "parent": "x_axis",
+      "label": "B-Axis Trunnion (Tilting Table)",
+      "mesh": "dmg_dmu50/b_trunnion.stl",
+      "transform": [0, 0, -250, 0, 0, 0],
+      "axis": "B",
+      "limits": [-115, 115],
+      "max_feed": 18000,
+      "max_rpm": 50,
+      "pivot_offset": [0, 0, 0]
+    },
+    {
+      "id": "c_axis",
+      "type": "rotary_axis",
+      "parent": "b_axis",
+      "label": "C-Axis Rotary Table",
+      "mesh": "dmg_dmu50/c_table.stl",
+      "transform": [0, 0, -200, 0, 0, 0],
+      "axis": "C",
+      "limits": [0, 360],
+      "max_feed": 36000,
+      "max_rpm": 100,
+      "continuous": true,
+      "pivot_offset": [0, 0, -200]
+    },
+    {
+      "id": "fixture_mount",
+      "type": "fixture_mount",
+      "parent": "c_axis",
+      "label": "Fixture Mounting Surface",
+      "mesh": null,
+      "transform": [0, 0, -75, 0, 0, 0]
+    }
+  ],
+
+  "collision_groups": {
+    "tool_group": ["tool_mount"],
+    "spindle_group": ["spindle", "z_axis", "column"],
+    "head_group": ["spindle", "z_axis", "tool_mount"],
+    "table_group": ["c_axis", "b_axis", "x_axis", "y_axis"],
+    "trunnion_group": ["b_axis", "c_axis"],
+    "fixture_group": ["fixture_mount"]
+  },
+
+  "collision_pairs": [
+    {
+      "group_a": "tool_group",
+      "group_b": "fixture_group",
+      "clearance_mm": 2.0,
+      "check_type": "near_miss"
+    },
+    {
+      "group_a": "spindle_group",
+      "group_b": "table_group",
+      "clearance_mm": 5.0,
+      "check_type": "static"
+    },
+    {
+      "group_a": "head_group",
+      "group_b": "trunnion_group",
+      "clearance_mm": 10.0,
+      "check_type": "static"
+    },
+    {
+      "group_a": "tool_group",
+      "group_b": "stock",
+      "clearance_mm": 0.0,
+      "check_type": "during_cut"
+    },
+    {
+      "group_a": "spindle_group",
+      "group_b": "stock",
+      "clearance_mm": 5.0,
+      "check_type": "static"
+    }
+  ],
+
+  "home_position": [0, 0, 0, 0, 0, 0],
+  "tool_change_position": [0, 225, -400, 0, 0, 0],
+
+  "axis_priority": ["Z"],
+  "retract_axis": "Z",
+
+  "work_offset_defaults": {
+    "G54": [250, 150, 75, 0, 0, 0]
+  },
+
+  "kinematic_chain": {
+    "tool_chain": ["tool_mount", "spindle", "z_axis", "column", "bed"],
+    "workpiece_chain": ["fixture_mount", "c_axis", "b_axis", "x_axis", "y_axis", "bed"]
+  }
+}
+</code></pre>
+<h2 id="8-controller-definition">8. Controller Definition</h2>
+<h3 id="81-separation-of-concerns">8.1 Separation of Concerns</h3>
+<p>The <strong>machine</strong> defines the physical hardware (geometry, axes, limits). The <strong>controller</strong> defines the G-code interpretation:
+- Which G-code dialect (Fanuc, Heidenhain, Siemens, Haas, Okuma)
+- Macro/variable mappings
+- Canned cycle implementations
+- Tool change macro behavior
+- Probing cycle definitions
+- Coordinate system management
+- High-speed machining (look-ahead) settings</p>
+<h3 id="82-controller-json-format">8.2 Controller JSON Format</h3>
+<pre><code class="language-json">{
+  "name": "Siemens 840D sl",
+  "version": "1.0",
+  "dialect": "siemens_840d",
+
+  "gcode_mappings": {
+    "G00": "rapid_traverse",
+    "G01": "linear_feed",
+    "G02": "circular_cw",
+    "G03": "circular_ccw",
+    "G17": "plane_xy",
+    "G18": "plane_zx",
+    "G19": "plane_yz",
+    "G54": "work_offset_1",
+    "G55": "work_offset_2"
+  },
+
+  "mcode_mappings": {
+    "M03": "spindle_cw",
+    "M04": "spindle_ccw",
+    "M05": "spindle_stop",
+    "M06": "tool_change",
+    "M08": "coolant_on",
+    "M09": "coolant_off",
+    "M30": "program_end"
+  },
+
+  "canned_cycles": {
+    "G81": "drilling",
+    "G83": "peck_drilling",
+    "G84": "tapping"
+  },
+
+  "variable_mappings": {
+    "#500": "work_offset_x_g54",
+    "#501": "work_offset_y_g54",
+    "#502": "work_offset_z_g54"
+  },
+
+  "kinematic_transforms": {
+    "TRAORI": "5axis_transform_on",
+    "TRAFOOF": "5axis_transform_off",
+    "ORIWKS": "orientation_workpiece_frame",
+    "ORIMKS": "orientation_machine_frame"
+  },
+
+  "look_ahead_lines": 200,
+  "nan_smoothing": false,
+  "default_feed_rate": 5000
+}
+</code></pre>
+<h3 id="83-dialect-profiles">8.3 Dialect Profiles</h3>
+<table>
+<thead>
+<tr>
+<th>Dialect</th>
+<th>Key Characteristics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fanuc_30i</code></td>
+<td>G43.4/G43.5 for TCP, G68.2 for tilted work planes, macros via #variables</td>
+</tr>
+<tr>
+<td><code>siemens_840d</code></td>
+<td>TRAORI/TRAFOOF for 5-axis, CYCLE800 for swivel, frames (TRANS, ROT)</td>
+</tr>
+<tr>
+<td><code>heidenhain_tnc</code></td>
+<td>M128 for TCP, PLANE functions, CYCL DEF, conversational or DIN/ISO</td>
+</tr>
+<tr>
+<td><code>haas_ngc</code></td>
+<td>G234 for TCP, G254 for DWO, simplified macro set</td>
+</tr>
+<tr>
+<td><code>okuma_osp</code></td>
+<td>G131/G130 for TCP, CALL statements, different coordinate system conventions</td>
+</tr>
+<tr>
+<td><code>linuxcnc</code></td>
+<td>Open-source, supports multiple interpreters, highly configurable</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9-tool-assembly-format">9. Tool Assembly Format</h2>
+<h3 id="91-concept">9.1 Concept</h3>
+<p>A tool is not a single entity. It is a <strong>stack</strong> of components:
+- <strong>Holder</strong> (HSK/SK/BT/CAT taper with flange and pull stud)
+- <strong>Extension(s)</strong> (collet chuck, shrink-fit extension, hydraulic holder)
+- <strong>Cutter</strong> (the actual cutting tool: endmill, drill, etc.)</p>
+<p>Each component has its own STL mesh and dimensions. This enables:
+- Accurate collision detection for the entire tool assembly, not just the cutter
+- Tool length calculation from holder gauge line
+- Checking holder-fixture and extension-workpiece collisions
+- Simulating different tool setups with the same cutter</p>
+<h3 id="92-tool-assembly-json-format">9.2 Tool Assembly JSON Format</h3>
+<pre><code class="language-json">{
+  "name": "D12 Ball Endmill Assembly",
+  "description": "D12 ball endmill in HSK-A63 shrink-fit holder",
+
+  "interface": "HSK-A63",
+
+  "components": [
+    {
+      "id": "holder",
+      "type": "holder",
+      "label": "HSK-A63 Shrink Fit Holder D12",
+      "mesh": "holders/hsk_a63_shrink_d12.stl",
+      "length_mm": 80.0,
+      "diameter_mm": 48.0,
+      "gauge_length_mm": 80.0,
+      "transform": [0, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "extension",
+      "type": "extension",
+      "label": "D12 Collet Extension 50mm",
+      "mesh": "extensions/collet_ext_d12_50mm.stl",
+      "length_mm": 50.0,
+      "diameter_mm": 25.0,
+      "transform": [0, 0, 80, 0, 0, 0]
+    },
+    {
+      "id": "cutter",
+      "type": "cutter",
+      "label": "D12 Ball Endmill R6 4-Flute Carbide",
+      "tool_definition": {
+        "type": "ball_endmill",
+        "diameter": 12.0,
+        "flute_length": 24.0,
+        "length": 75.0
+      },
+      "mesh": "cutters/ball_d12_fl24.stl",
+      "transform": [0, 0, 130, 0, 0, 0],
+      "stickout_mm": 35.0
+    }
+  ],
+
+  "total_length_mm": 205.0,
+  "gauge_length_mm": 205.0,
+  "max_rpm": 24000,
+  "max_feed_per_tooth_mm": 0.15
+}
+</code></pre>
+<h3 id="93-tool-component-types">9.3 Tool Component Types</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>holder</code></td>
+<td>The tool holder body (taper + flange + body). Defines the machine interface type.</td>
+</tr>
+<tr>
+<td><code>extension</code></td>
+<td>Optional extension between holder and cutter. Multiple extensions can be stacked.</td>
+</tr>
+<tr>
+<td><code>cutter</code></td>
+<td>The actual cutting tool. Contains a <code>tool_definition</code> referencing the APT 7-parameter tool model for material removal simulation.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="94-derived-properties">9.4 Derived Properties</h3>
+<ul>
+<li><strong>Gauge length</strong>: Total distance from the holder's gauge plane (spindle nose face + <code>spindle_nose_to_gauge_mm</code>) to the cutter tip.</li>
+<li><strong>Stickout</strong>: Distance from the last holder/extension face to the cutter tip. Affects tool rigidity and max cutting parameters.</li>
+<li><strong>Assembly mesh</strong>: Union of all component meshes, transformed by their chain. Used for collision detection.</li>
+</ul>
+<h2 id="10-comparison-to-current-approach">10. Comparison to Current Approach</h2>
+<h3 id="101-current-approach-kinematicspy">10.1 Current Approach (kinematics.py)</h3>
+<pre><code>Strengths:
+  + Simple: enum + 3 hardcoded kinematic chains
+  + Fast to implement for known configurations
+  + No external files needed
+
+Weaknesses:
+  - New machine = new Python code (write new FK, IK, singularity handling)
+  - Cannot model non-standard architectures (gantry, horizontal, hexapod)
+  - Collision checking is not integrated -- no mesh-based collision pairs
+  - Tool offset is a single float (tool_pivot_length), not a full assembly
+  - Axis limits are generic defaults, not machine-specific
+  - No STL meshes for visualization or collision detection
+  - Work offsets (G54-G59) are not tied to the machine
+  - Cannot swap tool holders or check holder collision
+</code></pre>
+<h3 id="102-new-approach-scene-graph-machinemodel">10.2 New Approach (Scene Graph MachineModel)</h3>
+<pre><code>Strengths:
+  + Any machine configuration: just write a JSON file
+  + No code changes to add a new machine
+  + Explicit collision pairs with mesh-based proximity checking
+  + Full tool assembly with holder + extension + cutter STL meshes
+  + Machine-specific axis limits, speeds, dimensions
+  + Supports gantry, horizontal, hexapod, robot, swiss lathe, etc.
+  + Visual preview of machine with actual geometries
+  + Controller dialect is a separate configuration
+  + Tool change position, home position, work offsets all in machine file
+  + FK/IK derived from tree, not hardcoded per config
+
+Weaknesses:
+  - Requires STL files for each machine component (can be placeholders)
+  - More complex initial setup (write JSON + collect STL files)
+  - IK for arbitrary tree topologies may need numeric fallback (not always analytic)
+  - Performance overhead from mesh collision checking (mitigated by BVH + convex hull)
+</code></pre>
+<h3 id="103-migration-path">10.3 Migration Path</h3>
+<ol>
+<li><strong>Phase 2</strong>: Implement <code>MachineModel</code> and <code>MachineComponent</code> classes with tree-based FK/IK.</li>
+<li><strong>Phase 3</strong>: Wire <code>MachineModel</code> into <code>FiveAxisSimulator</code>. Keep backward compatibility: when given a <code>MachineConfig</code> enum, auto-generate a default <code>MachineModel</code>. Mark old kinematics paths as deprecated.</li>
+<li><strong>Phase 4</strong>: Create sample machine library (DMG DMU 50, Haas UMC-750, generic 3-axis).</li>
+<li><strong>Future</strong>: Full removal of <code>MachineConfig</code> enum and hardcoded kinematics once all callers migrate.</li>
+</ol>
+<h2 id="11-implementation-details">11. Implementation Details</h2>
+<h3 id="111-mesh-loading">11.1 Mesh Loading</h3>
+<ul>
+<li>Use <code>trimesh.load()</code> for STL files.</li>
+<li>Cache loaded meshes in a dictionary keyed by path.</li>
+<li><code>collision_mesh</code> overrides <code>mesh</code> for collision detection (use simplified convex hull).</li>
+<li>If <code>mesh</code> is <code>null</code>, the component is a pure transform node (no geometry).</li>
+</ul>
+<h3 id="112-transform-chain-computation">11.2 Transform Chain Computation</h3>
+<p>The core operation is walking from a leaf node to the root:</p>
+<pre><code class="language-python">def compute_chain(component_id: str) -&gt; list[str]:
+    """Return the ordered list of component IDs from leaf to root."""
+    chain = []
+    current = component_id
+    while current is not None:
+        chain.append(current)
+        current = components[current].parent_id
+    return chain
+</code></pre>
+<p>For FK, two chains are computed (tool side + workpiece side). For <code>get_world_transform</code>, a single chain from the target component to root.</p>
+<h3 id="113-axis-direction-vectors">11.3 Axis Direction Vectors</h3>
+<table>
+<thead>
+<tr>
+<th>Axis Letter</th>
+<th>Direction Vector (Machine Frame)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X</td>
+<td>[1, 0, 0]</td>
+</tr>
+<tr>
+<td>Y</td>
+<td>[0, 1, 0]</td>
+</tr>
+<tr>
+<td>Z</td>
+<td>[0, 0, 1]</td>
+</tr>
+<tr>
+<td>U</td>
+<td>[1, 0, 0] (secondary X)</td>
+</tr>
+<tr>
+<td>V</td>
+<td>[0, 1, 0] (secondary Y)</td>
+</tr>
+<tr>
+<td>W</td>
+<td>[0, 0, 1] (secondary Z)</td>
+</tr>
+<tr>
+<td>A</td>
+<td>[1, 0, 0] (rotation about X)</td>
+</tr>
+<tr>
+<td>B</td>
+<td>[0, 1, 0] (rotation about Y)</td>
+</tr>
+<tr>
+<td>C</td>
+<td>[0, 0, 1] (rotation about Z)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="114-homogeneous-transform-convention">11.4 Homogeneous Transform Convention</h3>
+<p>All transforms use 4x4 homogeneous matrices:</p>
+<pre><code>T = | R   t |
+    | 0   1 |
+
+where R is 3x3 rotation, t is 3x1 translation.
+</code></pre>
+<p>Composition: <code>T_world = T_parent_world @ T_local</code> (parent-to-world times local-to-parent).</p>
+<h2 id="12-future-extensions">12. Future Extensions</h2>
+<ul>
+<li><strong>Robotic arms</strong>: The component tree naturally extends to 6-DOF serial manipulators. Each joint is a <code>rotary_axis</code>. IK for 6-DOF uses iterative numeric methods (e.g., Jacobian pseudoinverse or CCD).</li>
+<li><strong>Parallel kinematics</strong>: Hexapods require solving the inverse kinematics of the parallel mechanism (leg lengths from platform pose). This would be a special <code>parallel_mechanism</code> component type.</li>
+<li><strong>Multi-channel machines</strong>: Machines with dual spindles or dual turrets have multiple independent tool chains. The tree supports this by having multiple <code>tool_mount</code> leaf nodes.</li>
+<li><strong>Automatic collision pair generation</strong>: For machines with many components, auto-generate all-pairs or neighbor-pairs collision groups from the tree.</li>
+<li><strong>Machine builder UI</strong>: A GUI that lets users drag-and-drop components into a tree, assign STL files, and auto-generate the JSON definition.</li>
+</ul>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

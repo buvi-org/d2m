@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SubCAD Program Generation - d2m</title>
+  <link rel="stylesheet" href="../site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../../README.html">Home</a>
+      <a href="../../TODO.html">TODO.md</a>
+      <a href="../zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="../architecture.html">docs/architecture.md</a>
+      <a href="../plan.html">docs/plan.md</a>
+      <a href="../step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="../simulation.html">docs/simulation.md</a>
+      <a href="../subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../../web/README.html">web/README.md</a>
+      <a href="../../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/subcad_limit_test/subcad_program_generation.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="subcad-program-generation">SubCAD Program Generation</h1>
+<p>Stage 3 converts each frozen Stage 2 English requirement into a SubCAD program.</p>
+<h2 id="boundary">Boundary</h2>
+<ul>
+<li>Generate one program per single-metal-part requirement.</li>
+<li>Do not change, simplify, or reinterpret the English requirement.</li>
+<li>If the requirement asks for a feature that SubCAD cannot currently express,
+  write the closest honest SubCAD program and record the unsupported feature in
+  the program metadata as a gap.</li>
+<li>Do not use imported STEP, STL, mesh, or opaque geometry as a shortcut.</li>
+<li>Do not add assemblies, fasteners, bearings, springs, bushings, rubber,
+  plastic, electronics, labels, or bought-out items.</li>
+</ul>
+<h2 id="output-convention">Output Convention</h2>
+<p>Runnable program files live under:</p>
+<p><code>docs/subcad_limit_test/subcad_programs_py/</code></p>
+<p>Each requirement gets one standalone Python file:</p>
+<p><code>agent_###/smp-###-##_part_name.py</code></p>
+<p>Each Python file:</p>
+<ul>
+<li>imports <code>Stock</code> from <code>subcad</code></li>
+<li>defines a variable named <code>part</code></li>
+<li>keeps the requirement ID, part name, source idea, coverage notes, known gaps,
+  and review notes as top-of-file comments</li>
+</ul>
+<p>The intermediate batch JSON files in <code>docs/subcad_limit_test/subcad_programs/</code>
+are metadata containers from the parallel generation step. The <code>.py</code> files are
+the primary artifacts for execution and review.</p>
+<h2 id="minimum-program-shape">Minimum Program Shape</h2>
+<pre><code class="language-python">from subcad import Stock
+
+part = (
+    Stock.rectangular(100, 50, 12, material="aluminum_6061")
+    .drill(diameter=6, cx=20, cy=25, depth=12)
+    .slot(width=10, length=40, depth=12, cx=50, cy=25)
+    .chamfer(width=1.0)
+)
+</code></pre>
+<p>For round-bar parts, use <code>Stock.cylindrical(diameter, height, material=...)</code>
+and add available turning/cylindrical operations where they match the
+requirement.</p>
+<p>Generated programs are drafts until executed and reviewed against STEP/STL
+artifacts.</p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

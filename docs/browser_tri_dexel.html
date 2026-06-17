@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tri-Dexel in the Browser: WebGPU Compute + WebGL Render - d2m</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="architecture.html">docs/architecture.md</a>
+      <a href="plan.html">docs/plan.md</a>
+      <a href="step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="simulation.html">docs/simulation.md</a>
+      <a href="subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../web/README.html">web/README.md</a>
+      <a href="../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/browser_tri_dexel.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="tri-dexel-in-the-browser-webgpu-compute-webgl-render">Tri-Dexel in the Browser: WebGPU Compute + WebGL Render</h1>
+<h2 id="summary">Summary</h2>
+<p>The tri-dexel simulation engine can run entirely in the browser, with WebGPU compute shaders handling the heavy math and WebGL rendering the result. This enables a Vericut-like 5-axis simulation experience with zero install, shareable URLs, and instant visual feedback — something Vericut's 1990s desktop architecture cannot do.</p>
+<h2 id="three-architectures">Three Architectures</h2>
+<h3 id="a-server-side-compute-stream-mesh-browser">A. Server-Side Compute, Stream Mesh → Browser</h3>
+<pre><code>Server (Python + numpy/CuPy)
+  ├── Tri-dexel engine runs on GPU
+  ├── Marching cubes extracts surface mesh
+  └── Stream mesh delta to browser via WebSocket
+
+Browser (Three.js)
+  └── Receives mesh as glTF binary, renders
+</code></pre>
+<ul>
+<li><strong>Pros</strong>: Uses full Python/CUDA stack. Server can have A100/H100.</li>
+<li><strong>Cons</strong>: Latency per frame (mesh transfer). Full remesh per operation is heavy to stream. Doesn't scale to many concurrent users.</li>
+<li><strong>Latency budget</strong>: Mesh serialization + transfer + deserialization ≈ 50-200ms for typical part.</li>
+<li><strong>Verdict</strong>: Works today. Best for Phase 0 if we need a working UI fast. Not the long-term target.</li>
+</ul>
+<h3 id="b-webassembly-compute-webgl-render">B. WebAssembly Compute, WebGL Render</h3>
+<pre><code>Browser
+  ├── WASM (Rust/C++): Tri-dexel engine on CPU threads
+  ├── Web Workers: Marching cubes
+  └── WebGL (Three.js): Render mesh
+</code></pre>
+<ul>
+<li><strong>Pros</strong>: Runs in browser without GPU requirements. Rust + wasm-bindgen + nalgebra is a mature toolchain.</li>
+<li><strong>Cons</strong>: CPU-only. No GPU acceleration for dexel subtraction (which is embarrassingly parallel).</li>
+<li><strong>Performance</strong>: Single dexel at 512² ≈ 5-10ms per operation. Tri-dexel ≈ 15-30ms. Acceptable for 3-axis, borderline for 5-axis at high resolution.</li>
+<li><strong>Verdict</strong>: Fallback path for browsers without WebGPU support. Not the primary target.</li>
+</ul>
+<h3 id="c-webgpu-compute-webgl-render-target-architecture">C. WebGPU Compute, WebGL Render (Target Architecture)</h3>
+<pre><code>Browser
+  ├── WebGPU Compute Shader: Tri-dexel subtraction on GPU
+  ├── WebGPU Compute Shader: Marching cubes on GPU
+  └── WebGL fallback (or WebGPU render): Display mesh
+</code></pre>
+<ul>
+<li><strong>Pros</strong>: Full GPU acceleration in browser. Dexel subtraction maps perfectly to compute shaders — each column is an independent work item. Same architecture as CUDA but targeting browser GPU. Chrome 113+ (May 2023) supports it. Edge, Opera same. Firefox Nightly.</li>
+<li><strong>Cons</strong>: Safari support is behind (WebGPU in Safari Technology Preview). Requires WGSL shader language (different from CUDA/GLSL, though similar concepts).</li>
+<li><strong>Performance</strong>: Comparable to CUDA for this workload. Embarrassingly parallel — thousands of dexel columns processed simultaneously.</li>
+<li><strong>Verdict</strong>: The target architecture. Write the Python/numpy reference implementation first, port compute kernels to WGSL in Phase 2.</li>
+</ul>
+<h2 id="webgpu-compute-shader-design">WebGPU Compute Shader Design</h2>
+<p>The tri-dexel subtraction is naturally parallel — each dexel column is independent. The compute shader processes columns in workgroups:</p>
+<pre><code class="language-wgsl">// Dexel subtraction compute shader (single direction, e.g., Z-dexels)
+
+struct ToolParams {
+    tool_type: u32,        // 0=ball, 1=flat, 2=bull_nose
+    diameter: f32,
+    corner_radius: f32,
+    tool_pos: vec3&lt;f32&gt;,   // tool tip position in workpiece frame
+    tool_dir: vec3&lt;f32&gt;,   // tool axis direction (for 5-axis)
+};
+
+@group(0) @binding(0) var&lt;storage, read_write&gt; intervals: array&lt;f32&gt;;  // packed [start,end] pairs
+@group(0) @binding(1) var&lt;storage, read_write&gt; interval_counts: array&lt;u32&gt;;  // count per column
+@group(0) @binding(2) var&lt;storage, read&gt; tool: ToolParams;
+@group(0) @binding(3) var&lt;storage, read&gt; affected_cols: array&lt;u32&gt;;  // column indices to process
+
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) gid: vec3&lt;u32&gt;) {
+    let idx = gid.x;
+    if idx &gt;= arrayLength(&amp;affected_cols) { return; }
+
+    let col_id = affected_cols[idx];
+
+    // 1. Compute ray-tool intersection for this dexel column
+    //    For Z-dexels: ray is vertical at (x_grid, y_grid)
+    //    For 5-axis ball endmill: sphere + cylinder intersection with the ray
+    let tool_intervals = compute_ray_tool_intersection(col_id, &amp;tool);
+
+    // 2. Subtract tool intervals from column's interval list
+    //    In-place update of the packed intervals array
+    subtract_intervals_in_place(col_id, &amp;intervals, &amp;interval_counts, &amp;tool_intervals);
+}
+
+fn compute_ray_tool_intersection(col_id: u32, tool: &amp;ToolParams) -&gt; array&lt;vec2&lt;f32&gt;, 4&gt; {
+    // Analytic ray-tool intersection
+    // Ball endmill = cylinder + capped hemisphere
+    // Returns up to 4 entry/exit pairs for complex tool shapes
+    ...
+}
+
+fn subtract_intervals_in_place(
+    col_id: u32,
+    intervals: &amp;array&lt;f32&gt;,
+    counts: &amp;array&lt;u32&gt;,
+    to_remove: &amp;array&lt;vec2&lt;f32&gt;, 4&gt;
+) {
+    // Standard interval subtraction: O(n) scan through existing intervals,
+    // removing or splitting where to_remove overlaps.
+    // This is the hot path — must be allocation-free.
+    ...
+}
+</code></pre>
+<p>The same pattern applies across all three dexel grids. For 5-axis moves, we sample intermediate tool poses and dispatch compute shaders per sample.</p>
+<h2 id="recommended-architecture-hybrid-split">Recommended Architecture: Hybrid Split</h2>
+<pre><code>┌──────────────────────────────────────────────────────┐
+│                     BROWSER                           │
+│                                                       │
+│  ┌──────────────────┐    ┌───────────────────────┐   │
+│  │  WebGPU Compute   │    │  WebGL Renderer       │   │
+│  │  (Tri-Dexel Core) │───▶│  (Three.js)           │   │
+│  │                   │    │                       │   │
+│  │  • Dexel subtract │    │  • Surface mesh       │   │
+│  │  • March cubes    │    │  • Deviation heatmap  │   │
+│  │  • Collision      │    │  • Tool animation     │   │
+│  │  • Gouge detect   │    │  • Machine kinematics │   │
+│  └──────────────────┘    └───────────────────────┘   │
+│           │                                          │
+│           │ WebSocket                                 │
+└───────────┼──────────────────────────────────────────┘
+            │
+┌───────────▼──────────────────────────────────────────┐
+│                     SERVER                             │
+│                                                       │
+│  • G-code parsing (Python)                            │
+│  • LLM process plan generation                        │
+│  • Knowledge graph validation                         │
+│  • Initial stock conversion (STEP → tri-dexel init)   │
+│  • Tool library serving                               │
+│  • User authentication / project management           │
+└──────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>Server does</strong>: Heavy preprocessing (STEP → tri-dexel initialization), G-code parsing, LLM planning, knowledge graph queries.</p>
+<p><strong>Browser does</strong>: All simulation computation (dexel subtraction, surface extraction, collision detection) and rendering.</p>
+<p><strong>Wire protocol</strong>: WebSocket sends G-code blocks + tool definitions. Browser streams back simulation progress, deviation stats, collision events.</p>
+<h2 id="performance-expectations">Performance Expectations</h2>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>WebGPU (browser)</th>
+<th>Python/CuPy (server)</th>
+<th>Native CUDA (C++)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3-axis, 0.1mm res, 200mm³ part</td>
+<td>5-15ms per op</td>
+<td>10-30ms per op</td>
+<td>2-5ms per op</td>
+</tr>
+<tr>
+<td>5-axis, 0.1mm res, 200mm³ part</td>
+<td>20-50ms per op</td>
+<td>40-100ms per op</td>
+<td>10-25ms per op</td>
+</tr>
+<tr>
+<td>Marching cubes (1M dexel grid)</td>
+<td>10-30ms</td>
+<td>20-50ms</td>
+<td>5-15ms</td>
+</tr>
+<tr>
+<td>Mesh transfer (glTF binary)</td>
+<td>N/A (local)</td>
+<td>50-200ms over network</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+<p>WebGPU is within 2-3x of native CUDA for this workload — entirely acceptable for interactive use.</p>
+<h2 id="implementation-path">Implementation Path</h2>
+<ol>
+<li><strong>Now (Python reference)</strong>: Tri-dexel engine in numpy. Validates the math, serves as the test oracle.</li>
+<li><strong>Phase 2 (WebGPU port)</strong>: Port dexel subtraction + marching cubes to WGSL compute shaders.</li>
+<li><strong>Phase 3 (Full browser app)</strong>: Three.js renderer, WebSocket protocol, complete VERICUT-like interaction model.</li>
+</ol>
+<h2 id="competitive-implications">Competitive Implications</h2>
+<p>Vericut's architecture is a 1990s desktop application — C++ with a Qt/OpenGL frontend, single-machine license server, GUI-first design. It cannot run in a browser. A WebGPU-based tri-dexel simulator:</p>
+<ul>
+<li>Zero install — share a URL, not a license dongle</li>
+<li>Offloads compute to user's GPU — scales infinitely</li>
+<li>WebSocket streaming enables real-time collaboration (multiple engineers watching the same simulation)</li>
+<li>Mobile-capable (WebGPU on Android Chrome, eventually iOS Safari)</li>
+<li>API-first design from day one (not bolted-on Python 2.7 API like Vericut)</li>
+</ul>
+<p>This is not just "replacing Vericut" — it's leapfrogging their architectural ceiling entirely.</p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

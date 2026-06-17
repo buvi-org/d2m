@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>d2m — Architecture - d2m</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="architecture.html">docs/architecture.md</a>
+      <a href="plan.html">docs/plan.md</a>
+      <a href="step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="simulation.html">docs/simulation.md</a>
+      <a href="subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../web/README.html">web/README.md</a>
+      <a href="../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/architecture.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="d2m-architecture">d2m — Architecture</h1>
+<h2 id="overview">Overview</h2>
+<p>d2m is currently centered on a STEP -&gt; pure SubCAD research workflow: generate
+executable subtractive SubCAD, execute it, export a generated STEP, and compare
+that generated STEP against the original source STEP before accepting a pair for
+training or evaluation. The immediate dataset target is 100,000
+original-STEP-verified Zero-to-CAD pairs. Current accepted-pair and
+planner-capacity status is tracked in
+<code>docs/zero_to_cad_status.md</code>; plannable rows are an attempt queue, not verified
+success.</p>
+<p>The architecture remains modular because manufacturing involves hard physical
+rules, sparse expert data, and geometric reasoning. However, verified training
+pairs must be pure SubCAD: no hybrid/imported opaque geometry, no direct CadQuery
+reconstruction, and no skipped unsupported features. GNNs, multimodal inputs,
+knowledge graphs, and RL remain staged or aspirational unless explicitly called
+out as implemented elsewhere in this document.</p>
+<h2 id="high-level-pipeline">High-Level Pipeline</h2>
+<h3 id="active-corpus-generation-pipeline">Active Corpus-Generation Pipeline</h3>
+<p>This is the current path that gates training data:</p>
+<pre><code>Zero-to-CAD row
+  ├─ original model.step          (immutable target)
+  ├─ CadQuery source / ops trace  (feature evidence)
+  ▼
+Pure SubCAD planner + deterministic/agentic generator
+  ▼
+Executable pure SubCAD program
+  ├─ process plan / setup sheet / validation / economics
+  └─ generated STEP
+  ▼
+Trusted comparison against original model.step
+  ▼
+accepted manifest record or failed/unsupported/manual-review record
+</code></pre>
+<p>The older product architecture below remains useful as the long-term
+upload-to-plan direction, but it is not the acceptance authority for the 100k
+training corpus.</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────┐
+│                        INPUT LAYER                                    │
+│  STEP/IGES CAD file + metadata (material, quantity, tolerances, PMI) │
+└──────────────────────────────┬───────────────────────────────────────┘
+                               │
+          ┌────────────────────┼────────────────────┐
+          ▼                    ▼                    ▼
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│   CAD Parser    │  │  4-View Render  │  │  Material Info   │
+│ (pythonOCC /    │  │  (CadQuery /    │  │  + Tolerances    │
+│  CadQuery)      │  │   FreeCAD)      │  │  + Volume specs  │
+└────────┬────────┘  └────────┬────────┘  └────────┬────────┘
+         │                    │                    │
+         ▼                    │                    │
+┌─────────────────┐           │                    │
+│  B-Rep → AAG    │           │                    │
+│  Conversion     │           │                    │
+└────────┬────────┘           │                    │
+         │                    │                    │
+         ▼                    ▼                    ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                   FEATURE EXTRACTION (GNN)                            │
+│                                                                       │
+│  Graph Neural Network (AAGNet / MaProNet-style) processes            │
+│  Attributed Adjacency Graph to identify machinable features:         │
+│  holes, pockets, slots, bosses, chamfers, fillets, threads           │
+│                                                                       │
+│  Output: Structured feature list with dimensions, positions,         │
+│          tolerances, and surface finish attributes                    │
+└──────────────────────────────┬───────────────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                     REASONING &amp; PLANNING ENGINE                        │
+│                                                                       │
+│  ┌─────────────────┐    ┌─────────────────────┐                      │
+│  │  Knowledge Graph │    │  Text LLM             │                      │
+│  │  (Neo4j)         │◄──►│  (DeepSeek V4 Pro)    │                      │
+│  │                  │    │                      │                      │
+│  │  • Materials     │    │  • Process selection  │                      │
+│  │  • Tools/Machines│    │  • Sequencing         │                      │
+│  │  • Process rules │    │  • Tool allocation    │                      │
+│  │  • DFM constraints│   │  • Cost estimation    │                      │
+│  │  • Cost models   │    │  • Natural-language   │                      │
+│  │                  │    │    explanations       │                      │
+│  └────────┬─────────┘    └──────────┬───────────┘                      │
+│           │                         │                                  │
+│           ▼                         ▼                                  │
+│  ┌─────────────────────────────────────────────────────────────┐     │
+│  │              Optimization Layer (GA / RL)                     │     │
+│  │  Multi-objective: minimize cost, time; maximize quality       │     │
+│  └─────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────┬───────────────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                    VALIDATION &amp; SIMULATION                             │
+│                                                                       │
+│  • Rule engine checks all DFM constraints against proposed plan      │
+│  • FreeCAD CAM simulation validates toolpaths and collision          │
+│  • Molding simulation checks wall thickness, warping, fill            │
+│  • Feedback loop: simulation results → reward signal for RL          │
+└──────────────────────────────┬───────────────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                        OUTPUT LAYER                                    │
+│                                                                       │
+│  • JSON process plan (operations, sequence, tools, machines, params) │
+│  • Cost &amp; time estimates                                              │
+│  • DFM issue flags with explanations                                  │
+│  • Ranked alternative plans                                           │
+│  • Visual: highlighted features, Gantt chart of operations            │
+│  • API endpoints for CAD/CAM/ERP integration                          │
+└──────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h2 id="component-details">Component Details</h2>
+<h3 id="1-cad-parser-representation">1. CAD Parser &amp; Representation</h3>
+<p><strong>Responsibility</strong>: Convert vendor CAD formats into machine-readable geometry.</p>
+<ul>
+<li><strong>Input formats</strong>: STEP (.stp), IGES (.igs), native CAD via plugins (.SLDPRT, .f3d)</li>
+<li><strong>Internal representation</strong>: Boundary Representation (B-Rep) → Attributed Adjacency Graph (AAG)</li>
+<li>B-Rep stores topological entities (faces, edges, vertices) and their geometric definitions</li>
+<li>AAG captures face adjacency with edge attributes (convex/concave, angle)</li>
+<li><strong>Tooling</strong>: pythonOCC (OpenCascade Python bindings), CadQuery</li>
+<li><strong>Why AAG</strong>: Naturally represents design features — a pocket is a set of faces with specific adjacency patterns. GNNs operate directly on this graph structure.</li>
+</ul>
+<h3 id="2-4-view-renderer">2. 4-View Renderer</h3>
+<p><strong>Responsibility</strong>: Generate standardized visual inputs for the multimodal LLM.</p>
+<ul>
+<li>Renders 4 orthographic + isometric PNG views per part:</li>
+<li>Front (XY plane), Top (XZ plane), Side (YZ plane), Isometric</li>
+<li>Uses CadQuery's built-in STL export + vtk/plotly for rendering</li>
+<li><strong>Why visual input</strong>: Complex geometries, surface finish issues, and assembly constraints are often obvious in images but hard to describe in text. Multimodal fusion improves edge-case accuracy.</li>
+</ul>
+<h3 id="3-feature-extraction-gnn">3. Feature Extraction GNN</h3>
+<p><strong>Responsibility</strong>: Identify and classify all machinable features from the AAG.</p>
+<ul>
+<li><strong>Architecture</strong>: Graph Attention Network (GAT) or AAGNet variant</li>
+<li>Input: AAG nodes (faces) with geometric features (area, curvature, normal vectors)</li>
+<li>Output: Node classifications (face → feature type) + feature parameters</li>
+<li><strong>Training</strong>: Supervised on MFCAD/MFCAD++ public datasets + synthetic data</li>
+<li>
+<blockquote>
+<p>99% accuracy reported in recent work (2024-2025)</p>
+</blockquote>
+</li>
+<li><strong>Technology</strong>: PyTorch Geometric (PyG)</li>
+<li><strong>Training cost</strong>: ₹2,000-8,000 on single RTX 4090 (2-8 hours)</li>
+</ul>
+<h3 id="4-knowledge-graph-symbolic-layer">4. Knowledge Graph (Symbolic Layer)</h3>
+<p><strong>Responsibility</strong>: Store and enforce hard manufacturing rules.</p>
+<p><strong>Schema</strong> (Neo4j property graph):</p>
+<pre><code>(Process)-[:COMPATIBLE_WITH]-&gt;(Material)
+(Process)-[:REQUIRES]-&gt;(Tool)
+(Process)-[:PRECEDES]-&gt;(Process)    // dependency chain
+(Feature)-[:MACHINABLE_BY]-&gt;(Process)
+(Material)-[:HAS_PROPERTY]-&gt;(Property)
+(Tool)-[:AVAILABLE_ON]-&gt;(Machine)
+</code></pre>
+<p><strong>Rule categories</strong>:
+- <strong>Material-Process compatibility</strong>: e.g., ABS → injection molding; Aluminum → CNC/die casting
+- <strong>Tolerance constraints</strong>: ±0.01mm tolerance → CNC required, sand casting excluded
+- <strong>Feature dependencies</strong>: "Drill after mill on same face", "Chamfer after pocket"
+- <strong>DFM rules</strong>: Thin wall (&lt;1mm in ABS) → warping risk → flag for redesign
+- <strong>Tool/Machine constraints</strong>: Tool diameter must be less than pocket width</p>
+<p><strong>Engine</strong>: Python rule engine (custom, declarative) with graph queries for relationship checking.</p>
+<h3 id="5-llm-planner-neural-layer">5. LLM Planner (Neural Layer)</h3>
+<p><strong>Responsibility</strong>: High-level reasoning — process selection, sequencing, explanation generation.</p>
+<ul>
+<li><strong>Base Model</strong>: DeepSeek V4 Pro — state-of-the-art reasoning, extremely cost-efficient</li>
+<li><strong>Input</strong>: Text prompt (features JSON + material + constraints + structured geometry description)</li>
+<li><strong>4-view renders</strong>: Generated for human review in the UI, but not required for LLM input</li>
+<li><strong>Output</strong>: Full JSON process plan with:</li>
+<li>Operation sequence with dependencies</li>
+<li>Tool selection per operation</li>
+<li>Machine assignment</li>
+<li>Estimated cycle time &amp; cost</li>
+<li>DFM notes and warnings</li>
+<li>Natural-language rationale for each decision</li>
+<li><strong>Fine-tuning</strong>: DeepSeek managed fine-tuning API</li>
+<li>5,000-20,000 instruction-response pairs</li>
+<li>No GPU provisioning needed</li>
+<li>Cost: ₹3,000-8,000 per run</li>
+<li><strong>Inference</strong>: DeepSeek API with fine-tuned model ID</li>
+</ul>
+<p><strong>Why LLM</strong>: Captures the "engineering judgment" that pure rule-based systems miss — trade-offs, edge cases, explanations in natural language.</p>
+<p><strong>Why text-only</strong>: DeepSeek V4 Pro is a text model. This is sufficient because:
+- Manufacturing features are discrete and nameable (holes, pockets, slots, bosses)
+- Dimensions, tolerances, and adjacency relationships are numeric — text is the natural representation
+- 4-view renders are still generated for human review in the UI
+- If visual reasoning proves necessary, renders can be added via a separate vision model or base64-encoded images if DeepSeek adds vision support</p>
+<h3 id="6-optimization-layer">6. Optimization Layer</h3>
+<p><strong>Responsibility</strong>: Multi-objective optimization of candidate plans.</p>
+<ul>
+<li><strong>Objectives</strong>: Minimize cost, minimize time, maximize quality, minimize environmental impact</li>
+<li><strong>Methods</strong>:</li>
+<li>Genetic Algorithm (GA) for discrete optimization (tool sequences, machine assignment)</li>
+<li>Reinforcement Learning for sequential decision-making (which op next?)</li>
+<li><strong>Integration</strong>: Takes top-N plans from LLM, scores them against objectives, returns Pareto-optimal set</li>
+</ul>
+<h3 id="7-simulation-rl-validation">7. Simulation &amp; RL Validation</h3>
+<p><strong>Responsibility</strong>: Verify plans are physically feasible; provide reward signal for continual improvement.</p>
+<p>Uses a <strong>multi-fidelity architecture</strong> — three tiers trading speed for accuracy:</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Method</th>
+<th>Speed</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tier 1</td>
+<td>Rule-based heuristics (wall thickness, draft, tolerance, tool constraints)</td>
+<td>&lt;1ms</td>
+<td>Reject-sampling (discard bad plans instantly)</td>
+</tr>
+<tr>
+<td>Tier 2</td>
+<td>Voxel-based material removal (trimesh + manifold3d)</td>
+<td>1-10s</td>
+<td>Primary RL reward signal</td>
+</tr>
+<tr>
+<td>Tier 3</td>
+<td>Full physics (openInjMoldSim CFD, mesh boolean)</td>
+<td>min-hrs</td>
+<td>Final validation spot-check</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>CNC simulation</strong>: Custom voxel simulator on trimesh.voxel + manifold3d mesh booleans + PyBullet collision detection</li>
+<li><strong>Molding simulation</strong>: Rule-based heuristics for MVP (wall thickness, draft, flow length); full CFD via openInjMoldSim deferred to Phase 2+</li>
+<li><strong>RL loop</strong>: Gymnasium env wrapping the simulator; PPO via Stable-Baselines3; composite reward = volume_removed − collision_penalty − time_penalty + constraint_bonus</li>
+<li><strong>Key insight</strong>: RL doesn't need perfect physics — a voxel sim that correlates with real outcomes is sufficient for learning feasible plans</li>
+</ul>
+<p>See <strong><a href="simulation.html">docs/simulation.md</a></strong> for the full simulation infrastructure documentation, including tool landscape, build-vs-integrate decisions, and phased roadmap.</p>
+<h3 id="8-output-integration-layer">8. Output &amp; Integration Layer</h3>
+<ul>
+<li><strong>Primary output</strong>: JSON/XML process plan (operations, tools, machines, NC code stubs)</li>
+<li><strong>Visual output</strong>: Highlighted CAD features, Gantt chart of operations sequence</li>
+<li><strong>API</strong>: REST endpoints for CAD/CAM/ERP integration</li>
+<li><strong>UI</strong>: Streamlit/Gradio for MVP, React SPA for production</li>
+</ul>
+<h2 id="knowledge-acquisition-how-the-system-learns">Knowledge Acquisition: How the System Learns</h2>
+<p>This section addresses a critical question: how does manufacturing knowledge — tool catalogs, material properties, process rules, operating parameters — actually get into the system? The answer is four distinct ingestion channels, each feeding different components.</p>
+<h3 id="channel-1-structured-tool-catalogs-knowledge-graph">Channel 1: Structured Tool Catalogs → Knowledge Graph</h3>
+<p>The primary source of tool knowledge. Tool manufacturers (Sandvik, Kennametal, Iscar, OSG, Seco, etc.) publish catalogs as structured data — CSV exports, JSON APIs, or ISO 13399 XML.</p>
+<p><strong>What gets ingested per tool:</strong></p>
+<pre><code>Tool: Ø10mm 4-flute carbide end mill, TiAlN coated
+├── GEOMETRY:      diameter=10mm, LOC=25mm, OAL=75mm, helix=30°, corner_radius=0
+├── SUBSTRATE:     solid carbide, TiAlN coated
+├── WORKPIECES:    Aluminum ✓ | Steel ✓ | Stainless ✓ | Titanium ⚠ (reduced params) | Plastic ✓
+├── PROCESSES:     facing, pocketing, profiling, slotting, helical_interpolation
+├── PARAMS (6061): SFM=600, FPT=0.05mm, DOC_max=5mm, WOC_max=4mm
+├── PARAMS (4140): SFM=200, FPT=0.03mm, DOC_max=2mm, WOC_max=2mm
+├── TOLERANCE:     holds ±0.05mm milling; cannot achieve H7 alone
+├── FITS_MACHINE:  CAT40 / HSK63 / BT40 spindles
+├── COST:          ₹2,500 | LIFE: 4h (aluminum), 2h (steel)
+└── CONSTRAINTS:   min_hole_dia=N/A, max_depth=2.5×D, needs_coolant: true
+</code></pre>
+<p><strong>Ingestion pipeline:</strong></p>
+<pre><code class="language-python"># Example: Ingest Sandvik ISO 13399 XML catalog into Neo4j
+# Claude/Cursor writes this once per catalog format
+
+def ingest_iso13399_catalog(xml_path: str, kg: KnowledgeGraph):
+    for tool_elem in parse_iso13399(xml_path):
+        tool = Tool(
+            id=tool_elem.id,
+            type=tool_elem.type,         # end_mill, drill, reamer, tap...
+            geometry=tool_elem.geometry,
+            substrate=tool_elem.substrate,
+            coating=tool_elem.coating,
+        )
+        kg.merge_tool(tool)
+
+        # Link to compatible workpiece materials
+        for mat in tool_elem.compatible_materials:
+            kg.link(tool, "COMPATIBLE_WITH", mat, properties={
+                "sfm": mat.sfm, "feed_per_tooth": mat.fpt,
+                "doc_max": mat.doc_max, "coolant_required": mat.coolant
+            })
+
+        # Link to processes this tool can perform
+        for proc in tool_elem.processes:
+            kg.link(tool, "EXECUTES", proc)
+
+        # Link to machines this tool fits
+        for machine in tool_elem.spindle_types:
+            kg.link(tool, "FITS", machine)
+</code></pre>
+<p><strong>Catalog format landscape:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Manufacturer</th>
+<th>Format</th>
+<th>Accessibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sandvik Coromant</td>
+<td>ISO 13399 XML, CoroPlus API</td>
+<td>Free with account</td>
+</tr>
+<tr>
+<td>Kennametal</td>
+<td>NOVO API, CSV export</td>
+<td>Free with account</td>
+</tr>
+<tr>
+<td>Iscar</td>
+<td>IscarToolAdvisor JSON</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>OSG</td>
+<td>CSV cutting conditions tables</td>
+<td>Public download</td>
+</tr>
+<tr>
+<td>Seco</td>
+<td>Suggest web API</td>
+<td>Free with account</td>
+</tr>
+<tr>
+<td>Generic</td>
+<td>ISO 13399 standard</td>
+<td>Standardized, tool-agnostic</td>
+</tr>
+</tbody>
+</table>
+<h3 id="channel-2-manufacturing-handbooks-rule-engine-llm-corpus">Channel 2: Manufacturing Handbooks → Rule Engine + LLM Corpus</h3>
+<p><em>Machinery's Handbook</em>, ISO tolerance guides, DFM handbooks, and process engineering textbooks encode the fundamental rules. These feed two subsystems:</p>
+<p><strong>A) Hard rules extracted into the Python rule engine:</strong></p>
+<pre><code class="language-python"># rules.py — Excerpt of rules distilled from handbooks
+
+def check_hole_process(hole: Feature, plan: ProcessPlan) -&gt; list[Warning]:
+    """Rules from Machinery's Handbook, 32nd ed., Hole Making section."""
+    warnings = []
+
+    # Rule: Any hole &lt; H7 tolerance requires a reaming pass
+    if hole.tolerance_grade and hole.tolerance_grade &lt;= 7:
+        if not any(op.tool.type == "reamer" for op in plan.operations):
+            warnings.append(Warning(
+                severity="error",
+                message=f"Hole Ø{hole.dia}mm requires H{hole.tolerance_grade} tolerance. "
+                        "Drill alone insufficient — add reamer after drill.",
+                source="Machinery's Handbook §Hole Making"
+            ))
+
+    # Rule: Deep holes need peck drilling
+    if hole.depth &gt; hole.dia * 5:
+        if not any("peck" in op.strategy for op in plan.operations):
+            warnings.append(Warning(
+                severity="warn",
+                message=f"Deep hole (L/D={hole.depth/hole.dia:.1f}). "
+                        "Use peck drilling cycle to clear chips.",
+                source="Machinery's Handbook §Deep Hole Drilling"
+            ))
+
+    # Rule: Tap drill size = major diameter − pitch (metric)
+    if hole.has_thread:
+        expected_drill = hole.dia - hole.thread_pitch
+        actual_drill = plan.get_drill_diameter(hole)
+        if abs(actual_drill - expected_drill) &gt; 0.05:
+            warnings.append(Warning(
+                severity="error",
+                message=f"Tap drill should be Ø{expected_drill}mm for M{hole.dia}×{hole.thread_pitch}",
+                source="ISO 724"
+            ))
+
+    return warnings
+
+
+def check_wall_thickness(feature: Feature, material: Material) -&gt; list[Warning]:
+    """DFM rules from Bralla, Design for Manufacturability Handbook."""
+
+    if material.type == "plastic" and feature.wall_thickness &lt; 1.0:
+        return [Warning(
+            severity="error",
+            message=f"Wall thickness {feature.wall_thickness}mm too thin for {material.name}. "
+                    "Minimum 1.0mm for injection molding. Risk: short shot, warping.",
+            suggestion="Increase wall to ≥1.0mm or add flow leaders."
+        )]
+
+    return []
+</code></pre>
+<p><strong>B) Handbook excerpts embedded in LLM fine-tuning data:</strong></p>
+<p>These teach the LLM <em>why</em> a rule exists and how to handle edge cases:</p>
+<pre><code class="language-jsonl">{"instruction": "You are a senior manufacturing engineer. A Ø20mm through hole in 4140 steel must hold ±0.012mm tolerance. What tool sequence? Explain.", "output": "Sequence: center drill → Ø19.7mm twist drill → Ø19.95mm boring bar (semi-finish) → Ø20mm H7 reamer. Explanation: ±0.012mm on Ø20mm is IT6 (H6/H7). A twist drill alone produces IT11-IT13 (±0.13-0.33mm) — entirely inadequate. Even a reamer after a drill is marginal here because the drill wanders. The boring bar establishes straightness before the reamer sizes it. Total 4 operations: spot for location, drill for bulk removal, bore for straightness, ream for size."}
+{"instruction": "Can I use a Ø6mm 2-flute HSS end mill for a 30mm deep pocket in 304 stainless?", "output": "No — and here's why. Max depth of cut for a Ø6mm end mill is ~2.5× diameter = 15mm when side-milling 304 SS. At 30mm depth, that tool will deflect, chatter, and likely snap. Solutions: (1) Use a larger end mill if corner radius allows. (2) If Ø6mm is required for internal corners, rough with a larger tool first, then finish with the Ø6mm taking only 0.5mm radial engagement. (3) Use a reduced-shank or necked tool with 6mm cutting diameter but thicker shank for rigidity."}
+</code></pre>
+<p>These are generated by prompting an LLM with handbook content and validated rules — Claude/Cursor writes the extractor once.</p>
+<h3 id="channel-3-synthetic-data-generator-llm-pattern-learning">Channel 3: Synthetic Data Generator → LLM Pattern Learning</h3>
+<p>The synthetic data generator doesn't assign tools randomly. It encodes real machining logic that the LLM absorbs as statistical patterns during fine-tuning.</p>
+<pre><code class="language-python"># Inside generate_synthetic_data.py — tool selection is rule-driven
+
+def assign_tools_for_features(features: list, material: str) -&gt; list[ToolStep]:
+    """Encodes real machining logic. Output becomes LLM training labels."""
+    steps = []
+
+    for feat in features:
+        if feat.type == "hole":
+            steps.append(ToolStep(
+                tool="Ø6mm center drill", op="spot_drill",
+                depth=3, rpm=rpm_lookup("center_drill", 6, material)
+            ))
+
+            # Drill: leave 0.2-0.5mm for reaming if tolerance is tight
+            allowance = 0.3 if feat.tolerance &lt; 0.05 else 0
+            drill_dia = feat.diameter - allowance
+            steps.append(ToolStep(
+                tool=f"Ø{drill_dia:.1f}mm twist drill", op="drill",
+                depth=feat.depth,
+                strategy="peck" if feat.depth &gt; drill_dia * 4 else "standard",
+                rpm=rpm_lookup("drill", drill_dia, material),
+                feed=feed_lookup("drill", drill_dia, material)
+            ))
+
+            if feat.tolerance &lt; 0.05:
+                steps.append(ToolStep(
+                    tool=f"Ø{feat.diameter}mm H7 reamer", op="ream",
+                    rpm=rpm_lookup("ream", feat.diameter, material),
+                    feed=feed_lookup("ream", feat.diameter, material),
+                    note="Required for tolerance &lt; ±0.05mm"
+                ))
+
+            if feat.has_thread:
+                steps.append(ToolStep(
+                    tool=f"M{feat.diameter}×{feat.pitch} machine tap",
+                    op="tap",
+                    rpm=rpm_lookup("tap", feat.diameter, material),
+                    note=f"Tap drill was Ø{drill_dia:.1f}mm"
+                ))
+
+        elif feat.type == "pocket":
+            steps.append(ToolStep(
+                tool=f"Ø{feat.width * 0.6:.1f}mm roughing end mill",
+                op="rough_pocket", strategy="adaptive",
+                rpm=rpm_lookup("end_mill", feat.width * 0.6, material),
+                stepover=feat.width * 0.6 * 0.4,
+                note="Rough with large tool for MRR; finish with smaller if corners tight"
+            ))
+
+            # Finish pass with smaller tool if corners are tight
+            if feat.min_corner_radius &lt; feat.width * 0.3:
+                finish_dia = feat.min_corner_radius * 2
+                steps.append(ToolStep(
+                    tool=f"Ø{finish_dia:.1f}mm finish end mill",
+                    op="finish_pocket",
+                    rpm=rpm_lookup("end_mill", finish_dia, material),
+                    stepover=0.5,
+                    note=f"Finish tool sized for R{feat.min_corner_radius}mm corners"
+                ))
+
+    return steps
+
+
+def feeds_speeds_lookup(tool_type: str, dia: float, material: str) -&gt; dict:
+    """Lookup table populated from Machinery's Handbook + manufacturer data."""
+    TABLE = {
+        ("end_mill", "aluminum_6061"): {"sfm": 500, "fpt": 0.05},
+        ("end_mill", "steel_4140"):    {"sfm": 180, "fpt": 0.03},
+        ("end_mill", "stainless_304"): {"sfm": 120, "fpt": 0.025},
+        ("drill", "aluminum_6061"):    {"sfm": 300, "fpt": 0.1},
+        ("drill", "steel_4140"):       {"sfm": 90,  "fpt": 0.06},
+        ("drill", "stainless_304"):    {"sfm": 60,  "fpt": 0.05},
+        ("ream", "aluminum_6061"):     {"sfm": 150, "fpt": 0.08},
+        ("ream", "steel_4140"):        {"sfm": 50,  "fpt": 0.04},
+        # ... full table has 50+ entries per tool type / material combination
+    }
+    return TABLE.get((tool_type, material))
+</code></pre>
+<p><strong>What the LLM learns from 10,000+ such examples:</strong>
+- Tool diameter scales with feature size (not memorized, but proportional)
+- Tight tolerance → reaming/boring pass added
+- Deep features → peck drilling or reduced DOC
+- Small internal corners → finish with smaller tool
+- Harder materials → slower SFM, lighter feed, shallower DOC</p>
+<p>The LLM never sees the <code>feeds_speeds_lookup</code> table. It sees 10,000 examples of "for a Ø12mm hole in 6061, drill at 3000 RPM and 0.15mm/rev" and learns the underlying mapping.</p>
+<h3 id="channel-4-user-feedback-shop-outcomes-continuous-learning">Channel 4: User Feedback + Shop Outcomes → Continuous Learning</h3>
+<p>Once deployed, real-world outcomes close the learning loop:</p>
+<pre><code class="language-python"># Continuous learning feedback loop
+
+class FeedbackCollector:
+    def record_rejection(self, plan: ProcessPlan, reason: str, user: str):
+        """User rejected a plan — learn the pattern."""
+        self.db.insert({
+            "event": "plan_rejected",
+            "plan_id": plan.id,
+            "features": plan.features,
+            "tools": plan.tools,
+            "reason": reason,   # e.g., "4mm end mill will deflect"
+            "user": user,
+            "timestamp": now()
+        })
+        # At next retraining: this plan becomes a NEGATIVE example
+        # LLM learns: "don't pair deep pockets with small-diameter tools"
+
+    def record_shop_outcome(self, plan: ProcessPlan, actual: ShopResult):
+        """Real shop-floor data."""
+        self.db.insert({
+            "event": "plan_executed",
+            "plan_id": plan.id,
+            "actual_time": actual.cycle_time,       # vs predicted_time
+            "actual_cost": actual.total_cost,        # vs predicted_cost
+            "tool_wear": actual.tool_wear_pct,       # update tool life model
+            "quality_pass": actual.inspection_pass,  # was the part good?
+            "issues": actual.issues,                 # surface finish, chatter, etc.
+        })
+        # Update cost models, tool life estimates, parameter adjustments
+
+    def generate_retraining_examples(self) -&gt; list:
+        """Before each retraining cycle, convert feedback into examples."""
+        examples = []
+        for rejection in self.db.get_rejections(since=last_training):
+            examples.append({
+                "instruction": build_instruction(rejection.features),
+                "output": f"AVOID: {rejection.reason}. {rejection.suggested_fix}",
+                "weight": 2.0  # upweight corrections
+            })
+        return examples
+</code></pre>
+<p><strong>Retraining trigger points:</strong>
+- Every 50 user corrections on the same issue pattern
+- Every significant shop outcome divergence (actual time &gt; 2× predicted)
+- Monthly batch: incorporate all feedback since last cycle</p>
+<h3 id="knowledge-acquisition-pipeline-summary">Knowledge Acquisition Pipeline: Summary</h3>
+<pre><code>                      ┌─────────────────────────────┐
+                      │    TOOL CATALOGS (ISO 13399) │
+                      │    Sandvik, Kennametal, OSG   │
+                      └─────────────┬───────────────┘
+                                    │ parse &amp; link
+                                    ▼
+┌──────────────────┐     ┌─────────────────────┐
+│  HANDBOOKS       │     │   KNOWLEDGE GRAPH    │◄──── Initial manual curation
+│  Machinery's Hbk │────▶│   (Neo4j)            │      by domain expert
+│  DFM guides       │     │                      │
+│  ISO standards    │     │  Tools + Materials   │
+└──────────────────┘     │  + Processes + Rules  │
+                          └──────────┬───────────┘
+                                     │
+              ┌──────────────────────┼──────────────────────┐
+              │                      │                      │
+              ▼                      ▼                      ▼
+    ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+    │  RULE ENGINE     │  │  SYNTHETIC DATA │  │  LLM PROMPT     │
+    │  Hard constraints│  │  GENERATOR      │  │  CONTEXT        │
+    │  (never violated)│  │  Encodes rules  │  │  Handbook text  │
+    │                  │  │  into examples  │  │  embedded       │
+    └─────────────────┘  └────────┬────────┘  └─────────────────┘
+                                  │
+                                  ▼
+                        ┌─────────────────┐
+                        │  LLM FINE-TUNING │
+                        │  Learns patterns │
+                        │  from 10k+ ex.   │
+                        └────────┬────────┘
+                                 │
+              ┌──────────────────┼──────────────────┐
+              │                  │                  │
+              ▼                  ▼                  ▼
+    ┌─────────────┐   ┌─────────────┐   ┌─────────────────┐
+    │ USER FEEDBACK│   │ SHOP OUTCOMES│   │ SIMULATION      │
+    │ Plan reject  │   │ Actual time │   │ Feasibility ✓/✗ │
+    │ Corrections  │   │ Tool wear   │   │ Collision check  │
+    └──────┬───────┘   └──────┬──────┘   └────────┬────────┘
+           │                  │                    │
+           └──────────────────┼────────────────────┘
+                              │
+                              ▼
+                    ┌───────────────────┐
+                    │  CONTINUOUS LEARN │
+                    │  Retraining cycle │
+                    │  (monthly / 50    │
+                    │   corrections)     │
+                    └───────────────────┘
+</code></pre>
+<h3 id="key-design-principle">Key Design Principle</h3>
+<p>The LLM is allowed to be creative about tool selection — it can suggest novel combinations. But the <strong>knowledge graph + rule engine act as the gatekeeper</strong>: any tool in the final plan must exist in the graph and satisfy all constraints. This means:</p>
+<ul>
+<li><strong>LLM suggests</strong> → "Use a Ø8mm ball end mill for this organic pocket"</li>
+<li><strong>KG validates</strong> → "Ø8mm ball end mill exists? ✓ Compatible with 6061? ✓ Available on VF2? ✓"</li>
+<li><strong>Rules check</strong> → "Pocket depth 20mm vs tool reach 18mm? ✗ REJECT"</li>
+</ul>
+<p>The LLM provides engineering judgment; the symbolic layer ensures physical and shop-floor reality.</p>
+<h2 id="data-flow-for-training">Data Flow for Training</h2>
+<p>Current verified-pair flow:</p>
+<pre><code>Zero-to-CAD original STEP
+  -&gt; STEP/B-Rep and CadQuery feature evidence
+  -&gt; pure SubCAD generator
+  -&gt; SubCAD execution and generated STEP export
+  -&gt; trusted comparison against original STEP
+  -&gt; accepted train/eval manifest or rejected-attempt manifest
+</code></pre>
+<p>The synthetic/GNN/VLM flow below is retained as future/product training context,
+not the active acceptance gate for the 100k verified SubCAD corpus.</p>
+<pre><code>                    ┌──────────────────────────┐
+                    │  Synthetic Data Generator │
+                    │  (CadQuery scripts)        │
+                    └───────────┬──────────────┘
+                                │
+            ┌───────────────────┼───────────────────┐
+            ▼                   ▼                   ▼
+     STEP files           JSON labels          PNG renders
+            │                   │                   │
+            ▼                   │                   │
+     B-Rep → AAG               │                   │
+            │                   │                   │
+            ▼                   ▼                   ▼
+     ┌─────────────┐   ┌──────────────┐   ┌──────────────┐
+     │ GNN Training │   │  Instruction │   │  Image tokens │
+     │ (supervised) │   │   formatting │   │  for VLM      │
+     └──────┬───────┘   └──────┬───────┘   └──────┬───────┘
+            │                  │                   │
+            │                  └─────────┬─────────┘
+            │                            │
+            │                  ┌─────────▼─────────┐
+            │                  │  Fine-Tuning      │
+            │                  │  (DeepSeek V4 Pro)   │
+            │                  └─────────┬─────────┘
+            │                            │
+            │                  ┌─────────▼─────────┐
+            │                  │   RL via GRPO +    │
+            │                  │   Simulation       │
+            │                  └───────────────────┘
+            ▼
+     Trained Feature
+     Extractor (GNN)
+</code></pre>
+<h2 id="technology-choices-rationale">Technology Choices &amp; Rationale</h2>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Choice</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GNN over 3D CNN for features</td>
+<td>Graph Attention Network</td>
+<td>CAD topology (face adjacency) is naturally a graph; GNNs capture structural dependencies that CNNs miss</td>
+</tr>
+<tr>
+<td>Hybrid symbolic + neural</td>
+<td>Neo4j + LLM</td>
+<td>Hard manufacturing rules (physics, material science) must never be violated; symbolic layer guarantees constraint enforcement</td>
+</tr>
+<tr>
+<td>Multimodal over text-only</td>
+<td>DeepSeek V4 Pro (text)</td>
+<td>Manufacturing features are discrete and numeric — text is the natural representation. 4 renders still generated for human review.</td>
+</tr>
+<tr>
+<td>QLoRA over full fine-tune</td>
+<td>DeepSeek managed fine-tuning API</td>
+<td>No GPU provisioning needed, cost-efficient, simple API</td>
+</tr>
+<tr>
+<td>RL over pure SFT</td>
+<td>GRPO</td>
+<td>Simulation feedback fixes infeasible plans the model would otherwise hallucinate</td>
+</tr>
+<tr>
+<td>Synthetic over real data</td>
+<td>CadQuery scripts</td>
+<td>Real CAD→plan datasets are proprietary and rare; synthetic data with engineered labels is near-free and covers more edge cases</td>
+</tr>
+</tbody>
+</table>
+<h2 id="directory-structure">Directory Structure</h2>
+<pre><code>d2m/
+├── app/
+│   ├── main.py              # Streamlit/Gradio UI entry point
+│   ├── pipeline.py           # Full inference pipeline orchestrator
+│   └── api.py                # REST API (FastAPI)
+├── src/
+│   ├── cad_parser/           # STEP/IGES parsing (pythonOCC/CadQuery)
+│   │   ├── parser.py         # B-Rep → AAG conversion
+│   │   ├── renderer.py       # 4-view PNG generation
+│   │   └── aag.py            # Attributed Adjacency Graph builder
+│   ├── feature_extraction/   # GNN feature recognition
+│   │   ├── model.py          # GAT/AAGNet architecture
+│   │   ├── train.py          # Training script
+│   │   └── inference.py      # Inference wrapper
+│   ├── knowledge_graph/      # Neo4j + rules
+│   │   ├── schema.py         # Graph schema &amp; population
+│   │   ├── rules.py          # DFM / process rules engine
+│   │   └── queries.py        # Common Cypher queries
+│   ├── planner/              # LLM planning
+│   │   ├── train.py          # QLoRA fine-tuning script
+│   │   ├── inference.py      # Plan generation
+│   │   ├── dataset.py        # Synthetic data → training format
+│   │   └── prompts.py        # Prompt templates
+│   ├── optimization/         # Multi-objective optimization
+│   │   ├── genetic.py        # GA for plan optimization
+│   │   └── rl.py             # GRPO RL training
+│   └── simulation/           # Multi-fidelity validation (see docs/simulation.md)
+│       ├── env.py            # Gymnasium CAPPEnv
+│       ├── tier1_rules.py    # Heuristic rule validators
+│       ├── tier2_voxel.py    # Voxel-based CNC simulation
+│       ├── tier3_physics.py  # High-fidelity integration (Phase 2+)
+│       ├── collision.py      # PyBullet collision detection
+│       ├── toolpath.py       # Tool swept volume generation
+│       ├── gcode.py          # G-code parser wrapper
+│       ├── rewards.py        # Reward function definitions
+│       ├── molding_rules.py  # Injection molding heuristics
+│       ├── material_db.py    # Material property lookup tables
+│       └── visualization.py  # Simulation result viz
+├── scripts/
+│   ├── generate_synthetic_data.py  # Synthetic CAD data generator
+│   └── convert_dataset.py    # JSON labels → LLM training format
+├── data/                     # Generated datasets (gitignored)
+├── models/                   # Trained model weights (gitignored)
+├── docs/
+│   ├── architecture.md
+│   └── plan.md
+├── requirements.txt
+└── README.md
+</code></pre>
+<h2 id="inference-flow-production">Inference Flow (Production)</h2>
+<p>Future product path, gated by the verified 100k corpus and reliable comparison
+loop:</p>
+<pre><code>1. User uploads STEP + material + volume → stored in temp/
+2. CAD parser validates file, extracts B-Rep
+3. Renderer generates 4 PNG views
+4. AAG builder creates graph representation
+5. GNN inference extracts features → JSON
+6. Feature JSON + images + material specs → formatted into LLM prompt
+7. LLM generates candidate process plans (top-N, temp=0.7)
+8. Knowledge graph validates each plan against rules; rejects violations
+9. Optimizer ranks surviving plans by cost/time/quality
+10. Optional simulation validates top plan physically
+11. Response returned: ranked plans + DFM notes + explanations
+12. User can ask follow-up questions or request alternatives
+</code></pre>
+<h2 id="scalability-notes">Scalability Notes</h2>
+<ul>
+<li><strong>Inference</strong>: GNN inference (&lt;1s on CPU), LLM generation (5-30s on GPU). Pipeline runs in ~30-60s end-to-end per part.</li>
+<li><strong>Batch mode</strong>: Process multiple parts in parallel for quoting platforms</li>
+<li><strong>Online learning</strong>: Store user corrections + simulation outcomes → periodic retraining</li>
+<li><strong>Model serving</strong>: Single A100 serves 50+ concurrent inference requests via vLLM</li>
+</ul>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

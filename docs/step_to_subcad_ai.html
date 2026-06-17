@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STEP-To-SubCAD AI Model Requirements - d2m</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="architecture.html">docs/architecture.md</a>
+      <a href="plan.html">docs/plan.md</a>
+      <a href="step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="simulation.html">docs/simulation.md</a>
+      <a href="subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../web/README.html">web/README.md</a>
+      <a href="../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/step_to_subcad_ai.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="step-to-subcad-ai-model-requirements">STEP-To-SubCAD AI Model Requirements</h1>
+<p>This note captures the current direction for moving beyond authored SubCAD
+programs toward an AI system that can take a STEP file and generate executable
+SubCAD.</p>
+<h2 id="goal">Goal</h2>
+<p>The target is an AI-assisted translation loop:</p>
+<pre><code class="language-text">STEP file + material + quantity + tolerances/PMI when available
+-&gt; STEP/B-Rep understanding
+-&gt; feature and dimension evidence package
+-&gt; AI SubCAD generator
+-&gt; SubCAD execution
+-&gt; target comparison and manufacturability validation
+-&gt; repair loop
+-&gt; ranked SubCAD programs with time/cost estimates
+</code></pre>
+<p>The output should not be a static process-plan guess. It should be a SubCAD
+program that can execute, export a process plan, compare against the original
+STEP target, surface validation issues, and estimate engineering time/cost.</p>
+<h2 id="current-objective-and-dataset-gate">Current Objective And Dataset Gate</h2>
+<p>The concrete project objective is to train and evaluate a STEP -&gt; pure SubCAD
+model/workflow from at least 100,000 original-STEP-verified Zero-to-CAD pairs.
+Current accepted-pair and planner-capacity status is tracked in
+<code>docs/zero_to_cad_status.md</code>. Planner coverage is only the attempt queue.</p>
+<p>A pair is accepted only when:</p>
+<ul>
+<li>The original Zero-to-CAD <code>model.step</code> is saved as the immutable target.</li>
+<li>Generated code uses pure SubCAD operations and no hybrid geometry escape
+  hatches such as imported opaque B-Rep/mesh reuse, direct CadQuery
+  reconstruction, or skipped unsupported features.</li>
+<li>Generated SubCAD executes, exports a generated STEP, and emits the
+  process-plan, setup, validation, comparison, economics, and provenance
+  artifacts.</li>
+<li>Generated STEP passes original-STEP comparison under the recorded trusted
+  match policy and tolerance.</li>
+<li>The manifest records source split/row/UUID, feature families, runner command,
+  prompt/model id, comparison method, SubCAD/process-plan schema version, and
+  git commit.</li>
+</ul>
+<h2 id="core-decision">Core Decision</h2>
+<p>Use STEP/B-Rep derived data as the source of truth. Use vision as supporting
+evidence.</p>
+<p>Structured geometry should carry exact information:</p>
+<ul>
+<li>Dimensions, positions, radii, depths, volumes, and units.</li>
+<li>Face and edge topology.</li>
+<li>Surface types and adjacency.</li>
+<li>Feature candidates such as holes, pockets, slots, bosses, islands, chamfers,
+  fillets, and datum-like faces.</li>
+<li>Tolerances, material, surface finish, and PMI when available from STEP AP242
+  or external metadata.</li>
+</ul>
+<p>Images and video should help the model and humans understand the part, but
+they should not be trusted as the only source of dimensions. Manufacturing
+requires exact geometry. A visually plausible 6 mm hole in the wrong location
+is still a failed plan.</p>
+<h2 id="why-vision-is-still-useful">Why Vision Is Still Useful</h2>
+<p>Vision is useful when paired with exact geometry:</p>
+<ul>
+<li>It gives the model a fast global sense of orientation and shape.</li>
+<li>It helps identify top/bottom/side setup intuition.</li>
+<li>It makes missing or surprising features easier to notice during review.</li>
+<li>It helps humans debug why the AI chose a plan.</li>
+<li>It may help the repair loop when feature JSON alone is hard to interpret.</li>
+</ul>
+<p>The current recommended evidence format is not "video vs JSON." It is:</p>
+<pre><code class="language-text">JSON for truth.
+Images/video for understanding.
+SubCAD execution for proof.
+Simulation/comparison for trust.
+</code></pre>
+<h2 id="vision-and-dimension-projection">Vision And Dimension Projection</h2>
+<p>We can create a video from a STEP file and overlay dimensions on the shape.
+The important implementation detail is that the dimensions must come from the
+STEP/B-Rep extraction, then be projected into the rendered view.</p>
+<p>For every rendered view or video frame, save a sidecar manifest:</p>
+<pre><code class="language-json">{
+  "frame_id": "top_001",
+  "camera": "top",
+  "features": [
+    {
+      "feature_id": "hole_04",
+      "type": "hole",
+      "screen_bbox": [420, 180, 470, 230],
+      "exact_dimensions": {
+        "diameter_mm": 6.0,
+        "depth_mm": 12.0,
+        "center_mm": [20.0, -15.0, 0.0]
+      }
+    }
+  ]
+}
+</code></pre>
+<p>The overlay should show:</p>
+<ul>
+<li>Overall dimensions.</li>
+<li>Hole diameters, depths, and centers.</li>
+<li>Pocket and slot width, length, depth, and position.</li>
+<li>Feature IDs that match the structured JSON.</li>
+<li>Datum axes and setup-facing hints.</li>
+<li>Hidden or rear-side feature markers when needed.</li>
+</ul>
+<p>This lets the AI consume visual context while still having an exact, auditable
+mapping back to the STEP-derived geometry.</p>
+<h2 id="recommended-architecture">Recommended Architecture</h2>
+<p>Use a staged modular system first. Defer fine-tuning until execution-scored
+data exists.</p>
+<pre><code class="language-text">STEP Parser
+-&gt; B-Rep / AAG Feature Extractor
+-&gt; Evidence Builder
+   -&gt; part_understanding.json
+   -&gt; features.json
+   -&gt; rendered views
+   -&gt; optional turntable video
+   -&gt; view/frame manifest
+-&gt; SubCAD Planning Agent
+-&gt; SubCAD Code Generator
+-&gt; SubCAD REPL Execution
+-&gt; STEP Target Comparison
+-&gt; Validation + Economics
+-&gt; Repair Agent
+</code></pre>
+<p>The AI generator should receive:</p>
+<ul>
+<li><code>part_understanding.json</code>.</li>
+<li>Feature graph JSON.</li>
+<li>Stock, material, setup, machine, and tool inventory context.</li>
+<li>SubCAD API reference.</li>
+<li>Optional rendered images or selected video frames.</li>
+<li>Execution and comparison feedback from earlier attempts.</li>
+</ul>
+<p>The AI should return:</p>
+<ul>
+<li>SubCAD Python program.</li>
+<li>Manufacturing assumptions.</li>
+<li>Unresolved ambiguities.</li>
+<li>Required stock and setup intent.</li>
+<li>Selected tool and fixture intent where possible.</li>
+<li>Validation warnings.</li>
+<li>Time/cost estimate once the plan is executable.</li>
+</ul>
+<h2 id="data-products">Data Products</h2>
+<p>For each STEP input, create a durable evidence directory:</p>
+<pre><code class="language-text">sessions/step_evidence/&lt;sample_id&gt;/
+  input.step
+  part_understanding.json
+  features.json
+  views/
+    top.png
+    front.png
+    side.png
+    iso.png
+    manifest.json
+  turntable.webm
+  generated_subcad.py
+  generated_model.step
+  process_plan.json
+  comparison.json
+  validation.json
+  economics.json
+  manifest.json
+</code></pre>
+<p>This gives us both a product artifact and future training/evaluation data.</p>
+<h2 id="correct-benchmark-flow">Correct Benchmark Flow</h2>
+<p>There are two different dataset flows, and they must not be confused.</p>
+<h3 id="translator-benchmark-flow">Translator benchmark flow</h3>
+<p>This is the immediate proof path for CadQuery/STEP -&gt; SubCAD:</p>
+<pre><code class="language-text">Zero-to-CAD sample
+  cadquery_code.py
+  ops_trace.json
+  original model.step
+-&gt; DeepSeek/LLM translator generates SubCAD
+-&gt; execute generated SubCAD
+-&gt; export generated STEP
+-&gt; compare generated STEP against the original Zero-to-CAD model.step
+-&gt; save generated SubCAD, comparison metrics, validation, economics, and repair history
+</code></pre>
+<p>This is the flow that answers: "Can AI generate SubCAD for an existing CAD
+part?" A candidate only counts as successful if it matches the original target
+STEP from the source dataset, not a STEP produced from the generated SubCAD.</p>
+<p>Implemented runner: <code>python -m src.data.run_zero_to_cad_translations</code>.</p>
+<p>Useful commands:</p>
+<pre><code class="language-bash">python -m src.data.run_zero_to_cad_translations --scan-compatible --source-dir data/zero_to_cad_100k --split train
+python -m src.data.run_zero_to_cad_translations --source-dir data/zero_to_cad_100k --split train --comparison-methods slice --target-successes 100000
+</code></pre>
+<p>Current policy:</p>
+<ul>
+<li>The source artifact for every run is the original Zero-to-CAD STEP bytes saved
+  as <code>original_model.step</code>.</li>
+<li>The translator may converge on volume first, but the batch runner only counts
+  a kept sample after original-STEP comparison passes the trusted match policy.</li>
+<li>Rich comparison applies translation-only bounding-box alignment because
+  Zero-to-CAD and SubCAD use different local origins for the same physical part.</li>
+<li>For the current 2.5D collection pass, <code>--comparison-methods slice</code> is the
+  practical trusted mode. The existing vertex-based SDF is useful feedback but
+  too noisy on sparse STEP tessellations to be the hard gate.</li>
+<li>The compatibility gate is now a typed pure-operation planner. It maps local
+  chamfers/fillets, retained bosses/unions, circle extrusions, shells, revolves,
+  sweeps, lofts, cones, spheres, and arbitrary profiles to explicit SubCAD
+  operation families instead of skipping them up front.</li>
+<li>Planner compatibility is not success. A sample only becomes a kept pair after
+  the generated SubCAD executes and passes original-STEP geometry comparison.</li>
+</ul>
+<p>Current scan and guarded live pilot status are tracked in
+<code>docs/zero_to_cad_status.md</code>.
+The first AI-heavy accepted row is train global index 21963, generated by
+<code>deepseek-chat</code> in one attempt and accepted by the original-STEP trusted policy.
+The same row timed out with <code>deepseek-v4-pro</code>, so the current recommended
+AI-heavy pilot model is <code>deepseek-chat</code>.</p>
+<h2 id="ai-heavy-translation-mode">AI-Heavy Translation Mode</h2>
+<p>The previous guarded pilots leaned heavily on deterministic planner builders.
+That proved the original-STEP verification loop, but it is too slow for the
+100k target. The translator now has <code>translation_mode="ai_heavy"</code> and the CLI
+flag <code>--translation-mode ai_heavy</code>.</p>
+<p>In AI-heavy mode:</p>
+<ul>
+<li>deterministic SubCAD builders are skipped;</li>
+<li>planner candidates are still shown to the model as evidence;</li>
+<li>the model may infer pure SubCAD operations that are absent from the planner
+  when the CadQuery source, operation trace, measures, or STEP dimensions
+  support them;</li>
+<li>feature-family pilots may add <code>--attempt-unsupported</code> so planner-unsupported
+  rows can still be attempted by the model under strict guardrails;</li>
+<li>hybrid/imported geometry and direct CadQuery reconstruction remain forbidden;</li>
+<li>accepted rows still require execution and original-STEP verification.</li>
+</ul>
+<p>Recommended pilot command:</p>
+<pre><code class="language-powershell">python -m src.data.run_zero_to_cad_feature_benchmarks --split train --source-dir data/zero_to_cad_100k --output-dir runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD --accepted-index runs/zero_to_cad_live_pilots/accepted_index.jsonl --manifest-jsonl runs/zero_to_cad_live_pilots/ai_heavy_pilot_YYYYMMDD/attempts.jsonl --execute --executor translator --translation-mode ai_heavy --attempt-unsupported --provider deepseek --model deepseek-chat --comparison-methods volume,mesh,slices --min-mesh-score 95 --target-matches 5 --max-attempts 20 --max-failures 8 --safety-cap 5
+</code></pre>
+<p>The reduction from earlier planner counts is intentional: closed/inaccessible
+shell operations are now rejected as unsupported CNC work instead of counted as
+plannable rows.</p>
+<p>This means the project moved from "few rows can even be attempted" to "most
+rows can be assigned pure operation families." The next proof step is maturing
+each operation family's geometry/toolpaths until original-STEP verification
+passes at scale.</p>
+<p>Geometry-backed pure operation slice:</p>
+<ul>
+<li>Selected-edge chamfer/fillet now route through CadQuery edge selectors.</li>
+<li>Profile pocket/cutout/contour now cut lightweight polygon/circle/rectangle
+  profiles in the B-Rep backend.</li>
+<li>Retained-material operations for profile/cylindrical bosses now remove
+  surrounding stock around retained islands.</li>
+<li>These are still v1 geometry implementations; original-STEP verification is
+  still required before counting translated samples as successful.</li>
+</ul>
+<p>Completed implementation slice:</p>
+<ul>
+<li>Improve profile fidelity for rectangle, circle, polygon, slot/obround,
+  arc-chain, and spline/polyline approximations.</li>
+<li>Add feature-family benchmark reporting so Zero-to-CAD progress is visible by
+  operation family: plannable, attempted, executed, matched, failed, and
+  unsupported.</li>
+<li>Harden translator prompts and repair feedback so generated code stays within
+  pure SubCAD operations and compares against the original STEP target.</li>
+</ul>
+<p>Active next implementation slice:</p>
+<ul>
+<li>Run accepted-index guarded forward scans after the latest verified row and
+  classify each blocker before spending larger live batches.</li>
+<li>Promote deterministic builders for families that repeatedly match original
+  STEP targets: simple profiles, L-brackets, retained ribs, construction
+  patterns, no-op source features, and later thin-wall/turning/surface families.</li>
+<li>Track family metrics for selected, attempted, executed, matched, failed, and
+  unsupported rows before scaling any bucket.</li>
+<li>Maintain accepted-index manifests so previously verified rows count toward
+  the 100k target without re-running paid/live translator calls.</li>
+<li>Track the corpus-capacity gap explicitly in <code>docs/zero_to_cad_status.md</code>;
+  current plannable rows cannot yield 100k accepted pairs unless unsupported
+  families mature or more source STEP rows are added.</li>
+<li>Release training-ready datasets only as versioned manifests that separate
+  accepted original-STEP-verified pairs from failed attempts, manual-review
+  rows, and synthetic/self-generated auxiliary pairs.</li>
+</ul>
+<h3 id="self-generated-subcad-pair-flow">Self-generated SubCAD-pair flow</h3>
+<p>This is only for supervised pretraining and regression data:</p>
+<pre><code class="language-text">generate SubCAD program
+-&gt; execute SubCAD
+-&gt; export STEP
+-&gt; save SubCAD + STEP as a pair
+-&gt; verify by re-executing the same SubCAD and comparing to the saved STEP
+</code></pre>
+<p>This proves the pair is reproducible and internally consistent. It does not
+prove translation quality against Zero-to-CAD or any external STEP file. These
+pairs are useful because they provide clean labels, but they are not a live
+translator success metric.</p>
+<p>Priority order:</p>
+<ol>
+<li>Run the translator benchmark on real Zero-to-CAD samples.</li>
+<li>Keep only execution-scored successful translations for evaluation/training.</li>
+<li>Use self-generated SubCAD pairs as auxiliary supervised data, clearly marked
+   as synthetic/self-generated.</li>
+</ol>
+<h2 id="model-strategy">Model Strategy</h2>
+<p>Start with an agentic multimodal LLM workflow:</p>
+<ol>
+<li>Build exact STEP/B-Rep evidence.</li>
+<li>Generate SubCAD from structured evidence, optionally including images.</li>
+<li>Execute generated SubCAD.</li>
+<li>Compare the generated geometry to the target STEP.</li>
+<li>Feed localized geometry, feature, validation, and economics feedback back to
+   the model.</li>
+<li>Keep the best executable candidate.</li>
+</ol>
+<p>Only fine-tune after we have many successful, execution-scored examples.
+Training on unverified text pairs would create a model that sounds right but
+may not produce manufacturable SubCAD.</p>
+<p>Training readiness requires a frozen accepted-pair index with original STEP
+hashes, generated SubCAD/STEP hashes, comparison policy, prompt/model version,
+runner command, SubCAD schema version, and git commit. Failed attempts and
+repair traces should remain available for feedback-loop learning, but they are
+not part of the primary verified training/evaluation split unless explicitly
+labeled as negative or repair data.</p>
+<h2 id="evaluation">Evaluation</h2>
+<p>Benchmark three input modes:</p>
+<ol>
+<li>Structured JSON only.</li>
+<li>Structured JSON plus still images.</li>
+<li>Structured JSON plus still images plus video frames.</li>
+</ol>
+<p>Measure:</p>
+<ul>
+<li>SubCAD generation success.</li>
+<li>Execution success.</li>
+<li>Target geometry match.</li>
+<li>Missing, extra, shifted, and wrong-size features.</li>
+<li>Validation errors and warnings.</li>
+<li>Number of repair iterations.</li>
+<li>Total time and total cost of the generated plan.</li>
+<li>Whether vision improved or hurt the result.</li>
+</ul>
+<p>Keep video in the AI loop only if it measurably improves setup choice,
+feature recognition, geometry match, or repair speed.</p>
+<h2 id="implementation-notes-for-this-repository">Implementation Notes For This Repository</h2>
+<p>Existing pieces to build on:</p>
+<ul>
+<li><code>src/cad_parser/parser.py</code> already parses STEP geometry features, bounding
+  boxes, volume, and closed-shell status.</li>
+<li><code>src/cad_parser/renderer.py</code> already generates standard views and explicitly
+  leaves room for dimension annotations.</li>
+<li><code>src/simulation/feature_compare.py</code> already contains feature extraction and
+  comparison utilities.</li>
+<li><code>src/data/agentic_translator.py</code> already implements an execution and repair
+  loop for CadQuery-to-SubCAD translation.</li>
+<li>SubCAD now provides process plans, validation, visualization, simulation
+  handoff, and economics output for generated programs.</li>
+</ul>
+<p>The next implementation should add a STEP evidence builder and then adapt the
+existing translator loop to consume STEP evidence instead of CadQuery source.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>Autodesk UV-Net shows why B-Rep/topology-native learning is a strong fit for
+  CAD geometry: https://www.research.autodesk.com/publications/uv-net-learning-from-boundary-representations/</li>
+<li>NIST describes STEP AP242 as a carrier for model-based engineering data,
+  tolerances, and PMI: https://www.nist.gov/publications/portrait-iso-step-tolerancing-standard-enabler-smart-manufacturing-systems</li>
+<li>Recent VLM spatial reasoning benchmarks show that vision models still need
+  care around exact spatial reasoning: https://arxiv.org/abs/2503.19707</li>
+<li>CAD-GPT is a useful reference direction for combining CAD construction with
+  multimodal spatial reasoning: https://huggingface.co/papers/2412.19663</li>
+</ul>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session Notes — 2026-05-19 - d2m</title>
+  <link rel="stylesheet" href="docs/site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="README.html">Home</a>
+      <a href="TODO.html">TODO.md</a>
+      <a href="docs/zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="docs/architecture.html">docs/architecture.md</a>
+      <a href="docs/plan.html">docs/plan.md</a>
+      <a href="docs/step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="docs/simulation.html">docs/simulation.md</a>
+      <a href="docs/subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="docs/subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="docs/subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="web/README.html">web/README.md</a>
+      <a href="machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>SESSION_NOTES_2026-05-19.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="session-notes-2026-05-19">Session Notes — 2026-05-19</h1>
+<h2 id="status-addendum-2026-05-20">Status addendum — 2026-05-20</h2>
+<p>These notes originally captured the work from 2026-05-19. The repository has moved since then, so treat the original "Next Steps" section as historical context, not current status.</p>
+<p>Current verified status:</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Agentic translator non-live test suite</td>
+<td><code>python test_agentic_translator.py</code> passes 55/55. This validates imports, prompts, code extraction, REPL integration, geometry comparison, feedback formatting, and mocked rich-comparison propagation. It does not prove live LLM translation success.</td>
+</tr>
+<tr>
+<td>SubCAD integration</td>
+<td><code>python test_subcad_integration.py</code> passes 39/39. Fluent chains, exports, process-plan JSON, volume monotonicity, immutability, threaded holes, and STEP round trip are covered.</td>
+</tr>
+<tr>
+<td>Fixture/setup integration</td>
+<td><code>python test_fixturing_integration.py</code> passes 19/19. Fixture metadata, setup flip, clearance warning path, JSON round trip, and error handling are covered.</td>
+</tr>
+<tr>
+<td>Simulation bridge</td>
+<td><code>python test_sim_bridge.py</code> now passes 51/51 after fixing tri-dexel mesh initialization and distance accounting.</td>
+</tr>
+</tbody>
+</table>
+<p>Current doc decision:</p>
+<ul>
+<li>SubCAD and the agentic translator should be described as implemented prototype infrastructure with passing non-live tests.</li>
+<li>Simulation should be described as a working prototype path with passing bridge tests, not yet a validated production machining simulator.</li>
+<li>Mesh and feature comparison are no longer just research recommendations; implementation files exist under <code>src/simulation/mesh_compare.py</code> and <code>src/simulation/feature_compare.py</code>, with translator hooks in <code>src/data/agentic_translator.py</code>.</li>
+<li>GNN feature recognition, fine-tuning, product UI, and RL remain roadmap items, not implemented product status.</li>
+</ul>
+<p>Recommended current plan:</p>
+<ol>
+<li>Validate existing mesh and feature comparison feedback on known translated samples.</li>
+<li>Run live translator trials with comparison/simulation signals recorded for scoring.</li>
+<li>Harden simulation beyond the bridge tests: real target meshes, representative toolpaths, gouge/deviation validation, and performance checks.</li>
+<li>Build training/evaluation pairs from execution-scored translations.</li>
+<li>Revisit GNN, fine-tuning, and RL after the executable feedback loop is reliable.</li>
+</ol>
+<h2 id="what-we-built-today">What we built today</h2>
+<h3 id="1-ai-agentic-cadquery-subcad-translator-srcdataagentic_translatorpy">1. AI Agentic CadQuery-&gt;subCAD Translator (<code>src/data/agentic_translator.py</code>)</h3>
+<p>The core infrastructure for translating constructive CadQuery programs into subtractive subCAD programs using an LLM + execution feedback loop.</p>
+<p><strong>Components:</strong></p>
+<ul>
+<li>
+<p><strong><code>LLMClient</code></strong> — unified client supporting DeepSeek (default), Anthropic, and OpenAI backends. Reads API keys from env vars (<code>DEEPSEEK_API_KEY</code>, <code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code>).</p>
+</li>
+<li>
+<p><strong><code>AgenticTranslator</code></strong> — main translation class. The loop:
+  1. Builds a prompt with CadQuery source, ops trace, STEP bbox, measures, and full subCAD API reference
+  2. LLM generates subCAD code
+  3. Code is executed in <code>run_subcad()</code> (the REPL)
+  4. Output is compared to reference STEP via <code>compare_to_reference()</code>
+  5. If mismatch, formatted feedback is sent back to LLM for refinement
+  6. Repeats until convergence or stagnation</p>
+</li>
+<li>
+<p><strong><code>ConvergenceController</code></strong> — replaces fixed <code>max_attempts</code> with a trend-tracking algorithm:</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Trigger</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>success</code></td>
+<td>Volume ratio within tolerance (default 5%)</td>
+</tr>
+<tr>
+<td><code>continue</code></td>
+<td>Error shrinking — still converging toward target</td>
+</tr>
+<tr>
+<td><code>stagnant</code></td>
+<td>3 consecutive attempts with no improvement</td>
+</tr>
+<tr>
+<td><code>diverging</code></td>
+<td>2 consecutive attempts getting worse</td>
+</tr>
+<tr>
+<td><code>execution_failing</code></td>
+<td>3 consecutive syntax/exec errors</td>
+</tr>
+<tr>
+<td><code>safety_cap</code></td>
+<td>20 attempts absolute max</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>
+<p><strong>Prompt builders</strong> — <code>build_system_prompt()</code> (full subCAD API reference), <code>build_user_prompt()</code> (CadQuery code + ops trace + STEP data + measures), <code>build_iteration_prompt()</code> (targeted refinement feedback)</p>
+</li>
+<li>
+<p><strong><code>extract_code()</code></strong> — robust code extraction from LLM responses (handles fenced blocks, bare code, malformed output)</p>
+</li>
+<li>
+<p><strong><code>translate_exploration_sample()</code></strong> — convenience function: point at a sample directory and get a translation</p>
+</li>
+<li>
+<p><strong><code>translate_batch()</code></strong> — batch processing with optional output saving</p>
+</li>
+</ul>
+<h3 id="2-fixed-compare_to_reference-in-subcad_replpy">2. Fixed <code>compare_to_reference()</code> in subcad_repl.py</h3>
+<p>The function was using <code>trimesh.load()</code> for STEP files, which requires the <code>cascadio</code> module (not available). Changed to use CadQuery's built-in STEP importer (<code>geometry.import_step()</code> -&gt; <code>geometry.to_mesh()</code>), with trimesh as fallback for non-STEP formats.</p>
+<h3 id="3-test-suite-test_agentic_translatorpy">3. Test suite (<code>test_agentic_translator.py</code>)</h3>
+<p>42 tests covering:
+- Module imports
+- System prompt contents (all operations documented)
+- Code extraction (fenced, unfenced, bare, malformed)
+- User prompt building (CadQuery code, ops trace, stock dims)
+- Iteration prompt building (feedback + previous code)
+- REPL integration (valid code execution, volume, faces, STEP/STL export)
+- REPL error handling (missing part, syntax errors)
+- Geometry comparison (self-match, cross-part)
+- Feedback formatting
+- Function availability</p>
+<h2 id="research-results-better-shape-comparison-metrics">Research Results: Better Shape Comparison Metrics</h2>
+<p>The research agent explored 4 approaches for going beyond global volume ratio to feature-localized comparison:</p>
+<h3 id="approach-1-cross-sectional-slicing-recommended-2nd">Approach 1: Cross-Sectional Slicing (recommended 2nd)</h3>
+<ul>
+<li>Slice both meshes at regular Z intervals</li>
+<li>Compare cross-sectional area at each Z</li>
+<li>Catches: wrong pocket depth, missing holes at specific Z, profile errors</li>
+<li>Feedback: "At Z=-5.0mm: candidate has 15% MORE area — material uncut"</li>
+<li>APIs: <code>trimesh.Trimesh.section()</code>, <code>Path2D.area</code></li>
+<li>~150 lines</li>
+</ul>
+<h3 id="approach-2-per-vertex-signed-distance-field-recommended-1st">Approach 2: Per-Vertex Signed Distance Field (recommended 1st)</h3>
+<ul>
+<li>Sample reference mesh vertices, compute signed distance to candidate</li>
+<li>Cluster error regions spatially</li>
+<li>Catches: gouges, uncut material, localized shape deviations</li>
+<li>Feedback: "Overcut of 1.2mm near (10, 20, -5) affecting 45 surface points"</li>
+<li>APIs: <code>trimesh.proximity.closest_point()</code>, <code>scipy.spatial.cKDTree</code></li>
+<li>~120 lines</li>
+<li>Note: existing <code>/api/deviation/</code> endpoint already returns per-vertex heatmap data</li>
+</ul>
+<h3 id="approach-3-feature-aware-per-operation-comparison-recommended-3rd-highest-value">Approach 3: Feature-Aware Per-Operation Comparison (recommended 3rd, highest value)</h3>
+<ul>
+<li>Use ops trace / process plan to know what features exist and where</li>
+<li>Extract sub-meshes around each feature region</li>
+<li>Compare per-feature: pocket depth, hole presence, chamfer width</li>
+<li>Feedback: "Hole at (30, 10): diameter 5.8mm instead of 6.0mm — MISSING"</li>
+<li>APIs: <code>cadquery.selectors.BoxSelector</code>, <code>trimesh.proximity</code>, AAG face classifiers</li>
+<li>~200 lines</li>
+<li>Integrates with existing <code>pipeline.py</code> feature extraction and <code>validator.py</code></li>
+</ul>
+<h3 id="approach-4-projected-area-silhouette-fastest-screening">Approach 4: Projected Area / Silhouette (fastest screening)</h3>
+<ul>
+<li>Project both meshes onto XY, XZ, YZ planes</li>
+<li>Compare binary projections</li>
+<li>Catches: missing holes, wrong outer profile, asymmetric cuts</li>
+<li>Feedback: "XY projection missing 3% material near (25, 5)"</li>
+<li>~80 lines</li>
+<li>APIs: <code>scipy.ndimage</code>, <code>scipy.spatial.ConvexHull</code></li>
+</ul>
+<h3 id="summary-matrix">Summary Matrix</h3>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Localizes?</th>
+<th>Lines</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Z-slicing</td>
+<td>By depth</td>
+<td>~150</td>
+<td>Pocket depth, hole-through detection</td>
+</tr>
+<tr>
+<td>2. Per-vertex SDF</td>
+<td>3D clusters</td>
+<td>~120</td>
+<td>Gouges, uncut, surface finish</td>
+</tr>
+<tr>
+<td>3. Feature-aware</td>
+<td>Per operation</td>
+<td>~200</td>
+<td>Wrong dimensions, missing ops, positions</td>
+</tr>
+<tr>
+<td>4. Projections</td>
+<td>2D regions</td>
+<td>~80</td>
+<td>Missing holes, asymmetric profile</td>
+</tr>
+<tr>
+<td>Volume only</td>
+<td>NO</td>
+<td>1</td>
+<td>Nothing useful</td>
+</tr>
+</tbody>
+</table>
+<h3 id="recommended-order-2-sdf-1-z-slicing-3-feature-aware">Recommended order: #2 (SDF) -&gt; #1 (Z-slicing) -&gt; #3 (feature-aware)</h3>
+<h2 id="files-changedcreated">Files changed/created</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/data/agentic_translator.py</code></td>
+<td><strong>Created</strong> — AI agentic translator with convergence controller</td>
+</tr>
+<tr>
+<td><code>src/data/subcad_repl.py</code></td>
+<td><strong>Fixed</strong> — <code>compare_to_reference()</code> uses CadQuery STEP import</td>
+</tr>
+<tr>
+<td><code>test_agentic_translator.py</code></td>
+<td><strong>Created</strong> — 42 self-tests</td>
+</tr>
+</tbody>
+</table>
+<h2 id="historical-next-steps">Historical Next Steps</h2>
+<p>The following list is retained to preserve the 2026-05-19 session history. It is not the current plan verbatim.</p>
+<h3 id="immediate-historical">Immediate (historical)</h3>
+<ol>
+<li><strong>Implement Approach 2 (Per-vertex SDF)</strong> — now represented by <code>src/simulation/mesh_compare.py</code>; current work is validation and integration, not first implementation.</li>
+<li><strong>Implement Approach 1 (Z-slicing)</strong> — now represented by <code>src/simulation/mesh_compare.py</code>; current work is validation and integration, not first implementation.</li>
+<li><strong>Wire richer comparison into agentic translator</strong> — hooks now exist; current work is to validate feedback quality and avoid overclaiming translator success.</li>
+</ol>
+<h3 id="medium-term">Medium-term</h3>
+<ol start="4">
+<li><strong>Implement Approach 3 (Feature-aware)</strong> — integrate with <code>pipeline.py</code> feature extraction and <code>operations.py</code> serialization. This is the endgame: per-operation feedback that tells the LLM exactly which operation to fix.</li>
+<li><strong>Run live translations</strong> — set <code>DEEPSEEK_API_KEY</code> and translate the 5 exploration samples. Measure success rate, iteration count, and convergence behavior. The former simulation bridge blocker is now fixed; the remaining concern is whether the feedback metrics are meaningful on representative samples.</li>
+<li><strong>Scale to dataset</strong> — once success rate is solid on exploration samples, run <code>translate_batch()</code> on the ADSKAILab Zero-To-CAD-100k dataset to generate training pairs.</li>
+</ol>
+<h3 id="eventual">Eventual</h3>
+<ol start="7">
+<li><strong>RL fine-tuning</strong> — use the REPL execution feedback as a reward signal for fine-tuning a code-generation model (Qwen2.5-Coder-7B or similar).</li>
+<li><strong>Multi-setup translation</strong> — handle parts that need flipping (machining from multiple faces).</li>
+</ol>
+<h2 id="how-to-run">How to run</h2>
+<pre><code class="language-python"># Set API key
+import os
+os.environ["DEEPSEEK_API_KEY"] = "sk-..."
+
+# Translate a single sample
+from src.data.agentic_translator import translate_exploration_sample
+result = translate_exploration_sample(
+    "data/zero_to_cad_exploration/sample_1",
+    provider="deepseek",    # or "anthropic", "openai"
+    tolerance=0.05,         # 5% volume match = success
+    stagnation_limit=3,     # give up after 3 non-improving attempts
+)
+
+# Or run the tests
+# python test_agentic_translator.py
+</code></pre>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

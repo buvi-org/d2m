@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SubCAD Operation Video Simulation Plan - d2m</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="architecture.html">docs/architecture.md</a>
+      <a href="plan.html">docs/plan.md</a>
+      <a href="step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="simulation.html">docs/simulation.md</a>
+      <a href="subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../web/README.html">web/README.md</a>
+      <a href="../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/operation_video_simulation_plan.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="subcad-operation-video-simulation-plan">SubCAD Operation Video Simulation Plan</h1>
+<p>Status: V1 foundation partially implemented.</p>
+<p>This plan documents the next SubCAD direction: time-based, realistic operation
+simulation and video output. The goal is to move beyond final STEP geometry and
+static turntable renders into a view of how the raw stock changes during each
+manufacturing operation.</p>
+<h2 id="goal">Goal</h2>
+<p>Given a SubCAD program and process plan, generate an interactive and exportable
+operation video that shows:</p>
+<ul>
+<li>The original stock, fixture/workholding, machine, tool, and target context.</li>
+<li>Material removal or deformation over process time, not just the final part.</li>
+<li>Half-finished states when the timeline is paused or scrubbed.</li>
+<li>Tool changes, setup changes, and machine-to-machine transitions.</li>
+<li>Captions for operations, tools, setups, and process transitions.</li>
+</ul>
+<p>The reference example is a <code>100 x 50 x 50 mm</code> aluminum block where a pocket is
+machined and edges are chamfered. At 50 percent of the pocket operation, the
+viewer should show a semi-finished pocket, not the final pocket.</p>
+<h2 id="chosen-v1-direction">Chosen V1 Direction</h2>
+<p>These defaults are chosen for the first implementation discussion:</p>
+<ul>
+<li>Scope: milling and turning first.</li>
+<li>Output: interactive timeline plus saved video export.</li>
+<li>Fidelity: hybrid realistic.</li>
+</ul>
+<p>Hybrid realistic means real geometric stock updates where the repository already
+has or can reasonably extend a simulation engine, plus believable tool, fixture,
+machine, and process animation around it. Processes without reliable material
+physics in V1 should be clearly labeled as visual approximations.</p>
+<h2 id="implemented-v1-foundation">Implemented V1 Foundation</h2>
+<p>The first implementation slice is now present:</p>
+<ul>
+<li><code>Stock.simulation_timeline(...)</code> returns <code>subcad.simulation_timeline.v1</code>.</li>
+<li><code>Stock.export_simulation_package(...)</code> writes <code>simulation_timeline.json</code>,
+  <code>simulation_states/*.stl</code>, and <code>video_manifest.json</code>.</li>
+<li>The timeline uses seconds, process-plan operations, neutral toolpath moves,
+  and estimated operation time.</li>
+<li>Milling-style material removal can generate mid-operation tri-dexel stock
+  snapshots for scrubbing and playback.</li>
+<li><code>Stock.simulate()</code> now starts from original stock replay instead of the final
+  shape.</li>
+<li><code>web/session-viewer.js</code> loads optional <code>simulation_timeline</code> assets and uses
+  the nearest stock keyframe during playback/scrubbing.</li>
+</ul>
+<p>This is not yet the full factory-video system. Browser recording, headless video
+export, named machine visuals, turning profile simulation, and non-milling
+process adapters remain future phases.</p>
+<h2 id="current-repository-baseline">Current Repository Baseline</h2>
+<p>SubCAD already has several useful building blocks:</p>
+<ul>
+<li>Fluent <code>Stock</code> API with process-plan JSON and setup-sheet export.</li>
+<li>Neutral toolpaths with rapid/feed/plunge/retract/dwell/arc moves.</li>
+<li>Tool, holder, fixture, setup, work-offset, quality, and economics metadata.</li>
+<li>Tri-dexel material-removal structures under <code>src/simulation</code>.</li>
+<li><code>FiveAxisSimulator</code>, material removal, tool geometry, machine models, and
+  browser visualization packages.</li>
+<li><code>web/visualization.html</code> and <code>web/session-viewer.js</code> for Three.js review of
+  stock states, fixtures, tools, toolpaths, and operation metadata.</li>
+<li>Browser WebGPU prototype files under <code>web/sim</code> and <code>web/shaders</code>.</li>
+</ul>
+<p>Latest local checks before this plan was written:</p>
+<ul>
+<li><code>python test_sim_bridge.py</code> passed <code>51/51</code>.</li>
+<li><code>python test_subcad_phase2_toolpaths.py</code> passed <code>154/154</code>.</li>
+<li><code>python test_subcad_visualization.py</code> passed <code>23/23</code>.</li>
+</ul>
+<h2 id="important-gap-to-fix-first">Important Gap To Fix First</h2>
+<p>The current <code>Stock.simulate()</code> bridge initializes tri-dexel simulation from
+<code>self.to_mesh()</code>. On a completed SubCAD chain, that mesh is the final part, not
+the original stock. Operation-video simulation must initialize from the original
+stock state and then replay operations forward.</p>
+<p>Implementation should use one of these sources, in priority order:</p>
+<ul>
+<li>The initial entry in <code>_state_history</code> if present.</li>
+<li>A new explicit initial-stock mesh captured when stock is constructed.</li>
+<li>A reconstructed stock mesh from <code>process_plan.stock_dimensions</code> only as a
+  fallback.</li>
+</ul>
+<p>This gap has been fixed for the current simulation bridge and operation-video
+timeline path. Without this boundary, a video simulation can look plausible
+while being physically wrong.</p>
+<h2 id="cadquery-boundary">CadQuery Boundary</h2>
+<p>Partial operation keyframes are not animated STEP/B-Rep states and should not be
+generated by rerunning CadQuery booleans frame by frame. CadQuery/SubCAD remains
+the final design authority for the finished part and STEP export.</p>
+<p>The operation-video layer is a separate process replay model:</p>
+<ul>
+<li>Start from the original stock mesh.</li>
+<li>Replay process-plan/toolpath/tool metadata over estimated operation time.</li>
+<li>Subtract swept tool volumes in the tri-dexel simulation engine where
+  supported.</li>
+<li>Export visual mesh snapshots for the browser viewer.</li>
+</ul>
+<p>Those snapshots are for visualization and review. They are not a replacement for
+the final STEP file or a production CAM verifier.</p>
+<h2 id="proposed-interfaces">Proposed Interfaces</h2>
+<p><code>Stock.simulation_timeline(...) -&gt; dict</code> is implemented.</p>
+<p>Recommended parameters:</p>
+<ul>
+<li><code>fps=30</code></li>
+<li><code>playback_rate=1.0</code></li>
+<li><code>resolution_mm=0.5</code></li>
+<li><code>keyframe_interval_sec=0.25</code></li>
+<li><code>target=None</code></li>
+<li><code>include_machine=True</code></li>
+<li><code>include_fixtures=True</code></li>
+<li><code>include_process_effects=True</code></li>
+</ul>
+<p>Return schema: <code>subcad.simulation_timeline.v1</code>.</p>
+<p>Core fields:</p>
+<ul>
+<li><code>units</code></li>
+<li><code>source_plan</code></li>
+<li><code>timeline</code></li>
+<li><code>operations</code></li>
+<li><code>tools</code></li>
+<li><code>machines</code></li>
+<li><code>fixtures</code></li>
+<li><code>stock_keyframes</code></li>
+<li><code>captions</code></li>
+<li><code>fidelity</code></li>
+<li><code>performance</code></li>
+</ul>
+<p><code>Stock.export_simulation_package(output_dir, ...) -&gt; dict</code> is implemented.</p>
+<p>This should extend the current visualization package with:</p>
+<ul>
+<li><code>simulation_timeline.json</code></li>
+<li><code>simulation_states/*.stl</code></li>
+<li><code>video_manifest.json</code></li>
+<li>machine, fixture, tool, and effect assets</li>
+<li>a viewer entrypoint for playback and recording</li>
+</ul>
+<p>Add a command-line export path:</p>
+<pre><code class="language-powershell">python -m src.subcad.video_export path\to\scene.json --out output.webm
+</code></pre>
+<p>Browser-native export should default to WebM. MP4 can be added later through
+<code>ffmpeg</code> when available.</p>
+<h2 id="timeline-model">Timeline Model</h2>
+<p>The timeline compiler should convert the process plan into display segments:</p>
+<ul>
+<li><code>setup_transition</code>: move part to a new machine or setup.</li>
+<li><code>tool_change</code>: old tool retracts/exits, new tool enters.</li>
+<li><code>rapid_move</code>: non-cutting positioning.</li>
+<li><code>cutting_move</code>: material-removal motion.</li>
+<li><code>forming_move</code>: press brake or deformation motion.</li>
+<li><code>process_move</code>: welding, EDM, laser, grinding, or other visual process.</li>
+<li><code>inspection_or_pause</code>: optional labeled pauses.</li>
+</ul>
+<p>Segment timing should use authored data in this order:</p>
+<ul>
+<li><code>toolpath_summary.estimated_time_min</code></li>
+<li><code>pass_plan.estimated_time_min</code></li>
+<li>operation economics timing</li>
+<li>polyline length divided by feed rate</li>
+<li>conservative default fallback</li>
+</ul>
+<p>Each segment should include:</p>
+<ul>
+<li>start and end timestamps</li>
+<li>operation sequence number</li>
+<li>machine/setup/tool IDs</li>
+<li>tool pose path</li>
+<li>cutting or non-cutting flag</li>
+<li>stock keyframe references</li>
+<li>caption text</li>
+<li>fidelity label</li>
+</ul>
+<h2 id="simulation-engines">Simulation Engines</h2>
+<h3 id="milling">Milling</h3>
+<p>Use the existing tri-dexel material-removal engine as the main source of truth.
+Replay neutral toolpaths move by move and generate stock keyframes at a fixed
+time interval or after meaningful material changes.</p>
+<p>Default display should show:</p>
+<ul>
+<li>stock mesh changing over time</li>
+<li>fixture and clamps</li>
+<li>spindle, holder, cutter, and optional shank</li>
+<li>toolpath trail</li>
+<li>current operation and pass</li>
+<li>target ghost mesh when useful</li>
+</ul>
+<h3 id="turning">Turning</h3>
+<p>Add a lathe-specific fast path rather than forcing turning into milling logic.
+Represent stock as an axisymmetric radius profile along the spindle axis, then
+revolve it to a display mesh for keyframes.</p>
+<p>Default display should show:</p>
+<ul>
+<li>rotating chuck and stock</li>
+<li>stationary or moving turning tool</li>
+<li>faced ends, OD turning, ID boring, grooves, and threads as progressive
+  profile edits</li>
+</ul>
+<h3 id="other-processes">Other Processes</h3>
+<p>Support the same timeline schema in V1, but use explicit fidelity labels:</p>
+<ul>
+<li>Laser cutting: 2D kerf progression on sheet stock, pierce dwell, glow trail.</li>
+<li>Press brake: punch/die motion and bend-angle interpolation.</li>
+<li>EDM: electrode/wire path, spark effect, progressive removal approximation.</li>
+<li>Surface grinder: wheel pass animation and shallow material-removal bands.</li>
+<li>Welding: torch path, bead deposition visual, heat tint, no structural physics.</li>
+</ul>
+<p>These processes should not pretend to be fully validated physics in V1.</p>
+<h2 id="browser-viewer-and-video-export">Browser Viewer And Video Export</h2>
+<p>Extend the current session viewer to support:</p>
+<ul>
+<li>time scrubber in seconds and percent</li>
+<li>operation list synchronized with timeline</li>
+<li>playback speed control</li>
+<li>current tool, operation, setup, and pass display</li>
+<li>stock state interpolation or keyframe switching</li>
+<li>captions during machine transitions and tool changes</li>
+<li>record/export button</li>
+</ul>
+<p>Video export path:</p>
+<ul>
+<li>Render frames in the browser viewer.</li>
+<li>Capture the canvas through <code>captureStream</code>.</li>
+<li>Encode with <code>MediaRecorder</code> to WebM.</li>
+<li>Use fixed camera and deterministic playback for repeatable output.</li>
+<li>Keep the generated video duration based on estimated process time, with
+  optional speed-up for review videos.</li>
+</ul>
+<p>Target performance for the reference pocket/chamfer case:</p>
+<ul>
+<li>Generate video at least <code>10x</code> faster than output video duration on a capable
+  local machine using the fast path.</li>
+<li>Fall back to lower resolution or CPU simulation with a clear warning if WebGPU
+  is unavailable or too slow.</li>
+</ul>
+<h2 id="phased-implementation">Phased Implementation</h2>
+<h3 id="phase-1-timeline-and-correct-replay">Phase 1: Timeline And Correct Replay</h3>
+<ul>
+<li>Done: fix initial-stock simulation source.</li>
+<li>Done: add <code>simulation_timeline.v1</code> compiler.</li>
+<li>Done: generate mid-operation stock keyframes for milling-style replay.</li>
+<li>Done: export package assets without changing production geometry output.</li>
+<li>Remaining: improve simulation/target tolerance validation and performance
+  profiling on larger representative programs.</li>
+</ul>
+<h3 id="phase-2-interactive-viewer">Phase 2: Interactive Viewer</h3>
+<ul>
+<li>Done: load <code>simulation_timeline.json</code> in the browser.</li>
+<li>Done: add time-based scrub/playback using simulation keyframes.</li>
+<li>Partial: animate tool pose using existing toolpath fallback when timeline
+  segments do not contain enough pose data.</li>
+<li>Remaining: render captions/tool-change/setup-transition overlays as explicit
+  viewer UI.</li>
+<li>Done: keep current static visualization behavior working.</li>
+</ul>
+<h3 id="phase-3-video-export">Phase 3: Video Export</h3>
+<ul>
+<li>Add browser recording.</li>
+<li>Add headless or CLI-driven video export.</li>
+<li>Add deterministic camera presets and frame pacing.</li>
+</ul>
+<h3 id="phase-4-turning">Phase 4: Turning</h3>
+<ul>
+<li>Add lathe stock-profile simulation.</li>
+<li>Render chuck, spindle rotation, turning tools, and progressive profile edits.</li>
+</ul>
+<h3 id="phase-5-process-coverage">Phase 5: Process Coverage</h3>
+<ul>
+<li>Add V1 visual adapters for laser, press brake, EDM, grinder, and welding.</li>
+<li>Label fidelity per process and per segment.</li>
+<li>Promote any process from approximation to real geometry simulation only after
+  tests prove the output.</li>
+</ul>
+<h2 id="testing-and-acceptance">Testing And Acceptance</h2>
+<p>Required tests:</p>
+<ul>
+<li>Timeline compiler creates correct segments for pocket plus chamfer.</li>
+<li>A mid-pocket timestamp shows partially removed material.</li>
+<li>Final simulated stock matches final SubCAD output within tolerance.</li>
+<li>Tool-change segments are inserted when the tool changes.</li>
+<li>Machine/setup transition captions appear when process context changes.</li>
+<li>Browser viewer loads and renders nonblank stock, tool, fixture, and captions.</li>
+<li>Video export produces a playable file.</li>
+<li>Existing simulation, toolpath, and visualization tests remain passing.</li>
+</ul>
+<p>Performance acceptance:</p>
+<ul>
+<li>Reference pocket/chamfer export reaches <code>&gt;=10x</code> generation speed in fast mode.</li>
+<li>CPU or reduced-resolution fallback reports its lower fidelity/performance.</li>
+</ul>
+<h2 id="out-of-scope-for-v1">Out Of Scope For V1</h2>
+<ul>
+<li>Production-certified G-code generation.</li>
+<li>Full cutting-force, heat, chatter, deflection, or coolant physics.</li>
+<li>Exact welding metallurgy or distortion.</li>
+<li>Exact EDM plasma/spark material model.</li>
+<li>Full press-brake springback prediction.</li>
+<li>Full CAM strategy generation beyond the existing neutral toolpath intent.</li>
+</ul>
+<h2 id="open-discussion-points">Open Discussion Points</h2>
+<p>Before implementation, decide:</p>
+<ul>
+<li>Whether review videos should default to real estimated time or a compressed
+  review duration such as <code>10x</code> playback.</li>
+<li>Whether video export must support MP4 immediately or WebM is acceptable first.</li>
+<li>What machine visuals should be modeled first: generic machines, named catalog
+  machines, or both.</li>
+<li>How much UI should live in the existing visualization viewer versus a new
+  simulation-specific page.</li>
+<li>Which process after milling and turning should be promoted from visual
+  approximation to geometric simulation first.</li>
+</ul>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zero-To-CAD Verification Status - d2m</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="architecture.html">docs/architecture.md</a>
+      <a href="plan.html">docs/plan.md</a>
+      <a href="step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="simulation.html">docs/simulation.md</a>
+      <a href="subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../web/README.html">web/README.md</a>
+      <a href="../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/zero_to_cad_status.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="zero-to-cad-verification-status">Zero-To-CAD Verification Status</h1>
+<p>This is the single human-readable status file for live Zero-to-CAD accepted-pair
+counts and planner-capacity snapshots. README, TODO, and roadmap docs should
+link here instead of embedding the live count.</p>
+<p>Last refreshed: 2026-05-22</p>
+<h2 id="accepted-original-step-verified-pairs">Accepted Original-STEP-Verified Pairs</h2>
+<ul>
+<li>Accepted unique pairs: 521</li>
+<li>Accepted records before dedupe: 526</li>
+<li>Duplicates excluded by dedupe key: 5</li>
+<li>Split counts: train 471, val 14, test 36</li>
+<li>Latest source indexes by split: train 80938, val 9615, test 9631</li>
+</ul>
+<p>Acceptance policy:</p>
+<ul>
+<li>Target is the original Zero-to-CAD <code>model.step</code>.</li>
+<li>Dedupe key is <code>source.split + source.uuid</code>.</li>
+<li>A row counts only when <code>accepted == true</code>, <code>status == "matched"</code>, and the
+  strict volume policy passes.</li>
+<li>Default maximum volume error is 5%.</li>
+<li>Volume-only success is rejected.</li>
+</ul>
+<p>Machine-readable local sources:</p>
+<ul>
+<li><code>runs/zero_to_cad_live_pilots/accepted_index.jsonl</code></li>
+<li><code>runs/zero_to_cad_live_pilots/accepted_summary.json</code></li>
+</ul>
+<p>Regenerate with:</p>
+<pre><code class="language-powershell">python -m src.data.build_zero_to_cad_accepted_index --runs-dir runs/zero_to_cad_live_pilots --index-out runs/zero_to_cad_live_pilots/accepted_index.jsonl --summary-out runs/zero_to_cad_live_pilots/accepted_summary.json
+</code></pre>
+<h2 id="planner-capacity-snapshot">Planner Capacity Snapshot</h2>
+<ul>
+<li>Snapshot date: 2026-05-21</li>
+<li>Local Zero-to-CAD rows scanned: 100,516</li>
+<li>Plannable by pure-operation planner: 79,911</li>
+<li>Unsupported by current planner: 20,605</li>
+</ul>
+<p>Planner capacity is only an attempt queue. It is not translation success and it
+does not count toward the accepted dataset until the generated pure SubCAD
+executes and matches the original STEP target.</p>
+<h2 id="update-policy">Update Policy</h2>
+<p>Do not update README, TODO, or roadmap files for every accepted row. Refresh this
+file and the generated JSON summary at meaningful milestones, after strict
+policy changes, or when preparing a dataset release.</p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

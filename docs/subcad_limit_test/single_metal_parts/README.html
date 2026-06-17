@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Single Metal Part Requirements - d2m</title>
+  <link rel="stylesheet" href="../../site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../../../README.html">Home</a>
+      <a href="../../../TODO.html">TODO.md</a>
+      <a href="../../zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="../../architecture.html">docs/architecture.md</a>
+      <a href="../../plan.html">docs/plan.md</a>
+      <a href="../../step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="../../simulation.html">docs/simulation.md</a>
+      <a href="../../subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="../execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../../../web/README.html">web/README.md</a>
+      <a href="../../../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/subcad_limit_test/single_metal_parts/README.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="single-metal-part-requirements">Single Metal Part Requirements</h1>
+<p>This folder contains Stage 2 review candidates generated from the raw SubCAD
+limit-test ideas.</p>
+<p>Current frozen input size: 540 raw ideas from 42 agent files.</p>
+<p>Boundary rule:</p>
+<ul>
+<li>Each requirement describes exactly one metal part.</li>
+<li>The allowed starting forms are sheet, rod, plate, or block.</li>
+<li>Larger products, assemblies, electronics, plastic, rubber, bearings, bushings,
+  springs, bought-out fasteners, labels, and coatings are outside the modeled
+  scope.</li>
+<li>If the raw idea was a multi-part product, the Stage 2 requirement selects one
+  metal part from that product and describes only that part.</li>
+<li>These are English review candidates. After review, accepted entries become
+  immutable product truth for SubCAD program generation.</li>
+</ul>
+<p>Files:</p>
+<ul>
+<li><code>agent_###_*.json</code>: machine-readable Stage 2 requirements for one source agent.</li>
+<li><code>agent_###_*.md</code>: human-readable review copy for the same requirements.</li>
+<li><code>all_single_metal_parts.jsonl</code>: one JSON object per requirement.</li>
+<li><code>manifest.json</code>: file counts, part counts, and generation rule summary.</li>
+</ul>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

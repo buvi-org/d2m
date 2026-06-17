@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SubCAD Program Execution Report - d2m</title>
+  <link rel="stylesheet" href="../site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../../README.html">Home</a>
+      <a href="../../TODO.html">TODO.md</a>
+      <a href="../zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="../architecture.html">docs/architecture.md</a>
+      <a href="../plan.html">docs/plan.md</a>
+      <a href="../step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="../simulation.html">docs/simulation.md</a>
+      <a href="../subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../../web/README.html">web/README.md</a>
+      <a href="../../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/subcad_limit_test/execution_report.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="subcad-program-execution-report">SubCAD Program Execution Report</h1>
+<p>Run date: 2026-06-16</p>
+<h2 id="scope">Scope</h2>
+<p>Executed the standalone Stage 3 Python programs under:</p>
+<p><code>docs/subcad_limit_test/subcad_programs_py/</code></p>
+<p>The runner generated STEP, STL, process-plan JSON, per-program result JSON, and
+summary files under:</p>
+<p><code>runs/subcad_limit_test_execution_full_patched/</code></p>
+<h2 id="mechanical-execution-result">Mechanical Execution Result</h2>
+<ul>
+<li>Python files checked: 540</li>
+<li>Python compile failures: 0</li>
+<li>Runtime failures after patching executable drafts: 0</li>
+<li>STEP exports generated: 540</li>
+<li>STL exports generated: 540</li>
+<li>Process-plan exports generated: 540</li>
+<li>Envelope checks against frozen Stage 2 dimensions: 540 pass, 0 fail</li>
+</ul>
+<p>Summary file:</p>
+<p><code>runs/subcad_limit_test_execution_full_patched/summary.json</code></p>
+<p>Known-gap report:</p>
+<p><code>runs/subcad_limit_test_execution_full_patched/known_gap_report.json</code></p>
+<h2 id="requirement-match-status">Requirement-Match Status</h2>
+<p>The corpus is now mechanically executable, but it is not yet proven to fully
+match the frozen English requirements.</p>
+<p>Reason: every generated program still contains at least one known gap recorded
+in its top-of-file comments. The common categories are:</p>
+<ul>
+<li>Chamfers: global/targeted chamfer support was removed from executable drafts
+  where current SubCAD/OCC chamfering fails on complex generated solids.</li>
+<li>Serrations: triangular serrations are often approximated or omitted when the
+  proxy cut erased or invalidated the solid.</li>
+<li>Side tapped holes: side-axis tapped holes are often represented as top-face
+  threaded-hole proxies.</li>
+<li>Hook lips and projecting/undercut edges: several are represented only as
+  approximations or omitted when the proxy changed the envelope.</li>
+<li>Other feature-form approximations: V-grooves, exact angled exterior faces,
+  opposite-end counterbores, bore-edge chamfers, and similar details require
+  Stage 4 review.</li>
+</ul>
+<h2 id="interpretation">Interpretation</h2>
+<p>This is a useful gate:</p>
+<ul>
+<li>SubCAD can execute all 540 generated draft programs.</li>
+<li>The exporters produced STEP and STL for every program.</li>
+<li>The gross envelope for every output matches the frozen requirement dimensions.</li>
+</ul>
+<p>It is not a final pass:</p>
+<ul>
+<li>Feature-level semantic matching still needs manual/visual review against the
+  Stage 2 requirement text.</li>
+<li>Known gaps should be treated as either <code>agent_error</code>, <code>subcad_gap</code>, or
+  <code>export_or_geometry_bug</code> after review.</li>
+</ul>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

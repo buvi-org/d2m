@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>d2m Web Frontend - d2m</title>
+  <link rel="stylesheet" href="../docs/site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="../docs/zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="../docs/architecture.html">docs/architecture.md</a>
+      <a href="../docs/plan.html">docs/plan.md</a>
+      <a href="../docs/step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="../docs/simulation.html">docs/simulation.md</a>
+      <a href="../docs/subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="../docs/subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="../docs/subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="README.html">web/README.md</a>
+      <a href="../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>web/README.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="d2m-web-frontend">d2m Web Frontend</h1>
+<p>Browser-based 3D viewer for the d2m 5-axis CNC simulator.</p>
+<h2 id="setup">Setup</h2>
+<ol>
+<li>Start the Python backend (from project root):</li>
+</ol>
+<p><code>bash
+   python -m app.api</code></p>
+<p>The FastAPI server starts at <code>http://localhost:8000</code>.</p>
+<ol start="2">
+<li>Serve the frontend (from the <code>web/</code> directory):</li>
+</ol>
+<p><code>bash
+   cd web
+   python -m http.server 8080</code></p>
+<p>Or open <code>web/index.html</code> directly in a browser (some features require a local HTTP server).</p>
+<ol start="3">
+<li>Open <code>http://localhost:8080</code> in a modern browser (Chrome/Firefox recommended).</li>
+</ol>
+<h2 id="usage">Usage</h2>
+<ol>
+<li><strong>Upload meshes</strong>: Drag and drop STL/STEP files for stock and target, or use the file buttons.</li>
+<li><strong>Enter G-code</strong>: Type or paste your G-code program, or drop a <code>.nc</code> file.</li>
+<li><strong>Configure tool</strong>: Select tool type, diameter, and simulation resolution.</li>
+<li><strong>Simulate</strong>: Click "Simulate" to upload meshes, run the simulation, and stream results.</li>
+<li><strong>Playback</strong>: After simulation completes, use the playback controls to step through operations.</li>
+<li><strong>Download</strong>: Export the final machined part as STL or GLB.</li>
+</ol>
+<h2 id="files">Files</h2>
+<ul>
+<li><code>index.html</code> -- Main page layout (dark theme, sidebar + viewport)</li>
+<li><code>style.css</code> -- Dark theme styling</li>
+<li><code>app.js</code> -- Application orchestration (upload, simulation control, UI)</li>
+<li><code>viewer.js</code> -- Three.js 3D viewer module</li>
+<li><code>ws-client.js</code> -- WebSocket client for streaming simulation</li>
+</ul>
+<h2 id="dependencies">Dependencies</h2>
+<p>All loaded from CDN -- no bundler required.</p>
+<ul>
+<li>Three.js 0.160.0 (3D rendering)</li>
+<li>Modern browser with WebGL and ES modules support</li>
+</ul>
+<h2 id="api-backend">API Backend</h2>
+<p>The frontend expects the FastAPI backend at <code>http://localhost:8000</code>. See <code>../app/api.py</code> for the API.</p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WebGPU Compute Shader Architecture for Tri-Dexel Simulation - d2m</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="architecture.html">docs/architecture.md</a>
+      <a href="plan.html">docs/plan.md</a>
+      <a href="step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="simulation.html">docs/simulation.md</a>
+      <a href="subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../web/README.html">web/README.md</a>
+      <a href="../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/webgpu_compute.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="webgpu-compute-shader-architecture-for-tri-dexel-simulation">WebGPU Compute Shader Architecture for Tri-Dexel Simulation</h1>
+<h2 id="1-what-runs-where">1. What Runs Where</h2>
+<h3 id="browser-all-simulation-compute">Browser (ALL simulation compute)</h3>
+<ul>
+<li>WebGPU compute shaders: dexel subtraction, marching cubes surface extraction, gouge/collision detection</li>
+<li>WebGL/Three.js: mesh rendering</li>
+<li>CPU JavaScript: orchestration, buffer management, G-code parsing (lightweight), bounding-box culling, tool pose interpolation</li>
+</ul>
+<h3 id="server-zero-simulation-compute">Server (zero simulation compute)</h3>
+<ul>
+<li>G-code parsing (Python, can optionally run in browser too)</li>
+<li>LLM process planning</li>
+<li>Initial stock STEP-to-dexel conversion (one-time preprocessing)</li>
+<li>Static file serving (HTML, JS, WGSL shaders)</li>
+<li>User authentication / project management</li>
+</ul>
+<h3 id="communication">Communication</h3>
+<ul>
+<li>WebSocket sends parsed G-code blocks + tool definitions to browser</li>
+<li>Browser streams back: simulation progress, deviation stats, collision events</li>
+<li>Alternatively: self-contained static page with embedded G-code for demos</li>
+</ul>
+<hr/>
+<h2 id="2-memory-model">2. Memory Model</h2>
+<h3 id="gpu-buffer-layout">GPU Buffer Layout</h3>
+<p>The tri-dexel data structure maps to GPU storage buffers as follows:</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│  Z-Dexel Grid (XY plane, rays along +Z)                         │
+│                                                                  │
+│  @binding(0) intervals_z:  array&lt;f32&gt;   // packed [s0,e0,s1,e1..]│
+│  @binding(1) columns_z:    array&lt;DexelColumnMeta&gt;               │
+│                                                                  │
+│  DexelColumnMeta {                                               │
+│    interval_offset: u32,  // start index in intervals array      │
+│    interval_count: u32,   // number of [start,end] pairs         │
+│  }                                                               │
+└─────────────────────────────────────────────────────────────────┘
+
+Same layout replicated for X-grid (@binding(0,1) in group 1) and
+Y-grid (@binding(0,1) in group 2).
+
+### Buffer Sizing Rules
+
+- Max intervals per column: 64 (covers complex multi-feature parts)
+- Column buffer size: nu_cells * nv_cells * sizeof(DexelColumnMeta) = nx*ny*8 bytes
+- Interval buffer size: nu_cells * nv_cells * 64 * 2 * 4 bytes = nx*ny*512 bytes
+- For a 512x512 grid at 0.1mm resolution: ~128 MB per grid, ~384 MB total for tri-dexel
+- Resizing: when interval count exceeds capacity, double the intervals buffer and re-pack
+
+### Additional Buffers
+
+</code></pre>
+<p>@binding(2) tool_params:    ToolParams uniform buffer   (48 bytes per tool pose)
+@binding(3) affected_cols:  array<u32>                   (output of CPU culling)
+@binding(4) grid_params:    vec4<f32> uniform            (origin_x, origin_y, res, cols_per_row)</f32></u32></p>
+<pre><code>
+### Output Buffers (Marching Cubes)
+
+</code></pre>
+<p>@binding(0) vertex_buffer:   array<f32>  // x,y,z,nx,ny,nz per vertex
+@binding(1) vertex_count:    atomic<u32>
+@binding(2) index_buffer:    array<u32>
+@binding(3) index_count:     atomic<u32></u32></u32></u32></f32></p>
+<pre><code>
+---
+
+## 3. Dispatch Strategy
+
+### Per-Move Pipeline
+
+For each tool move (G01 block):
+
+1. **CPU**: Parse G-code -&gt; tool pose start/end
+2. **CPU**: Interpolate tool poses (SLERP + linear for 5-axis)
+3. **CPU**: Compute swept bounding box, cull to affected column indices
+4. **CPU**: Serialize tool params to uniform buffer, upload affected column list
+5. **GPU Dispatch 1**: `dexel_subtract_z` (one thread per affected column)
+6. **GPU Dispatch 2**: `dexel_subtract_x` (one thread per affected column)
+7. **GPU Dispatch 3**: `dexel_subtract_y` (one thread per affected column)
+
+For swept volumes (toolpaths longer than resolution):
+- Sample N intermediate poses
+- For each pose sample, dispatch subtract shaders
+- The union happens naturally because each dispatch subtracts from the same buffers
+
+### Workgroup Configuration
+
+</code></pre>
+<p>Workgroup size: 64 (WGSL @workgroup_size(64))
+Dispatch count: ceil(affected_cols.length / 64)</p>
+<p>For 512x512 grid, worst-case affected ≈ 262k columns
+  = 4096 workgroups per dispatch
+  = ~4M GPU threads per move (3 dispatches)</p>
+<pre><code>
+### Synchronization
+
+- Each dispatch must complete before the next begins (GPU fence / pipeline barrier)
+- Between Z/X/Y subtract dispatches: no dependency (they modify different buffer groups)
+  - Can run in parallel if using separate bind groups
+
+---
+
+## 4. Shader Pipeline
+
+### Shader 1: `dexel_subtract.wgsl`
+
+**Purpose**: Core material removal. For each dexel column, compute ray-tool intersection intervals and subtract from existing intervals.
+
+**Input**: Dexel interval buffer, column metadata, tool params, affected column indices, grid params
+
+**Output**: Updated dexel interval buffer + column metadata (in-place)
+
+**Key Functions** (mapped to Python source):
+- `ray_ball_endmill_intersection()` -&gt; Python `BallEndmill.ray_intersection()` (tools.py:520)
+- `ray_flat_endmill_intersection()` -&gt; Python `FlatEndmill.ray_intersection()` (tools.py:450)
+- `ray_bullnose_intersection()` -&gt; Python `BullNoseEndmill.ray_intersection()` (tools.py:587)
+- `ray_drill_intersection()` -&gt; Python `Drill.ray_intersection()` (tools.py:673)
+- `subtract_intervals_in_place()` -&gt; Python `DexelColumn.subtract()` (tri_dexel.py:107)
+- `world_to_tool()` -&gt; Python `world_to_tool()` (swept_volume.py:53)
+- `ray_cylinder()` -&gt; Python `_ray_cylinder()` (tools.py:58)
+- `ray_sphere()` -&gt; Python `_ray_sphere()` (tools.py:159)
+- `ray_cone()` -&gt; Python `_ray_cone()` (tools.py:218)
+- `ray_disc()` -&gt; Python `_ray_disc()` (tools.py:278)
+- `solve_quadratic()` -&gt; Python `_solve_quadratic()` (tools.py:24)
+
+**Data flow per thread**:
+1. Read `col_idx` from `affected_cols[gid.x]`
+2. Read column metadata: `interval_offset`, `interval_count`
+3. Compute ray origin in world coords from grid params + col_idx
+4. Transform ray to tool-local via tool pose
+5. Dispatch to tool-specific intersection function -&gt; up to 4 entry/exit pairs
+6. For each existing interval in column, apply 5-case subtraction
+7. Write surviving intervals back to packed buffer
+8. Update `interval_count` in column metadata
+
+### Shader 2: `marching_cubes.wgsl`
+
+**Purpose**: Extract surface mesh from dexel interval data.
+
+**Algorithm**: 
+- For each non-empty column in Z-grid, emit surface vertices at interval boundaries
+- Entry point of first interval = surface facing -Z (ray origin side)
+- Exit point of last interval = surface facing +Z
+- Internal entry/exit pairs = internal cavities/walls
+- Each vertex: position + normal (6 floats)
+- Build index buffer connecting adjacent columns into triangles
+- Merge vertices from X and Y grids (done on CPU after readback, for simplicity)
+
+**Input**: Z dexel intervals + column metadata, X dexel intervals, Y dexel intervals
+
+**Output**: Vertex buffer (position + normal interleaved), index buffer, atomic counters
+
+### Shader 3: `collision_detect.wgsl`
+
+**Purpose**: Detect tool-machine collisions using SDF distance checks.
+
+**Input**: Tool pose, machine component SDFs in buffers
+
+**Output**: Collision flag + penetration depth per collision pair
+
+---
+
+## 5. Data Flow
+
+</code></pre>
+<p>G-code file
+    │
+    ▼
+┌──────────────────┐
+│  CPU: G-code     │  JavaScript parser (web/sim/gcode.js)
+│  Parser          │  Modal state tracking, returns parsed moves
+└──────┬───────────┘
+       │  [{motion: "G01", X:10, Y:20, Z:-5, A:0, B:30, C:0}, ...]
+       ▼
+┌──────────────────┐
+│  CPU: Tool Pose  │  Interpolate start-&gt;end poses for swept volumes
+│  Interpolation   │  Compute swept bounding box (AABB)
+└──────┬───────────┘
+       │  ToolParams + affected column indices
+       ▼
+┌──────────────────┐
+│  GPU: Dexel      │  Compute shader dispatch (3x, one per axis)
+│  Subtraction     │  Each thread: ray-tool intersect + interval subtract
+└──────┬───────────┘
+       │  Updated dexel buffers (on GPU)
+       ▼
+┌──────────────────┐
+│  GPU: Marching   │  Surface extraction compute shader
+│  Cubes           │  Emit vertex/index buffers
+└──────┬───────────┘
+       │  Vertex buffer + Index buffer (GPU -&gt; CPU readback)
+       ▼
+┌──────────────────┐
+│  CPU -&gt; GPU:     │  Upload vertex/index buffers to WebGL
+│  Three.js Render │  Render mesh, tool animation, deviation heatmap
+└──────────────────┘
+```</p>
+<hr/>
+<h2 id="6-performance-targets">6. Performance Targets</h2>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Target</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3-axis single move (no sweep)</td>
+<td>&lt;10ms GPU time</td>
+<td>512x512 grid, ball endmill</td>
+</tr>
+<tr>
+<td>5-axis single move (no sweep)</td>
+<td>&lt;30ms GPU time</td>
+<td>Includes pose interpolation overhead</td>
+</tr>
+<tr>
+<td>5-axis swept move (10 samples)</td>
+<td>&lt;50ms GPU time</td>
+<td>10x dispatch overhead</td>
+</tr>
+<tr>
+<td>Marching cubes (512x512 grid)</td>
+<td>&lt;20ms GPU time</td>
+<td>Surface extraction + vertex/index generation</td>
+</tr>
+<tr>
+<td>Total frame budget</td>
+<td>&lt;50ms</td>
+<td>For interactive playback at 20fps</td>
+</tr>
+<tr>
+<td>Buffer readback (2M vertices)</td>
+<td>&lt;5ms</td>
+<td>GPU-&gt;CPU transfer for mesh update</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scaling-notes">Scaling Notes</h3>
+<ul>
+<li>Workload scales linearly with grid resolution^2</li>
+<li>Each additional dexel direction adds ~33% compute</li>
+<li>Swept volumes scale linearly with sample count</li>
+<li>WebGPU overhead per dispatch: ~0.1-0.5ms (amortized over thousands of threads)</li>
+</ul>
+<hr/>
+<h2 id="7-error-handling-debugging">7. Error Handling &amp; Debugging</h2>
+<h3 id="shader-debugging">Shader Debugging</h3>
+<ul>
+<li><code>device.pushErrorScope('validation')</code> before each dispatch</li>
+<li><code>device.popErrorScope()</code> after to catch shader compilation/validation errors</li>
+<li>WGSL <code>debugPrintf</code> (where available) for printf-style debugging</li>
+<li>Compare GPU output against Python reference for identical inputs</li>
+</ul>
+<h3 id="buffer-overflow-handling">Buffer Overflow Handling</h3>
+<ul>
+<li>Pre-allocate generous interval capacity (64 intervals/column)</li>
+<li>On overflow: resize buffer, re-pack, re-dispatch</li>
+<li>Track max interval count per grid for adaptive sizing</li>
+</ul>
+<h3 id="fallback-paths">Fallback Paths</h3>
+<ul>
+<li>If WebGPU unavailable: fall back to Architecture B (WASM) or Architecture A (server)</li>
+<li>If GPU OOM: reduce grid resolution, retry</li>
+<li>If shader compilation fails: report error to user with WGSL source</li>
+</ul>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

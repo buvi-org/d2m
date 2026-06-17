@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Machine Library - d2m</title>
+  <link rel="stylesheet" href="../docs/site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="../docs/zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="../docs/architecture.html">docs/architecture.md</a>
+      <a href="../docs/plan.html">docs/plan.md</a>
+      <a href="../docs/step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="../docs/simulation.html">docs/simulation.md</a>
+      <a href="../docs/subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="../docs/subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="../docs/subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../web/README.html">web/README.md</a>
+      <a href="README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>machines/README.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="machine-library">Machine Library</h1>
+<p>This directory contains machine definition files for the d2m 5-axis CNC simulator. Each <code>.json</code> file defines a complete CNC machine using the Vericut-style scene-graph component tree format.</p>
+<h2 id="using-a-machine-definition">Using a Machine Definition</h2>
+<pre><code class="language-python">from src.simulation.machine import MachineModel
+from src.simulation.simulator import FiveAxisSimulator
+
+# Load a machine from its JSON definition
+machine = MachineModel.from_json("machines/dmg_dmu50.json")
+
+# Use it in the simulator
+sim = FiveAxisSimulator(stock_mesh, target_mesh, machine)
+</code></pre>
+<h2 id="available-machines">Available Machines</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Machine</th>
+<th>Type</th>
+<th>Travels (X/Y/Z)</th>
+<th>Rotary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dmg_dmu50.json</code></td>
+<td>DMG MORI DMU 50</td>
+<td>5-axis BC trunnion</td>
+<td>500/450/400 mm</td>
+<td>B: -35 to +110 deg, C: 360 deg continuous</td>
+</tr>
+<tr>
+<td><code>haas_umc750.json</code></td>
+<td>Haas UMC-750</td>
+<td>5-axis BC trunnion</td>
+<td>762/508/508 mm</td>
+<td>B: -35 to +120 deg, C: 360 deg continuous</td>
+</tr>
+<tr>
+<td><code>generic_3axis.json</code></td>
+<td>Generic 3-Axis VMC</td>
+<td>3-axis vertical mill</td>
+<td>600/400/350 mm</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<h2 id="creating-your-own-machine-definition">Creating Your Own Machine Definition</h2>
+<h3 id="step-1-understand-the-component-tree">Step 1: Understand the Component Tree</h3>
+<p>A CNC machine is modeled as a <strong>scene graph</strong> (component tree). Each node represents a physical component of the machine. The tree structure defines the kinematic chain:</p>
+<pre><code>Bed (root)
+  ├── Column -&gt; Z Axis -&gt; Spindle -&gt; Tool Mount    (tool chain)
+  └── Y Axis -&gt; X Axis -&gt; B Axis -&gt; C Axis -&gt; Fixture Mount  (workpiece chain)
+</code></pre>
+<h3 id="step-2-gather-machine-specifications">Step 2: Gather Machine Specifications</h3>
+<p>You need the following information about your machine:
+- <strong>Axis travels</strong> (X, Y, Z limits in mm)
+- <strong>Rotary axis ranges</strong> (A, B, C limits in degrees)
+- <strong>Rapid traverse speeds</strong> (mm/min)
+- <strong>Spindle specs</strong> (max RPM, power, torque, tool interface)
+- <strong>Physical dimensions</strong> (for component offsets)
+- <strong>Tool change position</strong> (absolute machine coordinates)
+- <strong>Home position</strong> (where the machine powers up)
+- <strong>Work offset defaults</strong> (typical G54 values)</p>
+<h3 id="step-3-write-the-json-file">Step 3: Write the JSON File</h3>
+<p>Create a new <code>.json</code> file following this structure:</p>
+<pre><code class="language-json">{
+  "name": "Your Machine Name",
+  "version": "1.0",
+  "description": "Brief description of the machine",
+  "manufacturer": "Manufacturer Name",
+  "model": "Model Number",
+
+  "components": [
+    {
+      "id": "unique_component_id",
+      "type": "static | linear_axis | rotary_axis | spindle | tool_mount | fixture_mount | stock_mount",
+      "parent": "parent_component_id or null (for root)",
+      "label": "Human-readable name",
+      "mesh": "relative/path/to/component.stl or null",
+      "transform": [x_mm, y_mm, z_mm, rx_deg, ry_deg, rz_deg],
+
+      "_axis_specific (only for linear_axis/rotary_axis)": "",
+      "axis": "X | Y | Z | A | B | C",
+      "limits": [min, max],
+      "max_feed": 30000,
+      "rapid_feed": 50000,
+      "max_rpm": 100,
+      "continuous": false,
+      "pivot_offset": [x, y, z],
+
+      "_spindle_specific": "",
+      "max_power_kw": 25,
+      "max_torque_nm": 100,
+      "spindle_nose_to_gauge_mm": 50
+    }
+  ],
+
+  "collision_groups": {
+    "group_name": ["component_id_1", "component_id_2"]
+  },
+
+  "collision_pairs": [
+    {
+      "group_a": "group_name_or_stock",
+      "group_b": "group_name_or_stock",
+      "clearance_mm": 2.0,
+      "check_type": "static | during_cut | near_miss | rapid_only",
+      "warn_clearance_mm": 5.0
+    }
+  ],
+
+  "home_position": [x, y, z, a, b, c],
+  "tool_change_position": [x, y, z, a, b, c],
+
+  "axis_priority": ["Z"],
+  "retract_axis": "Z",
+
+  "work_offset_defaults": {
+    "G54": [x, y, z, a, b, c]
+  },
+
+  "kinematic_chain": {
+    "tool_chain": ["leaf_to_root_component_ids"],
+    "workpiece_chain": ["leaf_to_root_component_ids"]
+  }
+}
+</code></pre>
+<h3 id="step-4-understand-component-types">Step 4: Understand Component Types</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+<th>Required Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>static</code></td>
+<td>Non-moving structural part (bed, column, frame)</td>
+<td><code>id</code>, <code>type</code>, <code>parent</code></td>
+</tr>
+<tr>
+<td><code>linear_axis</code></td>
+<td>Translation axis (X, Y, Z)</td>
+<td>+ <code>axis</code>, <code>limits</code>, <code>max_feed</code></td>
+</tr>
+<tr>
+<td><code>rotary_axis</code></td>
+<td>Rotation axis (A, B, C)</td>
+<td>+ <code>axis</code>, <code>limits</code>, <code>max_feed</code></td>
+</tr>
+<tr>
+<td><code>spindle</code></td>
+<td>Spindle cartridge/housing</td>
+<td>+ <code>max_rpm</code></td>
+</tr>
+<tr>
+<td><code>tool_mount</code></td>
+<td>Tool holder interface (HSK, BT, SK)</td>
+<td>None additional</td>
+</tr>
+<tr>
+<td><code>fixture_mount</code></td>
+<td>Fixture/vise attachment point</td>
+<td>None additional</td>
+</tr>
+<tr>
+<td><code>stock_mount</code></td>
+<td>Raw stock attachment (optional)</td>
+<td>None additional</td>
+</tr>
+</tbody>
+</table>
+<h3 id="step-5-determine-component-transforms">Step 5: Determine Component Transforms</h3>
+<p>The <code>transform</code> field positions each component relative to its parent:
+- <code>[x, y, z]</code>: Translation in mm
+- <code>[rx, ry, rz]</code>: Euler rotation in degrees (ZYX intrinsic order)</p>
+<p>Start at the bed (root, transform = [0, 0, 0, 0, 0, 0]) and work outward:
+1. Column: offset from bed to column base
+2. Z-axis: offset to the Z-axis head at its top position (Z=0 is fully retracted)
+3. Spindle: offset from Z-axis saddle to spindle center
+4. Tool mount: offset from spindle nose to tool interface gauge line
+5. Y-axis: offset to Y-axis saddle center
+6. X-axis: offset to X-axis table center (from Y-axis)
+7. Rotary axes: offset to pivot center
+8. Fixture mount: offset from rotary table surface to fixture reference plane</p>
+<h3 id="step-6-set-up-collision-groups-and-pairs">Step 6: Set Up Collision Groups and Pairs</h3>
+<p>Collision groups are named sets of component IDs:</p>
+<pre><code class="language-json">{
+  "tool_group": ["tool_mount"],
+  "spindle_group": ["spindle", "z_axis", "column"],
+  "table_group": ["c_axis", "b_axis", "x_axis", "y_axis"]
+}
+</code></pre>
+<p>Collision pairs declare which groups should be checked against each other:</p>
+<pre><code class="language-json">[
+  {"group_a": "spindle_group", "group_b": "table_group", "clearance_mm": 5.0, "check_type": "static"},
+  {"group_a": "tool_group", "group_b": "stock", "clearance_mm": 0.0, "check_type": "during_cut"}
+]
+</code></pre>
+<p>The special group name <code>"stock"</code> refers to the dynamic stock mesh during simulation.</p>
+<h3 id="step-7-add-stl-meshes-optional-but-recommended">Step 7: Add STL Meshes (Optional but Recommended)</h3>
+<p>Place STL files in a subdirectory named after your machine:</p>
+<pre><code>machines/
+  dmg_dmu50/
+    bed.stl
+    column.stl
+    z_saddle.stl
+    spindle_head.stl
+    y_saddle.stl
+    x_table.stl
+    b_trunnion.stl
+    c_table.stl
+</code></pre>
+<p>If <code>mesh</code> is <code>null</code>, the component has no geometry and is a pure transform node. This is typical for <code>tool_mount</code> and <code>fixture_mount</code> which are logical attachment points.</p>
+<p>For collision detection performance, you can specify a simplified mesh:</p>
+<pre><code class="language-json">{
+  "mesh": "spindle_head.stl",
+  "collision_mesh": "spindle_head_convex.stl"
+}
+</code></pre>
+<h3 id="step-8-verify-your-definition">Step 8: Verify Your Definition</h3>
+<p>Load the machine and run basic checks:</p>
+<pre><code class="language-python">machine = MachineModel.from_json("machines/my_machine.json")
+
+# Check that all components form a valid tree
+for comp in machine.components.values():
+    print(f"{comp.id}: type={comp.component_type.value}, parent={comp.parent_id}")
+
+# Verify FK works at home
+pose = machine.compute_forward_kinematics(machine.home_position)
+print(f"Home pose: {pose}")
+
+# Run FK-IK roundtrip
+joints = np.array([50.0, 0.0, -100.0, 0.0, 15.0, 30.0])
+pose = machine.compute_forward_kinematics(joints)
+recovered = machine.compute_inverse_kinematics(pose)
+print(f"Roundtrip axis error: {np.linalg.norm(machine.compute_forward_kinematics(recovered).tool_axis - pose.tool_axis)}")
+</code></pre>
+<h2 id="machine-specific-notes">Machine-Specific Notes</h2>
+<h3 id="dmg-dmu-50">DMG DMU 50</h3>
+<ul>
+<li>The B-axis trunnion tilts from -35 to +110 degrees</li>
+<li>Table diameter: 630 mm</li>
+<li>Max workpiece: 630 x 400 mm</li>
+<li>Tool interface: HSK-A63</li>
+<li>Typical application: complex 5-axis workpieces, medical, aerospace</li>
+<li>Spindle nose to table center: ~280 mm (at B=0)</li>
+<li>Known to be "stiff" with good dynamic performance</li>
+</ul>
+<h3 id="haas-umc-750">Haas UMC-750</h3>
+<ul>
+<li>B-axis tilts from -35 to +120 degrees</li>
+<li>Table diameter: 500 mm</li>
+<li>Max table load: 300 kg</li>
+<li>Tool interface: BT40</li>
+<li>Typical application: job shop 5-axis work, mold bases</li>
+<li>Platter (C-axis table surface) is ~60 mm above the B-axis pivot</li>
+<li>Good value proposition for entry-level 5-axis</li>
+</ul>
+<h3 id="generic-3-axis-vmc">Generic 3-Axis VMC</h3>
+<ul>
+<li>No rotary axes (3 linear axes only)</li>
+<li>Standard C-frame vertical mill configuration</li>
+<li>Useful as a template for creating custom 3-axis machine definitions</li>
+<li>Can be modified to represent bridge mills, gantry mills, etc.</li>
+</ul>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<p><strong>Q: My machine loads but FK gives wrong tool orientation.</strong>
+A: Check that the <code>kinematic_chain.tool_chain</code> and <code>kinematic_chain.workpiece_chain</code> list the correct component IDs in leaf-to-root order. Verify that your rotary axes have the correct <code>axis</code> letter (A/B/C).</p>
+<p><strong>Q: Collision checking doesn't find any collisions.</strong>
+A: Verify that your <code>collision_groups</code> contain valid component IDs and that the components have <code>mesh</code> paths pointing to existing STL files.</p>
+<p><strong>Q: IK returns None for a valid pose.</strong>
+A: The pose may be unreachable due to axis limits or the machine's kinematic configuration. Check your axis <code>limits</code> values and ensure all active axes are correctly declared.</p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

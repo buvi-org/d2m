@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SubCAD Limit-Test Corpus - d2m</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="architecture.html">docs/architecture.md</a>
+      <a href="plan.html">docs/plan.md</a>
+      <a href="step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="simulation.html">docs/simulation.md</a>
+      <a href="subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../web/README.html">web/README.md</a>
+      <a href="../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/subcad_limit_test_corpus.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="subcad-limit-test-corpus">SubCAD Limit-Test Corpus</h1>
+<p>This corpus is intended to test whether SubCAD can represent real mechanical
+product intent without weakening the requirement to match current SubCAD
+capabilities.</p>
+<h2 id="non-negotiable-rule">Non-Negotiable Rule</h2>
+<p>The first English requirement for a part is the source of truth. After a part
+description is frozen, later stages must not dilute, simplify, reinterpret, or
+change it to accommodate shortcomings in SubCAD, generation agents, exporters,
+viewers, or comparison tooling.</p>
+<p>If SubCAD cannot represent a frozen requirement, the result is a SubCAD gap.
+The requirement stays intact.</p>
+<h2 id="corpus-stages">Corpus Stages</h2>
+<h3 id="stage-1-raw-product-ideas">Stage 1: Raw Product Ideas</h3>
+<p>Create raw product ideas before any concrete part requirements are written.</p>
+<p>The original target was 1000 ideas. On 2026-06-16 the working Stage 1 corpus
+was frozen at 540 ideas by user decision because that was enough coverage to
+begin part expansion.</p>
+<ul>
+<li>Use independent agent assignments.</li>
+<li>Initial batches used 10 ideas per agent.</li>
+<li>The last active generation batch size was 30 different product ideas per
+  agent so the corpus could cover more ground faster.</li>
+<li>Future corpus expansion may continue in 30-idea batches, but the current
+  frozen Stage 1 set is 540 ideas.</li>
+<li>Count progress by completed agent outputs, not by edited or curated ideas.</li>
+<li>Every idea must include:</li>
+<li><code>idea_title</code></li>
+<li><code>product_context</code></li>
+<li><code>core_function</code></li>
+<li><code>likely_main_part</code></li>
+<li><code>why_it_tests_cad_representation</code></li>
+<li>Raw ideas are not yet concrete part specifications.</li>
+<li>Raw ideas must preserve the agent/domain provenance.</li>
+<li>Do not write SubCAD code in this stage.</li>
+<li>Do not filter ideas by current SubCAD capability.</li>
+<li>Do not begin Stage 2 until the current Stage 1 idea set is frozen.</li>
+</ul>
+<h3 id="stage-2-concrete-mechanical-part-requirements">Stage 2: Concrete Mechanical Part Requirements</h3>
+<p>Expand each raw product idea into one concrete mechanical part.</p>
+<p>The Stage 2 scope is deliberately narrower than the full product idea:</p>
+<ul>
+<li>Each requirement must describe exactly one metal part.</li>
+<li>The part must be made from sheet, rod, plate, or block stock.</li>
+<li>If the raw idea describes a multi-part product, choose one metal part from
+  that product and specify only that part.</li>
+<li>Do not include assemblies, fasteners, bearings, springs, bushings, rubber,
+  plastic, electronics, labels, adhesives, coatings as geometry, or bought-out
+  items.</li>
+</ul>
+<p>Each expanded part must include:</p>
+<ul>
+<li>Material and manufacturing context.</li>
+<li>Overall envelope and stock assumptions.</li>
+<li>Complete dimensions in millimeters.</li>
+<li>Datum orientation and coordinate convention.</li>
+<li>All functional features with positions, sizes, depths, radii, chamfers, and
+  clearances.</li>
+<li>Required holes, bores, pockets, slots, grooves, ribs, pads, profiles, threads,
+  tapers, angled faces, repeating patterns, and surface details.</li>
+<li>Tolerances where they matter.</li>
+<li>Explicit acceptance checklist.</li>
+<li>Explicit negative requirements: things the generated part must not contain,
+  omit, approximate away, or move.</li>
+</ul>
+<p>The expanded English text becomes immutable once reviewed.</p>
+<h3 id="stage-3-subcad-program-generation">Stage 3: SubCAD Program Generation</h3>
+<p>Agents generate SubCAD code from the frozen English part requirement.</p>
+<ul>
+<li>The frozen English requirement is the only product truth.</li>
+<li>Agents may inspect SubCAD API documentation.</li>
+<li>Agents must not alter the requirement.</li>
+<li>Agents must not replace a hard feature with an easier one.</li>
+<li>Agents must not use imported opaque geometry as a shortcut.</li>
+</ul>
+<h3 id="stage-4-execution-and-manual-review">Stage 4: Execution And Manual Review</h3>
+<p>For each SubCAD program:</p>
+<ul>
+<li>Execute the program.</li>
+<li>Export STEP and STL.</li>
+<li>Generate high-resolution turntable review media.</li>
+<li>Review the result manually against the original frozen English requirement.</li>
+<li>Record pass/fail per acceptance checklist item.</li>
+<li>Record SubCAD language gaps separately from agent mistakes.</li>
+</ul>
+<h2 id="result-categories">Result Categories</h2>
+<ul>
+<li><code>pass</code>: The generated part matches the frozen requirement.</li>
+<li><code>agent_error</code>: SubCAD could likely represent the requirement, but the generated
+  program is wrong.</li>
+<li><code>subcad_gap</code>: The requirement is clear, but SubCAD cannot express it correctly.</li>
+<li><code>export_or_geometry_bug</code>: The SubCAD program expresses the intent, but STEP,
+  STL, mesh, or visualization output is wrong.</li>
+<li><code>review_blocked</code>: Manual review cannot decide with current artifacts.</li>
+</ul>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

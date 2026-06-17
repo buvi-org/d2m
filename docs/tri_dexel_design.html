@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tri-Dexel 5-Axis CNC Simulation Core -- Design Document - d2m</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <strong>d2m docs</strong>
+      <a href="../README.html">Home</a>
+      <a href="../TODO.html">TODO.md</a>
+      <a href="zero_to_cad_status.html">docs/zero_to_cad_status.md</a>
+      <a href="architecture.html">docs/architecture.md</a>
+      <a href="plan.html">docs/plan.md</a>
+      <a href="step_to_subcad_ai.html">docs/step_to_subcad_ai.md</a>
+      <a href="simulation.html">docs/simulation.md</a>
+      <a href="subcad_limit_test_corpus.html">docs/subcad_limit_test_corpus.md</a>
+      <a href="subcad_limit_test/single_metal_parts/README.html">docs/subcad_limit_test/single_metal_parts/README.md</a>
+      <a href="subcad_limit_test/execution_report.html">docs/subcad_limit_test/execution_report.md</a>
+      <a href="../web/README.html">web/README.md</a>
+      <a href="../machines/README.html">machines/README.md</a>
+    </nav>
+    <main>
+      <div class="meta">Preserved from <code>docs/tri_dexel_design.md</code> before Markdown removal.</div>
+      <article>
+<h1 id="tri-dexel-5-axis-cnc-simulation-core-design-document">Tri-Dexel 5-Axis CNC Simulation Core -- Design Document</h1>
+<h2 id="1-algorithm-choice-why-tri-dexel">1. Algorithm Choice: Why Tri-Dexel</h2>
+<p>The core question for any material removal simulator is: <strong>how do you represent the workpiece in memory such that subtracting a moving tool is fast, accurate, and handles arbitrary tool orientations?</strong></p>
+<h3 id="tradeoff-table">Tradeoff Table</h3>
+<table>
+<thead>
+<tr>
+<th>Representation</th>
+<th>Memory</th>
+<th>Speed (single op)</th>
+<th>Accuracy</th>
+<th>5-Axis Capability</th>
+<th>Implementation Complexity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Uniform Voxel (3D grid)</td>
+<td>O(n^3)</td>
+<td>O(affected cells) -- fast</td>
+<td>Resolution-limited (staircase)</td>
+<td>Rotation requires resampling</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>Octree (sparse voxel)</td>
+<td>O(surface area) ~ n^2</td>
+<td>O(log n) per cell lookup</td>
+<td>Adaptive resolution</td>
+<td>Rotation requires resampling</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>BREP (exact geometry)</td>
+<td>O(number of faces)</td>
+<td>Slow -- boolean ops are O(n^3) on BREP</td>
+<td>Exact (within float)</td>
+<td>Full</td>
+<td>Very High (needs kernel like OpenCASCADE)</td>
+</tr>
+<tr>
+<td>Analytic Swept Volume</td>
+<td>O(1) formula per move</td>
+<td>Instant (formula eval)</td>
+<td>Exact</td>
+<td>Constrained to simple paths</td>
+<td>Extreme (unsolved problem for general 5-axis)</td>
+</tr>
+<tr>
+<td><strong>Tri-Dexel</strong></td>
+<td>O(3 * nx * ny * avg_intervals)</td>
+<td>Fast batch ray subtraction</td>
+<td>Sub-resolution (interval endpoints are float)</td>
+<td>Natural -- any ray direction supported</td>
+<td>Medium-High</td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-tri-dexel-wins-for-5-axis-simulation">Why Tri-Dexel Wins for 5-Axis Simulation</h3>
+<ol>
+<li>
+<p><strong>Direction-independent subtraction</strong>: A single dexel grid along Z works well for 3-axis (tool axis is always Z). For 5-axis, the tool can approach from any direction. A different ray direction is needed for each tool orientation. <strong>Three orthogonal dexel grids</strong> cover all directions without resampling.</p>
+</li>
+<li>
+<p><strong>Algebraic operations on intervals</strong>: Subtraction, union, and intersection on sorted interval lists are O(n) operations. No mesh intersection, no BREP boolean kernel, no voxel resampling.</p>
+</li>
+<li>
+<p><strong>Memory proportional to surface area</strong>: A uniform voxel grid stores O(n^3) cells. Tri-dexel stores intervals only along rays that intersect the workpiece -- approximately O(3 * n^2 * k) where k is the average number of intervals per column. For a solid block, k=1 (one continuous interval); for complex geometry, k is proportional to feature count.</p>
+</li>
+<li>
+<p><strong>Float-precision endpoints</strong>: Interval [start, end] uses float64. This is NOT limited to grid resolution -- it is sub-resolution accurate. The grid spacing determines which rays are cast, but the start/end of each interval along that ray is float-precise.</p>
+</li>
+<li>
+<p><strong>Published algorithm</strong>: The tri-dexel approach is published in academic literature and used in commercial systems (Vericut uses a related dexel approach for its speed).</p>
+</li>
+</ol>
+<h3 id="limitations-honest-assessment">Limitations (Honest Assessment)</h3>
+<ul>
+<li><strong>Curved surface approximation</strong>: Surfaces not aligned with dexel directions are staircase-approximated at the dexel spacing. At 0.1mm resolution, this is machining-tolerance-acceptable.</li>
+<li><strong>Memory for very large parts</strong>: A 500mm^3 part at 0.1mm requires 3 * 5000^2 = 75M dexels, or ~600MB. Acceptable for modern workstations.</li>
+<li><strong>Not a replacement for BREP verification</strong>: For final gauge R&amp;R verification (micron-level), a BREP boolean is still needed.</li>
+</ul>
+<hr/>
+<h2 id="2-data-structure-design">2. Data Structure Design</h2>
+<h3 id="dexelinterval">DexelInterval</h3>
+<pre><code class="language-python">@dataclass(slots=True)
+class DexelInterval:
+    start: float   # Distance from ray origin to entry point
+    end: float     # Distance from ray origin to exit point
+    material_id: int = 0  # Reserved for multi-material support
+</code></pre>
+<p>Frozen once created. <code>slots=True</code> avoids dict overhead -- important when millions of these exist.</p>
+<h3 id="dexelcolumn">DexelColumn</h3>
+<p>A <strong>sorted, non-overlapping</strong> list of <code>DexelInterval</code> objects. The sorting and non-overlap invariants are enforced on every mutation.</p>
+<pre><code class="language-python">class DexelColumn:
+    _intervals: list[DexelInterval]
+</code></pre>
+<p><strong>Key operations</strong> (all O(n) where n = interval count in column):</p>
+<ul>
+<li><code>subtract(sub_start, sub_end)</code>: Remove material from [sub_start, sub_end]. Splits any interval that overlaps the subtraction range.</li>
+<li><code>union(other)</code>: Merge two columns, combining overlapping intervals.</li>
+<li><code>intersect(start, end)</code>: Extract only intervals within [start, end].</li>
+<li><code>material_volume()</code>: Sum of (end - start) for all intervals.</li>
+</ul>
+<p><strong>Memory layout</strong>: The column stores a Python <code>list</code> of <code>DexelInterval</code> objects. For GPU-friendliness, we also support a "flat" representation:</p>
+<pre><code class="language-python">def to_flat(self) -&gt; np.ndarray:
+    """Return (N,2) float64 array of [start, end] pairs for batch ops."""
+    return np.array([[i.start, i.end] for i in self._intervals], dtype=np.float64)
+</code></pre>
+<h3 id="dexelgrid">DexelGrid</h3>
+<p>A 2D array of <code>DexelColumn</code> objects representing rays cast along one axis direction through a grid in the plane of the other two axes.</p>
+<pre><code>DexelGrid with axis='Z':
+  - Grid plane: XY
+  - Each cell [i][j] is a DexelColumn of intervals along Z
+  - i indexes X position, j indexes Y position
+  - Ray for cell [i][j] originates at (origin_x + i*res, origin_y + j*res, 0)
+    and points in the +Z direction
+</code></pre>
+<pre><code class="language-python">class DexelGrid:
+    axis: str                          # 'x', 'y', or 'z' (dexel ray direction)
+    origin: tuple[float, float, float] # Workspace origin of the grid
+    resolution: float                  # Grid spacing in mm
+    nu_cells: int                      # Number of cells in the first orthogonal axis
+    nv_cells: int                      # Number of cells in the second orthogonal axis
+    _columns: list[list[DexelColumn]]  # [nu][nv] array
+</code></pre>
+<p><strong>Axis mapping convention:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Grid</th>
+<th>Ray Direction</th>
+<th>Grid Plane</th>
+<th>nu (first index) maps to</th>
+<th>nv (second index) maps to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>axis='z'</code></td>
+<td>+Z</td>
+<td>XY</td>
+<td>X (columns)</td>
+<td>Y (rows)</td>
+</tr>
+<tr>
+<td><code>axis='x'</code></td>
+<td>+X</td>
+<td>YZ</td>
+<td>Y (columns)</td>
+<td>Z (rows)</td>
+</tr>
+<tr>
+<td><code>axis='y'</code></td>
+<td>+Y</td>
+<td>XZ</td>
+<td>X (columns)</td>
+<td>Z (rows)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Initialization from mesh</strong>:</p>
+<pre><code class="language-python">def init_from_mesh(self, mesh: trimesh.Trimesh) -&gt; None:
+    """Cast rays through the mesh to populate dexel columns.
+    Uses trimesh.ray.intersects_location for ray-mesh intersection.
+    Each ray produces a sorted list of (entry, exit) distance pairs.
+    """
+</code></pre>
+<h3 id="tridexelmodel">TriDexelModel</h3>
+<p>Three orthogonal <code>DexelGrid</code> instances representing the same workpiece:</p>
+<pre><code class="language-python">class TriDexelModel:
+    dexel_z: DexelGrid  # Rays along Z, grid in XY
+    dexel_x: DexelGrid  # Rays along X, grid in YZ
+    dexel_y: DexelGrid  # Rays along Y, grid in XZ
+    bounds: AABB         # Bounding box of the workpiece
+    resolution: float    # Grid resolution (same for all three grids)
+</code></pre>
+<p><strong>Why three grids?</strong> A single dexel grid represents surfaces well when the surface normal has a positive dot product with the dexel direction. When the surface is nearly parallel to the dexel direction, it is poorly represented (rays graze the surface). Three orthogonal grids ensure that for any surface orientation, at least one grid has rays nearly perpendicular to it.</p>
+<h3 id="resolution-choice">Resolution Choice</h3>
+<ul>
+<li><strong>Default</strong>: 0.1mm (acceptable for roughing/finishing simulation)</li>
+<li><strong>Fine</strong>: 0.05mm (precision finishing, tight tolerance features)</li>
+<li><strong>Coarse</strong>: 0.5mm (rapid roughing overview, RL training)</li>
+</ul>
+<p>The resolution translates directly to:
+- Number of cells per grid: <code>(part_size / resolution)^2</code>
+- Memory: <code>3 * n_cells * avg_intervals_per_column * sizeof(interval)</code></p>
+<p>For a 200mm^3 stock at 0.1mm: 3 * (2000)^2 * 1.5 * 16 bytes ~= 288MB (typical)</p>
+<hr/>
+<h2 id="3-interval-arithmetic-specification">3. Interval Arithmetic Specification</h2>
+<p>This is the <strong>hot path</strong> of the entire system. Every material removal operation calls <code>DexelColumn.subtract()</code>. It must be correct and fast.</p>
+<h3 id="union-algorithm">Union Algorithm</h3>
+<p>Combine two sorted interval lists into one non-overlapping sorted list.</p>
+<pre><code>Input:  A = [[a0_start, a0_end], [a1_start, a1_end], ...]  (sorted, non-overlapping)
+        B = [[b0_start, b0_end], [b1_start, b1_end], ...]  (sorted, non-overlapping)
+Output: C = sorted, non-overlapping merged intervals
+
+Algorithm:
+1. Merge A and B by start value (like merge-sort merge step)
+2. While merging, if current.start &lt;= last.end, extend last.end = max(last.end, current.end)
+3. Else append current as new interval
+Complexity: O(n + m)
+</code></pre>
+<h3 id="subtraction-algorithm-the-hot-path">Subtraction Algorithm (THE HOT PATH)</h3>
+<pre><code>Input:  column = [[c0_start, c0_end], ...]  (sorted intervals of existing material)
+        sub_start, sub_end                   (interval to remove)
+Output: column is mutated in-place
+
+Algorithm:
+For each interval [c_start, c_end] in column:
+    Case 1: sub completely covers interval     → remove interval entirely
+        [ sub_start ... [c_start..c_end] ... sub_end ]  → delete
+
+    Case 2: sub is completely inside interval  → split into two
+        [ c_start ... [sub_start..sub_end] ... c_end ]  → [c_start, sub_start], [sub_end, c_end]
+
+    Case 3: sub overlaps left side of interval → trim left
+        [ sub_start ... [c_start ... sub_end] ... c_end ] → [sub_end, c_end]
+
+    Case 4: sub overlaps right side of interval → trim right
+        [ c_start ... [sub_start ... c_end] ... sub_end ] → [c_start, sub_start]
+
+    Case 5: sub and interval are disjoint       → keep interval unchanged
+        sub completely before: sub_end &lt; c_start
+        sub completely after:  sub_start &gt; c_end
+
+Optimization: Early exit when sub_end &lt; first_interval[0].start (sub is before all material)
+Complexity: O(n) single pass, in-place mutation with minimal allocation
+</code></pre>
+<p><strong>Performance notes for the hot path:</strong>
+- Use <code>list</code> operations (append, pop, slice assignment). Avoid <code>del column[i]</code> in the middle of a list -- it is O(n). Instead, build a new list of surviving intervals.
+- Pre-allocate result list with capacity = len(column) + 1 (in case of split).
+- In the common case (tool removes material from the top), the subtraction range covers the tail of the column and we can early-exit.</p>
+<h3 id="intersection-algorithm">Intersection Algorithm</h3>
+<pre><code>Input:  column as sorted intervals, query range [q_start, q_end]
+Output: list of intervals within query range, clipped to [q_start, q_end]
+
+Algorithm:
+For each interval in column:
+    if interval.end &lt; q_start: continue
+    if interval.start &gt; q_end: break  (sorted, so all subsequent are past range)
+    result.append([max(interval.start, q_start), min(interval.end, q_end)])
+Complexity: O(n)
+</code></pre>
+<h3 id="batch-subtraction-numpy-vectorization">Batch Subtraction (Numpy Vectorization)</h3>
+<p>For bulk operations (e.g., subtracting the same tool shape from 1000 columns):</p>
+<pre><code class="language-python">def batch_subtract(columns_flat: list[np.ndarray], sub_start: np.ndarray, sub_end: np.ndarray) -&gt; list[np.ndarray]:
+    """
+    columns_flat: list of (N_i, 2) arrays of interval pairs
+    sub_start, sub_end: (K,) arrays of subtraction ranges (one per column)
+
+    Uses numpy boolean indexing:
+    - For each column, compute which intervals overlap the subtraction range
+    - Apply the 5 cases above using array operations
+    - Reconstruct each column from surviving interval fragments
+    """
+</code></pre>
+<p>This is the path that gets accelerated by CuPy later -- the numpy operations map directly to CUDA kernels.</p>
+<hr/>
+<h2 id="4-tool-model">4. Tool Model</h2>
+<h3 id="apt-standard-7-parameter-tool-definition">APT Standard 7-Parameter Tool Definition</h3>
+<p>APT (Automatically Programmed Tools, ANSI/ISO 4343) defines cutting tools by 7 geometric parameters:</p>
+<pre><code>Parameter | Symbol | Description
+----------|--------|-------------
+Diameter  | D      | Cutting diameter (mm)
+Corner radius | R  | Radius at the corner between side and bottom (mm)
+Length    | L      | Total tool length (mm)
+Flute length | FL   | Length of the cutting portion (mm)
+Taper angle | A    | Side taper angle (degrees, 0 = straight)
+Tip angle | B      | Bottom angle (degrees, 0 = flat, 180 = full radius)
+Tip diameter | d    | Diameter at the tip (for drills, chamfers)
+</code></pre>
+<h3 id="supported-tool-types">Supported Tool Types</h3>
+<h4 id="flat-endmill-flat_endmill">Flat Endmill (flat_endmill)</h4>
+<pre><code>Shape: Cylinder of diameter D + flat bottom disc
+D &gt; 0, R = 0, A = 0, B = 0
+</code></pre>
+<ul>
+<li><strong>Cylinder</strong>: Infinite cylinder of radius D/2 from z=0 to z=FL (oriented along tool axis, tip at origin)</li>
+<li><strong>Bottom disc</strong>: Circle of radius D/2 at z=0</li>
+<li>Ray-cylinder intersection: <code>|(P - O) - ((P - O).d)*d| = R</code> where d is cylinder axis direction</li>
+<li>Quadratic: <code>|dir_perp|^2 * t^2 + 2*(dir_perp . (O - C_perp))*t + |(O - C_perp)|^2 - R^2 = 0</code></li>
+<li>Only keep solutions where the intersection point is within [0, FL]</li>
+<li>Ray-disc intersection: Ray-plane intersection at z=0, then check if point is within radius D/2</li>
+</ul>
+<h4 id="ball-endmill-ball_endmill">Ball Endmill (ball_endmill)</h4>
+<pre><code>Shape: Cylinder of diameter D + hemisphere of radius D/2 at tip
+D &gt; 0, R = D/2, A = 0, B = 90
+</code></pre>
+<ul>
+<li><strong>Cylinder</strong>: Same as flat endmill (above the hemisphere)</li>
+<li><strong>Hemisphere</strong>: Sphere of radius D/2 centered at (0,0,D/2) from tip</li>
+<li>Ray-sphere: <code>|O + t*dir - C|^2 = R^2</code></li>
+<li>Quadratic: <code>|dir|^2 * t^2 + 2*dir.(O-C)*t + |O-C|^2 - R^2 = 0</code></li>
+<li>Keep solutions where z &lt;= 0 (tip = hemisphere, material is below the sphere equator)</li>
+<li>The union of cylinder and hemisphere intervals gives the full tool intersection</li>
+</ul>
+<h4 id="bull-nose-endmill-bull_nose">Bull Nose Endmill (bull_nose)</h4>
+<pre><code>Shape: Cylinder of diameter D + torus at corner
+D &gt; 0, 0 &lt; R &lt; D/2, A = 0, B = 0
+</code></pre>
+<ul>
+<li><strong>Cylinder</strong>: Radius D/2 for the main body</li>
+<li><strong>Flat bottom</strong>: Radius (D/2 - R) for the flat portion</li>
+<li><strong>Torus corner</strong>: Major radius = R, minor radius = (D/2 - R), centered at corner</li>
+<li>Ray-torus intersection: 4th-degree polynomial (quartic)</li>
+<li>Approximate: Sample the torus as many small sphere segments and union their results</li>
+<li>More precisely: Solve the quartic using numpy roots for each ray (computationally expensive, use bounding box cull first)</li>
+</ul>
+<h4 id="drill">Drill</h4>
+<pre><code>Shape: Cone (tip angle B) + cylinder of diameter D
+D &gt; 0, A = 0, B = 118 (typical), d = 0
+</code></pre>
+<ul>
+<li><strong>Cylinder</strong>: Same as endmill cylinder</li>
+<li><strong>Cone</strong>: From tip (0,0,0) to height where cone diameter = D</li>
+<li>Cone angle: tan(B/2) = D/(2<em>h_cone), so h_cone = D/(2</em>tan(B/2))</li>
+<li>Ray-cone: Quadratic equation in t</li>
+<li>Cone apex at (0,0,0), half-angle = B/2</li>
+<li>Check: intersection point z-coordinate is within [0, h_cone] and distance from axis &lt;= D/2 at that z</li>
+</ul>
+<h4 id="chamfer-tool">Chamfer Tool</h4>
+<pre><code>Shape: Truncated cone (chamfer angle A)
+D &gt; 0, A = chamfer angle, d = tip diameter
+</code></pre>
+<ul>
+<li><strong>Truncated cone</strong>: Radius varies linearly from d/2 at z=0 to D/2 at z=h</li>
+<li>Ray-cone intersection with truncation planes at z=0 and z=h</li>
+<li>Same quadratic as cone, plus plane clipping</li>
+</ul>
+<h4 id="thread-mill">Thread Mill</h4>
+<pre><code>Shape: Cylinder with thread profile ridges
+</code></pre>
+<ul>
+<li>Approximate as cylinder for material removal (thread form is too fine for dexel resolution)</li>
+<li>Thread validation is done in Tier 1 rules, not geometry simulation</li>
+</ul>
+<h4 id="dovetail-cutter">Dovetail Cutter</h4>
+<pre><code>Shape: Reverse taper (diameter increases with depth)
+A = negative taper (typically 45-60 degrees)
+</code></pre>
+<ul>
+<li><strong>Reverse taper cone</strong>: Radius = r_base + z*tan(A) where A is the dovetail angle from vertical</li>
+<li>Ray-cone intersection with opposite sign</li>
+</ul>
+<h3 id="ray-tool-intersection-general-approach">Ray-Tool Intersection -- General Approach</h3>
+<p>All tool types share the same interface:</p>
+<pre><code class="language-python">class Tool(ABC):
+    diameter: float
+    length: float
+
+    @abstractmethod
+    def ray_intersection(self, ray_origin: np.ndarray, ray_direction: np.ndarray) -&gt; DexelColumn:
+        """
+        Compute intersection intervals of this tool with a ray.
+
+        The tool is positioned with its tip at origin, oriented along +Z (tool axis).
+        The ray is transformed into the tool's local coordinate system before calling.
+
+        Args:
+            ray_origin: (3,) float array, origin of the ray in tool-local coordinates
+            ray_direction: (3,) float array, direction of the ray (normalized)
+
+        Returns:
+            DexelColumn with sorted intervals where the ray enters and exits the tool volume
+        """
+</code></pre>
+<p><strong>Implementation for ball endmill</strong> (most common in 5-axis):</p>
+<pre><code class="language-python">def ray_intersection(self, ray_origin, ray_direction):
+    intervals = []
+
+    # 1. Ray-cylinder intersection (tool body)
+    # Cylinder axis = +Z, centered at (0,0), radius = D/2
+    # Length from z = D/2 to z = FL (the cylinder starts at the hemisphere equator)
+    cylinder_hits = self._ray_cylinder_intersect(ray_origin, ray_direction, 
+                                                   radius=D/2, 
+                                                   z_min=D/2, z_max=self.length)
+    intervals.extend(cylinder_hits)
+
+    # 2. Ray-sphere intersection (hemisphere tip)
+    # Sphere center at (0, 0, D/2), radius = D/2
+    # Only keep points where z &lt;= D/2 (below equator = tip hemisphere)
+    sphere_hits = self._ray_sphere_intersect(ray_origin, ray_direction,
+                                              center=(0, 0, D/2), radius=D/2,
+                                              z_max=D/2)
+    intervals.extend(sphere_hits)
+
+    # 3. Merge and sort
+    return DexelColumn.from_intervals(intervals).sort_and_merge()
+</code></pre>
+<h3 id="swept-volume-bounding-box">Swept Volume Bounding Box</h3>
+<pre><code class="language-python">def swept_volume_bbox(self, start_pose: ToolPose, end_pose: ToolPose) -&gt; AABB:
+    """Bounding box of the volume swept by the tool moving from start to end pose.
+
+    Expands the tool's bounding box at each pose and takes the convex hull of the two.
+    For 5-axis, adds the maximal swept arc (the tool tip traces an arc in space).
+    """
+</code></pre>
+<hr/>
+<h2 id="5-material-removal-algorithm">5. Material Removal Algorithm</h2>
+<h3 id="core-algorithm">Core Algorithm</h3>
+<p>For each tool position and orientation:</p>
+<pre><code>Algorithm: remove_tool_at_pose(tool, pose)
+1. For each dexel grid (Z, X, Y):
+   a. Transform tool into the grid's local coordinate system
+      - Tool is defined in its own frame: tip at origin, axis along +Z_local
+      - Transform = pose.inverse() * grid.transform
+   b. Compute affected column range:
+      - Project tool bounding box onto the grid plane (XY for Z-grid, etc.)
+      - Compute [i_min, i_max] and [j_min, j_max] in grid coordinates
+      - This is the bounding box cull -- we skip most columns
+   c. For each affected column (i, j):
+      - Get the ray for this column: ray_origin = grid origin + (i*res, j*res, 0)
+      - Transform ray into tool-local frame: ray_local = tool_transform * ray
+      - Compute tool.ray_intersection(ray_local.origin, ray_local.direction)
+      - Transform intersection distances back to grid-space distances
+      - Call column.subtract(entry_dist, exit_dist)
+2. Return RemovalResult(count_columns_modified, total_volume_removed)
+</code></pre>
+<h3 id="5-axis-swept-volume">5-Axis Swept Volume</h3>
+<p>For a tool moving from pose A to pose B in a 5-axis movement:</p>
+<pre><code>Algorithm: remove_tool_swept(tool, start_pose, end_pose)
+1. Compute number of samples:
+   - Translational component: arc_length / resolution (at least 2)
+   - Rotational component: max angular change / angular_resolution (e.g., 5 degrees)
+   - n_samples = max(translational_samples, rotational_samples, 2)
+
+2. Sample intermediate poses:
+   - Translation: linear interpolation in workpiece frame
+   - Rotation: SLERP (spherical linear interpolation) for quaternion rotation
+   - For each sample i: pose_i = interpolate(start, end, i/(n-1))
+
+3. For each dexel grid, compute union of affected column ranges across all samples
+   (This is the swept volume bounding box cull -- skip columns definitely not touched)
+
+4. For each affected column:
+   a. For each sample pose:
+      - Compute ray-tool intersection at that pose
+      - Add intervals to a running union
+   b. Subtract the union of all intervals from the column
+
+5. Return RemovalResult with aggregate statistics
+</code></pre>
+<p><strong>Sample count formula:</strong></p>
+<pre><code class="language-python">def n_samples_for_move(start_pose, end_pose, resolution=0.1, angular_resolution=np.radians(5)):
+    translational_dist = np.linalg.norm(end_pose.position - start_pose.position)
+    angular_dist = quaternion_angular_distance(start_pose.orientation, end_pose.orientation)
+
+    n_trans = max(int(translational_dist / resolution) + 2, 2)
+    n_angular = max(int(angular_dist / angular_resolution) + 2, 2)
+
+    return max(n_trans, n_angular)
+</code></pre>
+<p><strong>Error bound</strong>: The swept volume sampling error is bounded by the resolution parameter. A tool moving 1mm at 0.1mm sampling has at most 0.1mm of unsampled volume at the midpoint. For 5-axis rotation, 5-degree angular steps keep the swept arc within the resolution tolerance.</p>
+<h3 id="three-grid-consistency">Three-Grid Consistency</h3>
+<p>After material removal, all three dexel grids are updated independently. They may have slight inconsistencies (a column in one grid might show a tiny material sliver that the other grids disagree on). This is acceptable because:</p>
+<ol>
+<li>The surface extraction step reconciles all three grids.</li>
+<li>Deviations are bounded by the grid resolution.</li>
+<li>Conservative approach: when in doubt, material is present (avoid false gouge detection).</li>
+</ol>
+<hr/>
+<h2 id="6-5-axis-kinematics">6. 5-Axis Kinematics</h2>
+<h3 id="transformation-chain-model">Transformation Chain Model</h3>
+<p>A 5-axis machine is modeled as a chain of rigid transformations. The tool tip position in world coordinates is:</p>
+<pre><code>T_tool_world = T_machine * T_rotary_primary(angle1) * T_rotary_secondary(angle2) * T_linear(X,Y,Z) * T_tool_offset
+</code></pre>
+<p>where <code>T_machine</code> is the fixed machine frame to world transformation.</p>
+<h3 id="machine-configurations">Machine Configurations</h3>
+<h4 id="table_table-eg-bc-trunnion-table">TABLE_TABLE (e.g., BC trunnion table)</h4>
+<p>Both rotary axes are on the table side. The part rotates; the tool is fixed in orientation.</p>
+<pre><code>Chain: world → table_base → B_axis(rotate about Y) → C_axis(rotate about rotated Z) → part
+       world → machine_column → Z_axis → Y_axis → X_axis → spindle → tool
+</code></pre>
+<p><strong>Forward kinematics</strong> (BC trunnion):</p>
+<pre><code>Given joints [X, Y, Z, B, C] in machine coordinates:
+1. Part orientation: R_part = R_y(B) * R_z(C)   (B rotates about machine Y, C about part Z)
+2. Tool tip position in part frame:
+   P_tool_in_part = R_part.T * (P_spindle(X,Y,Z) - P_part_zero)
+
+Where P_spindle(X,Y,Z) = [X, Y, Z] is the linear axis position
+and P_part_zero is the machine zero of the rotary table center
+
+Tool orientation in part frame:
+   O_tool_in_part = R_part.T * [0, 0, 1]   (tool axis is always machine Z for table-table)
+</code></pre>
+<p><strong>Inverse kinematics</strong> (BC trunnion):</p>
+<pre><code>Given desired tool position P_wp and orientation O_wp in workpiece frame:
+
+Tool axis direction in machine frame: O_machine = [Ox_m, Oy_m, Oz_m]
+From O_machine, compute B and C:
+   B = -arcsin(Ox_m)       (B rotates about Y, affects X component)
+   C = atan2(Oy_m, Oz_m)   (C rotates about Z)
+
+Alternative solution: B' = pi - B, C' = C + pi
+
+Tool position inverse:
+   R_machine = Ry(B) * Rz(C)
+   P_spindle = R_machine * P_wp + P_table_center
+   X = P_spindle[0], Y = P_spindle[1], Z = P_spindle[2]
+</code></pre>
+<p><strong>Singularity at B=0</strong>: When B=0, the C axis rotation does not change the tool orientation (both rotate the tool axis around itself). C becomes undefined. Solution: use the previous C value (or a preferred configuration), and handle with small epsilon for near-singularity.</p>
+<h4 id="head_head-both-rotary-axes-in-spindle-head">HEAD_HEAD (both rotary axes in spindle head)</h4>
+<pre><code>Chain: world → machine → linear axes → A_axis(tilt) → B_axis(pan) → spindle → tool
+       world → part (fixed)
+</code></pre>
+<p>The tool orientation changes but the part is fixed. This is simpler for inverse kinematics but the machine head is heavier and less rigid.</p>
+<h4 id="head_table-one-in-head-one-on-table">HEAD_TABLE (one in head, one on table)</h4>
+<pre><code>Chain: world → table → C_axis(rotate) → part
+       world → machine → linear → B_axis(tilt) → spindle → tool
+</code></pre>
+<p>Common configuration: B on head (tilting spindle), C on table (rotary table).</p>
+<h3 id="forward-kinematics-unified">Forward Kinematics (unified)</h3>
+<pre><code class="language-python">def forward(self, joints: np.ndarray) -&gt; ToolPose:
+    """
+    joint vector = [X, Y, Z, A, B, C] in machine coordinates (mm, degrees)
+    Returns tool tip position and orientation in the workpiece frame.
+
+    For table-table: [X,Y,Z] position the tool tip relative to table center.
+                     [A,B,C] are rotary table angles (A about X, B about Y, C about Z).
+                     Only 2 of [A,B,C] are used depending on machine config.
+    """
+</code></pre>
+<h3 id="inverse-kinematics-unified-closed-form">Inverse Kinematics (unified, closed-form)</h3>
+<pre><code class="language-python">def inverse(self, pose: ToolPose) -&gt; Optional[np.ndarray]:
+    """
+    Given desired tool pose in workpiece frame, compute joint values.
+    Returns None if pose is unreachable (outside machine envelope or limit violation).
+
+    For table-table BC:
+    1. Extract tool axis direction from pose orientation
+    2. Compute B = -arcsin(tool_axis.x), C = atan2(tool_axis.y, tool_axis.z)
+    3. Check both B solutions (B and pi-B) and pick within limits
+    4. Compute [X,Y,Z] from rotation and translation equations
+
+    For head-head:
+    1. Tool axis = pose.orientation * [0,0,1]
+    2. A = atan2(tool_axis.y, tool_axis.z) or similar mapping
+    3. Solve for linear axes
+    """
+</code></pre>
+<h3 id="singularity-handling">Singularity Handling</h3>
+<p>At B=0 (table-table) or A=0 (head-head), one rotary axis loses meaning because the two rotary axes are aligned. The inverse kinematics has infinite solutions.</p>
+<pre><code class="language-python">def handle_singularity(self, pose: ToolPose, prev_joints: Optional[np.ndarray] = None) -&gt; np.ndarray:
+    """
+    When near a singularity (e.g., |B| &lt; 1e-6 degrees for table-table):
+    1. If prev_joints is available, use the previous C value
+    2. If no previous, use C = 0 as preferred solution
+    3. The positional axes are unaffected by the singularity
+    4. For small B, apply a minimum B to stay out of exact singularity
+    """
+</code></pre>
+<h3 id="axis-limit-validation">Axis Limit Validation</h3>
+<pre><code class="language-python">def check_limits(self, joints: np.ndarray) -&gt; bool:
+    """Verify all joint values are within machine limits."""
+
+AXIS_LIMITS = {
+    "X": (-500, 500),    # mm
+    "Y": (-300, 300),
+    "Z": (-400, 0),      # Z is typically negative (toward table)
+    "A": (-120, 120),    # degrees
+    "B": (-120, 120),
+    "C": (0, 360),       # or continuous
+}
+</code></pre>
+<hr/>
+<h2 id="7-surface-extraction">7. Surface Extraction</h2>
+<h3 id="modified-marching-cubes-for-tri-dexel">Modified Marching Cubes for Tri-Dexel</h3>
+<p>Standard marching cubes operates on a 3D scalar field (e.g., voxel grid of signed distance values). For tri-dexel, we have three 2D grids of intervals -- not a scalar field. The approach:</p>
+<h4 id="step-1-extract-surface-points-from-each-grid">Step 1: Extract Surface Points from Each Grid</h4>
+<p>For each dexel grid, material transitions (present-to-absent or absent-to-present) define surface points:</p>
+<pre><code>For each column:
+    For each interval in column:
+        Entry point: (grid coord, interval.start along ray) → 3D point, normal points inward
+        Exit point:  (grid coord, interval.end along ray) → 3D point, normal points outward
+
+For axis='Z' grid: 
+    Point = (x_origin + i*res, y_origin + j*res, z_origin + interval.start/end)
+    Normal = (0, 0, ±1)  (approximate -- ray is along Z)
+</code></pre>
+<p>This gives us three point clouds with approximated normals:
+- Z-dexel surface points: normals roughly aligned with ±Z
+- X-dexel surface points: normals roughly aligned with ±X
+- Y-dexel surface points: normals roughly aligned with ±Y</p>
+<h4 id="step-2-merge-and-filter">Step 2: Merge and Filter</h4>
+<p>Merge all surface points from all three grids. For points close together (within resolution), keep the one with the highest-quality normal (i.e., the one whose dexel direction is closest to the surface normal).</p>
+<p><strong>Normal quality heuristic</strong>: A dexel ray gives a good surface estimate when the surface normal is nearly parallel to the ray direction. The entry/exit distance is accurately captured. When the surface is nearly perpendicular to the ray direction, the dexel doesn't see it well. For each surface point, compute how grazing the surface is to its dexel direction:</p>
+<pre><code>quality = |surface_normal . dexel_direction|  (1.0 = perfect, 0.0 = grazing)
+</code></pre>
+<p>Keep the point with the highest quality from any grid.</p>
+<h4 id="step-3-triangulation">Step 3: Triangulation</h4>
+<p>Option A (fast): <strong>Ball-pivoting or Poisson reconstruction</strong> on the merged point cloud.
+Option B (more accurate): <strong>Running marching cubes on a derived signed distance field</strong>.</p>
+<p>For Option B:
+1. From the merged point cloud, estimate signed distances at each point (using normals)
+2. Interpolate onto a regular 3D grid at resolution/2
+3. Run standard marching cubes on this grid
+4. The result is a triangulated mesh</p>
+<h4 id="step-4-mesh-post-processing">Step 4: Mesh Post-Processing</h4>
+<ul>
+<li>Remove degenerate triangles (zero area)</li>
+<li>Fix non-manifold edges</li>
+<li>Optional: Laplacian smoothing (1-2 iterations) to reduce staircase artifacts</li>
+</ul>
+<h3 id="deviation-mapping">Deviation Mapping</h3>
+<pre><code class="language-python">def compare_to_target(simulated: TriDexelModel, target_mesh: trimesh.Trimesh) -&gt; np.ndarray:
+    """
+    For each vertex of the target mesh:
+    - Ray-cast through the simulated tri-dexel model
+    - Compute signed distance: positive = uncut material remains, negative = gouge
+
+    Returns (N,) array of signed distances in mm.
+    """
+</code></pre>
+<h3 id="gouge-detection">Gouge Detection</h3>
+<p>A gouge is detected when material was removed below the target surface:</p>
+<pre><code class="language-python">def detect_gouges(tri_dexel: TriDexelModel, target_mesh: trimesh.Trimesh, 
+                  tolerance: float = 0.01) -&gt; list[Gouge]:
+    """
+    Sample the target surface at resolution spacing.
+    For each sample point:
+    - Check if material exists at that point in tri_dexel
+    - If no material found where target expects it → potential gouge
+    - Verify by checking if the point is below the target surface
+
+    Returns list of Gouge(position, depth, severity).
+    """
+</code></pre>
+<hr/>
+<h2 id="8-performance-targets">8. Performance Targets</h2>
+<h3 id="target-metrics">Target Metrics</h3>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>3-Axis</th>
+<th>5-Axis</th>
+<th>Resolution</th>
+<th>Part Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Single tool pose subtraction</td>
+<td>&lt;50ms</td>
+<td>&lt;200ms</td>
+<td>0.1mm</td>
+<td>200mm^3</td>
+</tr>
+<tr>
+<td>Swept volume (10-sample move)</td>
+<td>&lt;100ms</td>
+<td>&lt;500ms</td>
+<td>0.1mm</td>
+<td>200mm^3</td>
+</tr>
+<tr>
+<td>Surface extraction (to mesh)</td>
+<td>&lt;2s</td>
+<td>&lt;2s</td>
+<td>0.1mm</td>
+<td>200mm^3</td>
+</tr>
+<tr>
+<td>Deviation mapping</td>
+<td>&lt;500ms</td>
+<td>&lt;500ms</td>
+<td>0.1mm</td>
+<td>200mm^3</td>
+</tr>
+<tr>
+<td>Full G-code simulation (100 ops)</td>
+<td>&lt;30s</td>
+<td>&lt;2min</td>
+<td>0.1mm</td>
+<td>200mm^3</td>
+</tr>
+</tbody>
+</table>
+<h3 id="profiling-hot-paths">Profiling Hot Paths</h3>
+<p>The hot paths, in order of optimization priority:</p>
+<ol>
+<li><strong><code>DexelColumn.subtract()</code></strong> -- called for every affected column for every tool pose. Must be O(n) with minimal allocation.</li>
+<li><strong><code>Tool.ray_intersection()</code></strong> -- called for every affected column. Quadratic equation solves are fast but the per-column overhead matters.</li>
+<li><strong><code>DexelGrid.affected_columns()</code></strong> -- bounding box cull. Must be fast (integer arithmetic only).</li>
+<li><strong>Swept volume sampling</strong> -- number of samples directly multiplies the workload.</li>
+</ol>
+<h3 id="gpu-acceleration-plan">GPU Acceleration Plan</h3>
+<p><strong>Phase 1 (current): Numpy vectorization</strong>
+- Batch tool-ray intersection using numpy array operations
+- Batch interval subtraction using boolean indexing
+- Pre-allocate arrays to avoid GC pressure</p>
+<p><strong>Phase 2: CuPy drop-in</strong>
+- Replace <code>import numpy as np</code> with <code>import cupy as np</code> for GPU arrays
+- Numpy's array API is directly compatible -- minimal code changes
+- Expected speedup: 10-50x for batch operations (latency-bound per operation, but throughput scales)
+- Limitation: PCIe transfer of large arrays between CPU and GPU adds latency</p>
+<p><strong>Phase 3: Numba CUDA kernels</strong>
+- Write custom CUDA kernels for the interval subtraction hot path
+- One CUDA thread per dexel column
+- No Python overhead in the inner loop
+- Expected: 50-200x over CPU for large batches</p>
+<h3 id="memory-budget">Memory Budget</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Formula</th>
+<th>Example (200mm^3 at 0.1mm)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DexelGrid Z</td>
+<td>(Lx/res + 1) * (Ly/res + 1) * 32 bytes</td>
+<td>2000 * 2000 * 32 = 128MB</td>
+</tr>
+<tr>
+<td>DexelGrid X</td>
+<td>(Ly/res + 1) * (Lz/res + 1) * 32 bytes</td>
+<td>128MB</td>
+</tr>
+<tr>
+<td>DexelGrid Y</td>
+<td>(Lx/res + 1) * (Lz/res + 1) * 32 bytes</td>
+<td>128MB</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td></td>
+<td><strong>~384MB</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Column overhead assumes <code>DexelColumn</code> with average 1.5 intervals per column and 32 bytes per interval (two float64 values + material_id integer + overhead).</p>
+<p>For 0.05mm resolution, quadruple the memory (~1.5GB). For 0.5mm resolution, 1/25th (~15MB).</p>
+<hr/>
+<h2 id="9-phase-roadmap">9. Phase Roadmap</h2>
+<h3 id="phase-1-this-phase-folder-structure-plan-design-decisions">Phase 1 (this phase): Folder Structure, Plan &amp; Design Decisions</h3>
+<ul>
+<li>Create directory structure under <code>src/simulation/</code></li>
+<li>Write this design document</li>
+<li>Dependencies: none</li>
+<li>Test criteria: Document reviewed, all design decisions justified</li>
+</ul>
+<h3 id="phase-2-core-data-structures">Phase 2: Core Data Structures</h3>
+<ul>
+<li>Implement <code>tri_dexel.py</code>: DexelInterval, DexelColumn, DexelGrid, TriDexelModel</li>
+<li>Implement <code>tools.py</code>: APT standard tools with ray-tool intersection</li>
+<li>Dependencies: numpy, trimesh (for mesh import)</li>
+<li>Test criteria:</li>
+<li>DexelColumn.subtract() produces correct intervals for all 5 cases</li>
+<li>TriDexelModel.from_mesh() correctly voxelizes a sphere (check volume error &lt; 5% at 0.1mm)</li>
+<li>BallEndmill.ray_intersection() intersects a known ray within 1e-6</li>
+<li>Each file has <code>if __name__ == "__main__":</code> with runnable self-test</li>
+</ul>
+<h3 id="phase-3-material-removal-engine">Phase 3: Material Removal Engine</h3>
+<ul>
+<li>Implement <code>swept_volume.py</code>: swept volume sampling + bounding box computation</li>
+<li>Implement <code>material_removal.py</code>: MaterialRemovalEngine with pose and swept removal</li>
+<li>Dependencies: Phase 2</li>
+<li>Test criteria:</li>
+<li>Remove a ball endmill at a known pose from a rectangular stock → correct cutout shape</li>
+<li>Swept volume removal along a linear move → continuous slot</li>
+<li>Volume conservation: volume_removed ≤ tool_volume * (1 + epsilon)</li>
+<li>Performance: &lt;50ms for single 3-axis pose subtraction</li>
+</ul>
+<h3 id="phase-4-5-axis-kinematics">Phase 4: 5-Axis Kinematics</h3>
+<ul>
+<li>Implement <code>kinematics.py</code>: FiveAxisKinematics with all configs</li>
+<li>Dependencies: Phase 2 (ToolPose)</li>
+<li>Test criteria:</li>
+<li>Forward kinematics for table-table BC: known joint angles → expected tool pose</li>
+<li>Inverse kinematics: forward(inverse(pose)) == pose within 1e-6</li>
+<li>Singularity handling: near B=0, returns valid solution</li>
+<li>Axis limit check correctly rejects out-of-bounds positions</li>
+</ul>
+<h3 id="phase-5-surface-extraction">Phase 5: Surface Extraction</h3>
+<ul>
+<li>Implement <code>surface.py</code>: tri-dexel to mesh conversion, deviation mapping</li>
+<li>Implement <code>simulator.py</code>: FiveAxisSimulator orchestrator</li>
+<li>Dependencies: Phase 2, 3, 4</li>
+<li>Test criteria:</li>
+<li>Simulated sphere: extracted mesh volume matches expected within 5%</li>
+<li>Deviation map on a simulated pocket: detects uncut corners</li>
+<li>Full G-code simulation of simple 3-axis program produces expected mesh</li>
+</ul>
+<h3 id="phase-6-visualization-validation">Phase 6: Visualization &amp; Validation</h3>
+<ul>
+<li>Implement <code>visualizer.py</code>: 3D rendering of tri-dexel state, deviations, gouges</li>
+<li>Implement <code>validator.py</code>: comprehensive gouge/collision/constraint checking</li>
+<li>Dependencies: Phase 5</li>
+<li>Test criteria:</li>
+<li>Visualizer renders stock + tool + deviation heatmap</li>
+<li>Validator catches gouge, collision, over-travel scenarios</li>
+</ul>
+<h3 id="future-phases-beyond-initial-scope">Future Phases (beyond initial scope)</h3>
+<ul>
+<li>CuPy/Numba GPU acceleration</li>
+<li>Real G-code parser integration (gcodeparser)</li>
+<li>Machine-specific kinematics library (Haas, DMG Mori, Hurco)</li>
+<li>BREP boolean verification pass (via pythonOCC)</li>
+<li>Multi-material support (material_id in DexelInterval)</li>
+<li>Tool wear model integration</li>
+<li>Cutting force estimation from engagement angle analysis</li>
+</ul>
+<hr/>
+<h2 id="appendix-a-key-mathematical-formulas">Appendix A: Key Mathematical Formulas</h2>
+<h3 id="ray-cylinder-intersection">Ray-Cylinder Intersection</h3>
+<p>Cylinder of radius R along axis direction d (normalized), passing through point C on the axis.
+Ray: O + t * dir (|dir| = 1).</p>
+<p>Let w = O - C
+Let w_perp = w - (w . d) * d       (component of w perpendicular to cylinder axis)
+Let dir_perp = dir - (dir . d) * d  (component of ray direction perpendicular to cylinder axis)</p>
+<p>Quadratic: a<em>t^2 + 2</em>b*t + c = 0
+where:
+  a = |dir_perp|^2
+  b = dir_perp . w_perp
+  c = |w_perp|^2 - R^2</p>
+<p>Discriminant: delta = b^2 - a*c
+If delta &lt; 0: no intersection
+If delta &gt;= 0: t = (-b ± sqrt(delta)) / a</p>
+<p>For finite cylinder: filter t values where the intersection point's projection onto the axis
+is within [0, h] (or [z_min, z_max] in tool coordinates).</p>
+<h3 id="ray-sphere-intersection">Ray-Sphere Intersection</h3>
+<p>Sphere: center C, radius R.
+Ray: O + t * dir.</p>
+<p>Let w = O - C
+Quadratic: a<em>t^2 + 2</em>b*t + c = 0
+where:
+  a = |dir|^2 = 1 (if dir is normalized)
+  b = dir . w
+  c = |w|^2 - R^2</p>
+<p>Discriminant: delta = b^2 - a*c
+If delta &lt; 0: no intersection
+t = (-b ± sqrt(delta)) / a</p>
+<h3 id="quaternion-slerp-for-5-axis-tool-pose-interpolation">Quaternion SLERP (for 5-axis tool pose interpolation)</h3>
+<pre><code class="language-python">def slerp(q1: np.ndarray, q2: np.ndarray, t: float) -&gt; np.ndarray:
+    """Spherical linear interpolation between two quaternions."""
+    dot = np.clip(np.dot(q1, q2), -1.0, 1.0)
+    if dot &lt; 0:
+        q2 = -q2
+        dot = -dot
+    if dot &gt; 0.9995:
+        # Near-parallel: use linear interpolation
+        result = q1 + t * (q2 - q1)
+        return result / np.linalg.norm(result)
+    theta_0 = np.arccos(dot)
+    sin_theta_0 = np.sin(theta_0)
+    theta = theta_0 * t
+    sin_theta = np.sin(theta)
+    s0 = np.cos(theta) - dot * sin_theta / sin_theta_0
+    s1 = sin_theta / sin_theta_0
+    return s0 * q1 + s1 * q2
+</code></pre>
+<h3 id="quaternion-angular-distance">Quaternion Angular Distance</h3>
+<pre><code class="language-python">def quaternion_angular_distance(q1, q2):
+    """Angular distance between two quaternions in radians."""
+    dot = np.abs(np.dot(q1, q2))
+    dot = np.clip(dot, -1.0, 1.0)
+    return 2 * np.arccos(dot)
+</code></pre>
+<h2 id="appendix-b-api-reference-planned">Appendix B: API Reference (Planned)</h2>
+<h3 id="tridexelmodel_1">TriDexelModel</h3>
+<pre><code class="language-python">@classmethod
+def from_mesh(cls, mesh: trimesh.Trimesh, resolution: float = 0.1) -&gt; TriDexelModel
+
+def to_mesh(self) -&gt; trimesh.Trimesh
+
+def get_material_at(self, point: np.ndarray) -&gt; bool
+    """Test if a 3D point contains material. Checks all three grids (consensus: 2/3)."""
+
+def volume(self) -&gt; float
+    """Total material volume from all three dexel grids (averaged)."""
+</code></pre>
+<h3 id="fiveaxissimulator">FiveAxisSimulator</h3>
+<pre><code class="language-python">class FiveAxisSimulator:
+    def __init__(self, stock_mesh: trimesh.Trimesh, target_mesh: trimesh.Trimesh,
+                 machine_config: MachineConfig, resolution: float = 0.1)
+
+    def load_tool(self, tool: Tool) -&gt; None
+
+    def execute_gcode(self, gcode: str) -&gt; SimulationResult
+
+    def execute_move(self, start_pose: ToolPose, end_pose: ToolPose, 
+                     tool: Tool) -&gt; MoveResult
+
+    @property
+    def current_stock_mesh(self) -&gt; trimesh.Trimesh
+
+    @property
+    def deviation_map(self) -&gt; np.ndarray
+
+    @property
+    def gouges(self) -&gt; list[Gouge]
+</code></pre>
+<h3 id="simulationresult">SimulationResult</h3>
+<pre><code class="language-python">@dataclass
+class SimulationResult:
+    success: bool
+    moves_executed: int
+    total_volume_removed: float      # mm^3
+    total_time: float                # seconds (cycle time)
+    collisions: list[Collision]
+    gouges: list[Gouge]
+    warnings: list[str]
+    stock_mesh: trimesh.Trimesh
+    deviation_map: np.ndarray        # per-vertex signed distance to target
+</code></pre>
+<h2 id="appendix-c-coordinate-frame-conventions">Appendix C: Coordinate Frame Conventions</h2>
+<p>All coordinate systems use the <strong>right-hand rule</strong>:</p>
+<ul>
+<li><strong>Workpiece frame (WP)</strong>: The part or stock. Origin at a convenient reference (e.g., top center of stock).</li>
+<li><strong>Tool frame (T)</strong>: Tool tip at origin, tool axis along +Z. This is the standard APT tool coordinate system.</li>
+<li><strong>Machine frame (M)</strong>: Origin at machine home. XYZ axes aligned with machine slides.</li>
+<li><strong>World frame (W)</strong>: Fixed reference frame. For simulation, W = WP.</li>
+</ul>
+<p>Tool orientation is represented as a unit quaternion <code>[w, x, y, z]</code> (scalar-first convention) or a 3x3 rotation matrix. The Z-axis of the tool frame maps to the tool axis direction in the world frame.</p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>
