@@ -1,0 +1,536 @@
+{
+  "title": "SubCAD Visualization Session",
+  "schema_version": "subcad.visualization_package.v1",
+  "units": "mm",
+  "material": "steel_a36",
+  "stock_dimensions": {
+    "length": 220.0,
+    "width": 202.0,
+    "height": 1.2,
+    "thickness": 1.2,
+    "stock_form": "sheet",
+    "process_family": "sheet_metal",
+    "formed_enclosure": {
+      "inside_length_mm": 120.0,
+      "inside_width_mm": 80.0,
+      "inside_height_mm": 50.0,
+      "lid_lip_mm": 22.0
+    }
+  },
+  "bounding_box": {
+    "x_min": -62.400528,
+    "x_max": 62.400528,
+    "y_min": -42.400699,
+    "y_max": 41.2,
+    "z_min": -0.0,
+    "z_max": 51.2,
+    "length": 124.801057,
+    "width": 83.6007,
+    "height": 51.2
+  },
+  "volume_mm3": 53200.847561,
+  "operations": [
+    {
+      "sequence_number": 1,
+      "operation": "laser_cut_profile",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.18,
+        "label": "fiber_laser D0.18mm",
+        "tool_diameter_mm": 0.18,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.18,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 0.18,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.18,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 0.18,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "sequence_number": 2,
+      "operation": "laser_cut_internal",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.18,
+        "label": "fiber_laser D0.18mm",
+        "tool_diameter_mm": 0.18,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.18,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 0.18,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.18,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 0.18,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "sequence_number": 3,
+      "operation": "press_brake_bend",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 3.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 3.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "sequence_number": 4,
+      "operation": "press_brake_bend",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 3.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 3.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "sequence_number": 5,
+      "operation": "press_brake_bend",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 3.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 3.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "sequence_number": 6,
+      "operation": "press_brake_bend",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 3.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 3.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "sequence_number": 7,
+      "operation": "press_brake_bend",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 3.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 3.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "sequence_number": 8,
+      "operation": "press_brake_bend",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 3.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 3.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "sequence_number": 9,
+      "operation": "press_brake_bend",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 3.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 3.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    },
+    {
+      "sequence_number": 10,
+      "operation": "assembly_fasteners",
+      "setup": null,
+      "face_selector": null,
+      "tool": {
+        "tool_type": "screwdriver",
+        "diameter_mm": 0.0,
+        "label": "screwdriver D0.0mm",
+        "tool_diameter_mm": 0.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "screwdriver",
+          "cutter_diameter_mm": 0.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 0.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "tool_assembly": {
+        "tool_id": "",
+        "tool_type": "screwdriver",
+        "cutter_diameter_mm": 0.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 0.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      },
+      "toolpath_summary": null,
+      "tool_selection": null,
+      "pass_plan": null,
+      "economics": null,
+      "validation": {
+        "errors": [],
+        "warnings": []
+      },
+      "warnings": []
+    }
+  ],
+  "clearance_markers": [],
+  "validation_issues": [],
+  "economics": null,
+  "fixtures": [],
+  "setups": {},
+  "assets": {
+    "stock_mesh": {
+      "path": "stock.stl",
+      "format": "stl",
+      "role": "stock",
+      "color": "#8ca0b4"
+    },
+    "toolpath": {
+      "path": "toolpath.json",
+      "format": "json",
+      "operation_count": 10,
+      "move_count": 0
+    },
+    "stock_states": [
+      {
+        "index": 0,
+        "sequence_number": 10,
+        "operation": "assembly_fasteners",
+        "label": "Final closed screw-fastened box",
+        "path": "states/stock_state_010.stl",
+        "format": "stl",
+        "role": "stock_state"
+      }
+    ]
+  },
+  "compare_status": null,
+  "view": {
+    "target": [
+      0.0,
+      -0.60035,
+      25.6
+    ],
+    "camera_position": [
+      187.201585,
+      -225.242253,
+      175.361268
+    ],
+    "up": [
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "viewer": {
+    "entrypoint": "web/visualization.html",
+    "recommended_url": "visualization.html?session=sessions/latest/scene.json"
+  }
+}

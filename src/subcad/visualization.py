@@ -139,6 +139,7 @@ def export_visualization_package(
         "clearance_markers": clearance_markers,
         "validation_issues": validation_issues,
         "economics": economics_report,
+        "machine": plan.get("machine"),
         "fixtures": fixtures,
         "setups": plan.get("setups", {}),
         "assets": assets,

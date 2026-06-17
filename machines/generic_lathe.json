@@ -1,0 +1,187 @@
+{
+  "name": "Generic 2-Axis CNC Lathe",
+  "version": "1.0",
+  "description": "Generic CNC turning center for SubCAD turning validation and viewer playback. Z-axis carriage travel 300 mm, X-axis radial travel 120 mm, 4500 RPM main spindle, hydraulic 3-jaw chuck, tailstock support.",
+  "manufacturer": "Generic",
+  "model": "2-Axis Turning Center",
+  "components": [
+    {
+      "id": "bed",
+      "type": "static",
+      "parent": null,
+      "label": "Lathe Bed",
+      "mesh": null,
+      "transform": [0, 0, 0, 0, 0, 0],
+      "visual": {
+        "shape": "box",
+        "size_mm": [190, 34, 16],
+        "color": "#253241"
+      }
+    },
+    {
+      "id": "headstock",
+      "type": "static",
+      "parent": "bed",
+      "label": "Headstock Casting",
+      "mesh": null,
+      "transform": [-78, 0, 24, 0, 0, 0],
+      "visual": {
+        "shape": "box",
+        "size_mm": [32, 92, 76],
+        "color": "#334155"
+      }
+    },
+    {
+      "id": "spindle",
+      "type": "spindle",
+      "parent": "headstock",
+      "label": "Main Spindle",
+      "mesh": null,
+      "transform": [-58, 0, 24, 0, 0, 0],
+      "axis": "Z",
+      "spindle_axis": "Z",
+      "max_rpm": 4500,
+      "max_power_kw": 15,
+      "max_torque_nm": 180,
+      "spindle_nose_to_gauge_mm": 0
+    },
+    {
+      "id": "chuck",
+      "type": "workholding",
+      "parent": "spindle",
+      "label": "Hydraulic 3-Jaw Chuck",
+      "fixture_type": "lathe_chuck",
+      "mesh": null,
+      "transform": [-52, 0, 24, 0, 0, 0],
+      "grip_diameter_range_mm": [10, 90],
+      "visual": {
+        "shape": "cylinder",
+        "axis": "X",
+        "diameter_mm": 86,
+        "length_mm": 18,
+        "jaw_count": 3,
+        "jaw_length_mm": 18,
+        "jaw_width_mm": 9,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "z_axis",
+      "type": "linear_axis",
+      "parent": "bed",
+      "label": "Z-Axis Carriage",
+      "mesh": null,
+      "transform": [10, 0, 6, 0, 0, 0],
+      "axis": "Z",
+      "limits": [-150, 150],
+      "max_feed": 12000,
+      "rapid_feed": 24000
+    },
+    {
+      "id": "x_axis",
+      "type": "linear_axis",
+      "parent": "z_axis",
+      "label": "X-Axis Cross Slide",
+      "mesh": null,
+      "transform": [10, 48, 24, 0, 0, 0],
+      "axis": "X",
+      "limits": [0, 120],
+      "max_feed": 10000,
+      "rapid_feed": 18000
+    },
+    {
+      "id": "tool_mount",
+      "type": "tool_mount",
+      "parent": "x_axis",
+      "label": "Turret Tool Station",
+      "mesh": null,
+      "transform": [10, 68, 38, 0, 0, 0],
+      "visual": {
+        "shape": "box",
+        "size_mm": [26, 26, 22],
+        "color": "#334155"
+      }
+    },
+    {
+      "id": "tailstock",
+      "type": "tailstock",
+      "parent": "bed",
+      "label": "Tailstock With Live Center",
+      "mesh": null,
+      "transform": [74, 0, 19, 0, 0, 0],
+      "visual": {
+        "body_size_mm": [26, 50, 42],
+        "center_length_mm": 24,
+        "center_diameter_mm": 16,
+        "color": "#334155"
+      }
+    },
+    {
+      "id": "stock_mount",
+      "type": "stock_mount",
+      "parent": "chuck",
+      "label": "Stock Grip Plane",
+      "mesh": null,
+      "transform": [-42, 0, 24, 0, 0, 0]
+    }
+  ],
+  "collision_groups": {
+    "spindle_group": ["headstock", "spindle", "chuck"],
+    "workholding_group": ["chuck", "stock_mount"],
+    "tool_group": ["tool_mount"],
+    "support_group": ["tailstock"],
+    "slide_group": ["x_axis", "z_axis", "tool_mount"]
+  },
+  "collision_pairs": [
+    {
+      "group_a": "tool_group",
+      "group_b": "workholding_group",
+      "clearance_mm": 1.0,
+      "check_type": "near_miss",
+      "warn_clearance_mm": 3.0
+    },
+    {
+      "group_a": "tool_group",
+      "group_b": "stock",
+      "clearance_mm": 0.0,
+      "check_type": "during_cut"
+    },
+    {
+      "group_a": "slide_group",
+      "group_b": "spindle_group",
+      "clearance_mm": 5.0,
+      "check_type": "static"
+    }
+  ],
+  "home_position": [120, 150, 0, 0, 0, 0],
+  "tool_change_position": [120, 120, 0, 0, 0, 0],
+  "axis_priority": ["X", "Z"],
+  "retract_axis": "X",
+  "work_offset_defaults": {
+    "G54": [0, 0, 0, 0, 0, 0]
+  },
+  "kinematic_chain": {
+    "tool_chain": ["tool_mount", "x_axis", "z_axis", "bed"],
+    "workpiece_chain": ["stock_mount", "chuck", "spindle", "headstock", "bed"]
+  },
+  "capabilities": {
+    "schema_version": "subcad.machine_capabilities.v1",
+    "processes": ["turn"],
+    "operation_families": [
+      "turn_profile",
+      "turn_face",
+      "turn_od",
+      "turn_id",
+      "turn_groove",
+      "turn_thread",
+      "mill_turn_setup",
+      "hollow_bore",
+      "tube_profile"
+    ],
+    "controller_cycles": ["G71", "G72", "G76", "G96", "G97"],
+    "coolant": ["flood"],
+    "probing": false,
+    "tool_interface": "VDI40",
+    "tool_capacity": 12
+  }
+}

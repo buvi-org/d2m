@@ -167,9 +167,13 @@ manufacturing artifacts, and matches the original Zero-to-CAD <code>model.step</
 returns a second-based <code>subcad.simulation_timeline.v1</code> payload, and
 <code>Stock.export_simulation_package(...)</code> writes <code>simulation_timeline.json</code>,
 <code>simulation_states/*.stl</code>, and <code>video_manifest.json</code>. The browser viewer can
-load that optional timeline and scrub/play the nearest partial stock keyframe.</p>
-<p>This foundation still needs browser recording, explicit caption overlays,
-named machine visuals, turning-specific profile simulation, and V1 adapters for
+load that optional timeline and scrub/play the nearest partial stock keyframe.
+Headless export is also available through
+<code>python -m src.subcad.video_export path\to\scene.json --out output.webm</code>;
+it renders the exported keyframes and machine-schema primitives with VTK and
+encodes WebM/MP4 through <code>ffmpeg</code>.</p>
+<p>This foundation still needs explicit caption overlays in the interactive UI,
+named machine mesh loading, turning-specific profile simulation, and V1 adapters for
 laser, press brake, EDM, grinder, welding, and other non-milling processes.</p>
 <p>This gives immediate interactive review without waiting for browser-side simulation:</p>
 <ul>

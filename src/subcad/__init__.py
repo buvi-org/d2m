@@ -42,6 +42,7 @@ from .gcode_preview import gcode_preview, to_gcode_preview
 from .postprocessor import PostProcessor, Generic3AxisDebugPost, postprocess
 from .target_compare import compare_to_target
 from .visualization import export_visualization_package
+from .operation_video import export_simulation_package
 from .economics import estimate_cost, compare_programs
 from .operations import (
     MachiningOperation,
@@ -120,6 +121,19 @@ from .fixturing import (
     WORK_OFFSET_NAMES,
 )
 
+
+def build_video_export_plan(*args, **kwargs):
+    from .video_export import build_video_export_plan as _build_video_export_plan
+
+    return _build_video_export_plan(*args, **kwargs)
+
+
+def export_video(*args, **kwargs):
+    from .video_export import export_video as _export_video
+
+    return _export_video(*args, **kwargs)
+
+
 __all__ = [
     # Core classes
     "Stock",
@@ -154,6 +168,9 @@ __all__ = [
     "postprocess",
     "compare_to_target",
     "export_visualization_package",
+    "export_simulation_package",
+    "build_video_export_plan",
+    "export_video",
     "estimate_cost",
     "compare_programs",
     # Operation classes

@@ -382,6 +382,26 @@ html, body {
   text-align: center;
 }
 
+.export-controls {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.export-progress {
+  margin-top: 0;
+}
+
+.export-status {
+  min-height: 16px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
 .slider-row {
   display: flex;
   align-items: center;

@@ -1,0 +1,89 @@
+{
+  "status": "ok",
+  "renderer": "subcad.headless_video.v1",
+  "scene": "C:\\Users\\Rajesh\\dev\\d2m\\web\\sessions\\turning_demo_20260617_120756\\scene.json",
+  "timeline": "C:\\Users\\Rajesh\\dev\\d2m\\web\\sessions\\turning_demo_20260617_120756\\simulation_timeline.json",
+  "video_manifest": "C:\\Users\\Rajesh\\dev\\d2m\\web\\sessions\\turning_demo_20260617_120756\\video_manifest.json",
+  "output": "C:\\Users\\Rajesh\\dev\\d2m\\renders\\turning_demo_cli_10x.webm",
+  "manifest": "C:\\Users\\Rajesh\\dev\\d2m\\renders\\turning_demo_cli_10x.json",
+  "output_format": "webm",
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "playback_rate": 10.0,
+  "timeline_total_time_sec": 70.0,
+  "rendered_duration_sec": 7.0,
+  "frame_count": 210,
+  "max_frames": null,
+  "turning_scene": true,
+  "segment_count": 3,
+  "keyframe_count": 29,
+  "machine_component_count": 9,
+  "notes": [
+    "Headless export samples simulation stock keyframes; it does not modify the CadQuery STEP chain.",
+    "Current renderer uses VTK primitives for machine schema components and ffmpeg for encoding."
+  ],
+  "ffmpeg": "C:\\Users\\Rajesh\\AppData\\Local\\Microsoft\\WinGet\\Links\\ffmpeg.EXE",
+  "crf": 34,
+  "video": "C:\\Users\\Rajesh\\dev\\d2m\\renders\\turning_demo_cli_10x.webm",
+  "file_size_bytes": 125761,
+  "elapsed_sec": 2.646,
+  "sampled_frames": [
+    {
+      "frame": 0,
+      "simulation_time_sec": 0.0,
+      "segment": "turn_setup_000",
+      "operation": "mill_turn_setup",
+      "keyframe": "simulation_states/turn_state_000.stl"
+    },
+    {
+      "frame": 30,
+      "simulation_time_sec": 10.0478,
+      "segment": "turn_profile_001",
+      "operation": "turn_profile",
+      "keyframe": "simulation_states/turn_state_004.stl"
+    },
+    {
+      "frame": 60,
+      "simulation_time_sec": 20.0957,
+      "segment": "turn_profile_001",
+      "operation": "turn_profile",
+      "keyframe": "simulation_states/turn_state_008.stl"
+    },
+    {
+      "frame": 90,
+      "simulation_time_sec": 30.1435,
+      "segment": "turn_profile_001",
+      "operation": "turn_profile",
+      "keyframe": "simulation_states/turn_state_012.stl"
+    },
+    {
+      "frame": 120,
+      "simulation_time_sec": 40.1914,
+      "segment": "turn_id_002",
+      "operation": "turn_id",
+      "keyframe": "simulation_states/turn_state_016.stl"
+    },
+    {
+      "frame": 150,
+      "simulation_time_sec": 50.2392,
+      "segment": "turn_id_002",
+      "operation": "turn_id",
+      "keyframe": "simulation_states/turn_state_020.stl"
+    },
+    {
+      "frame": 180,
+      "simulation_time_sec": 60.2871,
+      "segment": "turn_id_002",
+      "operation": "turn_id",
+      "keyframe": "simulation_states/turn_state_024.stl"
+    },
+    {
+      "frame": 209,
+      "simulation_time_sec": 70.0,
+      "segment": "turn_id_002",
+      "operation": "turn_id",
+      "keyframe": "simulation_states/turn_state_028.stl"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
-import { Viewer } from './viewer.js';
+import { Viewer } from './viewer.js?v=20260617-axis-fix-v10';
 
 const viewer = new Viewer();
+window.__viewer = viewer;
 const els = {};
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,6 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
     'playback-speed',
     'playback-range',
     'playback-label',
+    'export-video',
+    'export-video-status',
+    'export-progress',
+    'export-progress-fill',
   ]) {
     els[id] = document.getElementById(id);
   }
@@ -81,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
   els['playback-reset'].addEventListener('click', () => resetPlayback());
   els['playback-speed'].addEventListener('change', () => updatePlaybackLabel());
   els['playback-range'].addEventListener('input', event => scrubPlayback(Number(event.target.value)));
+  els['export-video'].addEventListener('click', () => exportPlaybackVideo());
   els['fit-view'].addEventListener('click', () => viewer.fitView());
 
   loadSession(session);
@@ -98,8 +104,24 @@ async function loadSession(scenePath) {
     window.__currentScene = scene;
     window.__sceneBaseUrl = baseUrl;
     window.__machiningZOffset = Number(scene.stock_dimensions?.height || 0) / 2;
+    window.__simulationTimeline = await loadSimulationTimeline(scene, baseUrl);
+    window.__videoManifest = await loadVideoManifest(scene, baseUrl);
+    window.__simulationStockKeyframes = window.__simulationTimeline?.stockKeyframes || [];
+    const isTurning = isTurningScene(scene, window.__simulationTimeline);
+    window.__isTurningScene = isTurning;
+    window.__currentMachine = machineForScene(scene, window.__simulationTimeline);
+    viewer.setProcessMode(
+      isTurning ? 'turning' : 'mill',
+      {
+        stock_dimensions: scene.stock_dimensions || {},
+        machine: window.__currentMachine,
+        fixtures: scene.fixtures || window.__simulationTimeline?.fixtures || null,
+      },
+    );
+    window.__currentSimulationKeyframeIndex = -1;
+    window.__simulationStockRequestId = 0;
     window.__stockStates = scene.assets?.stock_states || [];
-    window.__currentStateIndex = Math.max(0, window.__stockStates.length - 1);
+    window.__currentStateIndex = Math.max(0, stockTimelineStates().length - 1);
     window.__currentToolpath = [];
     window.__currentToolpathMoves = [];
     window.__currentDiffRegions = [];
@@ -107,7 +129,7 @@ async function loadSession(scenePath) {
     window.__selectedToolpathOperation = 'all';
     window.__playback = emptyPlayback();
 
-    if (window.__stockStates.length) {
+    if (stockTimelineStates().length) {
       await loadTimelineState(window.__currentStateIndex);
     } else if (scene.assets?.stock_mesh) {
       await viewer.loadStockSTL(await fetchArrayBuffer(assetUrl(scene.assets.stock_mesh, baseUrl)));
@@ -131,7 +153,14 @@ async function loadSession(scenePath) {
     viewer.setClearanceMarkerVisible(els['show-markers'].checked);
 
     const toolpathAsset = scene.assets?.toolpaths || scene.assets?.toolpath;
-    if (toolpathAsset) {
+    if (isTurning && window.__simulationTimeline?.segments?.length) {
+      const extracted = simulationToolpathMoves(window.__simulationTimeline);
+      window.__currentToolpath = extracted.points;
+      window.__currentToolpathMoves = extracted.operations;
+      if (els['show-toolpath'].checked) {
+        renderSelectedToolpath();
+      }
+    } else if (toolpathAsset) {
       const toolpaths = await fetchJson(assetUrl(toolpathAsset, baseUrl));
       const extracted = extractToolpathMoves(toolpaths);
       window.__currentToolpath = extracted.points;
@@ -159,12 +188,19 @@ async function loadSession(scenePath) {
     preparePlayback(getSelectedOperations(), { reset: true });
     updateSelectedOperationDetails();
     updateTimelineControls();
+    updateExportAvailability();
+    const statusParts = [
+      `${window.__currentToolpath.length} toolpath points`,
+      `${window.__stockStates.length} stock states`,
+      `${window.__currentDiffRegions.length} diff regions`,
+      `${window.__currentClearanceMarkers.length} clearance markers`,
+    ];
+    if (window.__simulationTimeline) {
+      statusParts.push(`${window.__simulationStockKeyframes.length} sim keyframes`);
+    }
     setStatus(
       `Loaded ${scene.title || 'SubCAD visualization session'}; `
-      + `${window.__currentToolpath.length} toolpath points; `
-      + `${window.__stockStates.length} stock states; `
-      + `${window.__currentDiffRegions.length} diff regions; `
-      + `${window.__currentClearanceMarkers.length} clearance markers`
+      + statusParts.join('; ')
     );
   } catch (err) {
     console.error(err);
@@ -183,6 +219,271 @@ function cacheBustUrl(url) {
     next.searchParams.set('v', window.__cacheBust);
   }
   return next.href;
+}
+
+async function loadSimulationTimeline(scene, baseUrl) {
+  const asset = scene.assets?.simulation_timeline;
+  if (!asset) return null;
+
+  try {
+    const payload = await fetchJson(assetUrl(asset, baseUrl));
+    return normalizeSimulationTimeline(payload);
+  } catch (err) {
+    console.warn('Could not load simulation_timeline:', err);
+    return null;
+  }
+}
+
+async function loadVideoManifest(scene, baseUrl) {
+  const asset = scene.assets?.video_manifest || { path: 'video_manifest.json' };
+  if (!asset?.path) return null;
+
+  try {
+    return await fetchJson(assetUrl(asset, baseUrl));
+  } catch (err) {
+    return null;
+  }
+}
+
+function normalizeSimulationTimeline(payload) {
+  const timeline = payload?.timeline || {};
+  const segments = normalizeSimulationSegments(timeline.segments || payload?.segments || []);
+  const stockKeyframes = normalizeSimulationStockKeyframes(payload?.stock_keyframes || timeline.stock_keyframes || []);
+  const declaredTotal = numberOrNull(timeline.total_time_sec ?? timeline.totalTimeSec ?? payload?.total_time_sec);
+  const segmentTotal = segments.reduce((max, segment) => Math.max(max, segment.endTimeSec), 0);
+  const keyframeTotal = stockKeyframes.reduce((max, keyframe) => Math.max(max, keyframe.time_sec), 0);
+  const totalTimeSec = declaredTotal && declaredTotal > 0
+    ? declaredTotal
+    : Math.max(segmentTotal, keyframeTotal);
+
+  return {
+    schema: payload?.schema || payload?.schema_version || '',
+    totalTimeSec,
+    segments,
+    stockKeyframes,
+    machines: Array.isArray(payload?.machines) ? payload.machines : [],
+    fixtures: payload?.fixtures || null,
+  };
+}
+
+function normalizeSimulationSegments(rawSegments) {
+  if (!Array.isArray(rawSegments)) return [];
+
+  let cursorSec = 0;
+  return rawSegments.map((segment, index) => {
+    const start = numberOrNull(
+      segment.start_time_sec
+      ?? segment.startTimeSec
+      ?? segment.start_sec
+      ?? segment.startSec
+      ?? segment.time_sec
+    );
+    const duration = numberOrNull(segment.duration_sec ?? segment.durationSec);
+    const end = numberOrNull(
+      segment.end_time_sec
+      ?? segment.endTimeSec
+      ?? segment.end_sec
+      ?? segment.endSec
+    );
+    const startTimeSec = start ?? cursorSec;
+    const endTimeSec = end ?? (duration !== null ? startTimeSec + duration : startTimeSec + 0.25);
+    const sequence = segment.sequence_number
+      ?? segment.operation_sequence_number
+      ?? segment.operationSequenceNumber
+      ?? segment.op_sequence
+      ?? null;
+    const operationLabel = typeof segment.operation === 'string'
+      ? segment.operation
+      : (segment.operation?.operation || segment.operation_name || segment.label || '');
+    const normalized = {
+      ...segment,
+      index,
+      sequence_number: sequence,
+      operation_label: operationLabel,
+      moveType: segment.move_type || segment.moveType || segment.segment_type || segment.type || 'simulation',
+      start: pointOrNull(segment.start_position || segment.startPosition || segment.start),
+      end: pointOrNull(segment.end_position || segment.endPosition || segment.end),
+      startTimeSec,
+      endTimeSec: Math.max(startTimeSec, endTimeSec),
+      durationSec: Math.max(0, endTimeSec - startTimeSec),
+    };
+    cursorSec = normalized.endTimeSec;
+    return normalized;
+  }).sort((a, b) => a.startTimeSec - b.startTimeSec);
+}
+
+function normalizeSimulationStockKeyframes(rawKeyframes) {
+  if (!Array.isArray(rawKeyframes)) return [];
+
+  return rawKeyframes.map((keyframe, index) => {
+    const path = typeof keyframe === 'string' ? keyframe : keyframe?.path;
+    if (!path) return null;
+
+    const rawFormat = typeof keyframe === 'string'
+      ? path.split('.').pop()
+      : (keyframe.format || path.split('.').pop());
+    const format = String(rawFormat || '').toLowerCase();
+    if (format && format !== 'stl') return null;
+
+    return {
+      ...(typeof keyframe === 'string' ? {} : keyframe),
+      index,
+      path,
+      format: 'stl',
+      time_sec: numberOrNull(keyframe?.time_sec ?? keyframe?.timeSec) ?? 0,
+      role: keyframe?.role || 'simulation_stock_keyframe',
+      source: 'simulation_timeline',
+    };
+  }).filter(Boolean).sort((a, b) => a.time_sec - b.time_sec);
+}
+
+function simulationToolpathMoves(timeline) {
+  const operations = [];
+  const points = [];
+  for (const segment of timeline?.segments || []) {
+    if (!segment.start || !segment.end) continue;
+    if (String(segment.moveType || segment.move_type || '').toLowerCase().includes('boring')) continue;
+    const motion = turningDisplayMotion(segment);
+    const start = latheGuidePoint(motion.start, segment);
+    const end = latheGuidePoint(motion.end, segment);
+    points.push(start, end);
+    operations.push({
+      sequence_number: segment.sequence_number,
+      operation: segment.operation_label || segment.operation || segment.moveType || 'turning',
+      tool_type: segment.moveType === 'boring' ? 'boring_bar' : (segment.tool_type || 'turning_tool'),
+      tool_diameter_mm: segment.tool_diameter_mm || 8,
+      moves: [
+        { position: start, move_type: 'rapid' },
+        { position: end, move_type: segment.moveType || segment.move_type || 'feed' },
+      ],
+    });
+  }
+  return { operations, points };
+}
+
+function turningDisplayMotion(segment) {
+  const start = pointOrNull(segment?.start);
+  const end = pointOrNull(segment?.end);
+  if (!start || !end || !isLatheCuttingSegment(segment)) {
+    return { start, end, reversed: false };
+  }
+
+  const moveType = String(segment?.moveType || segment?.move_type || '').toLowerCase();
+  if ((moveType.includes('turn') || moveType.includes('od')) && Math.abs(start[2] - end[2]) > 1e-6) {
+    const maxRadius = Math.max(Math.abs(start[0]), Math.abs(end[0]));
+    const minRadius = Math.min(Math.abs(start[0]), Math.abs(end[0]));
+    const lowZ = start[2] <= end[2] ? start : end;
+    const highZ = start[2] > end[2] ? start : end;
+    const sign = Number(start[0] || end[0]) < 0 ? -1 : 1;
+    const freeEnd = [sign * maxRadius, lowZ[1], lowZ[2]];
+    const chuckEnd = [sign * minRadius, highZ[1], highZ[2]];
+    const reversed = Math.abs(start[2] - freeEnd[2]) > 1e-6
+      || Math.abs(Math.abs(start[0]) - maxRadius) > 1e-6;
+    return { start: freeEnd, end: chuckEnd, reversed };
+  }
+
+  const startDisplayX = latheDisplayX(start);
+  const endDisplayX = latheDisplayX(end);
+  if (startDisplayX < endDisplayX) {
+    return { start: end, end: start, reversed: true };
+  }
+  return { start, end, reversed: false };
+}
+
+function latheGuidePoint(point, segment) {
+  const next = [...point];
+  const moveType = String(segment?.moveType || segment?.move_type || '').toLowerCase();
+  const stockRadius = currentStockRadius();
+  if (stockRadius > 0 && (moveType.includes('turn') || moveType.includes('od'))) {
+    next[0] = radialWithSign(point[0], stockRadius);
+  }
+  return next;
+}
+
+function safeLatheToolPoint(point, segment, playback) {
+  if (!window.__isTurningScene || !point || !isLatheCuttingSegment(segment)) return point;
+
+  const next = [...point];
+  const moveType = String(segment?.moveType || segment?.move_type || '').toLowerCase();
+  const stockRadius = currentStockRadius();
+  if (stockRadius <= 0) return next;
+
+  if (moveType.includes('turn') || moveType.includes('od')) {
+    const progress = segmentAbsoluteProgress(segment, playback);
+    const targetRadius = Math.min(Math.abs(next[0]), stockRadius);
+    const currentCutRadius = stockRadius - ((stockRadius - targetRadius) * progress);
+    next[0] = radialWithSign(next[0], Math.max(targetRadius, currentCutRadius));
+  }
+  return next;
+}
+
+function isLatheCuttingSegment(segment) {
+  const text = [
+    segment?.operation,
+    segment?.operation_label,
+    segment?.moveType,
+    segment?.move_type,
+    segment?.segment_type,
+    segment?.tool_type,
+  ].filter(Boolean).join(' ').toLowerCase();
+  return text.includes('turn') || text.includes('boring') || text.includes('lathe');
+}
+
+function latheDisplayX(point) {
+  return -Number(point?.[2] || 0);
+}
+
+function currentStockRadius() {
+  const dimensions = window.__currentScene?.stock_dimensions || {};
+  return Number(dimensions.diameter || Math.max(dimensions.length || 0, dimensions.width || 0)) / 2;
+}
+
+function radialWithSign(value, radius) {
+  const sign = Number(value) < 0 ? -1 : 1;
+  return sign * radius;
+}
+
+function segmentAbsoluteProgress(segment, playback) {
+  const start = numberOrNull(segment?.absoluteStartTimeSec) ?? numberOrNull(segment?.startTimeSec) ?? 0;
+  const end = numberOrNull(segment?.absoluteEndTimeSec) ?? numberOrNull(segment?.endTimeSec) ?? start;
+  const now = playbackAbsoluteTimeSec(playback);
+  const duration = Math.max(end - start, 1e-6);
+  return Math.max(0, Math.min(1, (now - start) / duration));
+}
+
+function isTurningScene(scene, timeline) {
+  const values = [];
+  for (const op of scene?.operations || []) {
+    values.push(op.operation, op.process, op.tool_type, op.fidelity);
+  }
+  for (const op of timeline?.operations || []) {
+    values.push(op.operation, op.process, op.fidelity);
+  }
+  for (const segment of timeline?.segments || []) {
+    values.push(
+      segment.operation,
+      segment.operation_label,
+      segment.segment_type,
+      segment.moveType,
+      segment.move_type,
+      segment.tool_type,
+      segment.fidelity,
+    );
+  }
+  const text = values.filter(Boolean).join(' ').toLowerCase();
+  return (
+    text.includes('turn')
+    || text.includes('lathe')
+    || text.includes('boring')
+    || text.includes('radius_profile')
+  );
+}
+
+function machineForScene(scene, timeline) {
+  if (scene?.machine && typeof scene.machine === 'object') return scene.machine;
+  if (Array.isArray(scene?.machines) && scene.machines.length) return scene.machines[0];
+  if (Array.isArray(timeline?.machines) && timeline.machines.length) return timeline.machines[0];
+  return null;
 }
 
 async function loadSceneMarkers(scene, baseUrl) {
@@ -554,9 +855,12 @@ function updateOperationSelection() {
 
 function emptyPlayback() {
   return {
+    source: 'toolpath',
     segments: [],
     totalTimeSec: 0,
     elapsedSec: 0,
+    timeOriginSec: 0,
+    toolpathFallback: null,
     isPlaying: false,
     lastTimestamp: null,
     rafId: null,
@@ -565,7 +869,9 @@ function emptyPlayback() {
 
 function preparePlayback(operations, options = {}) {
   stopPlayback();
-  const playback = buildPlayback(operations || []);
+  const toolpathPlayback = buildPlayback(operations || []);
+  const playback = buildSimulationPlayback(window.__simulationTimeline, operations || [], toolpathPlayback)
+    || toolpathPlayback;
   if (options.reset !== false) {
     playback.elapsedSec = 0;
   } else if (window.__playback) {
@@ -574,6 +880,90 @@ function preparePlayback(operations, options = {}) {
   window.__playback = playback;
   updatePlaybackAt(playback.elapsedSec);
   updatePlaybackLabel();
+}
+
+function buildSimulationPlayback(timeline, operations, toolpathPlayback) {
+  if (!timeline) return null;
+
+  const selected = window.__selectedToolpathOperation || 'all';
+  let sourceSegments = timeline.segments || [];
+  if (selected !== 'all') {
+    sourceSegments = sourceSegments.filter(segment => String(segment.sequence_number) === selected);
+  }
+
+  const hasSelectedSegments = sourceSegments.length > 0;
+  const originSec = selected === 'all' || !hasSelectedSegments
+    ? 0
+    : Math.min(...sourceSegments.map(segment => segment.startTimeSec));
+  const segmentTotalSec = hasSelectedSegments
+    ? Math.max(...sourceSegments.map(segment => segment.endTimeSec)) - originSec
+    : 0;
+  const totalTimeSec = selected === 'all'
+    ? timeline.totalTimeSec
+    : segmentTotalSec;
+
+  if (!hasSelectedSegments && !(totalTimeSec > 0)) return null;
+
+  const playback = emptyPlayback();
+  playback.source = 'simulation_timeline';
+  playback.timeOriginSec = originSec;
+  playback.totalTimeSec = Math.max(0, totalTimeSec || segmentTotalSec);
+  playback.toolpathFallback = toolpathPlayback?.segments?.length ? toolpathPlayback : null;
+
+  if (hasSelectedSegments) {
+    playback.segments = sourceSegments.map(segment => {
+      const startTimeSec = Math.max(0, segment.startTimeSec - originSec);
+      const endTimeSec = Math.max(startTimeSec, segment.endTimeSec - originSec);
+      const operation = operationForSimulationSegment(segment, operations);
+      const motion = window.__isTurningScene ? turningDisplayMotion(segment) : { start: segment.start, end: segment.end };
+      return {
+        ...segment,
+        start: motion.start,
+        end: motion.end,
+        startTimeSec,
+        endTimeSec,
+        absoluteStartTimeSec: segment.startTimeSec,
+        absoluteEndTimeSec: segment.endTimeSec,
+        displayMotionReversed: Boolean(motion.reversed),
+        durationSec: Math.max(0, endTimeSec - startTimeSec),
+        operation,
+        tool: toolFromOperation({
+          ...(operation || {}),
+          tool_type: segment.moveType === 'boring'
+            ? 'boring_bar'
+            : (segment.tool_type || operation?.tool_type),
+          tool_diameter_mm: segment.tool_diameter_mm || operation?.tool_diameter_mm,
+        }),
+      };
+    });
+  } else {
+    playback.segments = [{
+      startTimeSec: 0,
+      endTimeSec: playback.totalTimeSec,
+      durationSec: playback.totalTimeSec,
+      moveType: 'simulation',
+      operation: null,
+      passNumber: null,
+    }];
+  }
+
+  if (playback.totalTimeSec <= 0) {
+    playback.totalTimeSec = playback.segments.reduce((max, segment) => Math.max(max, segment.endTimeSec), 0);
+  }
+  return playback.segments.length ? playback : null;
+}
+
+function operationForSimulationSegment(segment, selectedOperations) {
+  const sequence = segment.sequence_number;
+  const operation = (selectedOperations || [])
+    .find(op => String(op.sequence_number) === String(sequence))
+    || mergedOperationForSequence(sequence);
+  if (operation) return operation;
+  if (sequence === null && !segment.operation_label) return null;
+  return {
+    sequence_number: sequence,
+    operation: segment.operation_label || segment.label || segment.moveType || 'simulation',
+  };
 }
 
 function buildPlayback(operations) {
@@ -657,6 +1047,9 @@ function stopPlayback() {
     playback.lastTimestamp = null;
     playback.rafId = null;
   }
+  if (viewer.setMachinePlayback) {
+    viewer.setMachinePlayback({ isPlaying: false, segment: null });
+  }
   if (els['playback-play']) {
     els['playback-play'].textContent = 'Play';
   }
@@ -674,6 +1067,220 @@ function scrubPlayback(value) {
   const ratio = Math.max(0, Math.min(1, Number(value) / 1000));
   updatePlaybackAt(playback.totalTimeSec * ratio);
   updatePlaybackLabel();
+}
+
+async function exportPlaybackVideo() {
+  const playback = window.__playback || emptyPlayback();
+  if (window.__videoExportActive || !playback.segments.length || playback.totalTimeSec <= 0) {
+    return;
+  }
+  if (typeof MediaRecorder === 'undefined') {
+    setExportStatus('MediaRecorder unavailable');
+    return;
+  }
+  if (!viewer.captureStream) {
+    setExportStatus('Canvas capture unavailable');
+    return;
+  }
+
+  const mimeType = supportedVideoMimeType();
+  if (!mimeType) {
+    setExportStatus('WebM recording unavailable');
+    return;
+  }
+
+  stopPlayback();
+  window.__videoExportActive = true;
+  updateExportAvailability();
+  setExportProgress(0);
+  setExportStatus('Preparing frames');
+
+  const fps = Math.max(1, Number(window.__videoManifest?.fps || 30));
+  const speed = Math.max(0.1, Number(els['playback-speed'].value || window.__videoManifest?.playback_rate || 1));
+  const stream = viewer.captureStream(fps);
+  if (!stream) {
+    window.__videoExportActive = false;
+    updateExportAvailability();
+    setExportStatus('Canvas capture unavailable');
+    return;
+  }
+
+  let recorder = null;
+  try {
+    await preloadSimulationStockKeyframes(progress => {
+      setExportProgress(progress * 0.12);
+      setExportStatus(`Preparing ${Math.round(progress * 100)}%`);
+    });
+
+    await setPlaybackFrameForExport(0);
+    const chunks = [];
+    recorder = new MediaRecorder(stream, {
+      mimeType,
+      videoBitsPerSecond: 8_000_000,
+    });
+    const stopped = new Promise((resolve, reject) => {
+      recorder.ondataavailable = event => {
+        if (event.data && event.data.size > 0) chunks.push(event.data);
+      };
+      recorder.onerror = event => reject(event.error || new Error('Video recorder failed'));
+      recorder.onstop = () => resolve();
+    });
+
+    playback.isPlaying = true;
+    playback.lastTimestamp = null;
+    window.__playback = playback;
+    els['playback-play'].textContent = 'Pause';
+
+    recorder.start(250);
+    const started = performance.now();
+    await new Promise((resolve, reject) => {
+      const frame = async now => {
+        if (!window.__videoExportActive) {
+          resolve();
+          return;
+        }
+        const wallElapsedSec = Math.max(0, (now - started) / 1000);
+        const elapsedSec = Math.min(playback.totalTimeSec, wallElapsedSec * speed);
+        try {
+          await setPlaybackFrameForExport(elapsedSec);
+        } catch (err) {
+          reject(err);
+          return;
+        }
+        updatePlaybackLabel();
+        setExportProgress(0.12 + (elapsedSec / playback.totalTimeSec) * 0.86);
+        setExportStatus(`${formatTime(elapsedSec)} / ${formatTime(playback.totalTimeSec)} at ${speed}x`);
+        if (elapsedSec >= playback.totalTimeSec) {
+          resolve();
+          return;
+        }
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    });
+
+    await setPlaybackFrameForExport(playback.totalTimeSec);
+    await new Promise(resolve => setTimeout(resolve, 350));
+    recorder.stop();
+    await stopped;
+
+    const blob = new Blob(chunks, { type: mimeType });
+    if (!blob.size) throw new Error('Recorder produced an empty video');
+    downloadBlob(blob, exportVideoFilename(mimeType));
+    setExportProgress(1);
+    setExportStatus(`${formatBytes(blob.size)} WebM exported`);
+  } catch (err) {
+    console.error(err);
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.stop();
+    }
+    setExportStatus(err?.message || 'Video export failed');
+  } finally {
+    stream.getTracks().forEach(track => track.stop());
+    playback.isPlaying = false;
+    playback.lastTimestamp = null;
+    window.__playback = playback;
+    window.__videoExportActive = false;
+    if (viewer.setMachinePlayback) {
+      viewer.setMachinePlayback({ isPlaying: false, segment: null });
+    }
+    if (els['playback-play']) {
+      els['playback-play'].textContent = 'Play';
+    }
+    updatePlaybackLabel();
+    updateExportAvailability();
+  }
+}
+
+async function setPlaybackFrameForExport(elapsedSec) {
+  const playback = window.__playback || emptyPlayback();
+  updatePlaybackAt(elapsedSec, { skipStockLoad: true });
+  if (playback.source === 'simulation_timeline') {
+    await loadSimulationStockAt(playbackAbsoluteTimeSec(playback));
+  }
+  if (viewer.renderFrame) viewer.renderFrame();
+}
+
+async function preloadSimulationStockKeyframes(onProgress) {
+  const keyframes = (window.__simulationStockKeyframes || []).filter(keyframe => keyframe?.path);
+  if (!keyframes.length || !window.__sceneBaseUrl) {
+    onProgress?.(1);
+    return;
+  }
+  let completed = 0;
+  for (const keyframe of keyframes) {
+    if (!keyframe._arrayBufferPromise) {
+      keyframe._arrayBufferPromise = fetchArrayBuffer(assetUrl(keyframe, window.__sceneBaseUrl));
+    }
+    await keyframe._arrayBufferPromise;
+    completed += 1;
+    onProgress?.(completed / keyframes.length);
+  }
+}
+
+function supportedVideoMimeType() {
+  if (typeof MediaRecorder.isTypeSupported !== 'function') {
+    return 'video/webm';
+  }
+  const candidates = [
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm',
+  ];
+  return candidates.find(type => MediaRecorder.isTypeSupported(type)) || '';
+}
+
+function exportVideoFilename(mimeType) {
+  const sceneName = window.__currentScene?.title || els['session-path']?.value || 'subcad-operation-video';
+  const slug = String(sceneName)
+    .replace(/\.json$/i, '')
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase()
+    .slice(0, 80) || 'subcad-operation-video';
+  const extension = mimeType.includes('webm') ? 'webm' : 'video';
+  return `${slug}-${new Date().toISOString().replace(/[:.]/g, '-')}.${extension}`;
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+}
+
+function updateExportAvailability() {
+  if (!els['export-video']) return;
+  const playback = window.__playback || emptyPlayback();
+  const supported = typeof MediaRecorder !== 'undefined' && Boolean(viewer.captureStream);
+  els['export-video'].disabled = Boolean(window.__videoExportActive) || !supported || !playback.segments.length;
+  if (!supported) {
+    setExportStatus('Recording unavailable');
+  } else if (!playback.segments.length) {
+    setExportStatus('No playback loaded');
+  } else if (!window.__videoExportActive && !els['export-video-status'].textContent) {
+    setExportStatus('Ready');
+  }
+}
+
+function setExportStatus(message) {
+  if (els['export-video-status']) {
+    els['export-video-status'].textContent = message || '';
+  }
+}
+
+function setExportProgress(value) {
+  const progress = Math.max(0, Math.min(1, Number(value || 0)));
+  if (els['export-progress']) {
+    els['export-progress'].hidden = progress <= 0 || progress >= 1;
+  }
+  if (els['export-progress-fill']) {
+    els['export-progress-fill'].style.width = `${Math.round(progress * 100)}%`;
+  }
 }
 
 function playbackTick(timestamp) {
@@ -697,32 +1304,44 @@ function playbackTick(timestamp) {
   playback.rafId = requestAnimationFrame(playbackTick);
 }
 
-function updatePlaybackAt(elapsedSec) {
+function updatePlaybackAt(elapsedSec, options = {}) {
   const playback = window.__playback || emptyPlayback();
   playback.elapsedSec = Math.max(0, Math.min(playback.totalTimeSec || 0, Number(elapsedSec || 0)));
   window.__playback = playback;
+  if (playback.source === 'simulation_timeline' && !options.skipStockLoad) {
+    loadSimulationStockAt(playbackAbsoluteTimeSec(playback));
+  }
 
   if (!playback.segments.length) {
     viewer.setToolVisible(false);
+    if (viewer.setMachinePlayback) {
+      viewer.setMachinePlayback({ isPlaying: false, segment: null });
+    }
     els['playback-range'].value = 0;
     return;
   }
 
   const segment = segmentAtTime(playback, playback.elapsedSec);
   if (!segment) return;
+  if (viewer.setMachinePlayback) {
+    viewer.setMachinePlayback({ isPlaying: playback.isPlaying, segment });
+  }
+  const toolSegment = toolMotionSegmentAt(playback, segment);
 
-  const local = segment.durationSec > 0
-    ? (playback.elapsedSec - segment.startTimeSec) / segment.durationSec
-    : 1;
-  const position = lerp3(segment.start, segment.end, Math.max(0, Math.min(1, local)));
-  if (els['show-tool'].checked) {
+  if (toolSegment && els['show-tool'].checked) {
+    const local = toolSegment.durationSec > 0
+      ? (toolSegment.elapsedSec - toolSegment.startTimeSec) / toolSegment.durationSec
+      : 1;
+    const rawPosition = lerp3(toolSegment.start, toolSegment.end, Math.max(0, Math.min(1, local)));
+    const position = safeLatheToolPoint(rawPosition, toolSegment, playback);
+    const tool = toolSegment.tool || segment.tool || toolFromOperation(segment.operation || {});
     viewer.updateTool(
       position,
       null,
-      segment.tool.toolType,
-      segment.tool.diameter,
-      segment.tool.fluteLength,
-      segment.tool,
+      tool.toolType,
+      tool.diameter,
+      tool.fluteLength,
+      tool,
     );
     viewer.setToolVisible(true);
   } else {
@@ -738,14 +1357,16 @@ function updatePlaybackAt(elapsedSec) {
 function updatePlaybackLabel() {
   const playback = window.__playback || emptyPlayback();
   if (!playback.segments.length) {
-    els['playback-label'].textContent = 'No toolpath loaded';
+    els['playback-label'].textContent = window.__simulationTimeline ? 'No playback loaded' : 'No toolpath loaded';
     els['playback-play'].disabled = true;
     els['playback-reset'].disabled = true;
+    updateExportAvailability();
     return;
   }
 
   els['playback-play'].disabled = false;
   els['playback-reset'].disabled = false;
+  updateExportAvailability();
   const segment = segmentAtTime(playback, playback.elapsedSec) || playback.segments[0];
   const opLabel = segment?.operation
     ? `OP ${segment.operation.sequence_number}: ${segment.operation.operation}`
@@ -756,9 +1377,86 @@ function updatePlaybackLabel() {
     + `(${els['playback-speed'].value}x)`;
 }
 
+function playbackAbsoluteTimeSec(playback) {
+  return Number(playback?.timeOriginSec || 0) + Number(playback?.elapsedSec || 0);
+}
+
+function toolMotionSegmentAt(playback, segment) {
+  if (segment?.start && segment?.end) {
+    return {
+      ...segment,
+      elapsedSec: playback.elapsedSec,
+    };
+  }
+
+  const fallback = playback.toolpathFallback;
+  if (!fallback?.segments?.length || playback.totalTimeSec <= 0) return null;
+
+  const fallbackElapsedSec = Math.min(
+    fallback.totalTimeSec,
+    (playback.elapsedSec / playback.totalTimeSec) * fallback.totalTimeSec,
+  );
+  const fallbackSegment = segmentAtTime(fallback, fallbackElapsedSec);
+  if (!fallbackSegment?.start || !fallbackSegment?.end) return null;
+  return {
+    ...fallbackSegment,
+    elapsedSec: fallbackElapsedSec,
+  };
+}
+
+function loadSimulationStockAt(absoluteTimeSec) {
+  const keyframes = window.__simulationStockKeyframes || [];
+  if (!keyframes.length || !window.__sceneBaseUrl) return Promise.resolve();
+
+  const index = simulationStockKeyframeIndexAtTime(keyframes, absoluteTimeSec);
+  if (index < 0 || index === window.__currentSimulationKeyframeIndex) return Promise.resolve();
+
+  window.__currentSimulationKeyframeIndex = index;
+  if (!(window.__stockStates || []).length) {
+    window.__currentStateIndex = index;
+    updateTimelineControls();
+  }
+  const requestId = (window.__simulationStockRequestId || 0) + 1;
+  window.__simulationStockRequestId = requestId;
+  return loadSimulationStockKeyframe(index, requestId).catch(err => {
+    if (requestId === window.__simulationStockRequestId) {
+      console.warn('Could not load simulation stock keyframe:', err);
+    }
+  });
+}
+
+function simulationStockKeyframeIndexAtTime(keyframes, absoluteTimeSec) {
+  const timeSec = Number(absoluteTimeSec || 0);
+  let selectedIndex = -1;
+  for (let index = 0; index < keyframes.length; index += 1) {
+    if (keyframes[index].time_sec <= timeSec + 1e-6) {
+      selectedIndex = index;
+    } else {
+      break;
+    }
+  }
+  return selectedIndex;
+}
+
+async function loadSimulationStockKeyframe(index, requestId) {
+  const keyframes = window.__simulationStockKeyframes || [];
+  const keyframe = keyframes[index];
+  if (!keyframe || !window.__sceneBaseUrl) return;
+
+  if (!keyframe._arrayBufferPromise) {
+    keyframe._arrayBufferPromise = fetchArrayBuffer(assetUrl(keyframe, window.__sceneBaseUrl));
+  }
+  const arrayBuffer = await keyframe._arrayBufferPromise;
+  if (requestId !== window.__simulationStockRequestId) return;
+
+  await viewer.loadStockSTL(arrayBuffer);
+  viewer.setStockVisible(els['show-stock'].checked);
+}
+
 function segmentAtTime(playback, elapsedSec) {
   if (!playback.segments.length) return null;
   return playback.segments.find(segment => elapsedSec >= segment.startTimeSec && elapsedSec <= segment.endTimeSec)
+    || (elapsedSec < playback.segments[0].startTimeSec ? playback.segments[0] : null)
     || playback.segments[playback.segments.length - 1];
 }
 
@@ -766,10 +1464,10 @@ function toolFromOperation(operation) {
   const tool = operation.tool || {};
   const assembly = operation.tool_assembly || tool.assembly || {};
   return {
-    toolType: tool.tool_type || operation.tool_type || 'flat_endmill',
-    diameter: Number(assembly.cutter_diameter_mm || tool.diameter_mm || operation.tool_diameter_mm || 6),
+    toolType: operation.tool_type || tool.tool_type || 'flat_endmill',
+    diameter: Number(operation.tool_diameter_mm || assembly.cutter_diameter_mm || tool.diameter_mm || 6),
     fluteLength: Number(assembly.flute_length_mm || tool.flute_length_mm || tool.fluteLength || 30),
-    shankDiameter: Number(assembly.shank_diameter_mm || tool.shank_diameter_mm || tool.diameter_mm || operation.tool_diameter_mm || 6),
+    shankDiameter: Number(operation.tool_diameter_mm || assembly.shank_diameter_mm || tool.shank_diameter_mm || tool.diameter_mm || 6),
     stickout: Number(assembly.stickout_mm || tool.stickout_mm || tool.flute_length_mm || 35),
     holderId: assembly.holder_id || tool.holder_id || 'generic_holder',
     holderDiameter: Number(assembly.holder_diameter_mm || tool.holder_diameter_mm || 25),
@@ -886,6 +1584,26 @@ function formatNumber(value) {
   return numeric.toFixed(Math.abs(numeric) >= 10 ? 1 : 2);
 }
 
+function formatBytes(value) {
+  const bytes = Number(value);
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const scaled = bytes / (1024 ** index);
+  return `${scaled.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+}
+
+function numberOrNull(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function pointOrNull(value) {
+  if (!Array.isArray(value) || value.length < 3) return null;
+  const point = [Number(value[0]), Number(value[1]), Number(value[2])];
+  return point.every(Number.isFinite) ? point : null;
+}
+
 function formatMinutes(minutes) {
   const value = Number(minutes || 0);
   if (value < 1) {
@@ -935,7 +1653,7 @@ function moveTypeOf(move) {
 }
 
 async function selectTimelineForOperation(sequence) {
-  const states = window.__stockStates || [];
+  const states = stockTimelineStates();
   if (!states.length) return;
 
   if (sequence === 'all') {
@@ -950,7 +1668,7 @@ async function selectTimelineForOperation(sequence) {
 }
 
 async function selectTimelineState(index, options = {}) {
-  const states = window.__stockStates || [];
+  const states = stockTimelineStates();
   if (!states.length) return;
 
   const nextIndex = Math.max(0, Math.min(states.length - 1, Number(index)));
@@ -966,18 +1684,22 @@ async function selectTimelineState(index, options = {}) {
 }
 
 async function loadTimelineState(index) {
-  const states = window.__stockStates || [];
+  const states = stockTimelineStates();
   const state = states[index];
   if (!state || !window.__sceneBaseUrl) return;
 
+  window.__simulationStockRequestId = (window.__simulationStockRequestId || 0) + 1;
   window.__currentStateIndex = index;
+  if (state.source === 'simulation_timeline') {
+    window.__currentSimulationKeyframeIndex = index;
+  }
   await viewer.loadStockSTL(await fetchArrayBuffer(assetUrl(state, window.__sceneBaseUrl)));
   viewer.setStockVisible(els['show-stock'].checked);
   updateTimelineControls();
 }
 
 function updateTimelineControls() {
-  const states = window.__stockStates || [];
+  const states = stockTimelineStates();
   const index = Math.max(0, Math.min(states.length - 1, window.__currentStateIndex || 0));
   const state = states[index];
   const hasTimeline = states.length > 0;
@@ -994,8 +1716,17 @@ function updateTimelineControls() {
     return;
   }
 
-  const prefix = state.sequence_number === 0 ? 'Initial' : `OP ${state.sequence_number}`;
+  const sequence = state.sequence_number;
+  const prefix = sequence === 0
+    ? 'Initial'
+    : (sequence === null || sequence === undefined ? formatTime(state.time_sec || 0) : `OP ${sequence}`);
   els['timeline-label'].textContent = `${prefix}: ${state.operation || state.label || 'stock state'}`;
+}
+
+function stockTimelineStates() {
+  const stockStates = window.__stockStates || [];
+  if (stockStates.length) return stockStates;
+  return window.__simulationStockKeyframes || [];
 }
 
 async function fetchJson(url) {

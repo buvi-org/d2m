@@ -2119,12 +2119,20 @@ class Stock:
             except ImportError as e:
                 return {"error": f"Simulation not available: {e}"}
 
-        # 1. Build initial tri-dexel grid from stock mesh
-        mesh = self.to_mesh()
+        # 1. Build initial tri-dexel grid from the original stock mesh.
+        # Process-video and validation replay must not start from the already
+        # finished CadQuery shape.
+        try:
+            from .operation_video import _initial_stock_mesh, _mesh_bbox
+
+            mesh, _initial_source = _initial_stock_mesh(self)
+            bbox = _mesh_bbox(mesh) if mesh is not None else self.bounding_box
+        except Exception:
+            mesh = self.to_mesh()
+            bbox = self.bounding_box
         if mesh is None:
             return {"error": "Cannot create mesh from shape."}
 
-        bbox = self.bounding_box
         dexel_resolution = float(toolpath_precision)  # mm per dexel
 
         # Create TriDexelModel from the mesh, then the MaterialRemovalEngine
@@ -2195,7 +2203,10 @@ class Stock:
             # Prefer operation-provided toolpath data when available.
             toolpath_data = op_dict.get("toolpath")
             toolpath = (
-                _toolpath_from_serialized(toolpath_data)
+                _toolpath_from_serialized(
+                    toolpath_data,
+                    z_offset=float(bbox.get("z_max", 0.0) or 0.0),
+                )
                 if toolpath_data
                 else _op_to_simple_toolpath(op_dict, bbox)
             )
@@ -2346,6 +2357,76 @@ class Stock:
             economics=economics,
         )
 
+    def simulation_timeline(
+        self,
+        *,
+        fps: int = 30,
+        playback_rate: float = 1.0,
+        resolution_mm: float = 0.5,
+        keyframe_interval_sec: float = 0.25,
+        target=None,
+        include_machine: bool = True,
+        include_fixtures: bool = True,
+        include_process_effects: bool = True,
+        max_keyframes: int = 240,
+    ) -> dict:
+        """Return a time-based operation simulation timeline.
+
+        The returned keyframes are visual simulation states, not CadQuery/STEP
+        B-Rep states.  Final CAD output remains unchanged.
+        """
+        from .operation_video import build_simulation_timeline
+
+        return build_simulation_timeline(
+            self,
+            fps=fps,
+            playback_rate=playback_rate,
+            resolution_mm=resolution_mm,
+            keyframe_interval_sec=keyframe_interval_sec,
+            target=target,
+            include_machine=include_machine,
+            include_fixtures=include_fixtures,
+            include_process_effects=include_process_effects,
+            max_keyframes=max_keyframes,
+        )
+
+    def export_simulation_package(
+        self,
+        output_dir: str,
+        *,
+        target=None,
+        tolerance_mm: float = 0.25,
+        include_diff_mesh: bool = True,
+        economics=None,
+        fps: int = 30,
+        playback_rate: float = 1.0,
+        resolution_mm: float = 0.5,
+        keyframe_interval_sec: float = 0.25,
+        include_machine: bool = True,
+        include_fixtures: bool = True,
+        include_process_effects: bool = True,
+        max_keyframes: int = 240,
+    ) -> dict:
+        """Export a browser package with operation-video timeline/keyframes."""
+        from .operation_video import export_simulation_package
+
+        return export_simulation_package(
+            self,
+            output_dir,
+            target=target,
+            tolerance_mm=tolerance_mm,
+            include_diff_mesh=include_diff_mesh,
+            economics=economics,
+            fps=fps,
+            playback_rate=playback_rate,
+            resolution_mm=resolution_mm,
+            keyframe_interval_sec=keyframe_interval_sec,
+            include_machine=include_machine,
+            include_fixtures=include_fixtures,
+            include_process_effects=include_process_effects,
+            max_keyframes=max_keyframes,
+        )
+
     def validate_shop_floor(self, structured: bool = False, raise_on_error: bool = False):
         """Run shop-floor validation against the current process plan."""
         from .validation import validate_all
@@ -2429,7 +2510,7 @@ def _serialize_toolpath(toolpath):
     return serialized
 
 
-def _toolpath_from_serialized(toolpath_data) -> list:
+def _toolpath_from_serialized(toolpath_data, *, z_offset: float = 0.0) -> list:
     """Rehydrate serialized operation toolpath records for simulation."""
     try:
         from src.simulation.kinematics import ToolPose
@@ -2464,6 +2545,10 @@ def _toolpath_from_serialized(toolpath_data) -> list:
         if position is None:
             continue
 
+        position = list(position)
+        if len(position) >= 3:
+            position[2] = float(position[2]) + float(z_offset or 0.0)
+
         toolpath.append(ToolPose(
             position=np.array(position, dtype=np.float64),
             orientation=np.array(orientation, dtype=np.float64),
@@ -2485,7 +2570,10 @@ def _op_to_simple_toolpath(op_dict: dict, bbox: dict) -> list:
     """
     authored_toolpath = op_dict.get("toolpath")
     if authored_toolpath:
-        preferred = _toolpath_from_serialized(authored_toolpath)
+        preferred = _toolpath_from_serialized(
+            authored_toolpath,
+            z_offset=float(bbox.get("z_max", 0.0) or 0.0),
+        )
         if preferred:
             return preferred
 

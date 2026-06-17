@@ -1,0 +1,47 @@
+{
+  "status": "ok",
+  "renderer": "subcad.headless_video.v1",
+  "scene": "C:\\Users\\Rajesh\\dev\\d2m\\web\\sessions\\turning_demo_20260617_120756\\scene.json",
+  "timeline": "C:\\Users\\Rajesh\\dev\\d2m\\web\\sessions\\turning_demo_20260617_120756\\simulation_timeline.json",
+  "video_manifest": "C:\\Users\\Rajesh\\dev\\d2m\\web\\sessions\\turning_demo_20260617_120756\\video_manifest.json",
+  "output": "C:\\Users\\Rajesh\\dev\\d2m\\renders\\turning_demo_cli_smoke.mp4",
+  "manifest": "C:\\Users\\Rajesh\\dev\\d2m\\renders\\turning_demo_cli_smoke.json",
+  "output_format": "mp4",
+  "width": 640,
+  "height": 360,
+  "fps": 30,
+  "playback_rate": 10.0,
+  "timeline_total_time_sec": 70.0,
+  "rendered_duration_sec": 0.4,
+  "frame_count": 12,
+  "max_frames": 12,
+  "turning_scene": true,
+  "segment_count": 3,
+  "keyframe_count": 29,
+  "machine_component_count": 9,
+  "notes": [
+    "Headless export samples simulation stock keyframes; it does not modify the CadQuery STEP chain.",
+    "Current renderer uses VTK primitives for machine schema components and ffmpeg for encoding."
+  ],
+  "ffmpeg": "C:\\Users\\Rajesh\\AppData\\Local\\Microsoft\\WinGet\\Links\\ffmpeg.EXE",
+  "crf": 34,
+  "video": "C:\\Users\\Rajesh\\dev\\d2m\\renders\\turning_demo_cli_smoke.mp4",
+  "file_size_bytes": 7751,
+  "elapsed_sec": 1.237,
+  "sampled_frames": [
+    {
+      "frame": 0,
+      "simulation_time_sec": 0.0,
+      "segment": "turn_setup_000",
+      "operation": "mill_turn_setup",
+      "keyframe": "simulation_states/turn_state_000.stl"
+    },
+    {
+      "frame": 11,
+      "simulation_time_sec": 70.0,
+      "segment": "turn_id_002",
+      "operation": "turn_id",
+      "keyframe": "simulation_states/turn_state_028.stl"
+    }
+  ]
+}

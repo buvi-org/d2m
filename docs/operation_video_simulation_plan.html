@@ -70,10 +70,12 @@ physics in V1 should be clearly labeled as visual approximations.</p>
   shape.</li>
 <li><code>web/session-viewer.js</code> loads optional <code>simulation_timeline</code> assets and uses
   the nearest stock keyframe during playback/scrubbing.</li>
+<li>The browser viewer can export the current playback to a WebM file using
+  canvas <code>captureStream</code> and <code>MediaRecorder</code>.</li>
 </ul>
-<p>This is not yet the full factory-video system. Browser recording, headless video
-export, named machine visuals, turning profile simulation, and non-milling
-process adapters remain future phases.</p>
+<p>This is not yet the full factory-video system. Named machine mesh loading,
+production turning profile simulation, and non-milling process adapters remain
+future phases. A first headless video export path is now available.</p>
 <h2 id="current-repository-baseline">Current Repository Baseline</h2>
 <p>SubCAD already has several useful building blocks:</p>
 <ul>
@@ -159,11 +161,15 @@ the final STEP file or a production CAM verifier.</p>
 <li>machine, fixture, tool, and effect assets</li>
 <li>a viewer entrypoint for playback and recording</li>
 </ul>
-<p>Add a command-line export path:</p>
+<p>Headless command-line export is implemented:</p>
 <pre><code class="language-powershell">python -m src.subcad.video_export path\to\scene.json --out output.webm
+python -m src.subcad.video_export path\to\scene.json --out output.mp4 --speed 10
+python -m src.subcad.video_export path\to\scene.json --out output.webm --dry-run
 </code></pre>
-<p>Browser-native export should default to WebM. MP4 can be added later through
-<code>ffmpeg</code> when available.</p>
+<p>The CLI renderer uses the same <code>scene.json</code>, <code>simulation_timeline.json</code>,
+<code>simulation_states/*.stl</code>, <code>video_manifest.json</code>, and machine component
+schema. It renders frames with VTK offscreen and encodes WebM/MP4 through
+<code>ffmpeg</code>.</p>
 <h2 id="timeline-model">Timeline Model</h2>
 <p>The timeline compiler should convert the process plan into display segments:</p>
 <ul>
@@ -278,9 +284,11 @@ revolve it to a display mesh for keyframes.</p>
 </ul>
 <h3 id="phase-3-video-export">Phase 3: Video Export</h3>
 <ul>
-<li>Add browser recording.</li>
-<li>Add headless or CLI-driven video export.</li>
-<li>Add deterministic camera presets and frame pacing.</li>
+<li>Done: add browser WebM recording.</li>
+<li>Done: add headless CLI-driven WebM/MP4 export through
+  <code>src.subcad.video_export</code>.</li>
+<li>Partial: deterministic playback uses the selected review speed and manifest
+  FPS; fixed camera presets still need a stronger multi-machine contract.</li>
 </ul>
 <h3 id="phase-4-turning">Phase 4: Turning</h3>
 <ul>
@@ -304,6 +312,8 @@ revolve it to a display mesh for keyframes.</p>
 <li>Machine/setup transition captions appear when process context changes.</li>
 <li>Browser viewer loads and renders nonblank stock, tool, fixture, and captions.</li>
 <li>Video export produces a playable file.</li>
+<li>CLI video export dry-run resolves scene, timeline, stock keyframes, speed,
+  frame count, and machine components without requiring the browser.</li>
 <li>Existing simulation, toolpath, and visualization tests remain passing.</li>
 </ul>
 <p>Performance acceptance:</p>

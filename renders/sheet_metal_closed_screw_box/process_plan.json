@@ -1,0 +1,509 @@
+{
+  "schema_version": "subcad.shop_floor.v1",
+  "units": {
+    "linear": "mm",
+    "time": "min",
+    "angle": "deg"
+  },
+  "material": "steel_a36",
+  "stock_dimensions": {
+    "length": 220.0,
+    "width": 202.0,
+    "height": 1.2,
+    "thickness": 1.2,
+    "stock_form": "sheet",
+    "process_family": "sheet_metal",
+    "formed_enclosure": {
+      "inside_length_mm": 120.0,
+      "inside_width_mm": 80.0,
+      "inside_height_mm": 50.0,
+      "lid_lip_mm": 22.0
+    }
+  },
+  "total_operations": 10,
+  "estimated_time_minutes": 20.0,
+  "tool_change_count": 2,
+  "tools_used": [
+    {
+      "tool_type": "fiber_laser",
+      "diameter_mm": 0.18,
+      "label": "fiber_laser D0.18mm",
+      "tool_diameter_mm": 0.18,
+      "assembly": {
+        "tool_id": "",
+        "tool_type": "fiber_laser",
+        "cutter_diameter_mm": 0.18,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 0.18,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      }
+    },
+    {
+      "tool_type": "press_brake_punch",
+      "diameter_mm": 3.0,
+      "label": "press_brake_punch D3.0mm",
+      "tool_diameter_mm": 3.0,
+      "assembly": {
+        "tool_id": "",
+        "tool_type": "press_brake_punch",
+        "cutter_diameter_mm": 3.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 3.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      }
+    },
+    {
+      "tool_type": "screwdriver",
+      "diameter_mm": 0.0,
+      "label": "screwdriver D0.0mm",
+      "tool_diameter_mm": 0.0,
+      "assembly": {
+        "tool_id": "",
+        "tool_type": "screwdriver",
+        "cutter_diameter_mm": 0.0,
+        "flute_length_mm": 50.0,
+        "shank_diameter_mm": 0.0,
+        "stickout_mm": 35.0,
+        "holder_id": "generic_er_collet",
+        "holder_diameter_mm": 25.0,
+        "holder_length_mm": 35.0,
+        "tool_number": null
+      }
+    }
+  ],
+  "operations": [
+    {
+      "operation": "laser_cut_profile",
+      "process": "laser_cut",
+      "operation_family": "sheet_metal_cutting",
+      "tool_type": "fiber_laser",
+      "tool_diameter_mm": 0.18,
+      "kerf_width_mm": 0.18,
+      "notes": "Cut one-piece enclosure blank: bottom, four walls, top lid, front screw lip, four corner return tabs, and corner reliefs.",
+      "sequence_number": 1,
+      "schema_version": "subcad.shop_floor.v1",
+      "feeds_speeds": null,
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.18,
+        "label": "fiber_laser D0.18mm",
+        "tool_diameter_mm": 0.18,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.18,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 0.18,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "validation_buckets": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Cut one-piece enclosure blank: bottom, four walls, top lid, front screw lip, four corner return tabs, and corner reliefs."
+        ]
+      }
+    },
+    {
+      "operation": "laser_cut_internal",
+      "process": "laser_cut",
+      "operation_family": "sheet_metal_cutting",
+      "tool_type": "fiber_laser",
+      "tool_diameter_mm": 0.18,
+      "notes": "Cut 3 x M4.5 front-lip closure holes and 16 x M3.4 corner-tab seam holes.",
+      "sequence_number": 2,
+      "schema_version": "subcad.shop_floor.v1",
+      "feeds_speeds": null,
+      "tool": {
+        "tool_type": "fiber_laser",
+        "diameter_mm": 0.18,
+        "label": "fiber_laser D0.18mm",
+        "tool_diameter_mm": 0.18,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "fiber_laser",
+          "cutter_diameter_mm": 0.18,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 0.18,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "validation_buckets": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Cut 3 x M4.5 front-lip closure holes and 16 x M3.4 corner-tab seam holes."
+        ]
+      }
+    },
+    {
+      "operation": "press_brake_bend",
+      "process": "press_brake",
+      "axis": "X",
+      "bend_line_position_mm": -40.0,
+      "angle_deg": -90,
+      "inside_radius_mm": 1.5,
+      "sheet_thickness_mm": 1.2,
+      "tool_type": "press_brake_punch",
+      "tool_diameter_mm": 3.0,
+      "notes": "Fold front wall up.",
+      "sequence_number": 3,
+      "schema_version": "subcad.shop_floor.v1",
+      "feeds_speeds": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "validation_buckets": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Fold front wall up."
+        ]
+      }
+    },
+    {
+      "operation": "press_brake_bend",
+      "process": "press_brake",
+      "axis": "X",
+      "bend_line_position_mm": 40.0,
+      "angle_deg": 90,
+      "inside_radius_mm": 1.5,
+      "sheet_thickness_mm": 1.2,
+      "tool_type": "press_brake_punch",
+      "tool_diameter_mm": 3.0,
+      "notes": "Fold back wall up with attached lid panel.",
+      "sequence_number": 4,
+      "schema_version": "subcad.shop_floor.v1",
+      "feeds_speeds": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "validation_buckets": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Fold back wall up with attached lid panel."
+        ]
+      }
+    },
+    {
+      "operation": "press_brake_bend",
+      "process": "press_brake",
+      "axis": "Y",
+      "bend_line_position_mm": -60.0,
+      "angle_deg": 90,
+      "inside_radius_mm": 1.5,
+      "sheet_thickness_mm": 1.2,
+      "tool_type": "press_brake_punch",
+      "tool_diameter_mm": 3.0,
+      "notes": "Fold left wall up.",
+      "sequence_number": 5,
+      "schema_version": "subcad.shop_floor.v1",
+      "feeds_speeds": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "validation_buckets": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Fold left wall up."
+        ]
+      }
+    },
+    {
+      "operation": "press_brake_bend",
+      "process": "press_brake",
+      "axis": "Y",
+      "bend_line_position_mm": 60.0,
+      "angle_deg": -90,
+      "inside_radius_mm": 1.5,
+      "sheet_thickness_mm": 1.2,
+      "tool_type": "press_brake_punch",
+      "tool_diameter_mm": 3.0,
+      "notes": "Fold right wall up.",
+      "sequence_number": 6,
+      "schema_version": "subcad.shop_floor.v1",
+      "feeds_speeds": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "validation_buckets": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Fold right wall up."
+        ]
+      }
+    },
+    {
+      "operation": "press_brake_bend",
+      "process": "press_brake",
+      "axis": "X",
+      "bend_line_position_mm": 50.0,
+      "angle_deg": 90,
+      "inside_radius_mm": 1.5,
+      "sheet_thickness_mm": 1.2,
+      "tool_type": "press_brake_punch",
+      "tool_diameter_mm": 3.0,
+      "notes": "Fold top lid over the box.",
+      "sequence_number": 7,
+      "schema_version": "subcad.shop_floor.v1",
+      "feeds_speeds": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "validation_buckets": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Fold top lid over the box."
+        ]
+      }
+    },
+    {
+      "operation": "press_brake_bend",
+      "process": "press_brake",
+      "axis": "X",
+      "bend_line_position_mm": 22.0,
+      "angle_deg": 90,
+      "inside_radius_mm": 1.5,
+      "sheet_thickness_mm": 1.2,
+      "tool_type": "press_brake_punch",
+      "tool_diameter_mm": 3.0,
+      "notes": "Fold front screw lip down over front wall.",
+      "sequence_number": 8,
+      "schema_version": "subcad.shop_floor.v1",
+      "feeds_speeds": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "validation_buckets": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Fold front screw lip down over front wall."
+        ]
+      }
+    },
+    {
+      "operation": "press_brake_bend",
+      "process": "press_brake",
+      "operation_family": "sheet_metal_forming",
+      "tool_type": "press_brake_punch",
+      "tool_diameter_mm": 3.0,
+      "notes": "Fold four corner return tabs 90 degrees and screw them to side walls.",
+      "sequence_number": 9,
+      "schema_version": "subcad.shop_floor.v1",
+      "feeds_speeds": null,
+      "tool": {
+        "tool_type": "press_brake_punch",
+        "diameter_mm": 3.0,
+        "label": "press_brake_punch D3.0mm",
+        "tool_diameter_mm": 3.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "press_brake_punch",
+          "cutter_diameter_mm": 3.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 3.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "validation_buckets": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Fold four corner return tabs 90 degrees and screw them to side walls."
+        ]
+      }
+    },
+    {
+      "operation": "assembly_fasteners",
+      "process": "assembly",
+      "tool_type": "screwdriver",
+      "tool_diameter_mm": 0.0,
+      "notes": "Install 3 x M4 screws on front lid lip and 16 x M3 screws on corner seam tabs.",
+      "sequence_number": 10,
+      "schema_version": "subcad.shop_floor.v1",
+      "feeds_speeds": null,
+      "tool": {
+        "tool_type": "screwdriver",
+        "diameter_mm": 0.0,
+        "label": "screwdriver D0.0mm",
+        "tool_diameter_mm": 0.0,
+        "assembly": {
+          "tool_id": "",
+          "tool_type": "screwdriver",
+          "cutter_diameter_mm": 0.0,
+          "flute_length_mm": 50.0,
+          "shank_diameter_mm": 0.0,
+          "stickout_mm": 35.0,
+          "holder_id": "generic_er_collet",
+          "holder_diameter_mm": 25.0,
+          "holder_length_mm": 35.0,
+          "tool_number": null
+        }
+      },
+      "validation_buckets": {
+        "errors": [],
+        "warnings": [],
+        "notes": [
+          "Install 3 x M4 screws on front lid lip and 16 x M3 screws on corner seam tabs."
+        ]
+      }
+    }
+  ],
+  "validation": {
+    "errors": [],
+    "warnings": [],
+    "notes": [
+      "Cut one-piece enclosure blank: bottom, four walls, top lid, front screw lip, four corner return tabs, and corner reliefs.",
+      "Cut 3 x M4.5 front-lip closure holes and 16 x M3.4 corner-tab seam holes.",
+      "Fold front wall up.",
+      "Fold back wall up with attached lid panel.",
+      "Fold left wall up.",
+      "Fold right wall up.",
+      "Fold top lid over the box.",
+      "Fold front screw lip down over front wall.",
+      "Fold four corner return tabs 90 degrees and screw them to side walls.",
+      "Install 3 x M4 screws on front lid lip and 16 x M3 screws on corner seam tabs."
+    ]
+  },
+  "validation_buckets": {
+    "errors": [],
+    "warnings": [],
+    "notes": [
+      "Cut one-piece enclosure blank: bottom, four walls, top lid, front screw lip, four corner return tabs, and corner reliefs.",
+      "Cut 3 x M4.5 front-lip closure holes and 16 x M3.4 corner-tab seam holes.",
+      "Fold front wall up.",
+      "Fold back wall up with attached lid panel.",
+      "Fold left wall up.",
+      "Fold right wall up.",
+      "Fold top lid over the box.",
+      "Fold front screw lip down over front wall.",
+      "Fold four corner return tabs 90 degrees and screw them to side walls.",
+      "Install 3 x M4 screws on front lid lip and 16 x M3 screws on corner seam tabs."
+    ]
+  },
+  "fixture": null,
+  "setups": {},
+  "work_offsets": {},
+  "machine": null,
+  "controller": null,
+  "setup_intent": null,
+  "tooling": null,
+  "quality": null,
+  "collision_policy": null
+}

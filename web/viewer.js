@@ -19,6 +19,11 @@ const TOOL_CYLINDER_COLOR = 0xffaa00;
 const TOOL_SPHERE_COLOR = 0xff8800;
 const TOOL_HOLDER_COLOR = 0x708090;
 const TOOL_OPACITY = 0.72;
+const LATHE_BED_COLOR = 0x253241;
+const LATHE_HEADSTOCK_COLOR = 0x334155;
+const LATHE_CHUCK_COLOR = 0x475569;
+const LATHE_JAW_COLOR = 0x94a3b8;
+const LATHE_INSERT_COLOR = 0xffb020;
 const FIXTURE_COLOR = 0x3b4a5a;
 const CLAMP_ZONE_COLOR = 0xff3b30;
 const GOUGE_SPHERE_COLOR = 0xff2222;
@@ -33,6 +38,9 @@ const TOOLPATH_COLORS = {
   dwell: 0xf7d774,
   arc: 0x2dd4bf,
 };
+const LATHE_SPINDLE_AXIS = new THREE.Vector3(1, 0, 0);
+const LATHE_STOCK_AXIS_TRANSFORM = new THREE.Quaternion()
+  .setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
 
 // Deviation color stops
 const DEVIATION_COLORS = [
@@ -57,6 +65,8 @@ export class Viewer {
     this.stockMesh = null;
     this.targetMesh = null;
     this.toolGroup = null;
+    this.latheGroup = null;
+    this.latheChuckGroup = null;
     this.gougeSpheres = [];
     this.toolpathLine = null;
     this.toolpathObjects = [];
@@ -75,6 +85,11 @@ export class Viewer {
     this._heatmapMode = false;
     this._wireframeMode = false;
     this._originalStockMaterial = null;
+    this._processMode = 'mill';
+    this._latheSpindleAngle = 0;
+    this._latheSpinning = false;
+    this._lastFrameTime = null;
+    this._latheSpinQuaternion = new THREE.Quaternion();
 
     this._gltfLoader = new GLTFLoader();
     this._stlLoader = new STLLoader();
@@ -131,6 +146,9 @@ export class Viewer {
     // Tool group (empty initially)
     this.toolGroup = new THREE.Group();
     this.scene.add(this.toolGroup);
+    this.latheGroup = new THREE.Group();
+    this.latheGroup.visible = false;
+    this.scene.add(this.latheGroup);
     this.fixtureGroup = new THREE.Group();
     this.clampZoneGroup = new THREE.Group();
     this.clearanceMarkerGroup = new THREE.Group();
@@ -205,9 +223,41 @@ export class Viewer {
     if (this.controls) {
       this.controls.update();
     }
+    this._updateLatheAnimation();
     if (this.renderer && this.scene && this.camera) {
       this.renderer.render(this.scene, this.camera);
     }
+  }
+
+  renderFrame() {
+    if (this.controls) {
+      this.controls.update();
+    }
+    if (this.renderer && this.scene && this.camera) {
+      this.renderer.render(this.scene, this.camera);
+    }
+  }
+
+  captureStream(fps = 30) {
+    const canvas = this.renderer?.domElement;
+    if (!canvas || typeof canvas.captureStream !== 'function') {
+      return null;
+    }
+    return canvas.captureStream(Math.max(1, Number(fps) || 30));
+  }
+
+  _updateLatheAnimation() {
+    if (this._processMode !== 'turning') {
+      this._lastFrameTime = null;
+      return;
+    }
+    const now = performance.now();
+    const delta = this._lastFrameTime === null ? 0 : Math.min((now - this._lastFrameTime) / 1000, 0.05);
+    this._lastFrameTime = now;
+    if (!this._latheSpinning || delta <= 0) return;
+
+    this._latheSpindleAngle += delta * Math.PI * 8.0;
+    this._applyLatheSpindleAngle();
   }
 
   _onResize() {
@@ -222,6 +272,252 @@ export class Viewer {
   // -----------------------------------------------------------------------
   // Mesh loading
   // -----------------------------------------------------------------------
+
+  setProcessMode(mode = 'mill', options = {}) {
+    const nextMode = String(mode || 'mill').toLowerCase();
+    this._processMode = nextMode === 'turning' || nextMode === 'lathe' ? 'turning' : 'mill';
+    this._latheSpinning = false;
+    this._latheSpindleAngle = 0;
+    this._clearGroup(this.latheGroup);
+    this.latheChuckGroup = null;
+
+    if (this._processMode === 'turning') {
+      this._buildLatheScene(options);
+      this.latheGroup.visible = true;
+      if (this.gridHelper) {
+        this.gridHelper.visible = false;
+      }
+    } else {
+      if (this.latheGroup) {
+        this.latheGroup.visible = false;
+      }
+      if (this.gridHelper) {
+        this.gridHelper.visible = true;
+      }
+    }
+    this._applyStockDisplayTransform();
+  }
+
+  setMachinePlayback(state = {}) {
+    const segment = state.segment || {};
+    const segmentText = [
+      segment.operation?.operation,
+      segment.operation_label,
+      segment.operation,
+      segment.moveType,
+      segment.move_type,
+      segment.segment_type,
+    ].filter(Boolean).join(' ').toLowerCase();
+    const turningSegment = this._processMode === 'turning' && (
+      segmentText.includes('turn')
+      || segmentText.includes('boring')
+      || segmentText.includes('lathe')
+    );
+    this._latheSpinning = Boolean(state.isPlaying && turningSegment);
+  }
+
+  _machineComponents(machine = {}) {
+    return Array.isArray(machine?.components) ? machine.components : [];
+  }
+
+  _machineComponent(machine, needles) {
+    const terms = (Array.isArray(needles) ? needles : [needles]).map(term => String(term).toLowerCase());
+    return this._machineComponents(machine).find(component => {
+      const text = [
+        component.id,
+        component.type,
+        component.label,
+        component.fixture_type,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return terms.some(term => text.includes(term));
+    }) || null;
+  }
+
+  _componentVisual(component) {
+    return component?.visual && typeof component.visual === 'object' ? component.visual : {};
+  }
+
+  _componentX(component, fallback) {
+    const transform = component?.transform;
+    if (Array.isArray(transform) && Number.isFinite(Number(transform[0]))) {
+      return Number(transform[0]);
+    }
+    return fallback;
+  }
+
+  _visualSize(component, fallback) {
+    const visual = this._componentVisual(component);
+    const raw = visual.size_mm || visual.size || component?.size_mm;
+    if (Array.isArray(raw) && raw.length >= 3) {
+      const size = raw.slice(0, 3).map(Number);
+      if (size.every(Number.isFinite)) return size;
+    }
+    return fallback;
+  }
+
+  _visualNumber(component, keys, fallback) {
+    const visual = this._componentVisual(component);
+    for (const source of [visual, component || {}]) {
+      for (const key of keys) {
+        const value = Number(source[key]);
+        if (Number.isFinite(value) && value > 0) return value;
+      }
+    }
+    return fallback;
+  }
+
+  _machineAxisTravel(machine, axis) {
+    const key = String(axis || '').toUpperCase();
+    const readLimits = limits => {
+      if (!Array.isArray(limits) || limits.length < 2) return null;
+      const lo = Number(limits[0]);
+      const hi = Number(limits[1]);
+      if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
+      return Math.abs(hi - lo);
+    };
+
+    const linear = machine?.linear_limits || {};
+    const direct = readLimits(linear[key]);
+    if (direct !== null) return direct;
+
+    const axisLimit = machine?.axis_limits?.[key]?.limits;
+    const fromAxisLimits = readLimits(axisLimit);
+    if (fromAxisLimits !== null) return fromAxisLimits;
+
+    const component = this._machineComponents(machine)
+      .find(item => String(item.axis || '').toUpperCase() === key && Array.isArray(item.limits));
+    return readLimits(component?.limits);
+  }
+
+  _buildLatheScene(options = {}) {
+    if (!this.latheGroup) return;
+
+    const machine = options.machine || {};
+    const stock = options.stock_dimensions || {};
+    const length = Number(stock.height || stock.length || 100);
+    const diameter = Number(stock.diameter || Math.max(stock.length || 60, stock.width || 60, 60));
+    const zTravel = this._machineAxisTravel(machine, 'Z');
+    const span = Math.max(length, zTravel || 0, 100);
+    const radius = Math.max(diameter / 2, 18);
+    const bedComponent = this._machineComponent(machine, ['bed', 'base']);
+    const headstockComponent = this._machineComponent(machine, ['headstock']);
+    const chuckComponent = this._machineComponent(machine, ['lathe_chuck', 'chuck', 'workholding']);
+    const tailstockComponent = this._machineComponent(machine, ['tailstock']);
+    const chuckDiameter = this._visualNumber(chuckComponent, ['diameter_mm', 'outer_diameter_mm'], null);
+    const chuckRadius = Math.max(
+      chuckDiameter ? chuckDiameter / 2 : radius * 1.35,
+      radius + 8,
+    );
+    const chuckLength = this._visualNumber(chuckComponent, ['length_mm', 'width_mm'], 16);
+    const bedZ = -radius - 18;
+
+    const bedMat = new THREE.MeshStandardMaterial({ color: LATHE_BED_COLOR, metalness: 0.45, roughness: 0.42 });
+    const headMat = new THREE.MeshStandardMaterial({ color: LATHE_HEADSTOCK_COLOR, metalness: 0.55, roughness: 0.35 });
+    const chuckMat = new THREE.MeshStandardMaterial({ color: LATHE_CHUCK_COLOR, metalness: 0.72, roughness: 0.22 });
+    const jawMat = new THREE.MeshStandardMaterial({ color: LATHE_JAW_COLOR, metalness: 0.78, roughness: 0.18 });
+
+    const bedSize = this._visualSize(bedComponent, [span + 70, 18, 8]);
+    const bed = new THREE.Mesh(new THREE.BoxGeometry(bedSize[0], bedSize[1], bedSize[2]), bedMat);
+    bed.position.set(0, 0, bedZ);
+    this.latheGroup.add(bed);
+
+    const railY = Math.max(bedSize[1] * 0.34, 12);
+    for (const y of [-railY, railY]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(Math.max(bedSize[0] - 14, span + 56), 4, 4), headMat);
+      rail.position.set(0, y, bedZ + bedSize[2] / 2 + 4);
+      this.latheGroup.add(rail);
+    }
+
+    const headstockSize = this._visualSize(headstockComponent, [26, chuckRadius * 2.25, chuckRadius * 1.9]);
+    const headstock = new THREE.Mesh(new THREE.BoxGeometry(headstockSize[0], headstockSize[1], headstockSize[2]), headMat);
+    headstock.position.set(this._componentX(headstockComponent, -span / 2 - 24), 0, -4);
+    this.latheGroup.add(headstock);
+
+    this.latheChuckGroup = new THREE.Group();
+    this.latheChuckGroup.position.set(this._componentX(chuckComponent, -span / 2 - 8), 0, 0);
+    const chuck = new THREE.Mesh(new THREE.CylinderGeometry(chuckRadius, chuckRadius, chuckLength, 64), chuckMat);
+    chuck.rotation.z = Math.PI / 2;
+    this.latheChuckGroup.add(chuck);
+
+    const jawCount = Math.max(3, Math.round(this._visualNumber(chuckComponent, ['jaw_count', 'jaws'], 3)));
+    for (let i = 0; i < jawCount; i += 1) {
+      const angle = i * Math.PI * 2 / jawCount;
+      const jawLength = Math.max(
+        this._visualNumber(chuckComponent, ['jaw_length_mm'], radius * 0.44),
+        14,
+      );
+      const jawWidth = Math.max(
+        this._visualNumber(chuckComponent, ['jaw_width_mm'], radius * 0.24),
+        8,
+      );
+      const jawCenterRadius = radius + jawLength / 2 - 1;
+      const jaw = new THREE.Mesh(new THREE.BoxGeometry(chuckLength * 0.62, jawLength, jawWidth), jawMat);
+      jaw.position.set(chuckLength * 0.45, Math.cos(angle) * jawCenterRadius, Math.sin(angle) * jawCenterRadius);
+      jaw.rotation.x = angle;
+      this.latheChuckGroup.add(jaw);
+    }
+    this.latheGroup.add(this.latheChuckGroup);
+
+    const tailVisual = this._componentVisual(tailstockComponent);
+    const tailstockSize = Array.isArray(tailVisual.body_size_mm) && tailVisual.body_size_mm.length >= 3
+      ? tailVisual.body_size_mm.slice(0, 3).map(Number)
+      : [24, radius * 1.4, radius * 1.35];
+    const tailstock = new THREE.Mesh(new THREE.BoxGeometry(tailstockSize[0], tailstockSize[1], tailstockSize[2]), headMat);
+    tailstock.position.set(this._componentX(tailstockComponent, span / 2 + 25), 0, bedZ + radius * 0.65);
+    this.latheGroup.add(tailstock);
+
+    const centerDiameter = Number(tailVisual.center_diameter_mm || 16);
+    const centerLength = Number(tailVisual.center_length_mm || 22);
+    const center = new THREE.Mesh(new THREE.ConeGeometry(Math.max(centerDiameter / 2, 4), Math.max(centerLength, 12), 32), chuckMat);
+    center.rotation.z = Math.PI / 2;
+    center.position.set(tailstock.position.x - Math.max(centerLength, 12) * 0.62, 0, 0);
+    this.latheGroup.add(center);
+
+    const axisGeom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(this.latheChuckGroup.position.x - chuckLength, 0, 0),
+      new THREE.Vector3(tailstock.position.x + centerLength * 0.5, 0, 0),
+    ]);
+    const axisLine = new THREE.Line(axisGeom, new THREE.LineDashedMaterial({
+      color: 0x22d3ee,
+      dashSize: 5,
+      gapSize: 4,
+      transparent: true,
+      opacity: 0.55,
+    }));
+    axisLine.computeLineDistances();
+    this.latheGroup.add(axisLine);
+  }
+
+  _displayPoint(position) {
+    if (!Array.isArray(position) || position.length < 3) return [0, 0, 0];
+    const x = Number(position[0]);
+    const y = Number(position[1]);
+    const z = Number(position[2]);
+    if (this._processMode === 'turning') {
+      return [-z, y, x];
+    }
+    return [x, y, z];
+  }
+
+  _applyStockDisplayTransform() {
+    if (this._processMode === 'turning') {
+      this._applyLatheSpindleAngle();
+      return;
+    }
+    if (!this.stockMesh) return;
+    this.stockMesh.rotation.set(0, 0, 0);
+    this.stockMesh.quaternion.identity();
+  }
+
+  _applyLatheSpindleAngle() {
+    this._latheSpinQuaternion.setFromAxisAngle(LATHE_SPINDLE_AXIS, this._latheSpindleAngle);
+    if (this.stockMesh) {
+      this.stockMesh.quaternion.copy(this._latheSpinQuaternion).multiply(LATHE_STOCK_AXIS_TRANSFORM);
+    }
+    if (this.latheChuckGroup) {
+      this.latheChuckGroup.quaternion.copy(this._latheSpinQuaternion);
+    }
+  }
 
   /**
    * Load a GLB ArrayBuffer into the scene as the stock mesh.
@@ -246,6 +542,7 @@ export class Viewer {
       this.stockMesh.castShadow = true;
       this.stockMesh.receiveShadow = true;
       this.stockMesh.visible = this._showStock;
+      this._applyStockDisplayTransform();
       this.scene.add(this.stockMesh);
       this._fitCameraToMesh(this.stockMesh);
     }
@@ -297,6 +594,7 @@ export class Viewer {
     this.stockMesh.castShadow = true;
     this.stockMesh.receiveShadow = true;
     this.stockMesh.visible = this._showStock;
+    this._applyStockDisplayTransform();
     this.scene.add(this.stockMesh);
     this._fitCameraToMesh(this.stockMesh);
     this._updateWireframe();
@@ -357,6 +655,7 @@ export class Viewer {
     this.stockMesh.castShadow = true;
     this.stockMesh.receiveShadow = true;
     this.stockMesh.visible = this._showStock;
+    this._applyStockDisplayTransform();
     this.scene.add(this.stockMesh);
     this._fitCameraToMesh(this.stockMesh);
     this._updateWireframe();
@@ -564,6 +863,7 @@ export class Viewer {
       this.toolGroup.remove(child);
     }
 
+    const normalizedToolType = String(toolType || '').toLowerCase();
     const radius = diameter / 2;
     const fl = fluteLength || 30;
     const stickout = Math.max(Number(assembly.stickout || assembly.stickout_mm || fl), fl);
@@ -572,7 +872,79 @@ export class Viewer {
     const holderLength = Math.max(Number(assembly.holderLength || assembly.holder_length_mm || 30), 5);
 
     // Create tool geometry based on type
-    if (toolType === 'ball_endmill') {
+    if (normalizedToolType === 'turning_tool' || normalizedToolType === 'lathe_tool' || normalizedToolType === 'boring_bar') {
+      const isBoringBar = normalizedToolType === 'boring_bar';
+      const barLength = Math.max(stickout + holderLength, 42);
+      const barHeight = Math.max(diameter * 0.9, 5);
+      const barGeom = isBoringBar
+        ? new THREE.BoxGeometry(barLength, barHeight, barHeight)
+        : new THREE.BoxGeometry(barHeight, barLength, barHeight);
+      const bar = new THREE.Mesh(barGeom, new THREE.MeshStandardMaterial({
+        color: TOOL_HOLDER_COLOR,
+        metalness: 0.76,
+        roughness: 0.24,
+      }));
+      if (isBoringBar) {
+        bar.position.set(barLength / 2, 0, 0);
+      } else {
+        bar.position.set(0, barLength / 2, barHeight * 0.55);
+      }
+      this.toolGroup.add(bar);
+
+      const toolpost = new THREE.Mesh(
+        new THREE.BoxGeometry(Math.max(barHeight * 2.2, 16), Math.max(barHeight * 2.0, 14), Math.max(barHeight * 2.4, 18)),
+        new THREE.MeshStandardMaterial({
+          color: LATHE_HEADSTOCK_COLOR,
+          metalness: 0.62,
+          roughness: 0.28,
+        }),
+      );
+      if (isBoringBar) {
+        toolpost.position.set(barLength + 8, 0, barHeight * 0.55);
+      } else {
+        toolpost.position.set(0, barLength + 8, barHeight * 0.55);
+      }
+      this.toolGroup.add(toolpost);
+
+      const insertBack = Math.max(diameter * 0.7, 5);
+      const insertWidth = Math.max(diameter * 0.65, 5);
+      const insertLift = Math.max(diameter * 0.45, 3);
+      const insertGeom = isBoringBar
+        ? new THREE.ConeGeometry(Math.max(diameter * 0.75, 4), Math.max(diameter * 0.7, 3), 3)
+        : new THREE.BufferGeometry();
+      if (!isBoringBar) {
+        insertGeom.setAttribute('position', new THREE.Float32BufferAttribute([
+          0, 0, 0,
+          -insertWidth / 2, insertBack, insertLift,
+          insertWidth / 2, insertBack, insertLift,
+          0, insertBack, insertLift + insertWidth * 0.55,
+        ], 3));
+        insertGeom.setIndex([
+          0, 1, 2,
+          0, 2, 3,
+          0, 3, 1,
+          1, 3, 2,
+        ]);
+        insertGeom.computeVertexNormals();
+      }
+      const insert = new THREE.Mesh(insertGeom, new THREE.MeshStandardMaterial({
+        color: LATHE_INSERT_COLOR,
+        metalness: 0.55,
+        roughness: 0.18,
+        side: THREE.DoubleSide,
+      }));
+      if (isBoringBar) {
+        insert.rotation.set(0, Math.PI / 2, Math.PI / 6);
+      }
+      insert.position.set(0, 0, 0);
+      this.toolGroup.add(insert);
+
+      const displayPosition = this._displayPoint(position);
+      this.toolGroup.position.set(displayPosition[0], displayPosition[1], displayPosition[2]);
+      this.toolGroup.quaternion.identity();
+      this.toolGroup.visible = this._showTool;
+      return;
+    } else if (normalizedToolType === 'ball_endmill') {
       // Cylinder body + sphere tip
       const cylGeom = new THREE.CylinderGeometry(radius, radius, fl - radius, 32);
       const cyl = new THREE.Mesh(cylGeom, new THREE.MeshStandardMaterial({
@@ -588,7 +960,7 @@ export class Viewer {
       }));
       sphere.position.z = radius;
       this.toolGroup.add(sphere);
-    } else if (toolType === 'flat_endmill') {
+    } else if (normalizedToolType === 'flat_endmill') {
       // Cylinder + flat disc
       const cylGeom = new THREE.CylinderGeometry(radius, radius, fl, 32);
       const cyl = new THREE.Mesh(cylGeom, new THREE.MeshStandardMaterial({
@@ -605,7 +977,7 @@ export class Viewer {
       disc.rotation.x = Math.PI / 2;
       disc.position.z = 0.15;
       this.toolGroup.add(disc);
-    } else if (toolType === 'drill') {
+    } else if (normalizedToolType === 'drill') {
       const coneHeight = Math.max(radius * 2.2, 2.0);
       const coneGeom = new THREE.ConeGeometry(radius, coneHeight, 32);
       const cone = new THREE.Mesh(coneGeom, new THREE.MeshStandardMaterial({
@@ -660,8 +1032,11 @@ export class Viewer {
     this.toolGroup.add(holder);
 
     // Position and orient the whole tool group
-    this.toolGroup.position.set(position[0], position[1], position[2]);
-    if (orientation) {
+    const displayPosition = this._displayPoint(position);
+    this.toolGroup.position.set(displayPosition[0], displayPosition[1], displayPosition[2]);
+    if (this._processMode === 'turning') {
+      this.toolGroup.quaternion.identity();
+    } else if (orientation) {
       this.toolGroup.quaternion.set(orientation[1], orientation[2], orientation[3], orientation[0]);
     } else {
       this.toolGroup.quaternion.identity();
@@ -771,7 +1146,7 @@ export class Viewer {
 
     if (!points || points.length < 2) return;
 
-    const positions = new Float32Array(points.flat());
+    const positions = new Float32Array(points.map(point => this._displayPoint(point)).flat());
     const geom = new THREE.BufferGeometry();
     geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
@@ -808,7 +1183,10 @@ export class Viewer {
           if (!segmentsByType.has(moveType)) {
             segmentsByType.set(moveType, []);
           }
-          segmentsByType.get(moveType).push(...previous, ...position);
+          segmentsByType.get(moveType).push(
+            ...this._displayPoint(previous),
+            ...this._displayPoint(position),
+          );
         }
         previous = position;
       }
@@ -966,6 +1344,7 @@ export class Viewer {
     this.stockMesh.receiveShadow = true;
     this.stockMesh.visible = this._showStock;
     this._originalStockMaterial = mat;
+    this._applyStockDisplayTransform();
     this.scene.add(this.stockMesh);
     this._fitCameraToMesh(this.stockMesh);
   }
@@ -975,9 +1354,9 @@ export class Viewer {
   // -----------------------------------------------------------------------
 
   _fitCameraToMesh(mesh) {
-    if (!mesh || !mesh.geometry) return;
-    mesh.geometry.computeBoundingBox();
-    const box = mesh.geometry.boundingBox;
+    if (!mesh) return;
+    mesh.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(mesh);
     if (!box) return;
 
     const center = new THREE.Vector3();
@@ -988,11 +1367,19 @@ export class Viewer {
     const dist = maxDim * 2.5;
     this._positionGridForBox(box);
 
-    this.camera.position.set(
-      center.x + dist * 0.7,
-      center.y - dist * 0.8,
-      center.z + dist * 0.7,
-    );
+    if (this._processMode === 'turning') {
+      this.camera.position.set(
+        center.x + dist * 0.75,
+        center.y - dist * 1.05,
+        center.z + dist * 0.42,
+      );
+    } else {
+      this.camera.position.set(
+        center.x + dist * 0.7,
+        center.y - dist * 0.8,
+        center.z + dist * 0.7,
+      );
+    }
     this.camera.up.set(0, 0, 1);
     this.controls.target.copy(center);
     this.controls.update();
@@ -1028,6 +1415,7 @@ export class Viewer {
   // -----------------------------------------------------------------------
 
   clearScene() {
+    this.setProcessMode('mill');
     this._disposeStockMesh();
     this._disposeTargetMesh();
     this.clearGougeMarkers();

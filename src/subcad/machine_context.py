@@ -163,6 +163,12 @@ class MachineContext:
     axis_limits: dict[str, dict[str, Any]] = field(default_factory=dict)
     spindle: dict[str, Any] = field(default_factory=dict)
     capabilities: dict[str, Any] = field(default_factory=dict)
+    components: list[dict[str, Any]] = field(default_factory=list)
+    collision_groups: dict[str, Any] = field(default_factory=dict)
+    collision_pairs: list[dict[str, Any]] = field(default_factory=list)
+    home_position: list[Any] = field(default_factory=list)
+    tool_change_position: list[Any] = field(default_factory=list)
+    kinematic_chain: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_json(cls, machine: str | Path) -> "MachineContext":
@@ -198,6 +204,12 @@ class MachineContext:
                 axis_limits=dict(data.get("axis_limits") or {}),
                 spindle=dict(data.get("spindle") or {}),
                 capabilities=capabilities,
+                components=list(data.get("components") or []),
+                collision_groups=dict(data.get("collision_groups") or {}),
+                collision_pairs=list(data.get("collision_pairs") or []),
+                home_position=list(data.get("home_position") or []),
+                tool_change_position=list(data.get("tool_change_position") or []),
+                kinematic_chain=dict(data.get("kinematic_chain") or {}),
             )
 
         axes: list[str] = []
@@ -259,6 +271,12 @@ class MachineContext:
             axis_limits=axis_limits,
             spindle=spindle,
             capabilities=capabilities,
+            components=list(data.get("components") or []),
+            collision_groups=dict(data.get("collision_groups") or {}),
+            collision_pairs=list(data.get("collision_pairs") or []),
+            home_position=list(data.get("home_position") or []),
+            tool_change_position=list(data.get("tool_change_position") or []),
+            kinematic_chain=dict(data.get("kinematic_chain") or {}),
         )
 
     @property
@@ -285,6 +303,12 @@ class MachineContext:
             "rotary_axes": self.rotary_axes,
             "spindle": dict(self.spindle),
             "capabilities": dict(self.capabilities),
+            "components": list(self.components),
+            "collision_groups": dict(self.collision_groups),
+            "collision_pairs": list(self.collision_pairs),
+            "home_position": list(self.home_position),
+            "tool_change_position": list(self.tool_change_position),
+            "kinematic_chain": dict(self.kinematic_chain),
         }
 
 

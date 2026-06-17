@@ -13,7 +13,7 @@
     }
   }
   </script>
-  <script type="module" src="session-viewer.js?v=20260520-manufacturing-trust-v1"></script>
+  <script type="module" src="session-viewer.js?v=20260617-axis-fix-v10"></script>
 </head>
 <body>
 <div class="app-container">
@@ -63,6 +63,13 @@
           </div>
           <input id="playback-range" class="timeline-range" type="range" min="0" max="1000" step="1" value="0">
           <div class="playback-label" id="playback-label">No toolpath loaded</div>
+          <div class="export-controls">
+            <button class="btn btn-success full-width" id="export-video" type="button">Export WebM</button>
+            <div class="progress-container export-progress" id="export-progress" hidden>
+              <div class="progress-bar-bg"><div class="progress-bar-fill" id="export-progress-fill"></div></div>
+            </div>
+            <div class="export-status" id="export-video-status">Ready</div>
+          </div>
         </div>
       </div>
 
